@@ -1,0 +1,180 @@
+name: auth_app
+description: Authentification demo app
+version: 1.0.1+1
+homepage: https://github.com/zs-dima/auth-app
+repository: https://github.com/zs-dima/auth-app
+issue_tracker: https://github.com/zs-dima/auth-app/issues
+
+funding:
+  - https://buymeacoffee.com/zs.dima
+  - https://patreon.com/zs_dima
+  - https://boosty.to/zs-dima
+
+topics:
+  - auth
+  - authentification
+  - grpc
+  - cross-platform
+  - flutter
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+publish_to: "none"
+
+environment:
+  sdk: ">=3.1.2"
+  flutter: ">=3.13.5"
+
+dependencies:
+  # Flutter SDK
+  flutter:
+    sdk: flutter
+
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.1
+
+  # Packages
+  core_model:
+    path: package/model/core_model
+  grpc_model:
+    path: package/model/grpc_model
+  auth_model:
+    path: package/model/auth_model
+  core_tool:
+    path: package/tool/core_tool
+  ui_tool:
+    path: package/tool/ui_tool
+
+  # SDK extensions
+  async: ^2.9.0
+  collection: any
+  meta: any
+  uuid: any
+  crypto: ^3.0.3
+  convert: ^3.1.1
+
+  # Logging
+  l: ^4.1.0-pre.1
+  sentry_flutter: ^7.10.0
+  stack_trace: ^1.11.0
+
+  # System
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  platform_info: ^4.0.2
+  package_info_plus: ^4.1.0
+  device_info_plus: ^9.0.3
+  android_id: ^0.3.6
+
+  # Stream
+  stream_transform: ^2.1.0
+  rxdart: ^0.27.7
+
+  # BLoC
+  bloc: ^8.1.2
+  bloc_concurrency: ^0.2.2
+  flutter_bloc: ^8.1.3
+
+  # Persistence
+  # drift: ^2.11.0
+  # sqlite3_flutter_libs: ^0.5.15
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  archive: ^3.4.6
+
+  # LLM
+  langchain: ^0.0.13
+  langchain_openai: ^0.0.13
+  tiktoken: ^1.0.3
+
+  # Platform
+  win32: ^5.0.9
+  window_manager: ^0.3.7
+
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_native_splash: ^2.3.2
+  file_picker: ^5.5.0
+  flutter_sticky_header: ^0.6.5
+  flutter_blurhash: ^0.7.0
+
+  # Code generation
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+
+  # API
+  dio: ^5.3.3
+  dio_http2_adapter: ^2.3.1+1
+  protobuf: ^3.1.0
+  grpc: ^3.2.4
+  retry: ^3.1.2
+
+dependency_overrides:
+  analyzer: ^6.2.0
+
+dev_dependencies:
+  # Unit & Widget tests for Flutter
+  flutter_test:
+    sdk: flutter
+  # Integration tests for Flutter
+  integration_test:
+    sdk: flutter
+
+  #mockito: ^5.4.2
+
+  # Code generation
+  # drift_dev: ^2.11.1
+  build_runner: ^2.4.6
+  # flutter_launcher_icons: ^0.13.1
+  # build_verify: ^3.1.0
+  # pubspec_generator: ^4.0.0
+  flutter_gen_runner: ^5.3.2
+  freezed: ^2.4.5
+  json_serializable: ^6.7.1
+  melos: ^3.1.1 # dart pub global activate melos
+  intl_utils: ^2.8.5
+
+  # Linting
+  flutter_lints: ^2.0.3
+
+# TODO flutter pub get
+# https://github.com/dart-lang/build/issues/2835
+flutter:
+  generate: false
+  uses-material-design: true
+  assets:
+    - asset/
+    - asset/image/
+    - asset/image/app/
+    - asset/icon/
+    - asset/icon/app/
+  # fonts:
+  #   - family: SocialIcons
+  #     fonts:
+  #       - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf
+
+flutter_intl: # dart run intl_utils:generate
+  enabled: true
+  class_name: GeneratedLocalization
+  main_locale: en
+  arb_dir: lib/core/localization/translation
+  output_dir: lib/core/gen/localization
+  use_deferred_loading: false
+
+flutter_gen:
+  output: lib/core/gen/resources
+  line_length: 120
+  integrations:
+    flutter_svg: true
+    flare_flutter: true
+#  colors:
+#    inputs:
+#      - assets/color/colors.xml

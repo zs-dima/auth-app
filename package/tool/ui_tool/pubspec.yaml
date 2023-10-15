@@ -1,0 +1,32 @@
+name: ui_tool
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.1.2"
+  flutter: ">=3.13.5"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Packages
+  core_tool:
+    path: ../core_tool    
+
+  # SDK extensions
+  collection: any
+  meta: any
+  uuid: any
+
+  # Internationalization
+  intl: ^0.18.1
+
+  # BLoC
+  bloc: ^8.1.2
+
+
+flutter:
+  uses-material-design: true

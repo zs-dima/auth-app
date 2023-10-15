@@ -1,0 +1,38 @@
+name: auth_model
+description: Authentification model
+version: 1.0.0+1
+
+publish_to: "none"
+
+environment:
+  sdk: ">=3.1.2"
+
+dependencies:
+  # Packages
+  json_converter:
+    path: ../../tool/converter/json_converter
+  core_model:
+    path: ../../model/core_model
+  grpc_model:
+    path: ../../model/grpc_model
+
+  # SDK extensions
+  collection: any
+  meta: any
+  uuid: any
+  async: ^2.9.0
+
+  # Code generation
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+
+  # API
+  grpc: ^3.2.4
+  protobuf: ^3.1.0
+  retry: ^3.1.2
+
+dev_dependencies:
+  # Code generation
+  build_runner: ^2.3.3
+  freezed: ^2.4.5
+  json_serializable: ^6.7.1

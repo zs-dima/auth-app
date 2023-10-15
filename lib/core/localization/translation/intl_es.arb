@@ -1,0 +1,9 @@
+{
+    "appTitle": "Auth app",
+    "@appTitle": {
+        "description": "El título de la aplicación"
+    },
+    "custom_colors": "Colores personalizados",
+    "default_themes": "Temas predeterminados",
+    "locales": "Idioma"
+}

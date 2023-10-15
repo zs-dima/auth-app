@@ -1,0 +1,13 @@
+name: core_model
+description: Core data classes
+version: 1.0.0+1
+
+publish_to: "none"
+
+environment:
+  sdk: ">=3.1.2"
+
+dependencies:
+  # SDK extensions
+  collection: any
+  meta: any

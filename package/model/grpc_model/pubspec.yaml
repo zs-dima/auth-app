@@ -1,0 +1,25 @@
+name: grpc_model
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.1.2"
+
+dependencies:
+
+  core_model:
+    path: ../../model/core_model
+    
+  # SDK extensions
+  collection: any
+  meta: any
+  uuid: any
+  fixnum: ^1.1.0
+
+  # API
+  grpc: ^3.2.4
+  protobuf: ^3.1.0
+
+

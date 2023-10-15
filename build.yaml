@@ -1,0 +1,52 @@
+targets:
+  $default:
+    sources:
+      - $package$
+      - lib/**
+      - pubspec.yaml
+      - test/**
+    builders:
+      json_serializable:
+        enabled: true
+        generate_for:
+          - lib/app/theme/**
+          - lib/app/event_bus/**
+          - lib/app/data/model/**
+          - lib/app/environment/**
+          - lib/app/**_bloc.dart
+          - lib/feature/**/model/**
+          - lib/feature/**_bloc.dart
+        options:
+          any_map: false
+          checked: false
+          create_factory: true
+          create_to_json: true
+          disallow_unrecognized_keys: false
+          explicit_to_json: true
+          field_rename: none
+          ignore_unannotated: false
+          include_if_null: true
+      freezed:
+        enabled: true
+        generate_for:
+          - lib/app/**_bloc.dart
+          - lib/app/theme/**
+          - lib/app/event_bus/**
+          - lib/app/environment/**
+          - lib/core/data/model/**
+          - lib/app/theme/**
+          - lib/app/data/model/**
+          - lib/feature/**/model/**
+          - lib/feature/**_bloc.dart
+        options:
+          union_key: type
+          union_value_case: snake
+          map: false
+          when: 
+            when: true
+            maybe_when: false
+            when_or_null: true
+      drift_dev:
+        enabled: true
+        generate_for:
+          - lib/core/data/**
