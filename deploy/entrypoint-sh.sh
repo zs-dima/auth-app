@@ -4,12 +4,9 @@
 env_string=""
 
 # Iterate over the environment variables
-for var in $(compgen -e); do
-  # If the variable has a non-empty value
-  if [ -n "${!var}" ]; then
-    # Append the variable and its value to the string
-    env_string+="${var}=${!var} "
-  fi
+for var in $(printenv | awk -F= '{print $1}'); do
+  val=$(printenv $var)
+  env_string="${env_string}${var}=${val} "
 done
 
 # Pass the string of environment variables to /app/bin/web-env

@@ -1,3 +1,7 @@
+# docker buildx build --platform linux/arm64 -t zsdima/auth-app:stable -f ./deploy/arm/Dockerfile . --push
+# docker run --pull=always -it zsdima/auth-app:stable /bin/bash
+# docker rm $(docker stop $(docker ps -a -q --filter ancestor=zsdima/auth-app:stable --format="{{.ID}}"))
+
 # Build time environment could be overridden by runtime variable
 ARG APP_ENVIRONMENT="staging"
 
@@ -9,12 +13,18 @@ COPY ./tool/web_env.dart ./tool/
 RUN dart compile exe tool/web_env.dart -o tool/web-env
 
 
-FROM plugfox/flutter:3.13.5-web AS build_web
+FROM fischerscode/flutter-sudo:stable AS build_web
 WORKDIR /home
 COPY --chown=101:101 . .
 
 ARG APP_ENVIRONMENT
 ENV APP_ENVIRONMENT=$APP_ENVIRONMENT
+
+USER root:root
+RUN git config --global --add safe.directory /home/flutter/flutter-sdk
+RUN flutter channel stable
+RUN flutter upgrade --force
+RUN flutter doctor -v
 
 RUN (cd package/model/auth_model && flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs --release)
 RUN flutter pub get
@@ -27,9 +37,9 @@ RUN flutter build web --release --no-source-maps \
     --base-href /
 
 
-FROM nginx:alpine as production
+FROM arm64v8/nginx:latest as production
 
-COPY --from=build_dart /runtime/ /
+COPY --from=build_dart /runtime/ /runtime/
 COPY --from=build_dart /app/tool/web-env /app/bin/web-env
 COPY --from=build_web --chown=101:101 /home/build/web /usr/share/nginx/html
 COPY ./deploy/entrypoint.sh /app/bin/entrypoint.sh
