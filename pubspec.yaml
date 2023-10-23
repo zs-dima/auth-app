@@ -143,7 +143,7 @@ dev_dependencies:
   intl_utils: ^2.8.5
 
   # Linting
-  flutter_lints: ^2.0.3
+  flutter_lints: ^3.0.0
 
 # TODO flutter pub get
 # https://github.com/dart-lang/build/issues/2835
