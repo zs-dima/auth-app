@@ -9,12 +9,12 @@ environment:
 
 dependencies:
   # Packages
-  json_converter:
-    path: ../../tool/converter/json_converter
   core_model:
     path: ../../model/core_model
   grpc_model:
     path: ../../model/grpc_model
+  json_converter:
+    path: ../../tool/converter/json_converter
 
   # SDK extensions
   collection: any

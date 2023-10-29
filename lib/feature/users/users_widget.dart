@@ -5,12 +5,12 @@ import 'package:auth_app/feature/users/bloc/users_bloc.dart';
 import 'package:auth_app/feature/users/edit/user_edit_dialog.dart';
 import 'package:auth_app/feature/users/user_tile_widget.dart';
 import 'package:auth_app/feature/users/users_scope.dart';
+import 'package:auth_app/feature/users/widget/user_list_header.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:uuid/uuid.dart';
 
 class UsersWidget extends StatefulWidget {
@@ -91,25 +91,27 @@ class _UsersWidgetState extends State<UsersWidget> {
             Row(
               children: [
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: TextField(
-                      focusNode: _searchPartFocus,
-                      controller: _searchPartController,
-                      decoration: InputDecoration(
-                        labelText: 'Search...',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact().ignore();
-                            _searchPartFocus!.unfocus();
-                            _searchPartController!.clear();
-                            _usersBloc!.add(const UsersEvent.filterUsers(''));
-                          },
-                          icon: const Icon(Icons.close),
+                  child: ShadowWidget(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: TextField(
+                        focusNode: _searchPartFocus,
+                        controller: _searchPartController,
+                        decoration: InputDecoration(
+                          labelText: 'Search...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              HapticFeedback.mediumImpact().ignore();
+                              _searchPartFocus!.unfocus();
+                              _searchPartController!.clear();
+                              _usersBloc!.add(const UsersEvent.filterUsers(''));
+                            },
+                            icon: const Icon(Icons.close),
+                          ),
                         ),
+                        onChanged: (v) => _usersBloc!.add(UsersEvent.filterUsers(v)),
                       ),
-                      onChanged: (v) => _usersBloc!.add(UsersEvent.filterUsers(v)),
                     ),
                   ),
                 ),
@@ -144,50 +146,35 @@ class _UsersWidgetState extends State<UsersWidget> {
                       slivers: userRoles.map(
                         (userRole) {
                           final users = allUsers.where((i) => i.role == userRole).toList();
-                          return SliverStickyHeader(
-                            header: SizedBox(
-                              height: 35,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      userRole.name,
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.right,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.key, color: IconTheme.of(context).color?.withOpacity(0.5)),
-                                  const SizedBox(width: 28),
-                                ],
-                              ),
-                            ),
-                            sliver: SliverList(
-                              // TODO SliverFixedExtentList itemExtent: 50,
-                              delegate: SliverChildBuilderDelegate(
-                                (BuildContext context, int index) {
-                                  final user = users[index];
 
-                                  return InkWell(
-                                    key: ValueKey('user_tile_${user.id}'),
-                                    mouseCursor: SystemMouseCursors.click,
-                                    onTap: () => editUserDialog(context, user, currentUser: _currentUser!),
-                                    child: UserTileWidget(
-                                      user: user,
-                                      tileColor: index.isEven //
-                                          ? colorScheme.primary.withOpacity(0.1)
-                                          : colorScheme.background,
-                                    ),
-                                  );
-                                },
-                                childCount: users.length,
+                          return SliverMainAxisGroup(
+                            slivers: [
+                              SliverPersistentHeader(
+                                pinned: true,
+                                delegate: UserListHeaderDelegate(userRole.name),
                               ),
-                            ),
+                              SliverFixedExtentList(
+                                itemExtent: 50,
+                                delegate: SliverChildBuilderDelegate(
+                                  (BuildContext context, int index) {
+                                    final user = users[index];
+
+                                    return InkWell(
+                                      key: ValueKey('user_tile_${user.id}'),
+                                      mouseCursor: SystemMouseCursors.click,
+                                      onTap: () => editUserDialog(context, user, currentUser: _currentUser!),
+                                      child: UserTileWidget(
+                                        user: user,
+                                        tileColor: index.isEven //
+                                            ? colorScheme.primary.withOpacity(0.1)
+                                            : colorScheme.background,
+                                      ),
+                                    );
+                                  },
+                                  childCount: users.length,
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ).toList(),

@@ -63,15 +63,15 @@ dependencies:
 
   # Logging
   l: ^4.1.0-pre.1
-  sentry_flutter: ^7.10.0
+  sentry_flutter: ^7.11.0
   stack_trace: ^1.11.0
 
   # System
   path: ^1.8.3
   path_provider: ^2.1.1
   platform_info: ^4.0.2
-  package_info_plus: ^4.1.0
-  device_info_plus: ^9.0.3
+  package_info_plus: ^4.2.0
+  device_info_plus: ^9.1.0
   android_id: ^0.3.6
 
   # Stream
@@ -90,20 +90,14 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   archive: ^3.4.6
 
-  # LLM
-  langchain: ^0.0.13
-  langchain_openai: ^0.0.13
-  tiktoken: ^1.0.3
-
   # Platform
   win32: ^5.0.9
   window_manager: ^0.3.7
 
   # UI
   cupertino_icons: ^1.0.6
-  flutter_native_splash: ^2.3.2
+  flutter_native_splash: ^2.3.5
   file_picker: ^6.0.0
-  flutter_sticky_header: ^0.6.5
   flutter_blurhash: ^0.7.0
 
   # Code generation

@@ -27,6 +27,7 @@ class AppLayout extends StatelessWidget {
     return Scaffold(
       floatingActionButton: floatingActionButton,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         leading: currentUser is AuthenticatedUser
             ? Tooltip(
                 message: currentUser.userInfo.name,

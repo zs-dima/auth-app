@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io' as io;
 
 import 'package:auth_app/app/app.dart';
 import 'package:auth_app/core/widget/window_scope.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ui_tool/ui_tool.dart';
 
@@ -73,7 +75,10 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
     final renderedSize = renderedWidget?.size;
 
     final padding = MediaQuery.of(context).padding;
-    final windowTitleHeigh = context.findAncestorWidgetOfExactType<WindowScope>()?.height ?? 0;
+
+    final windowTitleHeigh = (kIsWeb || io.Platform.isAndroid || io.Platform.isIOS)
+        ? 0
+        : context.findAncestorWidgetOfExactType<WindowScope>()?.height ?? 0;
 
     overlayEntry = OverlayEntry(
       builder: (BuildContext context) => Positioned(
