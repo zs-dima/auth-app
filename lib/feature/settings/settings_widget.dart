@@ -23,6 +23,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     final darkTheme = AppTheme.dark(screenSize);
     final systemTheme = AppTheme.system(screenSize);
 
+    final textTitleMedium = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+      color: theme.colorScheme.onBackground,
+    );
+
     return CustomScrollView(
       slivers: [
         SliverList(
@@ -31,10 +36,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               padding: const EdgeInsets.all(8),
               child: Text(
                 Localization.of(context).locales,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onBackground,
-                ),
+                style: textTitleMedium,
               ),
             ),
             LanguagesSelector(Localization.supportedLocales),
@@ -42,10 +44,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               padding: const EdgeInsets.all(8),
               child: Text(
                 Localization.of(context).default_themes,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onBackground,
-                ),
+                style: textTitleMedium,
               ),
             ),
             ThemeSelector(
@@ -55,10 +54,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               padding: const EdgeInsets.only(left: 8, top: 8),
               child: Text(
                 Localization.of(context).custom_colors,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onBackground,
-                ),
+                style: textTitleMedium,
               ),
             ),
             ThemeSelector(

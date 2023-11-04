@@ -7,7 +7,15 @@ part 'user.g.dart';
 
 @freezed
 class User with _$User implements IUserInfo, Comparable<User> {
-  static const String type = '2204CA60-2D98-4BF7-8140-9BF746F4CFE1';
+  static const type = '2204CA60-2D98-4BF7-8140-9BF746F4CFE1';
+
+  static const empty = User(
+    id: Uuid.NAMESPACE_NIL,
+    name: '',
+    email: '',
+    role: UserRole.user,
+    deleted: false,
+  );
 
   const User._();
 
@@ -19,14 +27,6 @@ class User with _$User implements IUserInfo, Comparable<User> {
     String? blurhash,
     required bool deleted,
   }) = _User;
-
-  static const User empty = User(
-    id: Uuid.NAMESPACE_NIL,
-    name: '',
-    email: '',
-    role: UserRole.user,
-    deleted: false,
-  );
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 

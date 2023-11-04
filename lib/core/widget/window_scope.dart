@@ -54,18 +54,27 @@ class _WindowTitle extends StatefulWidget {
 
 // ignore: prefer_mixin
 class _WindowTitleState extends State<_WindowTitle> with WindowListener {
-  final ValueNotifier<bool> _isFullScreen = ValueNotifier(false);
-  final ValueNotifier<bool> _isAlwaysOnTop = ValueNotifier(false);
+  final _isFullScreen = ValueNotifier<bool>(false);
+  final _isAlwaysOnTop = ValueNotifier<bool>(false);
 
   @override
   void initState() {
-    windowManager.addListener(this);
     super.initState();
+    windowManager.addListener(this);
+  }
+
+  void _setAlwaysOnTop(bool value) {
+    Future<void>(() async {
+      await windowManager.setAlwaysOnTop(value);
+      _isAlwaysOnTop.value = await windowManager.isAlwaysOnTop();
+    }).ignore();
   }
 
   @override
   void dispose() {
     windowManager.removeListener(this);
+    _isFullScreen.dispose();
+    _isAlwaysOnTop.dispose();
     super.dispose();
   }
 
@@ -84,15 +93,9 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
   @override
   void onWindowFocus() {
     // Make sure to call once.
+    // ignore: avoid-empty-setstate
     setState(() {});
     // do something
-  }
-
-  void setAlwaysOnTop(bool value) {
-    Future<void>(() async {
-      await windowManager.setAlwaysOnTop(value);
-      _isAlwaysOnTop.value = await windowManager.isAlwaysOnTop();
-    }).ignore();
   }
 
   @override
@@ -107,10 +110,10 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
         onPanStart: (details) => windowManager.startDragging(),
         onDoubleTap: () async {
           final isMaximized = await windowManager.isMaximized();
-          if (!isMaximized) {
-            await windowManager.maximize();
-          } else {
+          if (isMaximized) {
             await windowManager.unmaximize();
+          } else {
+            await windowManager.maximize();
           }
         },
         child: Material(
@@ -120,8 +123,8 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
             children: <Widget>[
               if (title != null)
                 Builder(
-                  builder: (context) {
-                    final size = MediaQuery.of(context).size;
+                  builder: (ctx) {
+                    final size = MediaQuery.sizeOf(ctx);
                     return AnimatedPositioned(
                       duration: const Duration(milliseconds: 350),
                       left: size.width < 800 ? 8 : 78,
@@ -142,7 +145,7 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
                             title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(height: 1),
+                            style: Theme.of(ctx).textTheme.labelLarge?.copyWith(height: 1),
                           ),
                         ),
                       ),
@@ -152,16 +155,16 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
               _WindowButtons$Windows(
                 isFullScreen: _isFullScreen,
                 isAlwaysOnTop: _isAlwaysOnTop,
-                setAlwaysOnTop: setAlwaysOnTop,
+                setAlwaysOnTop: _setAlwaysOnTop,
                 onPressedMinimize: windowManager.minimize,
                 onPressedMaximize: () async {
                   final isMaximized = await windowManager.isMaximized();
-                  if (!isMaximized) {
-                    await windowManager.maximize();
-                    _isFullScreen.value = true;
-                  } else {
+                  if (isMaximized) {
                     await windowManager.unmaximize();
                     _isFullScreen.value = false;
+                  } else {
+                    await windowManager.maximize();
+                    _isFullScreen.value = true;
                   }
                 },
               ),
@@ -203,7 +206,7 @@ class _WindowButtons$Windows extends StatelessWidget {
             // Is always on top
             ValueListenableBuilder<bool>(
               valueListenable: _isAlwaysOnTop,
-              builder: (context, isAlwaysOnTop, _) => _WindowButton(
+              builder: (_, isAlwaysOnTop, __) => _WindowButton(
                 onPressed: () => setAlwaysOnTop(!isAlwaysOnTop),
                 icon: isAlwaysOnTop ? Icons.push_pin : Icons.push_pin_outlined,
               ),
@@ -218,7 +221,7 @@ class _WindowButtons$Windows extends StatelessWidget {
             // Maximize
             ValueListenableBuilder<bool>(
               valueListenable: _isFullScreen,
-              builder: (context, isFullScreen, _) => _WindowButton(
+              builder: (_, isFullScreen, __) => _WindowButton(
                 onPressed: onPressedMaximize,
                 icon: isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
               ),

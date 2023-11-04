@@ -12,6 +12,8 @@ class AccessToken {
   /// Time at which the token will be expired (UTC time)
   final DateTime expiry;
 
+  bool get hasExpired => DateTime.now().toUtc().isAfter(expiry);
+
   /// [expiry] must be a UTC `DateTime`.
   AccessToken({
     this.type = 'Bearer',
@@ -35,21 +37,6 @@ class AccessToken {
     );
   }
 
-  bool get hasExpired => DateTime.now().toUtc().isAfter(expiry);
-
-  static Map<String, Object?> _decodeJwtToken(String token) {
-    final parts = token.split('.');
-    if (parts.length != 3) {
-      throw Exception('Invalid token');
-    }
-
-    final payload = parts[1];
-    final normalized = base64Url.normalize(payload);
-    final resp = utf8.decode(base64Url.decode(normalized));
-
-    return jsonDecode(resp) as Map<String, Object?>;
-  }
-
   factory AccessToken.fromJson(Map<String, dynamic> json) => AccessToken(
         type: json['type'] as String,
         token: json['data'] as String,
@@ -64,4 +51,16 @@ class AccessToken {
 
   @override
   String toString() => 'AccessToken(type=$type, data=$token, expiry=$expiry)';
+  static Map<String, Object?> _decodeJwtToken(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('Invalid token');
+    }
+
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final resp = utf8.decode(base64Url.decode(normalized));
+
+    return jsonDecode(resp) as Map<String, Object?>;
+  }
 }

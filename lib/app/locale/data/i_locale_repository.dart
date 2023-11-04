@@ -6,7 +6,7 @@ import 'dart:ui';
 /// {@endtemplate}
 abstract interface class ILocaleRepository {
   /// Set locale
-  FutureOr<void> setLocale(Locale locale);
+  Future<void> setLocale(Locale locale);
 
   /// Get current locale from cache
   Locale? loadLocaleFromCache();

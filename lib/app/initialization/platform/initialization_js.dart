@@ -1,10 +1,11 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 
+import 'dart:async';
 import 'dart:html' as html;
 
 //import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-Future<void> $platformInitialization() async {
+FutureOr<void> $platformInitialization() {
   //setUrlStrategy(const HashUrlStrategy());
   Future<void>.delayed(
     const Duration(seconds: 1),
@@ -17,5 +18,5 @@ Future<void> $platformInitialization() async {
           .toList(growable: false)
           .forEach((element) => element.remove());
     },
-  );
+  ).ignore();
 }

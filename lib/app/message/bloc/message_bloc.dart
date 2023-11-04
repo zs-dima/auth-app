@@ -11,8 +11,8 @@ import 'package:grpc_model/grpc_model.dart';
 part 'message_bloc.freezed.dart';
 
 class AppProgress {
-  static const int started = -1;
-  static const int done = 1;
+  static const started = -1;
+  static const done = 1;
 
   static const startedEvent = _ShowProgress(started);
   static const doneEvent = _ShowProgress(done);
@@ -32,7 +32,7 @@ class MessageEvent with _$MessageEvent {
 
 @freezed
 class MessageState with _$MessageState {
-  MessageState._();
+  const MessageState._();
 
   factory MessageState.initial() = _InitialState;
   factory MessageState.appMessage(String message, {Color? backgroundColor}) = AppMessageState;

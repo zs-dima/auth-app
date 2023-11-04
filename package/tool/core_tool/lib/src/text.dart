@@ -2,7 +2,7 @@ import 'package:characters/characters.dart';
 
 extension StringX on String {
   /// Returns string limited to [length] characters.
-  String limit(int length) => length < this.length ? substring(0, length) : this;
+  String limit(int length) => length < this.length ? characters.getRange(0, length).toString() : this;
 
   /// Trims string using [pattern] from both ends.
   String trim2(String pattern) => trimStart2(pattern).trimEnd2(pattern);
@@ -30,14 +30,14 @@ extension StringX on String {
   }
 
   /// Returns capitalized string.
-  String capitalize() => isEmpty //
+  String get capitalized => isEmpty //
       ? ''
       : '${this[0].toUpperCase()}${characters.getRange(1).toLowerCase()}';
 
   /// Returns string with capitalized first letter of each word.
-  String titleCase() => isEmpty //
+  String get titled => isEmpty //
       ? ''
-      : replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalize()).join(' ');
+      : replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalized).join(' ');
 }
 
 extension StringNX on String? {

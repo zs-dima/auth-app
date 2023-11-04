@@ -9,26 +9,45 @@ import 'package:rxdart/rxdart.dart';
 abstract interface class IAuthRepository {
   Stream<AuthUser> get userChanges;
   AuthUser get user;
-  FutureOr<UserId?> getUserId();
-
   IAuthenticationHandler get authHandler;
 
-  FutureOr<AccessCredentials?> getAccessCredentials();
-  FutureOr<AccessCredentials> refreshTokens(RefreshToken refreshToken);
-  FutureOr<void> validateCredentials(AuthenticatedUser credentials);
+  Future<UserId?> getUserId();
+
+  Future<AccessCredentials?> getAccessCredentials();
+  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken);
+  Future<void> validateCredentials(AuthenticatedUser credentials);
 
   Future<void> signIn(ISignInData signInData, IDeviceInfo device);
   Future<void> signOut();
 
-  FutureOr<void> updateUserInfo(IUserInfo user);
+  Future<void> updateUserInfo(IUserInfo user);
 
   Future<bool> resetPassword(String email);
   Future<bool> setPassword(UserId userId, String email, String password);
 
-  FutureOr<void> terminate();
+  Future<void> terminate();
 }
 
 class AuthRepository implements IAuthRepository {
+  @override
+  IAuthenticationHandler authHandler;
+
+  final ISettingsRepository _settings;
+
+  final IAuthApi _api;
+
+  StreamSubscription? _authSubscription;
+  StreamSubscription? _userChangesSubscription;
+
+  final _userController = StreamController<AuthUser>.broadcast();
+
+  AuthUser _user = const AuthUser.unauthenticated();
+
+  @override
+  Stream<AuthUser> get userChanges => _userController.stream;
+
+  @override
+  AuthUser get user => _user;
   AuthRepository({
     required final IAuthApi apiClient,
     required this.authHandler,
@@ -37,7 +56,7 @@ class AuthRepository implements IAuthRepository {
         _settings = settings {
     _userChangesSubscription = userChanges //
         .whereType<AuthenticatedUser>()
-        .listen((user) => authHandler.handleAuthenticated());
+        .listen((u) => authHandler.handleAuthenticated());
 
     _authSubscription = authHandler //
         .where((i) => i == AuthenticationState.unauthenticated)
@@ -45,52 +64,47 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  IAuthenticationHandler authHandler;
-
-  final ISettingsRepository _settings;
-
-  @override
-  FutureOr<AccessCredentials?> getAccessCredentials() {
+  Future<AccessCredentials?> getAccessCredentials() {
     switch (_user) {
-      case final AuthenticatedUser user:
-        final AuthenticatedUser(:AccessCredentials? credentials) = user;
-        return credentials;
+      case final AuthenticatedUser authUser:
+        final AuthenticatedUser(:AccessCredentials? credentials) = authUser;
+        return Future.value(credentials);
+
       default:
         // We don't use credentials for sign in
-        return null;
+        return Future.value(null);
     }
   }
 
   @override
-  FutureOr<void> validateCredentials(AuthenticatedUser user) async {
+  Future<void> validateCredentials(AuthenticatedUser user) async {
     var result = false;
     _user = user;
     try {
       result = await _api.validateCredentials();
-    } on GrpcError catch (e, s) {
-      if (e.code != StatusCode.unauthenticated) Error.throwWithStackTrace(e, s);
+    } on GrpcError catch (error, s) {
+      if (error.code != StatusCode.unauthenticated) Error.throwWithStackTrace(error, s);
     } finally {
       if (result) {
         _userController.add(user);
       } else {
         _user = const AuthUser.unauthenticated();
         _settings
-          ..setUser(null)
-          ..setCredentials(null);
+          ..setUser(null).ignore()
+          ..setCredentials(null).ignore();
       }
     }
   }
 
   @override
-  FutureOr<AccessCredentials> refreshTokens(RefreshToken refreshToken) async {
+  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken) async {
     switch (_user) {
-      case final AuthenticatedUser user:
-        final AuthenticatedUser(:IUserInfo userInfo) = user;
+      case final AuthenticatedUser authUser:
+        final AuthenticatedUser(:IUserInfo userInfo) = authUser;
         final refresh = await _api.refreshTokens(refreshToken);
 
-        _settings
-          ..setUser(userInfo)
-          ..setCredentials(refresh);
+        await _settings.setUser(userInfo);
+        await _settings.setCredentials(refresh);
 
         _userController.add(
           _user = AuthenticatedUser(
@@ -98,33 +112,20 @@ class AuthRepository implements IAuthRepository {
             userInfo: userInfo,
           ),
         );
-
         return refresh;
+
       default:
         throw Exception('User is not authenticated');
     }
   }
 
-  final IAuthApi _api;
-
-  StreamSubscription? _authSubscription;
-  StreamSubscription? _userChangesSubscription;
-
-  final StreamController<AuthUser> _userController = StreamController<AuthUser>.broadcast();
-
   @override
-  Stream<AuthUser> get userChanges => _userController.stream;
-
-  @override
-  AuthUser get user => _user;
-  AuthUser _user = const AuthUser.unauthenticated();
-
-  @override
-  FutureOr<UserId?> getUserId() async {
+  Future<UserId?> getUserId() async {
     switch (_user) {
-      case final AuthenticatedUser user:
-        final AuthenticatedUser(:IUserInfo userInfo) = user;
+      case final AuthenticatedUser authUser:
+        final AuthenticatedUser(:IUserInfo userInfo) = authUser;
         return userInfo.id;
+
       default:
         return null;
     }
@@ -150,16 +151,17 @@ class AuthRepository implements IAuthRepository {
       );
 
   @override
-  FutureOr<void> updateUserInfo(IUserInfo userInfo) {
+  Future<void> updateUserInfo(IUserInfo userInfo) async {
     switch (_user) {
-      case final AuthenticatedUser user:
-        final AuthenticatedUser(:AccessCredentials? credentials) = user;
+      case final AuthenticatedUser authUser:
+        final AuthenticatedUser(:AccessCredentials? credentials) = authUser;
         _userController.add(
           _user = AuthenticatedUser(userInfo: userInfo, credentials: credentials),
         );
-        _settings.setUser(userInfo);
+        await _settings.setUser(userInfo);
+
       default:
-        return null;
+        return;
     }
   }
 
@@ -170,9 +172,9 @@ class AuthRepository implements IAuthRepository {
   Future<bool> setPassword(UserId userId, String email, String password) => _api.setPassword(userId, email, password);
 
   @override
-  FutureOr<void> terminate() {
-    _authSubscription?.cancel();
-    _userChangesSubscription?.cancel();
-    _userController.close();
+  Future<void> terminate() async {
+    await _authSubscription?.cancel();
+    await _userChangesSubscription?.cancel();
+    await _userController.close();
   }
 }

@@ -37,11 +37,11 @@ class _LanguageCard extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.colorScheme.primary,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         child: InkWell(
           onTap: () => LocaleScope.of(context).setLocale(_language),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
           child: SizedBox(
             width: 64,
             child: Center(

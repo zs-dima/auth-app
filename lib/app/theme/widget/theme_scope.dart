@@ -9,7 +9,7 @@ import 'package:ui_tool/ui_tool.dart';
 
 extension ThemeScopeX on BuildContext {
   /// {@macro theme_controller}
-  ThemeController theme({bool listen = false}) => ThemeScope.of(this);
+  ThemeController theme({bool listen = false}) => ThemeScope.of(this, listen: listen);
 }
 
 /// {@template theme_controller}
@@ -37,33 +37,33 @@ class ThemeScope extends StatefulWidget {
     super.key,
   });
 
-  /// The child widget.
-  final Widget child;
-
   /// Get the [ThemeController] of the closest [ThemeScope] ancestor.
   static ThemeController of(BuildContext context, {bool listen = true}) =>
       context.scopeOf<_ThemeScopeInherited>(listen: listen).controller;
+
+  /// The child widget.
+  final Widget child;
 
   @override
   State<ThemeScope> createState() => _ThemeScopeState();
 }
 
 class _ThemeScopeState extends State<ThemeScope> implements ThemeController {
-  @override
-  void setTheme(AppTheme theme) => _bloc.add(
-        ThemeEvent.setTheme(theme),
-      );
-
-  @override
-  AppTheme get theme => _state.theme;
-
-  late ThemeState _state;
-
   late final ThemeBloc _bloc;
 
-  late ScreenSize _screenSize;
+  @override
+  void initState() {
+    super.initState();
 
-  StreamSubscription<void>? _subscription;
+    _bloc = ThemeBloc(
+      context.dependencies.themeRepository,
+      _screenSize = ScreenUtil.screenSize,
+    );
+
+    _state = _bloc.state;
+
+    _subscription = _bloc.stream.listen(_listener);
+  }
 
   void _listener(ThemeState state) {
     if (!mounted || _state == state) return;
@@ -72,18 +72,9 @@ class _ThemeScopeState extends State<ThemeScope> implements ThemeController {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    _bloc = ThemeBloc(
-      context.dependencies.themeRepository,
-      _screenSize = ScreenUtil.screenSize(),
-    );
-
-    _state = _bloc.state;
-
-    _subscription = _bloc.stream.listen(_listener);
-  }
+  void setTheme(AppTheme theme) => _bloc.add(
+        ThemeEvent.setTheme(theme),
+      );
 
   @override
   void didChangeDependencies() {
@@ -116,6 +107,15 @@ class _ThemeScopeState extends State<ThemeScope> implements ThemeController {
     super.debugFillProperties(properties);
     properties.add(DiagnosticsProperty<AppTheme>('theme', theme));
   }
+
+  @override
+  AppTheme get theme => _state.theme;
+
+  late ThemeState _state;
+
+  late ScreenSize _screenSize;
+
+  StreamSubscription<void>? _subscription;
 
   @override
   Widget build(BuildContext context) => _ThemeScopeInherited(

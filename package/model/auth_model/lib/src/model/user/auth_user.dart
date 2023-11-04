@@ -3,6 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 @immutable
 abstract class AuthUser {
+  bool get isAuthenticated;
+  bool get isNotAuthenticated;
+
   @literal
   const factory AuthUser.unauthenticated() = UnauthenticatedUser;
 
@@ -10,9 +13,6 @@ abstract class AuthUser {
     required final AccessCredentials credentials,
     required final IUserInfo userInfo,
   }) = AuthenticatedUser;
-
-  bool get isAuthenticated;
-  bool get isNotAuthenticated;
 
   T when<T extends Object?>({
     required final T Function(AuthenticatedUser user) authenticated,
@@ -22,14 +22,16 @@ abstract class AuthUser {
 
 @immutable
 class UnauthenticatedUser implements AuthUser {
-  @literal
-  const UnauthenticatedUser();
-
   @override
   bool get isAuthenticated => false;
 
   @override
   bool get isNotAuthenticated => true;
+
+  @override
+  int get hashCode => 0;
+  @literal
+  const UnauthenticatedUser();
 
   @override
   T when<T extends Object?>({
@@ -43,17 +45,12 @@ class UnauthenticatedUser implements AuthUser {
 
   @override
   bool operator ==(final Object other) => other is UnauthenticatedUser;
-
-  @override
-  int get hashCode => 0;
 }
 
 @immutable
 class AuthenticatedUser implements AuthUser {
-  const AuthenticatedUser({
-    required this.credentials,
-    required this.userInfo,
-  });
+  final AccessCredentials? credentials;
+  final IUserInfo userInfo;
 
   @override
   bool get isAuthenticated => !isNotAuthenticated;
@@ -61,8 +58,12 @@ class AuthenticatedUser implements AuthUser {
   @override
   bool get isNotAuthenticated => credentials?.accessToken.hasExpired ?? true;
 
-  final AccessCredentials? credentials;
-  final IUserInfo userInfo;
+  @override
+  int get hashCode => userInfo.hashCode;
+  const AuthenticatedUser({
+    required this.credentials,
+    required this.userInfo,
+  });
 
   @override
   T when<T extends Object?>({
@@ -78,7 +79,4 @@ class AuthenticatedUser implements AuthUser {
 
   @override
   bool operator ==(final Object other) => other is AuthenticatedUser && userInfo == other.userInfo;
-
-  @override
-  int get hashCode => userInfo.hashCode;
 }

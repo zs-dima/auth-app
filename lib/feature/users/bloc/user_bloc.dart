@@ -43,13 +43,13 @@ class UserBloc extends Bloc<UserEvent, UserState> with AppMessageBlocMixin {
                 ? emitMessage('User successfully saved', Colors.green[700])
                 : emitError('Error on saving user');
 
-            emit(UserState.created(user));
-          } on Exception catch (e, s) {
-            emitError('Error on saving user', e, s);
-            Error.throwWithStackTrace(e, s);
+            if (!isClosed) emit(UserState.created(user));
+          } on Exception catch (error, s) {
+            emitError('Error on saving user', error, s);
+            Error.throwWithStackTrace(error, s);
           } finally {
             emitProgress(AppProgress.doneEvent);
-            emit(const UserState.idle());
+            if (!isClosed) emit(const UserState.idle());
           }
         },
         updateUser: (User user) async {
@@ -61,13 +61,13 @@ class UserBloc extends Bloc<UserEvent, UserState> with AppMessageBlocMixin {
                 ? emitMessage('User successfully saved', Colors.green[700])
                 : emitError('Error on saving user');
 
-            emit(UserState.updated(user));
-          } on Exception catch (e, s) {
-            emitError('Error on saving user', e, s);
-            Error.throwWithStackTrace(e, s);
+            if (!isClosed) emit(UserState.updated(user));
+          } on Exception catch (error, s) {
+            emitError('Error on saving user', error, s);
+            Error.throwWithStackTrace(error, s);
           } finally {
             emitProgress(AppProgress.doneEvent);
-            emit(const UserState.idle());
+            if (!isClosed) emit(const UserState.idle());
           }
         },
       );

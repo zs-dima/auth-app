@@ -1,6 +1,6 @@
 class RootCertificates {
   /// LetsEncrypt Root Certificate
-  static const String letsEncrypt = '''
+  static const letsEncrypt = '''
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
 TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh

@@ -29,10 +29,10 @@ extension DateTimeX on DateTime {
       Duration(hours: hour, minutes: minute, seconds: second, microseconds: microsecond, milliseconds: millisecond);
 
   DateTime addMonths(int value) {
-    final r = value % 12;
-    final yearAdd = (value - r) ~/ 12;
+    final months = value % 12;
+    final yearAdd = (value - months) ~/ 12;
     var newYear = year + yearAdd;
-    var newMonth = month + r;
+    var newMonth = month + months;
     if (newMonth > 12) {
       newYear++;
       newMonth -= 12;
@@ -72,7 +72,7 @@ extension DurationX on Duration? {
   String _toTwoDigits(int n) => (n >= 10) ? '$n' : '0$n';
 
   // Returns a formatted string for the given Duration [d] to be DD:HH:mm:ss and ignore if 0.
-  String format() {
+  String get formatted {
     var seconds = this!.inSeconds;
     final days = seconds ~/ Duration.secondsPerDay;
     seconds -= days * Duration.secondsPerDay;

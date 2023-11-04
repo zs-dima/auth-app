@@ -30,7 +30,7 @@ class AppBlocObserver extends BlocObserver with _SentryTransactionMixin {
       ..write('BLoC ')
       ..write(bloc.runtimeType)
       ..write('.add(')
-      ..write(event.runtimeType.typeName())
+      ..write(event.runtimeType.typeName)
       ..write(') Event: ')
       ..writeln(event.toString().limit(100));
 
@@ -59,11 +59,11 @@ class AppBlocObserver extends BlocObserver with _SentryTransactionMixin {
       ..write('BLoC ')
       ..write(bloc.runtimeType)
       ..write('.')
-      ..write(bloc.runtimeType.typeName())
+      ..write(bloc.runtimeType.typeName)
       ..write(': ')
-      ..write(currentState.runtimeType.typeName())
+      ..write(currentState.runtimeType.typeName)
       ..write('->')
-      ..write(nextState.runtimeType.typeName())
+      ..write(nextState.runtimeType.typeName)
       ..write('State: ')
       ..writeln(transition.nextState.toString().limit(100));
 
@@ -107,8 +107,8 @@ mixin _SentryTransactionMixin {
   void init(Logger log) => _log = log;
 
   /// Sentry transactions
-  final Map<Closable, ISentrySpan?> _transactions = <Closable, ISentrySpan?>{};
-  final Map<Closable, List<Object>?> _states = <Closable, List<Object>?>{};
+  final _transactions = <Closable, ISentrySpan?>{};
+  final _states = <Closable, List<Object>?>{};
 
   void _startTransaction(Closable bloc, Object event) {
     try {
@@ -124,7 +124,7 @@ mixin _SentryTransactionMixin {
         )
         ..setTag(
           'event_type',
-          event.runtimeType.typeName(),
+          event.runtimeType.typeName,
         )
         ..setData(
           'Event',
@@ -156,6 +156,6 @@ mixin _SentryTransactionMixin {
   }
 }
 
-extension BlocTypeX on Type {
-  String typeName() => toString().replaceAll(r'_$_', '').replaceAll(r'_$', '');
+extension _BlocTypeX on Type {
+  String get typeName => toString().replaceAll(r'_$_', '').replaceAll(r'_$', '');
 }

@@ -8,18 +8,18 @@ abstract base class PreferencesEntry<T extends Object> {
   /// The key of the entry in the preferences.
   FutureOr<String> get key;
 
-  /// {@macro preferences_entry}
-  const PreferencesEntry();
-
   /// Obtain the value of the entry from the preferences.
   T? get value;
 
+  /// {@macro preferences_entry}
+  const PreferencesEntry();
+
   /// Set the value of the entry in the preferences.
-  FutureOr<void> set(T value);
+  Future<void> set(T value);
 
   /// Remove the entry from the preferences.
-  FutureOr<void> remove();
+  Future<void> remove();
 
   /// Set the value of the entry in the preferences if the value is not null.
-  FutureOr<void> setIfNullRemove(T? value) => value == null ? remove() : set(value);
+  Future<void> setIfNullRemove(T? value) => value == null ? remove() : set(value);
 }

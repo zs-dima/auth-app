@@ -13,6 +13,18 @@ import 'package:auth_app/app/initialization/model/dependencies.dart';
 /// The [onError] is called when the initialization process is failed.
 /// {@endtemplate}
 abstract interface class InitializationHook {
+  /// Called before the initialization process starts.
+  void Function()? onInit;
+
+  /// Called when the initialization process is in progress.
+  void Function(InitializationStepInfo info)? onInitializing;
+
+  /// Called when the initialization process is finished.
+  void Function(InitializationResult result)? onInitialized;
+
+  /// Called when the initialization process is failed.
+  void Function(int step, Object error, StackTrace stackTrace)? onError;
+
   /// {@macro initialization_hook}
   InitializationHook({
     this.onInit,
@@ -25,21 +37,9 @@ abstract interface class InitializationHook {
   factory InitializationHook.setup({
     void Function()? onInit,
     void Function(InitializationStepInfo info)? onInitializing,
-    void Function(InitializationResult)? onInitialized,
-    void Function(int, Object error, StackTrace stackTrace)? onError,
+    void Function(InitializationResult result)? onInitialized,
+    void Function(int step, Object error, StackTrace stackTrace)? onError,
   }) = _Hook;
-
-  /// Called before the initialization process starts.
-  void Function()? onInit;
-
-  /// Called when the initialization process is in progress.
-  void Function(InitializationStepInfo info)? onInitializing;
-
-  /// Called when the initialization process is finished.
-  void Function(InitializationResult)? onInitialized;
-
-  /// Called when the initialization process is failed.
-  void Function(int, Object error, StackTrace stackTrace)? onError;
 }
 
 final class _Hook extends InitializationHook {
@@ -55,14 +55,6 @@ final class _Hook extends InitializationHook {
 /// A class which contains information about initialization step.
 /// {@endtemplate}
 class InitializationStepInfo {
-  /// {@macro initialization_step_info}
-  const InitializationStepInfo({
-    required this.stepName,
-    required this.step,
-    required this.stepsCount,
-    required this.spent,
-  });
-
   /// The number of the step.
   final int step;
 
@@ -74,4 +66,12 @@ class InitializationStepInfo {
 
   /// The number of milliseconds spent on the step.
   final int spent;
+
+  /// {@macro initialization_step_info}
+  const InitializationStepInfo({
+    required this.stepName,
+    required this.step,
+    required this.stepsCount,
+    required this.spent,
+  });
 }

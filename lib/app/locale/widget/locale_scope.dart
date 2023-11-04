@@ -8,7 +8,7 @@ import 'package:ui_tool/ui_tool.dart';
 
 extension LocaleScopeX on BuildContext {
   /// {@macro locale_controller}
-  LocaleController locale({bool listen = false}) => LocaleScope.of(this);
+  LocaleController locale({bool listen = true}) => LocaleScope.of(this, listen: listen);
 }
 
 /// {@template locale_controller}
@@ -42,9 +42,6 @@ class LocaleScope extends StatefulWidget {
     super.key,
   });
 
-  /// The child widget.
-  final Widget child;
-
   /// Returns the [LocaleController] of the closest [LocaleScope] ancestor.
   ///
   /// If [listen] is true (the default), the returned [LocaleController] will
@@ -53,6 +50,9 @@ class LocaleScope extends StatefulWidget {
   /// changes.
   static LocaleController of(BuildContext context, {bool listen = true}) =>
       context.scopeOf<_LocaleScopeInherited>(listen: listen).controller;
+
+  /// The child widget.
+  final Widget child;
 
   @override
   State<LocaleScope> createState() => _LocaleScopeState();
@@ -69,16 +69,9 @@ class _LocaleScopeState extends State<LocaleScope> implements LocaleController {
 
   StreamSubscription<void>? _subscription;
 
-  /// Listener for changes in the locale state.
-  ///
-  /// Updates the [_state] with the new locale state, and rebuilds the widget.
-  void _listener(LocaleState state) {
-    if (!mounted || _state == state) return;
-    setState(() => _state = state);
-  }
-
   @override
   void initState() {
+    super.initState();
     _bloc = LocaleBloc(
       localeRepository: context.dependencies.localeRepository,
     );
@@ -86,7 +79,14 @@ class _LocaleScopeState extends State<LocaleScope> implements LocaleController {
     _state = _bloc.state;
 
     _subscription = _bloc.stream.listen(_listener);
-    super.initState();
+  }
+
+  /// Listener for changes in the locale state.
+  ///
+  /// Updates the [_state] with the new locale state, and rebuilds the widget.
+  void _listener(LocaleState state) {
+    if (!mounted || _state == state) return;
+    setState(() => _state = state);
   }
 
   @override

@@ -1,4 +1,5 @@
 extension BoolX on bool? {
+  // ignore: prefer-named-boolean-parameters
   bool whenEmpty(bool value) => this == null ? value : this!;
 }
 

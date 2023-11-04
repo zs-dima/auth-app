@@ -28,42 +28,33 @@ class AppMessageScope extends StatefulWidget {
     super.key,
   });
 
-  /// The child widget.
-  final Widget child;
-
   /// Get the [AppMessageController] of the closest [AppMessageScope] ancestor.
   static AppMessageController of(BuildContext context, {bool listen = true}) =>
       context.scopeOf<_AppMessageInherited>(listen: listen).controller;
+
+  /// The child widget.
+  final Widget child;
 
   @override
   State<AppMessageScope> createState() => _AppMessageScopeState();
 }
 
 class _AppMessageScopeState extends State<AppMessageScope> implements AppMessageController {
-  late final AppMessageBloc _bloc;
-
   StreamSubscription<void>? _messageSubscription;
+
+  @override
+  late final AppMessageBloc bloc;
 
   @override
   void initState() {
     super.initState();
 
-    _bloc = AppMessageBloc();
+    bloc = AppMessageBloc();
   }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    _subscribeMessages(context);
-  }
-
-  @override
-  AppMessageBloc get bloc => _bloc;
 
   void _subscribeMessages(BuildContext context) {
     _messageSubscription?.cancel();
-    _messageSubscription = _bloc.stream.listen(
+    _messageSubscription = bloc.stream.listen(
       (MessageState i) {
         if (!mounted) return;
         i.whenOrNull(
@@ -77,9 +68,16 @@ class _AppMessageScopeState extends State<AppMessageScope> implements AppMessage
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _subscribeMessages(context);
+  }
+
+  @override
   void dispose() {
     _messageSubscription?.cancel();
-    _bloc.close();
+    bloc.close();
     super.dispose();
   }
 

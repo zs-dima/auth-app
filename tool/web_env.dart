@@ -36,5 +36,5 @@ Object _toJsonValue(String value) => switch (value) {
       _ when double.tryParse(value) != null => double.parse(value),
       _ when value.toLowerCase() == 'true' => true,
       _ when value.toLowerCase() == 'false' => false,
-      _ => value
+      _ => value,
     };

@@ -1,6 +1,6 @@
 name: core_tool
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -8,7 +8,6 @@ environment:
   sdk: ">=3.1.2"
 
 dependencies:
-
   # SDK extensions
   meta: any
   collection: any
@@ -17,3 +16,7 @@ dependencies:
 
   # Internationalization
   intl: ^0.18.1
+
+dev_dependencies:
+  lints_tool:
+    path: ../../tool/lints_tool

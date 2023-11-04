@@ -5,6 +5,10 @@ import 'package:core_tool/core_tool.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final class AppSecurePreferencesDao extends SecurePreferencesDao {
+  static AppSecurePreferencesDao? _instance;
+
+  PreferencesEntryAsync<String> get credentials => stringEntry('credentials');
+
   AppSecurePreferencesDao._(
     super.driver, {
     required UserIdCallback? getUserId,
@@ -15,8 +19,6 @@ final class AppSecurePreferencesDao extends SecurePreferencesDao {
             return userId.isNullOrSpace ? 'NA' : '$userId';
           },
         );
-
-  static AppSecurePreferencesDao? _instance;
   static AppSecurePreferencesDao instance(
     FlutterSecureStorage preferences, {
     required UserIdCallback? getUserId,
@@ -25,6 +27,4 @@ final class AppSecurePreferencesDao extends SecurePreferencesDao {
         preferences,
         getUserId: getUserId,
       );
-
-  PreferencesEntryAsync<String> get credentials => stringEntry('credentials');
 }

@@ -1,10 +1,10 @@
 // ignore_for_file: avoid_classes_with_only_static_members
 
 class Validators {
-  static final RegExp _emailRegExp = RegExp(
+  static final _emailRegExp = RegExp(
     r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$',
   );
-  static final RegExp _passwordRegExp = RegExp(
+  static final _passwordRegExp = RegExp(
     r'^.{5,}$',
   );
 

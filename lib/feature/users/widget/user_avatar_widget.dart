@@ -22,6 +22,16 @@ class UserAvatarWidget extends StatefulWidget {
 class _UserAvatarWidgetState extends State<UserAvatarWidget> {
   late final UsersAvatarsBloc _avatarBloc;
 
+  @override
+  void initState() {
+    super.initState();
+
+    _avatarBloc = context.auth(listen: false).avatarBloc;
+    if (_avatarBloc.state.avatar(widget.user.id) == null) {
+      _avatarBloc.add(UsersAvatarsEvent.loadAvatar(widget.user.id, reload: false));
+    }
+  }
+
   String _getInitials(String name) {
     final names = name.split(' ');
     var initials = '';
@@ -37,16 +47,6 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     // Use the ASCII value of the initials letters to get consistent color
     final value = initials.codeUnitAt(0) + (initials.length > 1 ? initials.codeUnitAt(1) : 0);
     return Colors.primaries[value % Colors.primaries.length];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _avatarBloc = context.auth(listen: false).avatarBloc;
-    if (_avatarBloc.state.avatar(widget.user.id) == null) {
-      _avatarBloc.add(UsersAvatarsEvent.loadAvatar(widget.user.id, reload: false));
-    }
   }
 
   @override

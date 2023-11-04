@@ -63,13 +63,8 @@ mixin AppMessageBlocMixin {
   static Never throwWithStackTrace(Object error, StackTrace stackTrace) => Error.throwWithStackTrace(error, stackTrace);
 
   @pragma('vm:prefer-inline')
-  static String _localizedError(String fallback, String Function(Localization l) localize) {
-    try {
-      return Localization.current == null ? fallback : localize(Localization.current!);
-    } on Object {
-      return fallback;
-    }
-  }
+  static String _localizedError(String fallback, String Function(Localization l) localize) =>
+      Localization.current == null ? fallback : localize(Localization.current!);
 
   // Also we can add current localization to this method
   static String formatMessage(

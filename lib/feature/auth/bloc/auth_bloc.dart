@@ -59,13 +59,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with AppMessageBlocMixin {
             );
             final device = await DeviceInfo.instance(data.installationId);
             await _repository.signIn(data, device);
-            emit(AuthState.idle(user: _repository.user));
-          } on Object catch (e, s) {
+            if (!isClosed) emit(AuthState.idle(user: _repository.user));
+          } on Object catch (error, s) {
             emitError(
               'Error on signing in',
-              e,
+              error,
               s,
-              (message) => emit(AuthState.idle(user: state.user, error: message)),
+              (message) {
+                if (!isClosed) emit(AuthState.idle(user: state.user, error: message));
+              },
             );
           }
         },
@@ -73,10 +75,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with AppMessageBlocMixin {
           try {
             emit(const AuthState.idle(user: AuthUser.unauthenticated()));
             _repository.signOut().ignore();
-          } on Object catch (e, s) {
+          } on Object catch (error, s) {
             emitError(
               'Error on signing out',
-              e,
+              error,
               s,
               (message) => emit(AuthState.idle(user: state.user, error: message)),
             );
@@ -89,7 +91,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with AppMessageBlocMixin {
 
           await _repository.updateUserInfo(user);
 
-          emit(AuthState.idle(user: _repository.user));
+          if (!isClosed) emit(AuthState.idle(user: _repository.user));
         },
       );
 

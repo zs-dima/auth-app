@@ -37,10 +37,10 @@ class _ThemeCard extends StatelessWidget {
     return Card(
       child: Material(
         color: _theme.seed ?? _theme.computeTheme(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
         child: InkWell(
           onTap: () => ThemeScope.of(context).setTheme(_theme),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
           child: SizedBox(
             width: 64,
             height: 64,

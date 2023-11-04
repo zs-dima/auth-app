@@ -8,13 +8,13 @@ import 'package:uuid/uuid.dart';
 
 extension GrpcIdX on Guid? {
   rpc.UUID toUUID() => this == null ? rpc.UUID() : (rpc.UUID()..value = this!);
-  bool isNull() => this == null || this!.isEmpty || this == Uuid.NAMESPACE_NIL;
+  bool get isNull => this == null || this!.isEmpty || this == Uuid.NAMESPACE_NIL;
 }
 
 extension GrpcUuidX on rpc.UUID {
-  Guid toId() => (value.isNull()) ? Uuid.NAMESPACE_NIL : value;
+  Guid toId() => (value.isNull) ? Uuid.NAMESPACE_NIL : value;
 
-  bool isNull() => toId().isNull();
+  bool get isNull => toId().isNull;
 }
 
 extension DurationGrpcX on rpc.Duration {
@@ -79,7 +79,7 @@ extension GrpcErrorX on GrpcError {
         return '$caption: Permission denied';
 
       case StatusCode.unavailable:
-        return 'Backend error. Please contact support'; // '$caption: GRPC unavailable';
+        return 'Backend unavailable. Please contact support'; // '$caption: GRPC unavailable';
 
       case StatusCode.aborted:
         return '$caption: Network request aborted';

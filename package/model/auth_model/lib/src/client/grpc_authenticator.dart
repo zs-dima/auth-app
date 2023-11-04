@@ -5,37 +5,43 @@ import 'package:grpc/grpc.dart' as $grpc;
 
 const _tokenExpirationThreshold = Duration(seconds: 30);
 
+extension _StringExtension on AccessToken? {
+  bool get expiresSoon => this?.expiry.subtract(_tokenExpirationThreshold).isBefore(DateTime.now().toUtc()) ?? false;
+}
+
 /// {@template fresh}
 /// A Grpc Authenticator for automatic token refresh.
 /// Requires a concrete implementation of [AccessCredentialsCallback] and [RefreshTokensCallback].
 /// Handles transparently refreshing/caching tokens.
-/// {@endtemplate}+62781
+/// {@endtemplate}
 class GrpcAuthenticator {
+  final CredentialsCallbacks _credentialsManager;
+  AccessToken? _accessToken;
+
+  $grpc.CallOptions get toCallOptions => $grpc.CallOptions(providers: [authenticate]);
+
   GrpcAuthenticator({
     required CredentialsCallbacks credentialsManager,
   }) : _credentialsManager = credentialsManager;
 
-  final CredentialsCallbacks _credentialsManager;
-  AccessToken? _accessToken;
-
-  bool get _tokenExpiresSoon =>
-      _accessToken!.expiry.subtract(_tokenExpirationThreshold).isBefore(DateTime.now().toUtc());
-
-  FutureOr<void> authenticate(Map<String, String> metadata, String uri) async {
-    if (_accessToken == null || _tokenExpiresSoon) {
+  Future<void> authenticate(Map<String, String> metadata, String _) async {
+    if (_accessToken == null || _accessToken.expiresSoon) {
       try {
-        final credentials = await _credentialsManager.getAccessCredentials.call();
+        final credentials = await _credentialsManager.getAccessCredentials();
         if (credentials == null) return;
 
-        _accessToken = credentials.accessToken;
-        if (_accessToken == null || _tokenExpiresSoon) {
+        final accessToken = credentials.accessToken;
+        if (accessToken.expiresSoon) {
           final refresh = await _credentialsManager.refreshTokens(credentials.refreshToken);
           _accessToken = refresh?.accessToken;
+        } else {
+          _accessToken = accessToken;
         }
+
         // ignore: avoid_catches_without_on_clauses
-      } catch (e, s) {
+      } catch (error, s) {
         _credentialsManager.authHandler?.handleAuthenticationError();
-        Error.throwWithStackTrace(e, s);
+        Error.throwWithStackTrace(error, s);
       }
     }
 
@@ -51,6 +57,4 @@ class GrpcAuthenticator {
       'authorization': '${accessToken.type} ${accessToken.token}',
     });
   }
-
-  $grpc.CallOptions get toCallOptions => $grpc.CallOptions(providers: [authenticate]);
 }

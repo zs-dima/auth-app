@@ -11,16 +11,14 @@ abstract interface class IUsersRepository {
   Future<bool> createUser(User user, String password);
   Future<bool> updateUser(User user);
   Future<bool> saveUserPhoto(UserId userId, Uint8List? photo);
-
-  FutureOr<void> terminate();
 }
 
 class UsersRepository implements IUsersRepository {
+  final IAuthApi _api;
+
   UsersRepository({
     required final IAuthApi apiClient,
   }) : _api = apiClient;
-
-  final IAuthApi _api;
 
   @override
   Stream<User> loadUsers(UserId currentUserId) => _api.loadUsers(currentUserId);
@@ -38,7 +36,4 @@ class UsersRepository implements IUsersRepository {
 
   @override
   Future<bool> saveUserPhoto(UserId userId, Uint8List? photo) => _api.saveUserPhoto(userId, photo);
-
-  @override
-  FutureOr<void> terminate() {}
 }

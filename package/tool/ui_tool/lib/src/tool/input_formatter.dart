@@ -1,3 +1,4 @@
+import 'package:characters/characters.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -20,7 +21,7 @@ class DecimalTextInputFormatter extends TextInputFormatter {
       var newStringClean = newValue.text;
       final newStringDecimalStart = newStringClean.endsWith(decimalSymbol);
       if (newStringDecimalStart) {
-        newStringClean = newStringClean.substring(0, newStringClean.length - 1);
+        newStringClean = newStringClean.characters.getRange(0, newStringClean.length - 1).toString();
         if (newStringClean.contains(decimalSymbol)) return oldValue;
       }
 
@@ -31,9 +32,9 @@ class DecimalTextInputFormatter extends TextInputFormatter {
         text: newString,
         selection: TextSelection.collapsed(offset: newString.length - selectionIndexFromTheRight),
       );
-    } else {
-      return newValue;
     }
+
+    return newValue;
   }
 }
 
@@ -58,13 +59,14 @@ class IntTextInputFormatter extends TextInputFormatter {
         text: newString,
         selection: TextSelection.collapsed(offset: newString.length - selectionIndexFromTheRight),
       );
-    } else {
-      return newValue;
     }
+
+    return newValue;
   }
 }
 
 class PhoneTextInputFormatter extends TextInputFormatter {
+  const PhoneTextInputFormatter();
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     final regEx = RegExp(

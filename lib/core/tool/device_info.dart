@@ -17,7 +17,7 @@ class DeviceInfo implements IDeviceInfo {
   @override
   final String deviceOsVersion;
 
-  DeviceInfo({
+  const DeviceInfo({
     required this.installationId,
     required this.deviceId,
     required this.deviceName,

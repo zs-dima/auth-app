@@ -52,9 +52,9 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> with AppMessageBlocMixin {
             _users = users;
             final result = _filter(users, _query);
 
-            emit(UsersState.loaded(currentUserId, result));
-          } on Exception catch (e, s) {
-            emitError('Error on loading users', e, s);
+            if (!isClosed) emit(UsersState.loaded(currentUserId, result));
+          } on Exception catch (error, s) {
+            emitError('Error on loading users', error, s);
           } finally {
             emitProgress(AppProgress.doneEvent);
           }
@@ -74,8 +74,8 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> with AppMessageBlocMixin {
 
   UnmodifiableListView<User> _filter(List<User> users, String? query) {
     if (query.isNullOrSpace) return UnmodifiableListView<User>(users);
-    final q = query!.toUpperCase();
-    final filtered = users.where((i) => '${i.name}${i.email}'.toUpperCase().contains(q));
+    final qry = query!.toUpperCase();
+    final filtered = users.where((i) => '${i.name}${i.email}'.toUpperCase().contains(qry));
     return UnmodifiableListView<User>(filtered);
   }
 }

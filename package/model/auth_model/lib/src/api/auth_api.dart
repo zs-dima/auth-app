@@ -13,7 +13,7 @@ class AuthApi implements IAuthApi {
   AuthApi({required AuthApiClient client}) : _client = client;
 
   @override
-  FutureOr<AccessCredentials> refreshTokens(RefreshToken refreshToken) async {
+  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken) async {
     final result = await _client.refreshTokens(
       rpc.RefreshTokenRequest()..refreshToken = refreshToken,
     );

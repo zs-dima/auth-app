@@ -8,16 +8,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppLayout extends StatelessWidget {
-  final String title;
-  final Widget child;
-  final Widget? floatingActionButton;
-
   const AppLayout({
     super.key,
     required this.title,
     required this.child,
     this.floatingActionButton,
   });
+
+  final String title;
+  final Widget child;
+  final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {

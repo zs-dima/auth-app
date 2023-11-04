@@ -15,7 +15,7 @@ abstract interface class IExceptionTrackingDisabler {
 }
 
 // abstract interface class ILogManager {
-//   FutureOr<void> log(String message, {StackTrace? stackTrace});
+//   Future<void> log(String message, {StackTrace? stackTrace});
 // }
 
 abstract interface class IExceptionTrackingManager implements IExceptionTrackingDisabler {
@@ -29,23 +29,16 @@ abstract interface class IExceptionTrackingManager implements IExceptionTracking
 /// A class that is responsible for managing exception tracking.
 /// {@endtemplate}
 abstract base class ExceptionTrackingManager implements IExceptionTrackingManager {
-  /// {@macro exception_tracking_manager}
-  ExceptionTrackingManager({
-    required Logger logger,
-  }) : _log = logger;
-
   final Logger _log;
   StreamSubscription<LogMessage>? _subscription;
 
   /// Catch only warnings and errors
   Stream<LogMessage> get _reportLogs => _log.logs.where(_isWarningOrError);
 
-  static bool _isWarningOrError(LogMessage log) => switch (log.level) {
-        LogLevel.shout => true,
-        LogLevel.error => true,
-        LogLevel.warning => true,
-        _ => false,
-      };
+  /// {@macro exception_tracking_manager}
+  ExceptionTrackingManager({
+    required Logger logger,
+  }) : _log = logger;
 
   @override
   @mustCallSuper
@@ -62,6 +55,11 @@ abstract base class ExceptionTrackingManager implements IExceptionTrackingManage
     _subscription ??= _reportLogs.listen(_report);
   }
 
+  static bool _isWarningOrError(LogMessage log) => switch (log.level) {
+        LogLevel.shout || LogLevel.error || LogLevel.warning => true,
+        _ => false,
+      };
+
   /// Handles the log message.
   ///
   /// This method is called when a log message is received.
@@ -72,6 +70,9 @@ abstract base class ExceptionTrackingManager implements IExceptionTrackingManage
 /// A class that is responsible for managing Sentry exceptions tracking.
 /// {@endtemplate}
 final class SentryTrackingManager extends ExceptionTrackingManager {
+  final String _sentryDsn;
+  final Environment _environment;
+
   /// {@macro sentry_tracking_manager}
   SentryTrackingManager({
     required Environment environment,
@@ -80,8 +81,22 @@ final class SentryTrackingManager extends ExceptionTrackingManager {
   })  : _environment = environment,
         _sentryDsn = sentryDsn;
 
-  final String _sentryDsn;
-  final Environment _environment;
+  @override
+  Future<void> enableReporting() async {
+    await SentryFlutter.init(
+      (options) => options
+        ..dsn = _sentryDsn
+        ..environment = _environment.toString()
+        ..tracesSampleRate = 1,
+    );
+    await super.enableReporting();
+  }
+
+  @override
+  Future<void> disableReporting() async {
+    await Sentry.close();
+    await super.disableReporting();
+  }
 
   @override
   Future<void> _report(LogMessage log) async {
@@ -93,29 +108,6 @@ final class SentryTrackingManager extends ExceptionTrackingManager {
       buffer.toString(),
       stackTrace: log.stackTrace,
     );
-
-    return;
-  }
-
-  @override
-  Future<void> enableReporting() async {
-    await SentryFlutter.init(
-      (options) => options
-        ..dsn = _sentryDsn
-        ..environment = _environment.toString()
-        ..tracesSampleRate = 1,
-    );
-    await super.enableReporting();
-
-    return;
-  }
-
-  @override
-  Future<void> disableReporting() async {
-    await Sentry.close();
-    await super.disableReporting();
-
-    return;
   }
 
   // static Future<SentryId> _captureException(LogMessage msg) => Sentry.captureException(

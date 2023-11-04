@@ -32,32 +32,6 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
   late final UsersAvatarsBloc _avatarBloc;
   StreamSubscription? _userAvatarSubscription;
 
-  Future<void> _uploadPhoto() async {
-    final image = await FilePicker.platform.pickFiles(
-      type: kIsWeb ? FileType.custom : FileType.image,
-      allowMultiple: false,
-      allowedExtensions: ['png', 'jpg'],
-      withData: true,
-    );
-
-    if (image == null || image.count == 0) {
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _userAvatar = _userAvatar.copyWith(avatar: image.files.first.bytes);
-      widget.photoCallback(_userAvatar.avatar);
-    });
-  }
-
-  void _deletePhoto() {
-    setState(() {
-      _userAvatar = _userAvatar.copyWith(avatar: null);
-      widget.photoCallback(_userAvatar.avatar);
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -79,9 +53,35 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
         .map((state) => state.avatar(widget.user.id))
         .where((state) => state != null)
         .distinct()
-        .listen((userAvatar) {
+        .listen((avatar) {
       if (!mounted) return;
-      setState(() => _userAvatar = userAvatar!);
+      setState(() => _userAvatar = avatar!);
+      widget.photoCallback(_userAvatar.avatar);
+    });
+  }
+
+  Future<void> _uploadPhoto() async {
+    final image = await FilePicker.platform.pickFiles(
+      type: kIsWeb ? FileType.custom : FileType.image,
+      allowMultiple: false,
+      allowedExtensions: ['png', 'jpg'],
+      withData: true,
+    );
+
+    if (image == null || image.count == 0) {
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _userAvatar = _userAvatar.copyWith(avatar: image.files.firstOrNull?.bytes);
+      widget.photoCallback(_userAvatar.avatar);
+    });
+  }
+
+  void _deletePhoto() {
+    setState(() {
+      _userAvatar = _userAvatar.copyWith(avatar: null);
       widget.photoCallback(_userAvatar.avatar);
     });
   }
@@ -115,6 +115,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
                   child: Image.memory(
                     _userAvatar.avatar!,
                     fit: BoxFit.contain,
+                    semanticLabel: 'User photo',
                   ),
                 ),
                 Positioned(
@@ -123,7 +124,9 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: theme.colorScheme.background.withAlpha(170),
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(5),
+                      ),
                     ),
                     child: Row(
                       children: [

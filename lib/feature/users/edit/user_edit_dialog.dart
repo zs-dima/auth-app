@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 void editUserDialog(
   BuildContext context,
   User user, {
-  required IUserInfo currentUser,
   bool createNewUser = false,
 }) =>
     showDialog(
@@ -49,7 +48,7 @@ void editUserDialog(
           contentPadding: EdgeInsets.zero,
           content: SizedBox(
             width: double.maxFinite,
-            child: EditUserWidget(
+            child: UserEditWidget(
               user: user,
               createNewUser: createNewUser,
               usersController: context.users(),

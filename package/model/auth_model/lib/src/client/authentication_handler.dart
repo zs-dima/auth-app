@@ -17,6 +17,9 @@ class AuthenticationHandler extends Stream<AuthenticationState> implements IAuth
   StreamController<AuthenticationState>? _controller;
 
   @override
+  bool get isBroadcast => true;
+
+  @override
   void handleAuthenticationError() {
     if (_controller?.isClosed == false) _controller?.add(AuthenticationState.unauthenticated);
   }
@@ -28,7 +31,7 @@ class AuthenticationHandler extends Stream<AuthenticationState> implements IAuth
 
   @override
   StreamSubscription<AuthenticationState> listen(
-    void Function(AuthenticationState)? onData, {
+    void Function(AuthenticationState state)? onData, {
     Function? onError,
     void Function()? onDone,
     bool? cancelOnError,
@@ -42,9 +45,6 @@ class AuthenticationHandler extends Stream<AuthenticationState> implements IAuth
           cancelOnError: cancelOnError,
         );
   }
-
-  @override
-  bool get isBroadcast => true;
 
   @mustCallSuper
   Future<void>? close() => _controller?.close();

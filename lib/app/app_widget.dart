@@ -29,26 +29,20 @@ class AppWidget extends StatelessWidget {
           },
         ),
         home: Builder(
-          builder: (context) => AuthScope.userOf(context).isNotAuthenticated
+          builder: (ctx) => AuthScope.userOf(ctx).isNotAuthenticated
               ? const Scaffold(
-                  body: Center(
-                    child: SignInForm(),
-                  ),
+                  body: Center(child: SignInForm()),
                 )
-              : const UsersScope(
-                  child: UsersWidget(),
-                ),
+              : const UsersScope(child: UsersWidget()),
         ),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
+        builder: (ctx, child) => MediaQuery(
+          data: MediaQuery.of(ctx).copyWith(textScaleFactor: 1),
           child: ThemeScope(
             child: WindowScope(
-              title: Localization.of(context).appTitle,
+              title: Localization.of(ctx).appTitle,
               height: 24,
               child: AppMessageScope(
-                child: AuthScope(
-                  child: child ?? const SizedBox.shrink(),
-                ),
+                child: AuthScope(child: child ?? const SizedBox.shrink()),
               ),
             ),
           ),

@@ -11,3 +11,7 @@ dependencies:
   # SDK extensions
   collection: any
   meta: any
+
+dev_dependencies:
+  lints_tool:
+    path: ../../tool/lints_tool

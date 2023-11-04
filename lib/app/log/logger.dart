@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:l/l.dart' as logging;
 
 /// Logger instance
-final Logger logger = AppLogger$L();
+final logger = AppLogger$L();
 
 /// Possible levels of logging
 enum LogLevel implements Comparable<LogLevel> {
@@ -42,15 +42,6 @@ enum LogLevel implements Comparable<LogLevel> {
 /// Options for the logger
 /// {@endtemplate}
 base class LogOptions {
-  /// {@macro log_options}
-  const LogOptions({
-    this.showTime = true,
-    this.showEmoji = false,
-    this.logInRelease = false,
-    this.printColors = false,
-    this.level = LogLevel.info,
-  });
-
   /// Log level
   final LogLevel level;
 
@@ -65,23 +56,21 @@ base class LogOptions {
 
   /// Print with colors using ASCII escape codes
   final bool printColors;
+
+  /// {@macro log_options}
+  const LogOptions({
+    this.showTime = true,
+    this.showEmoji = false,
+    this.logInRelease = false,
+    this.printColors = false,
+    this.level = LogLevel.info,
+  });
 }
 
 /// {@template log_message}
 /// Log message
 /// {@endtemplate}
 base class LogMessage {
-  /// {@macro log_message}
-  const LogMessage({
-    required this.message,
-    required this.level,
-    this.hint,
-    this.error,
-    this.stackTrace,
-    this.time,
-    this.data,
-  });
-
   /// Log message
   final String message;
 
@@ -97,10 +86,24 @@ base class LogMessage {
 
   /// Log level
   final LogLevel level;
+
+  /// {@macro log_message}
+  const LogMessage({
+    required this.message,
+    required this.level,
+    this.hint,
+    this.error,
+    this.stackTrace,
+    this.time,
+    this.data,
+  });
 }
 
 /// Logger interface
 abstract base class Logger {
+  /// Stream of logs
+  Stream<LogMessage> get logs;
+
   /// Logs the error to the console
   void e(
     String message, {
@@ -143,9 +146,6 @@ abstract base class Logger {
     LogOptions options = const LogOptions(),
   ]);
 
-  /// Stream of logs
-  Stream<LogMessage> get logs;
-
   /// Handy method to log zoneError
   void logZoneError(Object error, StackTrace stackTrace) {
     e('Top-level error: $error $stackTrace', stackTrace: stackTrace);
@@ -168,7 +168,7 @@ abstract base class Logger {
 final class AppLogger$L extends Logger {
   final _log = logging.l;
 
-  final StreamController<LogMessage> _logController = StreamController<LogMessage>.broadcast();
+  final _logController = StreamController<LogMessage>.broadcast();
 
   @override
   Stream<LogMessage> get logs => _logController.stream;
@@ -295,14 +295,14 @@ final class AppLogger$L extends Logger {
 
 extension on logging.LogLevel {
   /// Transforms [logging.LogLevel] to [LogLevel]
-  LogLevel toLogLevel() => maybeWhen(
-        shout: () => LogLevel.shout,
-        error: () => LogLevel.error,
-        warning: () => LogLevel.warning,
-        info: () => LogLevel.info,
-        debug: () => LogLevel.debug,
-        orElse: () => LogLevel.verbose,
-      );
+  // LogLevel toLogLevel() => maybeWhen(
+  //       shout: () => LogLevel.shout,
+  //       error: () => LogLevel.error,
+  //       warning: () => LogLevel.warning,
+  //       info: () => LogLevel.info,
+  //       debug: () => LogLevel.debug,
+  //       orElse: () => LogLevel.verbose,
+  //     );
 
   /// Transforms [LogLevel] to emoji
   String get emoji => maybeWhen(
@@ -326,38 +326,36 @@ extension on logging.LogLevel {
       : '|';
 }
 
-extension on LogLevel {
-  /// Transforms [LogLevel] to [logging.LogLevel]
-  logging.LogLevel toLogLevel() => switch (this) {
-        LogLevel.shout => const logging.LogLevel.shout(),
-        LogLevel.error => const logging.LogLevel.error(),
-        LogLevel.warning => const logging.LogLevel.warning(),
-        LogLevel.info => const logging.LogLevel.info(),
-        LogLevel.debug => const logging.LogLevel.debug(),
-        _ => const logging.LogLevel.debug(),
-      };
+// extension on LogLevel {
+//   /// Transforms [LogLevel] to [logging.LogLevel]
+//   logging.LogLevel toLogLevel() => switch (this) {
+//         LogLevel.shout => const logging.LogLevel.shout(),
+//         LogLevel.error => const logging.LogLevel.error(),
+//         LogLevel.warning => const logging.LogLevel.warning(),
+//         LogLevel.info => const logging.LogLevel.info(),
+//         _ => const logging.LogLevel.debug(),
+//       };
 
-  /// Transforms [LogLevel] to emoji
-  String get emoji => switch (this) {
-        LogLevel.shout => '❗️',
-        LogLevel.error => '🚫',
-        LogLevel.warning => '⚠️',
-        LogLevel.info => '💡',
-        LogLevel.debug => '🐞',
-        _ => '',
-      };
+//   /// Transforms [LogLevel] to emoji
+//   String get emoji => switch (this) {
+//         LogLevel.shout => '❗️',
+//         LogLevel.error => '🚫',
+//         LogLevel.warning => '⚠️',
+//         LogLevel.info => '💡',
+//         LogLevel.debug => '🐞',
+//         _ => '',
+//       };
 
-  String get splitter => kDebugMode
-      ? switch (this) {
-          LogLevel.shout => '\x1B[31m|\x1B[0m',
-          LogLevel.error => '\x1B[31m|\x1B[0m',
-          LogLevel.warning => '\x1B[33m|\x1B[0m',
-          LogLevel.info => '\x1B[32m|\x1B[0m',
-          LogLevel.debug => '\x1B[36m|\x1B[0m',
-          _ => '|',
-        }
-      : '|';
-}
+//   String get splitter => kDebugMode
+//       ? switch (this) {
+//           LogLevel.shout || LogLevel.error => '\x1B[31m|\x1B[0m',
+//           LogLevel.warning => '\x1B[33m|\x1B[0m',
+//           LogLevel.info => '\x1B[32m|\x1B[0m',
+//           LogLevel.debug => '\x1B[36m|\x1B[0m',
+//           _ => '|',
+//         }
+//       : '|';
+// }
 
 extension on DateTime {
   /// Transforms DateTime to String with format: 00:00:00

@@ -14,17 +14,12 @@ extension LocalizationX on BuildContext {
 /// This class provides handy methods and tools.
 /// {@endtemplate}
 final class Localization extends generated.GeneratedLocalization {
-  /// {@macro localization}
-  Localization._({
-    required this.locale,
-  });
-
   /// Locale which is currently used.
   final Locale locale;
 
   /// Localization delegate.
-  static const LocalizationsDelegate<Localization> delegate =
-      _LocalizationDelegate(generated.AppLocalizationDelegate());
+  static const delegate = _LocalizationDelegate(generated.AppLocalizationDelegate());
+  static Localization? _current;
 
   /// Get supported locales.
   static List<Locale> get supportedLocales => const generated.AppLocalizationDelegate().supportedLocales;
@@ -46,7 +41,11 @@ final class Localization extends generated.GeneratedLocalization {
 
   /// Current localization instance.
   static Localization? get current => _current;
-  static Localization? _current;
+
+  /// {@macro localization}
+  Localization._({
+    required this.locale,
+  });
 
   /// Obtain [Localization] instance from [BuildContext].
   static Localization of(BuildContext context) => switch (Localizations.of<Localization>(context, Localization)) {
@@ -66,27 +65,27 @@ final class Localization extends generated.GeneratedLocalization {
 
 @immutable
 final class _LocalizationDelegate extends LocalizationsDelegate<Localization> {
+  final LocalizationsDelegate<generated.GeneratedLocalization> _delegate;
+
   @literal
   const _LocalizationDelegate(
     LocalizationsDelegate<generated.GeneratedLocalization> delegate,
   ) : _delegate = delegate;
 
-  final LocalizationsDelegate<generated.GeneratedLocalization> _delegate;
-
   @override
   bool isSupported(Locale locale) => _delegate.isSupported(locale);
 
   @override
-  Future<Localization> load(Locale locale) => //
-      generated.GeneratedLocalization.load(locale).then<Localization>(
-        (localization) => Localization._current = Localization._(locale: locale),
-      );
+  Future<Localization> load(Locale locale) async {
+    await generated.GeneratedLocalization.load(locale);
+    return Localization._current = Localization._(locale: locale);
+  }
 
   @override
   bool shouldReload(covariant _LocalizationDelegate old) => _delegate.shouldReload(old._delegate);
 }
 
-const Map<String, (String name, String nativeName)> _isoLangs = <String, (String name, String nativeName)>{
+const _isoLangs = <String, (String name, String nativeName)>{
   'ab': ('Abkhaz', 'аҧсуа'),
   'aa': ('Afar', 'Afaraf'),
   'af': ('Afrikaans', 'Afrikaans'),

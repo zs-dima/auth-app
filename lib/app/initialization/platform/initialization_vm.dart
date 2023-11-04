@@ -1,15 +1,16 @@
+import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-Future<void> $platformInitialization() => //
+FutureOr<void> $platformInitialization() => //
     io.Platform.isAndroid || io.Platform.isIOS //
         ? _mobileInitialization()
         : _desktopInitialization();
 
-Future<void> _mobileInitialization() async {}
+FutureOr<void> _mobileInitialization() {}
 
 Future<void> _desktopInitialization() async {
   // Must add this line.

@@ -16,7 +16,7 @@ import 'package:ui_tool/ui_tool.dart';
 
 extension UsersScopeX on BuildContext {
   /// {@macro users_controller}
-  UsersController users({bool listen = false}) => UsersScope.of(this);
+  UsersController users({bool listen = false}) => UsersScope.of(this, listen: listen);
 }
 
 /// {@template users_controller}
@@ -33,8 +33,6 @@ abstract interface class UsersController {
 
 @immutable
 class UsersScope extends StatefulWidget {
-  final Widget child;
-
   const UsersScope({
     required this.child,
     super.key,
@@ -47,6 +45,8 @@ class UsersScope extends StatefulWidget {
   /// Get the [UsersController] of the closest [UsersScope] ancestor.
   static UsersController of(BuildContext context, {bool listen = false}) =>
       context.scopeOf<_UsersScopeInherited>(listen: listen).controller;
+
+  final Widget child;
 
   @override
   State<UsersScope> createState() => _UsersScopeState();
@@ -62,8 +62,46 @@ class _UsersScopeState extends State<UsersScope> implements UsersController {
   late final UsersBloc bloc;
 
   @override
+  void initState() {
+    super.initState();
+
+    bloc = UsersBloc(
+      repository: context.dependencies.usersRepository,
+      messageBloc: context.message.bloc,
+    );
+
+    _userBloc = UserBloc(
+      repository: context.dependencies.usersRepository,
+      messageBloc: context.message.bloc,
+    );
+
+    _authBloc = context.auth(listen: false).bloc;
+    _avatarBloc = context.auth(listen: false).avatarBloc;
+
+    _subscription = bloc.stream.listen(_listener);
+  }
+
+  void _listener(UsersState state) {
+    if (!mounted) return;
+    state.whenOrNull(
+      loaded: (_, stateUsers) {
+        if (users == stateUsers) return;
+
+        // Update authenticated user info
+        final updatedUser = stateUsers.firstWhereOrNull((user) => user.id == _currentUser?.id);
+        if (updatedUser != null && updatedUser != _currentUser) {
+          _authBloc.add(AuthEvent.updateUserInfo(updatedUser));
+          _currentUser = updatedUser;
+        }
+
+        setState(() => users = stateUsers);
+      },
+    );
+  }
+
+  @override
   User? byId(UserId id) => bloc.state.whenOrNull(
-        loaded: (_, users) => users.firstWhereOrNull((user) => user.id == id),
+        loaded: (_, stateUsers) => users.firstWhereOrNull((user) => user.id == id),
       );
 
   @override
@@ -91,49 +129,6 @@ class _UsersScopeState extends State<UsersScope> implements UsersController {
   void savePhoto(UserId userId, Uint8List? photo) => _avatarBloc.add(UsersAvatarsEvent.savePhoto(userId, photo));
 
   @override
-  List<User> users = UnmodifiableListView<User>([]);
-
-  StreamSubscription<void>? _subscription;
-
-  void _listener(UsersState state) {
-    if (!mounted) return;
-    state.whenOrNull(
-      loaded: (_, users) {
-        if (this.users == users) return;
-
-        // Update authenticated user info
-        final updatedUser = users.firstWhereOrNull((user) => user.id == _currentUser?.id);
-        if (updatedUser != null && updatedUser != _currentUser) {
-          _authBloc.add(AuthEvent.updateUserInfo(updatedUser));
-          _currentUser = updatedUser;
-        }
-
-        setState(() => this.users = users);
-      },
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    bloc = UsersBloc(
-      repository: context.dependencies.usersRepository,
-      messageBloc: context.message.bloc,
-    );
-
-    _userBloc = UserBloc(
-      repository: context.dependencies.usersRepository,
-      messageBloc: context.message.bloc,
-    );
-
-    _authBloc = context.auth(listen: false).bloc;
-    _avatarBloc = context.auth(listen: false).avatarBloc;
-
-    _subscription = bloc.stream.listen(_listener);
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
@@ -150,9 +145,13 @@ class _UsersScopeState extends State<UsersScope> implements UsersController {
     _subscription?.cancel();
     bloc.close();
     _userBloc.close();
-    _avatarBloc.close();
     super.dispose();
   }
+
+  @override
+  List<User> users = UnmodifiableListView<User>([]);
+
+  StreamSubscription<void>? _subscription;
 
   @override
   Widget build(BuildContext context) => _UsersScopeInherited(

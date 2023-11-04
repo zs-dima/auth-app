@@ -5,7 +5,7 @@ import 'package:auth_model/auth_model.dart';
 import 'package:core_model/core_model.dart';
 
 abstract interface class IAuthApi {
-  FutureOr<AccessCredentials> refreshTokens(RefreshToken refreshToken);
+  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken);
   Future<bool> validateCredentials();
 
   Future<AuthenticatedUser> signIn(ISignInData signInData, IDeviceInfo device);

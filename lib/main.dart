@@ -21,7 +21,7 @@ void main() {
 
   logger.runLogging(
     () => runZonedGuarded<void>(
-      () async {
+      () {
         final initialization = InitializationExecutor();
 
         runApp(

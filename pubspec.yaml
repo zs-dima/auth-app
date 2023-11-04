@@ -136,8 +136,9 @@ dev_dependencies:
   melos: ^3.1.1 # dart pub global activate melos
   intl_utils: ^2.8.5
 
-  # Linting
-  flutter_lints: ^3.0.0
+  # Lints
+  lints_tool:
+    path: package/tool/lints_tool
 
 # TODO flutter pub get
 # https://github.com/dart-lang/build/issues/2835

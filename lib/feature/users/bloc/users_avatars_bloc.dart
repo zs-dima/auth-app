@@ -52,10 +52,10 @@ class UsersAvatarsBloc extends Bloc<UsersAvatarsEvent, UsersAvatarsState> with A
             final loadedAvatar = (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ??
                 loadingAvatar.copyWith(loaded: true);
 
-            emit(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
-          } on Exception catch (e, s) {
-            emitError('Error on loading user avatar', e, s);
-            Error.throwWithStackTrace(e, s);
+            if (!isClosed) emit(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
+          } on Exception catch (error, s) {
+            emitError('Error on loading user avatar', error, s);
+            Error.throwWithStackTrace(error, s);
           } finally {
             emitProgress(AppProgress.doneEvent);
           }
@@ -69,10 +69,10 @@ class UsersAvatarsBloc extends Bloc<UsersAvatarsEvent, UsersAvatarsState> with A
               return;
             }
 
-            add(UsersAvatarsEvent.loadAvatar(userId, reload: true));
-          } on Exception catch (e, s) {
-            emitError('Error on saving user avatar', e, s);
-            Error.throwWithStackTrace(e, s);
+            if (!isClosed) add(UsersAvatarsEvent.loadAvatar(userId, reload: true));
+          } on Exception catch (error, s) {
+            emitError('Error on saving user avatar', error, s);
+            Error.throwWithStackTrace(error, s);
           } finally {
             emitProgress(AppProgress.doneEvent);
           }

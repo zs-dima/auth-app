@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-unassigned-late-fields-keyword
+
 import 'package:auth_app/app/environment/model/app_environment.dart';
 import 'package:auth_app/app/initialization/widget/dependencies_scope.dart';
 import 'package:auth_app/app/locale/data/i_locale_repository.dart';
@@ -17,9 +19,6 @@ extension DependenciesX on BuildContext {
 /// Dependencies container
 /// {@endtemplate}
 abstract base class Dependencies {
-  /// {@macro dependencies}
-  const Dependencies();
-
   /// Exception tracking manager
   abstract final IExceptionTrackingManager exceptionTrackingManager;
 
@@ -43,6 +42,9 @@ abstract base class Dependencies {
 
   /// Users repository
   abstract final IUsersRepository usersRepository;
+
+  /// {@macro dependencies}
+  const Dependencies();
 }
 
 /// {@template mutable_dependencies}
@@ -51,9 +53,6 @@ abstract base class Dependencies {
 /// Used to build dependencies
 /// {@endtemplate}
 final class DependenciesMutable extends Dependencies {
-  /// {@macro mutable_dependencies}
-  DependenciesMutable();
-
   @override
   late IExceptionTrackingManager exceptionTrackingManager;
 
@@ -77,19 +76,15 @@ final class DependenciesMutable extends Dependencies {
 
   @override
   late IUsersRepository usersRepository;
+
+  /// {@macro mutable_dependencies}
+  DependenciesMutable();
 }
 
 /// {@template initialization_result}
 /// Result of initialization
 /// {@endtemplate}
 final class InitializationResult {
-  /// {@macro initialization_result}
-  const InitializationResult({
-    required this.dependencies,
-    required this.stepCount,
-    required this.msSpent,
-  });
-
   /// The dependencies
   final Dependencies dependencies;
 
@@ -98,6 +93,13 @@ final class InitializationResult {
 
   /// The number of milliseconds spent
   final int msSpent;
+
+  /// {@macro initialization_result}
+  const InitializationResult({
+    required this.dependencies,
+    required this.stepCount,
+    required this.msSpent,
+  });
 
   @override
   String toString() => 'InitializationResult('

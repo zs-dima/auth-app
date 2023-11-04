@@ -14,14 +14,14 @@ typedef InitializationProgressTuple = ({int progress, String message});
 abstract interface class InitializationProgressListenable implements ValueListenable<InitializationProgressTuple> {}
 
 class InitializationExecutor with ChangeNotifier, InitializationSteps implements InitializationProgressListenable {
-  InitializationExecutor();
-
   /// Ephemerally initializes the app and prepares it for use.
   Future<Dependencies>? _$currentInitialization;
 
+  InitializationProgressTuple _value = (progress: 0, message: '');
+
   @override
   InitializationProgressTuple get value => _value;
-  InitializationProgressTuple _value = (progress: 0, message: '');
+  InitializationExecutor();
 
   /// Initializes the app and prepares it for use.
   Future<Dependencies> call({
@@ -73,7 +73,11 @@ class InitializationExecutor with ChangeNotifier, InitializationSteps implements
           await for (final step in Stream.fromIterable(initializationSteps.entries)) {
             currentStep++;
             final stopWatch = Stopwatch()..start();
-            await step.value(dependencies);
+            final stepFunction = step.value(dependencies);
+            final _ = stepFunction is Future //
+                ? await stepFunction
+                : stepFunction;
+
             notifyProgress(currentStep, step.key, stopWatch..stop());
           }
 
@@ -85,18 +89,16 @@ class InitializationExecutor with ChangeNotifier, InitializationSteps implements
           hook.onInitialized?.call(result);
 
           return result.dependencies;
-        } on Object catch (e, s) {
-          hook.onError?.call(currentStep, e, s);
-          Error.throwWithStackTrace(e, s);
+        } on Object catch (error, s) {
+          hook.onError?.call(currentStep, error, s);
+          Error.throwWithStackTrace(error, s);
         } finally {
           stopwatch.stop();
           binding.addPostFrameCallback((_) {
-            // Closes splash screen, and show the app layout.
-            if (deferFirstFrame) {
-              binding.allowFirstFrame();
-              FlutterNativeSplash.remove();
-            }
-            //final context = binding.renderViewElement;
+            //final context = binding.renderViewElement;            // Closes splash screen, and show the app layout.
+            if (!deferFirstFrame) return;
+            binding.allowFirstFrame();
+            FlutterNativeSplash.remove();
           });
           _$currentInitialization = null;
         }

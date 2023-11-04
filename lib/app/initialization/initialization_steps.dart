@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:auth_app/app/bloc/app_bloc_observer.dart';
 import 'package:auth_app/app/environment/environment_loader.dart';
-import 'package:auth_app/app/environment/model/environment.dart';
 import 'package:auth_app/app/initialization/model/dependencies.dart';
 import 'package:auth_app/app/initialization/platform/initialization_vm.dart'
     // ignore: uri_does_not_exist
@@ -47,16 +46,16 @@ mixin InitializationSteps {
       dependencies.environment = await environmentLoader();
     },
     'Error tracking': (dependencies) async {
+      if (kDebugMode) return;
+
       final environment = dependencies.environment;
-      if (!(!kDebugMode && environment.type == Environment.production)) {
-        final trackingManager = SentryTrackingManager(
-          environment: environment.type,
-          sentryDsn: environment.sentryDsn,
-          logger: logger,
-        );
-        await trackingManager.enableReporting();
-        dependencies.exceptionTrackingManager = trackingManager;
-      }
+      final trackingManager = SentryTrackingManager(
+        environment: environment.type,
+        sentryDsn: environment.sentryDsn,
+        logger: logger,
+      );
+      await trackingManager.enableReporting();
+      dependencies.exceptionTrackingManager = trackingManager;
     },
     'Settings': (dependencies) async {
       final sharedPreferences = await SharedPreferences.getInstance();
@@ -74,16 +73,16 @@ mixin InitializationSteps {
       );
       dependencies.settings = settings;
     },
-    'Storage repository': (dependencies) async {
+    'Storage repository': (dependencies) {
       //
     },
-    'Theme repository': (dependencies) async {
+    'Theme repository': (dependencies) {
       final settings = dependencies.settings;
       final themeDataSource = ThemeDataSource(settings: settings);
       final themeRepository = ThemeRepository(themeDataSource);
       dependencies.themeRepository = themeRepository;
     },
-    'Locale repository': (dependencies) async {
+    'Locale repository': (dependencies) {
       final settings = dependencies.settings;
       final localeDataSource = LocaleDataSource(settings: settings);
       final localeRepository = LocaleRepository(localeDataSource);

@@ -40,7 +40,7 @@ final class ThemeDataSource implements IThemeDataSource {
     if (type == null) return null;
 
     return AppTheme(
-      seed: seedColor != null ? Color(seedColor) : null,
+      seed: seedColor == null ? null : Color(seedColor),
       mode: _themeModeCodec.decode(type),
       size: screenSize,
     );
@@ -50,13 +50,12 @@ final class ThemeDataSource implements IThemeDataSource {
 const _themeModeCodec = _ThemeModeCodec();
 
 final class _ThemeModeCodec extends Codec<ThemeMode, String> {
-  const _ThemeModeCodec();
-
   @override
   Converter<String, ThemeMode> get decoder => const _ThemeModeDecoder();
 
   @override
   Converter<ThemeMode, String> get encoder => const _ThemeModeEncoder();
+  const _ThemeModeCodec();
 }
 
 final class _ThemeModeDecoder extends Converter<String, ThemeMode> {
@@ -67,16 +66,16 @@ final class _ThemeModeDecoder extends Converter<String, ThemeMode> {
     switch (input) {
       case 'ThemeMode.dark':
         return ThemeMode.dark;
+
       case 'ThemeMode.light':
         return ThemeMode.light;
+
       case 'ThemeMode.system':
         return ThemeMode.system;
+
       default:
-        throw ArgumentError.value(
-          input,
-          'input',
-          'Cannot convert $input to ThemeMode',
-        );
+        // ignore: avoid-missing-interpolation
+        throw ArgumentError.value(input, 'input', 'Cannot convert $input to ThemeMode');
     }
   }
 }
@@ -89,8 +88,10 @@ final class _ThemeModeEncoder extends Converter<ThemeMode, String> {
     switch (input) {
       case ThemeMode.dark:
         return 'ThemeMode.dark';
+
       case ThemeMode.light:
         return 'ThemeMode.light';
+
       case ThemeMode.system:
         return 'ThemeMode.system';
     }

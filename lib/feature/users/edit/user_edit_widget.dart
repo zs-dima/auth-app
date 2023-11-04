@@ -12,24 +12,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ui_tool/ui_tool.dart';
 
-class EditUserWidget extends StatefulWidget {
-  final User user;
-  final bool createNewUser;
-
-  final UsersController usersController;
-
-  const EditUserWidget({
+class UserEditWidget extends StatefulWidget {
+  const UserEditWidget({
     super.key,
     required this.user,
     this.createNewUser = false,
     required this.usersController,
   });
 
+  final User user;
+  final bool createNewUser;
+
+  final UsersController usersController;
+
   @override
-  State createState() => _EditUserWidgetState();
+  State createState() => _UserEditWidgetState();
 }
 
-class _EditUserWidgetState extends State<EditUserWidget> {
+class _UserEditWidgetState extends State<UserEditWidget> {
   final _formKey = GlobalKey<FormState>();
   late User _user;
   Uint8List? _userAvatar;
@@ -41,19 +41,50 @@ class _EditUserWidgetState extends State<EditUserWidget> {
     _user = widget.user;
   }
 
+  Future<void> _saveUser() async {
+    HapticFeedback.mediumImpact().ignore();
+
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState!.save();
+
+      // TODO: Demo
+      // if (_user.id.toUpperCase() == '${GUID}'.toUpperCase()) {
+      //   context.showInfo('User editor disabled in Demo. User ${_user.name}');
+      //   if (mounted) Navigator.of(context).pop();
+      //   return;
+      // }
+
+      if (widget.createNewUser) {
+        await widget.usersController.createUser(_user, _password!);
+        widget.usersController.savePhoto(_user.id, _userAvatar);
+      } else {
+        final avatar = context.auth(listen: false).avatarBloc.state.avatar(_user.id)?.avatar;
+        await widget.usersController.updateUser(_user);
+        if (_userAvatar != avatar) {
+          widget.usersController.savePhoto(_user.id, _userAvatar);
+        }
+      }
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final appTheme = ThemeScope.of(context).theme;
 
+    final isPhone = appTheme.size.isPhone;
+
+    final defaultMediumPaddings = ThemePaddings.defaultMedium.medium;
+
     return Form(
       key: _formKey,
       child: Column(
         children: [
-          if (appTheme.size.isPhone)
+          if (isPhone)
             Padding(
-              padding: ThemePaddings.defaultMedium.medium.copyWith(bottom: 0, left: 8),
+              padding: defaultMediumPaddings.copyWith(bottom: 0, left: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -79,7 +110,7 @@ class _EditUserWidgetState extends State<EditUserWidget> {
                   child: SizedBox(
                     width: 640,
                     child: Padding(
-                      padding: appTheme.size.isPhone ? EdgeInsets.zero : ThemePaddings.defaultMedium.medium,
+                      padding: isPhone ? EdgeInsets.zero : defaultMediumPaddings,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -104,7 +135,7 @@ class _EditUserWidgetState extends State<EditUserWidget> {
                                     labelText: 'Email',
                                   ),
                                   initialValue: _user.email,
-                                  validator: (value) => !Validators.isValidEmail(value) ? 'Email required' : null,
+                                  validator: (value) => Validators.isValidEmail(value) ? null : 'Email required',
                                   onSaved: (value) => setState(() => _user = _user.copyWith(email: '$value')),
                                   autocorrect: false,
                                 ),
@@ -157,7 +188,7 @@ class _EditUserWidgetState extends State<EditUserWidget> {
                               ],
                             ),
                           ),
-                          if (!appTheme.size.isPhone) ...[
+                          if (!isPhone) ...[
                             const SizedBox(width: 20),
                             SizedBox(
                               width: 140,
@@ -197,24 +228,7 @@ class _EditUserWidgetState extends State<EditUserWidget> {
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
                   ),
-                  onPressed: () async {
-                    HapticFeedback.mediumImpact().ignore();
-
-                    if (_formKey.currentState?.validate() ?? false) {
-                      _formKey.currentState!.save();
-                      if (widget.createNewUser) {
-                        await widget.usersController.createUser(_user, _password!);
-                        widget.usersController.savePhoto(_user.id, _userAvatar);
-                      } else {
-                        final avatar = context.auth(listen: false).avatarBloc.state.avatar(_user.id)?.avatar;
-                        await widget.usersController.updateUser(_user);
-                        if (_userAvatar != avatar) {
-                          widget.usersController.savePhoto(_user.id, _userAvatar);
-                        }
-                      }
-                      if (mounted) Navigator.of(context).pop();
-                    }
-                  },
+                  onPressed: _saveUser,
                   child: const Text(
                     'Save',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -222,7 +236,7 @@ class _EditUserWidgetState extends State<EditUserWidget> {
                 ),
               ),
               Padding(
-                padding: ThemePaddings.defaultMedium.medium,
+                padding: defaultMediumPaddings,
                 child: SizedBox(
                   width: 120,
                   child: OutlinedButton(

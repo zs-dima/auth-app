@@ -14,9 +14,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:platform_info/platform_info.dart';
 
 class EnvironmentLoader {
-  EnvironmentLoader();
-
   Future<AppEnvironment>? _$currentLoading;
+
+  EnvironmentLoader();
 
   Future<AppEnvironment> call() => _$currentLoading ??= Future<AppEnvironment>(() async {
         try {
@@ -31,7 +31,8 @@ class EnvironmentLoader {
 
           final sentryDsn = dockerEnv.sentryDsn ?? const String.fromEnvironment(EnvironmentVariables.sentryDsn);
 
-          final environment = //
+          final environment =
+              //
               Environment.values.firstWhereOrNull((item) => item.name == env) ??
                   Platform.instance.buildMode.maybeWhen(
                     release: () => Environment.production,
@@ -53,12 +54,12 @@ class EnvironmentLoader {
             authService: authAddress.isNullOrSpace ? apiAddress : Uri.parse(authAddress),
             sentryDsn: sentryDsn,
           );
-          logger.i('🚀 ${environment.name.capitalize()} environment'.characters.toString());
+          logger.i('🚀 ${environment.name.capitalized} environment'.characters.toString());
 
           return environmentSettings;
-        } on Exception catch (e, s) {
-          logger.e('Error on loading Environment: $e\n$s', stackTrace: s);
-          Error.throwWithStackTrace(e, s);
+        } on Exception catch (error, s) {
+          logger.e('Error on loading Environment: $error\n$s', stackTrace: s);
+          Error.throwWithStackTrace(error, s);
         }
       });
 }

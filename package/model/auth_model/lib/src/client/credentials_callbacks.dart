@@ -10,9 +10,9 @@ import 'package:auth_model/auth_model.dart';
 ///
 /// {@category Client}
 /// {@category Entity}
-typedef AccessCredentialsCallback = FutureOr<AccessCredentials?> Function();
+typedef AccessCredentialsCallback = Future<AccessCredentials?> Function();
 
-typedef RefreshTokensCallback = FutureOr<AccessCredentials?> Function(RefreshToken refreshToken);
+typedef RefreshTokensCallback = Future<AccessCredentials?> Function(RefreshToken refreshToken);
 
 class CredentialsCallbacks {
   final AccessCredentialsCallback getAccessCredentials;

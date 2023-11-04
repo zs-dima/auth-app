@@ -12,7 +12,7 @@ final class LocaleRepository implements ILocaleRepository {
   const LocaleRepository(this._localeDataSource);
 
   @override
-  FutureOr<void> setLocale(Locale locale) => _localeDataSource.setLocale(locale);
+  Future<void> setLocale(Locale locale) => _localeDataSource.setLocale(locale);
 
   @override
   Locale? loadLocaleFromCache() => _localeDataSource.loadLocaleFromCache();

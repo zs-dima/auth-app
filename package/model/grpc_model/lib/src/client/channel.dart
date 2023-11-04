@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_connection_interface.dart';
 import 'package:grpc/service_api.dart' as service_api;
-
-import 'channel_io.dart'
+import 'package:grpc_model/src/client/channel_io.dart'
 // ignore: uri_does_not_exist
-    if (dart.library.html) 'channel_web.dart'
+    if (dart.library.html) 'package:grpc_model/src/client/channel_web.dart'
 // ignore: uri_does_not_exist
-    if (dart.library.io) 'channel_io.dart';
+    if (dart.library.io) 'package:grpc_model/src/client/channel_io.dart';
 
 class GrpcClientChannel implements service_api.ClientChannel {
   late ClientChannelBase _channel;
 
+  @override
+  Stream<ConnectionState> get onConnectionStateChanged => _channel.onConnectionStateChanged;
   GrpcClientChannel(Uri address) : super() {
     _channel = createClientChannel(address);
   }
@@ -26,7 +27,4 @@ class GrpcClientChannel implements service_api.ClientChannel {
 
   @override
   Future<void> terminate() => _channel.terminate();
-
-  @override
-  Stream<ConnectionState> get onConnectionStateChanged => _channel.onConnectionStateChanged;
 }

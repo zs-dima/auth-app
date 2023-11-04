@@ -46,7 +46,21 @@ abstract base class PreferencesDao {
 }
 
 final class _PreferencesEntry<T extends Object> extends PreferencesEntry<T> {
+  @override
+  final String key;
+
   final SharedPreferences _sharedPreferences;
+
+  @override
+  T? get value {
+    final v = _sharedPreferences.get(key);
+    if (v == null) return null;
+    if (v is T) return v;
+
+    throw Exception(
+      'The value of $key is not of type ${T.runtimeType}',
+    );
+  }
 
   _PreferencesEntry({
     required SharedPreferences sharedPreferences,
@@ -54,31 +68,15 @@ final class _PreferencesEntry<T extends Object> extends PreferencesEntry<T> {
   }) : _sharedPreferences = sharedPreferences;
 
   @override
-  final String key;
-
-  @override
-  T? get value {
-    final value = _sharedPreferences.get(key);
-
-    if (value == null) return null;
-
-    if (value is T) return value;
-
-    throw Exception(
-      'The value of $key is not of type ${T.runtimeType}',
-    );
-  }
-
-  @override
   Future<void> set(T value) async {
     await switch (value) {
-      final int value => _sharedPreferences.setInt(key, value),
-      final double value => _sharedPreferences.setDouble(key, value),
-      final String value => _sharedPreferences.setString(key, value),
-      final bool value => _sharedPreferences.setBool(key, value),
-      final Iterable<String> value => _sharedPreferences.setStringList(
+      final int v => _sharedPreferences.setInt(key, v),
+      final double v => _sharedPreferences.setDouble(key, v),
+      final String v => _sharedPreferences.setString(key, v),
+      final bool v => _sharedPreferences.setBool(key, v),
+      final Iterable<String> v => _sharedPreferences.setStringList(
           key,
-          value.toList(),
+          v.toList(),
         ),
       _ => throw Exception(
           '$T is not a valid type for a preferences entry value.',

@@ -61,53 +61,48 @@ extension ScreenUtilExtension on BuildContext {
 /// {@endtemplate}
 sealed class ScreenUtil {
   /// {@macro screen_util}
-  static ScreenSize screenSize() {
+  static ScreenSize get screenSize {
     final view = ui.PlatformDispatcher.instance.implicitView;
     if (view == null) return ScreenSize.phone;
     final size = view.physicalSize ~/ view.devicePixelRatio;
     return _screenSizeFromSize(size);
   }
 
-  static ScreenSize from(Size size) => _screenSizeFromSize(size);
-
-  /// {@macro screen_util}
-  static ScreenSize screenSizeOf(final BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return _screenSizeFromSize(size);
-  }
-
-  static ScreenSize _screenSizeFromSize(final Size size) => switch (size.width) {
-        >= 1024 => ScreenSize.desktop,
-        <= 600 => ScreenSize.phone,
-        _ => ScreenSize.tablet,
-      };
-
   /// Portrait or Landscape
-  static Orientation orientation() {
+  static Orientation get orientation {
     final view = ui.PlatformDispatcher.instance.implicitView;
     final size = view?.physicalSize;
     return size == null || size.height > size.width ? Orientation.portrait : Orientation.landscape;
   }
 
+  static ScreenSize from(Size size) => _screenSizeFromSize(size);
+
+  /// {@macro screen_util}
+  static ScreenSize screenSizeOf(final BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return _screenSizeFromSize(size);
+  }
+
   /// Portrait or Landscape
-  static Orientation orientationOf(BuildContext context) => MediaQuery.of(context).orientation;
+  static Orientation orientationOf(BuildContext context) => MediaQuery.orientationOf(context);
+  static ScreenSize _screenSizeFromSize(final Size size) => switch (size.width) {
+        >= 1024 => ScreenSize.desktop,
+        <= 600 => ScreenSize.phone,
+        _ => ScreenSize.tablet,
+      };
 }
 
 /// {@macro screen_util}
 @immutable
 sealed class ScreenSize {
-  /// {@macro screen_util}
-  @literal
-  const ScreenSize._(this.representation, this.min, this.max);
-
   /// Phone
-  static const ScreenSize phone = ScreenSize$Phone();
+  static const phone = ScreenSize$Phone();
 
   /// Tablet
-  static const ScreenSize tablet = ScreenSize$Tablet();
+  static const tablet = ScreenSize$Tablet();
 
   /// Large desktop
-  static const ScreenSize desktop = ScreenSize$Desktop();
+  static const desktop = ScreenSize$Desktop();
 
   /// Minimum width in logical pixels
   final double min;
@@ -126,6 +121,10 @@ sealed class ScreenSize {
 
   /// Is desktop
   abstract final bool isDesktop;
+
+  /// {@macro screen_util}
+  @literal
+  const ScreenSize._(this.representation, this.min, this.max);
 
   /// Evaluate the result of the first matching callback.
   ///
@@ -161,6 +160,18 @@ sealed class ScreenSize {
 
 /// {@macro screen_util}
 final class ScreenSize$Phone extends ScreenSize {
+  @override
+  bool get isPhone => true;
+
+  @override
+  bool get isTablet => false;
+
+  @override
+  bool get isDesktop => false;
+
+  @override
+  int get hashCode => 0;
+
   /// {@macro screen_util}
   @literal
   const ScreenSize$Phone() : super._('Phone', 0, 599);
@@ -174,23 +185,23 @@ final class ScreenSize$Phone extends ScreenSize {
       phone();
 
   @override
-  bool get isPhone => true;
-
-  @override
-  bool get isTablet => false;
-
-  @override
-  bool get isDesktop => false;
-
-  @override
-  int get hashCode => 0;
-
-  @override
   bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Phone;
 }
 
 /// {@macro screen_util}
 final class ScreenSize$Tablet extends ScreenSize {
+  @override
+  bool get isPhone => false;
+
+  @override
+  bool get isTablet => true;
+
+  @override
+  bool get isDesktop => false;
+
+  @override
+  int get hashCode => 1;
+
   /// {@macro screen_util}
   @literal
   const ScreenSize$Tablet() : super._('Tablet', 600, 1023);
@@ -204,35 +215,11 @@ final class ScreenSize$Tablet extends ScreenSize {
       tablet();
 
   @override
-  bool get isPhone => false;
-
-  @override
-  bool get isTablet => true;
-
-  @override
-  bool get isDesktop => false;
-
-  @override
-  int get hashCode => 1;
-
-  @override
   bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Tablet;
 }
 
 /// {@macro screen_util}
 final class ScreenSize$Desktop extends ScreenSize {
-  /// {@macro screen_util}
-  @literal
-  const ScreenSize$Desktop() : super._('Desktop', 1024, double.infinity);
-
-  @override
-  ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-  }) =>
-      desktop();
-
   @override
   bool get isPhone => false;
 
@@ -244,6 +231,18 @@ final class ScreenSize$Desktop extends ScreenSize {
 
   @override
   int get hashCode => 2;
+
+  /// {@macro screen_util}
+  @literal
+  const ScreenSize$Desktop() : super._('Desktop', 1024, double.infinity);
+
+  @override
+  ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
+    required final ScreenSizeWhenResult Function() phone,
+    required final ScreenSizeWhenResult Function() tablet,
+    required final ScreenSizeWhenResult Function() desktop,
+  }) =>
+      desktop();
 
   @override
   bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Desktop;

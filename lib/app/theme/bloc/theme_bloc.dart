@@ -1,5 +1,6 @@
 import 'package:auth_app/app/theme/data/i_theme_repository.dart';
 import 'package:auth_app/app/theme/model/app_theme.dart';
+import 'package:auth_app/app/theme/widget/theme_scope.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ui_tool/ui_tool.dart';

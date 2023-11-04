@@ -20,10 +20,10 @@ class SignInForm extends StatelessWidget implements PreferredSizeWidget {
   const SignInForm({super.key});
 
   /// Width of the sign in form.
-  static const double width = 480;
+  static const width = 480.0;
 
   /// Height of the sign in form.
-  static const double height = 720;
+  static const height = 720.0;
 
   @override
   Size get preferredSize => const Size(width, height);
@@ -76,32 +76,61 @@ class _SignInForm extends StatefulWidget {
 /// State for widget _SignInForm.
 class _SignInFormState extends State<_SignInForm> {
   // Make it static so that it doesn't get disposed when the widget is rebuilt.
-  static final TextEditingController _loginController = TextEditingController();
-  static final TextEditingController _passwordController = TextEditingController();
+  static final _loginController = TextEditingController();
+  static final _passwordController = TextEditingController();
 
-  final FocusNode _loginFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
+  final _loginFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
 
-  final ValueNotifier<String?> _loginError = ValueNotifier<String?>(null);
-  final ValueNotifier<String?> _passwordError = ValueNotifier<String?>(null);
+  final _loginError = ValueNotifier<String?>(null);
+  final _passwordError = ValueNotifier<String?>(null);
 
-  final ValueNotifier<bool> _validNotifier = ValueNotifier<bool>(false);
+  final _validNotifier = ValueNotifier<bool>(false);
 
-  late final AuthController authenticationController;
+  late final AuthController _authenticationController;
   late final Listenable _observer;
 
+  late final _validators = <String? Function(SignInData data)>[
+    (data) => _loginError.value = data.isValidLogin,
+    (data) => _passwordError.value = data.isValidPassword,
+  ];
   IAppEnvironment? _environment;
 
   @override
   void initState() {
     super.initState();
 
-    authenticationController = context.auth();
+    _authenticationController = context.auth();
 
-    if (kDebugMode) {
-      _loginController.text = 'admin@mail.com';
-      _passwordController.text = 'admin';
+    // if (kDebugMode) {
+    _loginController.text = 'admin@mail.com';
+    _passwordController.text = 'admin';
+    // }
+  }
+
+  void _onChanged() {
+    if (!mounted) return;
+
+    _data = SignInData(
+      login: _loginController.text,
+      password: _passwordController.text,
+      installationId: context.dependencies.settings.installationId,
+    );
+
+    _validNotifier.value = _validate(_data);
+  }
+
+  bool _validate(SignInData data) {
+    for (final validator in _validators) {
+      if (validator(data) != null) return false;
     }
+    return true;
+  }
+
+  void _submit() {
+    final data = _data;
+    if (!_validate(data)) return;
+    _authenticationController.signIn(data);
   }
 
   @override
@@ -125,39 +154,14 @@ class _SignInFormState extends State<_SignInForm> {
   void dispose() {
     _observer.removeListener(_onChanged);
     _validNotifier.dispose();
+    _loginError.dispose();
+    _passwordError.dispose();
+    _loginFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   late SignInData _data;
-
-  void _onChanged() {
-    if (!mounted) return;
-
-    _data = SignInData(
-      login: _loginController.text,
-      password: _passwordController.text,
-      installationId: context.dependencies.settings.installationId,
-    );
-
-    _validNotifier.value = _validate(_data);
-  }
-
-  late final List<String? Function(SignInData data)> _validators = <String? Function(SignInData data)>[
-    (data) => _loginError.value = data.isValidLogin(),
-    (data) => _passwordError.value = data.isValidPassword(),
-  ];
-  bool _validate(SignInData data) {
-    for (final validator in _validators) {
-      if (validator(data) != null) return false;
-    }
-    return true;
-  }
-
-  void _submit() {
-    final data = _data;
-    if (!_validate(data)) return;
-    authenticationController.signIn(data);
-  }
 
   @override
   Widget build(BuildContext context) => FocusScope(
@@ -228,8 +232,8 @@ class _SignInFormState extends State<_SignInForm> {
                   height: 64,
                   child: ValueListenableBuilder(
                     valueListenable: _validNotifier,
-                    builder: (context, valid, _) => AnimatedOpacity(
-                      opacity: valid ? 1 : .5,
+                    builder: (_, valid, __) => AnimatedOpacity(
+                      opacity: valid ? 1 : 0.5,
                       duration: const Duration(milliseconds: 350),
                       child: ElevatedButton(
                         onPressed: valid ? _submit : null,
@@ -293,25 +297,26 @@ class SignInTextField extends StatefulWidget {
 
 class _SignInTextFieldState extends State<SignInTextField> {
   bool _obscurePassword = false;
-  FocusNode? focusNode;
+  FocusNode? _focusNode;
 
   @override
   void initState() {
     super.initState();
     _obscurePassword = widget.obscureText;
-    focusNode = widget.focusNode?..addListener(_onFocusChanged);
+    _focusNode = widget.focusNode;
+    _focusNode?.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (_focusNode?.hasFocus == false && mounted && widget.obscureText && !_obscurePassword) {
+      setState(() => _obscurePassword = true);
+    }
   }
 
   @override
   void dispose() {
-    focusNode?.removeListener(_onFocusChanged);
+    _focusNode?.removeListener(_onFocusChanged);
     super.dispose();
-  }
-
-  void _onFocusChanged() {
-    if (focusNode?.hasFocus == false && mounted && widget.obscureText && !_obscurePassword) {
-      setState(() => _obscurePassword = true);
-    }
   }
 
   @override
@@ -319,15 +324,15 @@ class _SignInTextFieldState extends State<SignInTextField> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: BlocBuilder<AuthBloc, AuthState>(
           bloc: context.auth().bloc,
-          builder: (context, state) {
+          builder: (_, state) {
             final idle = state.whenOrNull(idle: (_, __, ___) => true) ?? false;
             return AnimatedOpacity(
-              opacity: idle ? 1 : .5,
+              opacity: idle ? 1 : 0.5,
               duration: const Duration(milliseconds: 250),
               child: ValueListenableBuilder<String?>(
                 valueListenable: widget.error ?? ValueNotifier<String?>(null),
-                builder: (context, error, child) => StatefulBuilder(
-                  builder: (context, setState) => TextField(
+                builder: (_, error, child) => StatefulBuilder(
+                  builder: (_, setState) => TextField(
                     focusNode: widget.focusNode,
                     enabled: idle,
                     maxLines: 1,
@@ -346,7 +351,7 @@ class _SignInTextFieldState extends State<SignInTextField> {
                       hintText: widget.hintText,
                       helperText: '',
                       helperMaxLines: 1,
-                      errorText: error ?? state.whenOrNull(idle: (_, __, error) => error),
+                      errorText: error ?? state.whenOrNull(idle: (_, __, err) => err),
                       errorMaxLines: 1,
                       suffixIcon: widget.obscureText
                           ? IconButton(

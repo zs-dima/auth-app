@@ -66,6 +66,9 @@ class _RadialProgressIndicatorState extends State<RadialProgressIndicator> with 
 }
 
 class _RadialProgressIndicatorPainter extends CustomPainter {
+  final Animation<double> _animation;
+  final Paint _arcPaint;
+
   _RadialProgressIndicatorPainter({
     required Animation<double> animation,
     Color color = Colors.blue, // TODO: use theme
@@ -76,9 +79,6 @@ class _RadialProgressIndicatorPainter extends CustomPainter {
           ..color = color,
         super(repaint: animation);
 
-  final Animation<double> _animation;
-  final Paint _arcPaint;
-
   @override
   void paint(Canvas canvas, Size size) {
     _arcPaint.strokeWidth = size.shortestSide / 8;
@@ -88,7 +88,7 @@ class _RadialProgressIndicatorPainter extends CustomPainter {
       radius: size.shortestSide / 2 - _arcPaint.strokeWidth / 2,
     );
     final rotate = math.pow(progress, 2) * math.pi * 2;
-    final sweep = math.sin(progress * math.pi) * 3 + math.pi * .25;
+    final sweep = math.sin(progress * math.pi) * 3 + math.pi * 0.25;
 
     canvas.drawArc(rect, rotate, sweep, false, _arcPaint);
   }

@@ -17,6 +17,15 @@ final class AppTheme with Diagnosticable {
 
   final ScreenSize size;
 
+  /// The dark [ThemeData] for this [AppTheme].
+  final ThemeData darkTheme;
+
+  /// The light [ThemeData] for this [AppTheme].
+  final ThemeData lightTheme;
+
+  @override
+  int get hashCode => mode.hashCode ^ seed.hashCode ^ size.hashCode;
+
   /// {@macro app_theme}
   AppTheme({
     required this.mode,
@@ -63,12 +72,6 @@ final class AppTheme with Diagnosticable {
         ),
       );
 
-  /// The dark [ThemeData] for this [AppTheme].
-  final ThemeData darkTheme;
-
-  /// The light [ThemeData] for this [AppTheme].
-  final ThemeData lightTheme;
-
   /// The [ThemeData] for this [AppTheme].
   /// This is computed based on the [mode].
   ///
@@ -77,8 +80,10 @@ final class AppTheme with Diagnosticable {
     switch (mode) {
       case ThemeMode.light:
         return lightTheme;
+
       case ThemeMode.dark:
         return darkTheme;
+
       case ThemeMode.system:
         return View.of(context).platformDispatcher.platformBrightness == Brightness.dark //
             ? darkTheme
@@ -105,7 +110,4 @@ final class AppTheme with Diagnosticable {
           seed == other.seed &&
           mode == other.mode &&
           size == other.size;
-
-  @override
-  int get hashCode => mode.hashCode ^ seed.hashCode ^ size.hashCode;
 }

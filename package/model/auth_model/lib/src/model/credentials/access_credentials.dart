@@ -1,5 +1,7 @@
-import 'access_token.dart';
-import 'refresh_token.dart';
+// ignore_for_file: avoid-dynamic
+
+import 'package:auth_model/src/model/credentials/access_token.dart';
+import 'package:auth_model/src/model/credentials/refresh_token.dart';
 
 /// OAuth2 Credentials.
 /// Inspired by https://pub.dev/packages/googleapis_auth
@@ -13,7 +15,7 @@ class AccessCredentials {
   /// Scopes these credentials are valid for.
   final List<String> scopes;
 
-  AccessCredentials({
+  const AccessCredentials({
     required this.accessToken,
     required this.refreshToken,
     this.scopes = const <String>[],

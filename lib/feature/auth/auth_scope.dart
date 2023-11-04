@@ -11,7 +11,7 @@ import 'package:ui_tool/ui_tool.dart';
 
 extension AuthScopeX on BuildContext {
   /// {@macro auth_controller}
-  AuthController auth({bool listen = false}) => AuthScope.of(this);
+  AuthController auth({bool listen = false}) => AuthScope.of(this, listen: listen);
 }
 
 /// {@template auth_controller}
@@ -36,9 +36,6 @@ class AuthScope extends StatefulWidget {
     super.key,
   });
 
-  /// The widget below this widget in the tree.
-  final Widget child;
-
   /// Authenticated user.
   static AuthUser userOf(BuildContext context, {bool listen = true}) =>
       context.scopeOf<_AuthScopeInherited>(listen: listen).user;
@@ -46,6 +43,9 @@ class AuthScope extends StatefulWidget {
   /// Get the [AuthController] of the closest [AuthScope] ancestor.
   static AuthController of(BuildContext context, {bool listen = false}) =>
       context.scopeOf<_AuthScopeInherited>(listen: listen).controller;
+
+  /// The widget below this widget in the tree.
+  final Widget child;
 
   @override
   State<AuthScope> createState() => _AuthScopeState();
@@ -58,23 +58,6 @@ class _AuthScopeState extends State<AuthScope> implements AuthController {
 
   @override
   late final UsersAvatarsBloc avatarBloc;
-
-  @override
-  void signIn(SignInData data) => bloc.add(AuthEvent.signIn(data));
-
-  @override
-  void signOut() => bloc.add(const AuthEvent.signOut());
-
-  @override
-  AuthUser user = const AuthUser.unauthenticated();
-  StreamSubscription<void>? _subscription;
-
-  void _listener(AuthState state) {
-    final user = state.user;
-    if (!mounted || this.user == user) return;
-
-    setState(() => this.user = user);
-  }
 
   @override
   void initState() {
@@ -93,11 +76,30 @@ class _AuthScopeState extends State<AuthScope> implements AuthController {
     _subscription = bloc.stream.listen(_listener);
   }
 
+  void _listener(AuthState state) {
+    final stateUser = state.user;
+    if (!mounted || user == stateUser) return;
+
+    setState(() => user = stateUser);
+  }
+
+  @override
+  void signIn(SignInData data) => bloc.add(AuthEvent.signIn(data));
+
+  @override
+  void signOut() => bloc.add(const AuthEvent.signOut());
+
   @override
   void dispose() {
     _subscription?.cancel();
+    bloc.close();
+    avatarBloc.close();
     super.dispose();
   }
+
+  @override
+  AuthUser user = const AuthUser.unauthenticated();
+  StreamSubscription<void>? _subscription;
 
   @override
   Widget build(BuildContext context) => _AuthScopeInherited(
@@ -105,7 +107,7 @@ class _AuthScopeState extends State<AuthScope> implements AuthController {
         controller: this,
         child: ClipRect(
           child: StatefulBuilder(
-            builder: (context, setState) => widget.child,
+            builder: (_, setState) => widget.child,
           ),
         ),
       );

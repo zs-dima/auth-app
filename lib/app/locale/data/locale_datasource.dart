@@ -10,7 +10,7 @@ import 'package:auth_app/app/settings/repository/settings_repository.dart';
 /// {@endtemplate}
 abstract interface class ILocaleDataSource {
   /// Set locale
-  FutureOr<void> setLocale(Locale locale);
+  Future<void> setLocale(Locale locale);
 
   /// Get current locale from cache
   Locale? loadLocaleFromCache();
@@ -26,7 +26,7 @@ final class LocaleDataSource implements ILocaleDataSource {
   }) : _settings = settings;
 
   @override
-  FutureOr<void> setLocale(Locale locale) => _settings.setLocale(locale.toString());
+  Future<void> setLocale(Locale locale) => _settings.setLocale(locale.toString());
 
   @override
   Locale? loadLocaleFromCache() {
@@ -35,7 +35,7 @@ final class LocaleDataSource implements ILocaleDataSource {
     if (locale != null) {
       final localeParts = locale.split('_');
       return Locale.fromSubtags(
-        languageCode: localeParts[0],
+        languageCode: localeParts.first,
         countryCode: localeParts.length > 1 ? localeParts[1] : null,
       );
     }

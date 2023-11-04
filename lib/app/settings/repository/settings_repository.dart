@@ -9,39 +9,29 @@ import 'package:uuid/uuid.dart';
 
 abstract class ISettingsRepository {
   int? get themeColor;
-  FutureOr<void> setThemeColor(int? value);
-
   String? get themeMode;
-  FutureOr<void> setThemeMode(String? value);
-
   String? get locale;
-  FutureOr<void> setLocale(String value);
-
   String get installationId;
 
   bool get firstStart;
-  FutureOr<void> setSecondStart();
-
   IUserInfo? get user;
-  FutureOr<void> setUser(IUserInfo? value);
+  Future<void> setThemeColor(int? value);
+
+  Future<void> setThemeMode(String? value);
+
+  Future<void> setLocale(String value);
+
+  Future<void> setSecondStart();
+
+  Future<void> setUser(IUserInfo? value);
 
   Future<AccessCredentials?> getCredentials();
-  FutureOr<void> setCredentials(AccessCredentials? value);
+  Future<void> setCredentials(AccessCredentials? value);
 }
 
 class SettingsRepository implements ISettingsRepository {
-  SettingsRepository({
-    required AppPreferencesDao preferences,
-    required AppSecurePreferencesDao securePreferences,
-  })  : _preferences = preferences,
-        _securePreferences = securePreferences {
-    _installationId = preferences.installationId.value ??
-        () {
-          final installationId = const Uuid().v1();
-          preferences.installationId.set(installationId);
-          return installationId;
-        }();
-  }
+  @override
+  late final String installationId;
 
   final AppPreferencesDao _preferences;
   final AppSecurePreferencesDao _securePreferences;
@@ -55,7 +45,29 @@ class SettingsRepository implements ISettingsRepository {
   }
 
   @override
-  FutureOr<void> setUser(IUserInfo? value) async {
+  String? get themeMode => _preferences.themeMode.value;
+  @override
+  int? get themeColor => _preferences.themeColor.value;
+  @override
+  String? get locale => _preferences.locale.value;
+  @override
+  bool get firstStart => _preferences.firstStart.value ?? true;
+
+  SettingsRepository({
+    required AppPreferencesDao preferences,
+    required AppSecurePreferencesDao securePreferences,
+  })  : _preferences = preferences,
+        _securePreferences = securePreferences {
+    installationId = preferences.installationId.value ??
+        () {
+          final id = const Uuid().v1();
+          preferences.installationId.set(id);
+          return id;
+        }();
+  }
+
+  @override
+  Future<void> setUser(IUserInfo? value) async {
     if (value != user) {
       if (value == null) {
         await _preferences.user.remove();
@@ -75,7 +87,7 @@ class SettingsRepository implements ISettingsRepository {
   }
 
   @override
-  FutureOr<void> setCredentials(AccessCredentials? value) async {
+  Future<void> setCredentials(AccessCredentials? value) async {
     if (value != await getCredentials()) {
       if (value == null) {
         await _securePreferences.credentials.remove();
@@ -87,26 +99,14 @@ class SettingsRepository implements ISettingsRepository {
   }
 
   @override
-  String? get themeMode => _preferences.themeMode.value;
-  @override
-  FutureOr<void> setThemeMode(String? value) => _preferences.themeMode.setIfNullRemove(value);
+  Future<void> setThemeMode(String? value) => _preferences.themeMode.setIfNullRemove(value);
 
   @override
-  int? get themeColor => _preferences.themeColor.value;
-  @override
-  FutureOr<void> setThemeColor(int? value) => _preferences.themeColor.setIfNullRemove(value);
+  Future<void> setThemeColor(int? value) => _preferences.themeColor.setIfNullRemove(value);
 
   @override
-  String? get locale => _preferences.locale.value;
-  @override
-  FutureOr<void> setLocale(String value) => _preferences.locale.set(value);
-
-  late final String _installationId;
-  @override
-  String get installationId => _installationId;
+  Future<void> setLocale(String value) => _preferences.locale.set(value);
 
   @override
-  bool get firstStart => _preferences.firstStart.value ?? true;
-  @override
-  FutureOr<void> setSecondStart() => _preferences.firstStart.set(false);
+  Future<void> setSecondStart() => _preferences.firstStart.set(false);
 }

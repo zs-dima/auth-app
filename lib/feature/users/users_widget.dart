@@ -1,5 +1,5 @@
-import 'package:auth_app/core/widget/card_widget.dart';
 import 'package:auth_app/core/widget/layout/app_layout.dart';
+import 'package:auth_app/core/widget/shadow_widget.dart';
 import 'package:auth_app/feature/auth/auth_scope.dart';
 import 'package:auth_app/feature/users/bloc/users_bloc.dart';
 import 'package:auth_app/feature/users/edit/user_edit_dialog.dart';
@@ -14,9 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 class UsersWidget extends StatefulWidget {
-  const UsersWidget({
-    super.key,
-  });
+  const UsersWidget({super.key});
 
   @override
   State createState() => _UsersWidgetState();
@@ -69,12 +67,13 @@ class _UsersWidgetState extends State<UsersWidget> {
     return AppLayout(
       title: 'Users',
       floatingActionButton: FloatingActionButton.extended(
+        tooltip: 'Create new user',
+        heroTag: 'create_user',
         onPressed: () {
           HapticFeedback.mediumImpact().ignore();
           editUserDialog(
             context,
             User.empty.copyWith(id: const Uuid().v4()),
-            currentUser: _currentUser!,
             createNewUser: true,
           );
         },
@@ -88,34 +87,28 @@ class _UsersWidgetState extends State<UsersWidget> {
       child: ShadowWidget(
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: ShadowWidget(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
-                      child: TextField(
-                        focusNode: _searchPartFocus,
-                        controller: _searchPartController,
-                        decoration: InputDecoration(
-                          labelText: 'Search...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact().ignore();
-                              _searchPartFocus!.unfocus();
-                              _searchPartController!.clear();
-                              _usersBloc!.add(const UsersEvent.filterUsers(''));
-                            },
-                            icon: const Icon(Icons.close),
-                          ),
-                        ),
-                        onChanged: (v) => _usersBloc!.add(UsersEvent.filterUsers(v)),
-                      ),
+            ShadowWidget(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: TextField(
+                  focusNode: _searchPartFocus,
+                  controller: _searchPartController,
+                  decoration: InputDecoration(
+                    labelText: 'Search...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        HapticFeedback.mediumImpact().ignore();
+                        _searchPartFocus!.unfocus();
+                        _searchPartController!.clear();
+                        _usersBloc!.add(const UsersEvent.filterUsers(''));
+                      },
+                      icon: const Icon(Icons.close),
                     ),
                   ),
+                  onChanged: (v) => _usersBloc!.add(UsersEvent.filterUsers(v)),
                 ),
-              ],
+              ),
             ),
             Expanded(
               child: BlocBuilder<UsersBloc, UsersState>(
@@ -124,11 +117,9 @@ class _UsersWidgetState extends State<UsersWidget> {
                   final allUsers = state.users;
 
                   if (allUsers.isEmpty) {
-                    if (state is! UsersLoadedState) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else {
-                      return const Center(child: Text('No users found'));
-                    }
+                    return state is UsersLoadedState //
+                        ? const Center(child: Text('No users found'))
+                        : const Center(child: CircularProgressIndicator());
                   }
 
                   final userRoles = [
@@ -143,41 +134,39 @@ class _UsersWidgetState extends State<UsersWidget> {
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       controller: ScrollController(),
-                      slivers: userRoles.map(
-                        (userRole) {
-                          final users = allUsers.where((i) => i.role == userRole).toList();
+                      slivers: userRoles.map((userRole) {
+                        final users = allUsers.where((i) => i.role == userRole).toList();
 
-                          return SliverMainAxisGroup(
-                            slivers: [
-                              SliverPersistentHeader(
-                                pinned: true,
-                                delegate: UserListHeaderDelegate(userRole.name),
-                              ),
-                              SliverFixedExtentList(
-                                itemExtent: 50,
-                                delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) {
-                                    final user = users[index];
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            SliverPersistentHeader(
+                              pinned: true,
+                              delegate: UserListHeaderDelegate(userRole.name),
+                            ),
+                            SliverFixedExtentList(
+                              itemExtent: 50,
+                              delegate: SliverChildBuilderDelegate(
+                                (BuildContext ctx, int index) {
+                                  final user = users[index];
 
-                                    return InkWell(
-                                      key: ValueKey('user_tile_${user.id}'),
-                                      mouseCursor: SystemMouseCursors.click,
-                                      onTap: () => editUserDialog(context, user, currentUser: _currentUser!),
-                                      child: UserTileWidget(
-                                        user: user,
-                                        tileColor: index.isEven //
-                                            ? colorScheme.primary.withOpacity(0.1)
-                                            : colorScheme.background,
-                                      ),
-                                    );
-                                  },
-                                  childCount: users.length,
-                                ),
+                                  return InkWell(
+                                    key: ValueKey('user_tile_${user.id}'),
+                                    mouseCursor: SystemMouseCursors.click,
+                                    onTap: () => editUserDialog(ctx, user),
+                                    child: UserTileWidget(
+                                      user: user,
+                                      tileColor: index.isEven //
+                                          ? colorScheme.primary.withOpacity(0.1)
+                                          : colorScheme.background,
+                                    ),
+                                  );
+                                },
+                                childCount: users.length,
                               ),
-                            ],
-                          );
-                        },
-                      ).toList(),
+                            ),
+                          ],
+                        );
+                      }).toList(),
                     ),
                   );
                 },
