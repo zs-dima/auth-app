@@ -63,7 +63,7 @@ dependencies:
 
   # Logging
   l: ^4.1.0-pre.1
-  sentry_flutter: ^7.11.0
+  sentry_flutter: ^7.12.0
   stack_trace: ^1.11.0
 
   # System
@@ -111,9 +111,6 @@ dependencies:
   grpc: ^3.2.4
   retry: ^3.1.2
 
-dependency_overrides:
-  analyzer: ^6.2.0
-
 dev_dependencies:
   # Unit & Widget tests for Flutter
   flutter_test:
@@ -133,7 +130,7 @@ dev_dependencies:
   flutter_gen_runner: ^5.3.2
   freezed: ^2.4.5
   json_serializable: ^6.7.1
-  melos: ^3.1.1 # dart pub global activate melos
+  melos: ^3.2.0 # dart pub global activate melos
   intl_utils: ^2.8.5
 
   # Lints
