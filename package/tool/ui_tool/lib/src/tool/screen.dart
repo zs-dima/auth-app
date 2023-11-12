@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
+typedef ScreenSizeCallback<ScreenSizeWhenResult extends Object?> = ScreenSizeWhenResult Function();
+
 /// {@macro screen_util}
 extension ScreenUtilExtension on BuildContext {
   /// Get current screen logical size representation
@@ -23,9 +25,9 @@ extension ScreenUtilExtension on BuildContext {
   /// tablet  | 600..1023 dp | 8 column
   /// desktop | >= 1024 dp   | 12 column
   ScreenSizeWhenResult screenSizeWhen<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> phone,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> tablet,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> desktop,
   }) =>
       ScreenUtil.screenSizeOf(this).when(
         phone: phone,
@@ -39,10 +41,10 @@ extension ScreenUtilExtension on BuildContext {
   /// On the other hand, it adds an extra [orElse] required parameter,
   /// for fallback behavior.
   ScreenSizeWhenResult screenSizeMaybeWhen<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() orElse,
-    final ScreenSizeWhenResult Function()? phone,
-    final ScreenSizeWhenResult Function()? tablet,
-    final ScreenSizeWhenResult Function()? desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> orElse,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? phone,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? tablet,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? desktop,
   }) =>
       ScreenUtil.screenSizeOf(this).maybeWhen(
         phone: phone,
@@ -132,9 +134,9 @@ sealed class ScreenSize {
   /// tablet  | 600..1023 dp | 8 column
   /// desktop | >= 1024 dp   | 12 column
   ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> phone,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> tablet,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> desktop,
   });
 
   /// The [maybeWhen] method is equivalent to [when],
@@ -143,10 +145,10 @@ sealed class ScreenSize {
   /// On the other hand, it adds an extra [orElse] required parameter,
   /// for fallback behavior.
   ScreenSizeWhenResult maybeWhen<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() orElse,
-    final ScreenSizeWhenResult Function()? phone,
-    final ScreenSizeWhenResult Function()? tablet,
-    final ScreenSizeWhenResult Function()? desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> orElse,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? phone,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? tablet,
+    final ScreenSizeCallback<ScreenSizeWhenResult>? desktop,
   }) =>
       when<ScreenSizeWhenResult>(
         phone: phone ?? orElse,
@@ -178,9 +180,9 @@ final class ScreenSize$Phone extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> phone,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> tablet,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> desktop,
   }) =>
       phone();
 
@@ -208,9 +210,9 @@ final class ScreenSize$Tablet extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> phone,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> tablet,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> desktop,
   }) =>
       tablet();
 
@@ -238,9 +240,9 @@ final class ScreenSize$Desktop extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult extends Object?>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> phone,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> tablet,
+    required final ScreenSizeCallback<ScreenSizeWhenResult> desktop,
   }) =>
       desktop();
 

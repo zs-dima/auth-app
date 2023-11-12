@@ -10,36 +10,36 @@ typedef PreferencesKeyCallback = Future<String> Function();
 /// {@endtemplate}
 abstract base class SecurePreferencesDao {
   final FlutterSecureStorage _preferences;
-  final PreferencesKeyCallback _keyPrefix;
+  final PreferencesKeyCallback _getKeyPrefix;
 
   /// {@macro preferences_dao}
 
   SecurePreferencesDao(
     this._preferences, {
-    required PreferencesKeyCallback keyPrefix,
-  }) : _keyPrefix = keyPrefix;
+    required PreferencesKeyCallback getKeyPrefix,
+  }) : _getKeyPrefix = getKeyPrefix;
 
   /// Obtain [String] entry from the preferences.
   PreferencesEntryAsync<String> stringEntry(String key) =>
       //
       _SecurePreferencesEntry<String>(
         key: key,
-        keyPrefix: _keyPrefix,
+        getKeyPrefix: _getKeyPrefix,
         preferences: _preferences,
       );
 }
 
 final class _SecurePreferencesEntry<T extends Object> extends PreferencesEntryAsync<T> {
   final FlutterSecureStorage _preferences;
-  final PreferencesKeyCallback _keyPrefix;
+  final PreferencesKeyCallback _getKeyPrefix;
   final String _key;
 
   _SecurePreferencesEntry({
     required FlutterSecureStorage preferences,
-    required PreferencesKeyCallback keyPrefix,
+    required PreferencesKeyCallback getKeyPrefix,
     required String key,
   })  : _preferences = preferences,
-        _keyPrefix = keyPrefix,
+        _getKeyPrefix = getKeyPrefix,
         _key = key;
 
   @override
@@ -67,7 +67,7 @@ final class _SecurePreferencesEntry<T extends Object> extends PreferencesEntryAs
   }
 
   Future<String> _getKey() async {
-    final keyPrefix = await _keyPrefix();
+    final keyPrefix = await _getKeyPrefix();
     return '${keyPrefix}_$_key';
   }
 }

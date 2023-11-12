@@ -2,6 +2,8 @@ import 'package:auth_app/app/initialization/model/dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+typedef AppDependenciesErrorBuilderCallback = Widget Function(Object error, StackTrace? stackTrace);
+
 /// {@template dependencies_scope}
 /// DependenciesScope widget.
 /// {@endtemplate}
@@ -41,7 +43,7 @@ class DependenciesScope extends StatelessWidget {
   final Widget splashScreen;
 
   /// Error widget.
-  final Widget Function(Object error, StackTrace? stackTrace)? errorBuilder;
+  final AppDependenciesErrorBuilderCallback? errorBuilder;
 
   /// The widget below this widget in the tree.
   final Widget child;

@@ -80,13 +80,17 @@ class UsersAvatarsBloc extends Bloc<UsersAvatarsEvent, UsersAvatarsState> with A
       );
 }
 
+// TODO: move to auth_model package
+typedef UserAvatarMapCallback<T extends Object> = T Function(Uint8List avatar);
+typedef UserBlurhashMapCallback<T extends Object> = T Function(String blurhash);
+
 extension UsersAvatarsStateX on UsersAvatarsState {
   UserAvatar? avatar(UserId userId) => avatars.firstWhereOrNull((i) => i.userId == userId);
 
   T? map<T extends Object>(
     IUserInfo userInfo, {
-    T Function(Uint8List avatar)? avatar,
-    T Function(String blurhash)? blurhash,
+    UserAvatarMapCallback<T>? avatar,
+    UserBlurhashMapCallback<T>? blurhash,
   }) {
     final userAvatar = avatars.firstWhereOrNull((i) => i.userId == userInfo.id);
     if (userAvatar == null || !userAvatar.loaded) {

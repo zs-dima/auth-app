@@ -1,4 +1,9 @@
 import 'package:auth_app/app/initialization/model/dependencies.dart';
+import 'package:flutter/foundation.dart';
+
+typedef AppInitializingCallback = void Function(InitializationStepInfo info);
+typedef AppInitializedCallback = void Function(InitializationResult result);
+typedef AppInitializationErrorCallback = void Function(int step, Object error, StackTrace stackTrace);
 
 /// {@template initialization_hook}
 /// A hook for the initialization process.
@@ -14,16 +19,16 @@ import 'package:auth_app/app/initialization/model/dependencies.dart';
 /// {@endtemplate}
 abstract interface class InitializationHook {
   /// Called before the initialization process starts.
-  void Function()? onInit;
+  VoidCallback? onInit;
 
   /// Called when the initialization process is in progress.
-  void Function(InitializationStepInfo info)? onInitializing;
+  AppInitializingCallback? onInitializing;
 
   /// Called when the initialization process is finished.
-  void Function(InitializationResult result)? onInitialized;
+  AppInitializedCallback? onInitialized;
 
   /// Called when the initialization process is failed.
-  void Function(int step, Object error, StackTrace stackTrace)? onError;
+  AppInitializationErrorCallback? onError;
 
   /// {@macro initialization_hook}
   InitializationHook({
@@ -35,10 +40,10 @@ abstract interface class InitializationHook {
 
   /// Setup the initialization hook.
   factory InitializationHook.setup({
-    void Function()? onInit,
-    void Function(InitializationStepInfo info)? onInitializing,
-    void Function(InitializationResult result)? onInitialized,
-    void Function(int step, Object error, StackTrace stackTrace)? onError,
+    VoidCallback? onInit,
+    AppInitializingCallback? onInitializing,
+    AppInitializedCallback? onInitialized,
+    AppInitializationErrorCallback? onError,
   }) = _Hook;
 }
 

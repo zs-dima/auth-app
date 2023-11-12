@@ -142,7 +142,7 @@ abstract base class Logger {
 
   /// Set up the logger
   L runLogging<L>(
-    L Function() fn, [
+    ValueGetter<L> fn, [
     LogOptions options = const LogOptions(),
   ]);
 
@@ -175,7 +175,7 @@ final class AppLogger$L extends Logger {
 
   @override
   L runLogging<L>(
-    L Function() fn, [
+    ValueGetter<L> fn, [
     LogOptions options = const LogOptions(),
   ]) {
     if (kReleaseMode && !options.logInRelease) {

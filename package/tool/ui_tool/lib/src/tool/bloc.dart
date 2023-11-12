@@ -1,5 +1,7 @@
 import 'package:bloc/bloc.dart';
 
+typedef BlocWhereStateCallback<State> = bool Function(State state);
+
 extension BlocX<Event, State> on Bloc<Event, State> {
   /// This transformer is a shorthand for Stream.where followed by Stream.cast.
   ///
@@ -18,7 +20,7 @@ extension BlocX<Event, State> on Bloc<Event, State> {
   ///
   /// [State]'s that do not match [T] are filtered out,
   ///  the resulting Stream will be of Type [T].
-  Stream<T> whereStates<T extends Object?>(bool Function(State state) filter) =>
+  Stream<T> whereStates<T extends Object?>(BlocWhereStateCallback<State> filter) =>
       stream.where(filter).where((state) => state is T).cast<T>();
 
   /// Filter with whereStates<T>() and after that
@@ -28,7 +30,7 @@ extension BlocX<Event, State> on Bloc<Event, State> {
   /// [State]'s that do not match [T] are filtered out,
   ///  the resulting Stream will be of Type [T].
   Stream<T> whereUniques<T extends Object?>(
-    bool Function(State state) filter,
+    BlocWhereStateCallback<State> filter,
   ) =>
       whereStates<T>(filter).distinct();
 }

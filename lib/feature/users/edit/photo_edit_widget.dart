@@ -15,12 +15,12 @@ class PhotoEditWidget extends StatefulWidget {
   const PhotoEditWidget({
     super.key,
     required this.user,
-    required this.photoCallback,
+    required this.onPhotoChanged,
     this.userPhoto,
   });
 
   final IUserInfo user;
-  final PhotoCallback photoCallback;
+  final PhotoCallback onPhotoChanged;
   final Uint8List? userPhoto;
 
   @override
@@ -45,7 +45,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
     if (userAvatar == null) {
       _avatarBloc.add(UsersAvatarsEvent.loadAvatar(widget.user.id, reload: false));
     } else if (widget.userPhoto == null) {
-      widget.photoCallback(_userAvatar.avatar);
+      widget.onPhotoChanged(_userAvatar.avatar);
     }
 
     _userAvatarSubscription = _avatarBloc //
@@ -56,7 +56,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
         .listen((avatar) {
       if (!mounted) return;
       setState(() => _userAvatar = avatar!);
-      widget.photoCallback(_userAvatar.avatar);
+      widget.onPhotoChanged(_userAvatar.avatar);
     });
   }
 
@@ -75,14 +75,14 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
     if (!mounted) return;
     setState(() {
       _userAvatar = _userAvatar.copyWith(avatar: image.files.firstOrNull?.bytes);
-      widget.photoCallback(_userAvatar.avatar);
+      widget.onPhotoChanged(_userAvatar.avatar);
     });
   }
 
   void _deletePhoto() {
     setState(() {
       _userAvatar = _userAvatar.copyWith(avatar: null);
-      widget.photoCallback(_userAvatar.avatar);
+      widget.onPhotoChanged(_userAvatar.avatar);
     });
   }
 

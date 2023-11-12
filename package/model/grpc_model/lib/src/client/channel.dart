@@ -14,7 +14,7 @@ class GrpcClientChannel implements service_api.ClientChannel {
 
   @override
   Stream<ConnectionState> get onConnectionStateChanged => _channel.onConnectionStateChanged;
-  GrpcClientChannel(Uri address) : super() {
+  GrpcClientChannel(Uri address) {
     _channel = createClientChannel(address);
   }
 

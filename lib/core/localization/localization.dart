@@ -57,7 +57,8 @@ final class Localization extends generated.GeneratedLocalization {
       };
 
   /// Get language by code.
-  static ({String name, String nativeName})? getLanguageByCode(String code) => switch (_isoLangs[code]) {
+  static ({String name, String nativeName})? getLanguageByCode(String code) => //
+      switch (_kIsoLangs[code]) {
         (:final String name, :final String nativeName) => (name: name, nativeName: nativeName),
         _ => null,
       };
@@ -85,7 +86,7 @@ final class _LocalizationDelegate extends LocalizationsDelegate<Localization> {
   bool shouldReload(covariant _LocalizationDelegate old) => _delegate.shouldReload(old._delegate);
 }
 
-const _isoLangs = <String, (String name, String nativeName)>{
+const _kIsoLangs = <String, (String name, String nativeName)>{
   'ab': ('Abkhaz', 'аҧсуа'),
   'aa': ('Afar', 'Afaraf'),
   'af': ('Afrikaans', 'Afrikaans'),

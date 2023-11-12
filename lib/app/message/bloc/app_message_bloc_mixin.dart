@@ -6,6 +6,9 @@ import 'package:auth_app/app/app.dart';
 import 'package:auth_app/app/log/logger.dart';
 import 'package:grpc/grpc.dart';
 
+typedef AppMessageBlocErrorCallback = void Function(String message);
+typedef AppMessageBlocLocalizeErrorCallback = String Function(Localization l);
+
 mixin AppMessageBlocMixin {
   late final AppMessageBloc _messageBloc;
   late final Logger _log;
@@ -23,7 +26,7 @@ mixin AppMessageBlocMixin {
     String message, [
     Object? e,
     StackTrace? s,
-    void Function(String message)? onError,
+    AppMessageBlocErrorCallback? onError,
   ]) {
     final msg = formatMessage(message);
 
@@ -62,8 +65,9 @@ mixin AppMessageBlocMixin {
   /// Rethrows the error with the stack trace.
   static Never throwWithStackTrace(Object error, StackTrace stackTrace) => Error.throwWithStackTrace(error, stackTrace);
 
+  @pragma('dart2js:tryInline')
   @pragma('vm:prefer-inline')
-  static String _localizedError(String fallback, String Function(Localization l) localize) =>
+  static String _localizedError(String fallback, AppMessageBlocLocalizeErrorCallback localize) =>
       Localization.current == null ? fallback : localize(Localization.current!);
 
   // Also we can add current localization to this method

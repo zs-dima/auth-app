@@ -97,7 +97,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                   PhotoEditWidget(
                     user: _user,
                     userPhoto: _userAvatar,
-                    photoCallback: (photo) => _userAvatar = photo,
+                    onPhotoChanged: (photo) => _userAvatar = photo,
                   ),
                 ],
               ),
@@ -197,7 +197,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                   PhotoEditWidget(
                                     user: _user,
                                     userPhoto: _userAvatar,
-                                    photoCallback: (photo) => _userAvatar = photo,
+                                    onPhotoChanged: (photo) => _userAvatar = photo,
                                   ),
                                   const SizedBox(height: 16),
                                   SwitchFormField(

@@ -1,6 +1,9 @@
 import 'package:auth_model/auth_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+typedef AuthenticatedCallback<T extends Object?> = T Function(AuthenticatedUser user);
+typedef UnauthenticatedCallback<T extends Object?> = T Function();
+
 @immutable
 abstract class AuthUser {
   bool get isAuthenticated;
@@ -15,8 +18,8 @@ abstract class AuthUser {
   }) = AuthenticatedUser;
 
   T when<T extends Object?>({
-    required final T Function(AuthenticatedUser user) authenticated,
-    required final T Function() unauthenticated,
+    required final AuthenticatedCallback<T> authenticated,
+    required final UnauthenticatedCallback<T> unauthenticated,
   });
 }
 
@@ -35,8 +38,8 @@ class UnauthenticatedUser implements AuthUser {
 
   @override
   T when<T extends Object?>({
-    required final T Function(AuthenticatedUser user) authenticated,
-    required final T Function() unauthenticated,
+    required final AuthenticatedCallback<T> authenticated,
+    required final UnauthenticatedCallback<T> unauthenticated,
   }) =>
       unauthenticated();
 
@@ -67,8 +70,8 @@ class AuthenticatedUser implements AuthUser {
 
   @override
   T when<T extends Object?>({
-    required final T Function(AuthenticatedUser user) authenticated,
-    required final T Function() unauthenticated,
+    required final AuthenticatedCallback<T> authenticated,
+    required final UnauthenticatedCallback<T> unauthenticated,
   }) =>
       authenticated(this);
 

@@ -85,5 +85,5 @@ final class _PreferencesEntry<T extends Object> extends PreferencesEntry<T> {
   }
 
   @override
-  Future<void> remove() async => _sharedPreferences.remove(key);
+  Future<void> remove() => _sharedPreferences.remove(key);
 }

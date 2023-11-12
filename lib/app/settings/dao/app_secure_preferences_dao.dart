@@ -13,7 +13,7 @@ final class AppSecurePreferencesDao extends SecurePreferencesDao {
     super.driver, {
     required UserIdCallback? getUserId,
   }) : super(
-          keyPrefix: () async {
+          getKeyPrefix: () async {
             if (getUserId == null) return 'NA';
             final userId = await getUserId();
             return userId.isNullOrSpace ? 'NA' : '$userId';

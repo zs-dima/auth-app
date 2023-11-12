@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 
 import 'package:meta/meta.dart';
 
@@ -7,6 +8,8 @@ enum AuthenticationState {
   authenticated,
   unauthenticated,
 }
+
+typedef AuthenticationCallback = void Function(AuthenticationState state);
 
 abstract interface class IAuthenticationHandler implements Stream<AuthenticationState> {
   void handleAuthenticationError();
@@ -31,9 +34,9 @@ class AuthenticationHandler extends Stream<AuthenticationState> implements IAuth
 
   @override
   StreamSubscription<AuthenticationState> listen(
-    void Function(AuthenticationState state)? onData, {
+    AuthenticationCallback? onData, {
     Function? onError,
-    void Function()? onDone,
+    VoidCallback? onDone,
     bool? cancelOnError,
   }) {
     _controller ??= StreamController<AuthenticationState>.broadcast();
