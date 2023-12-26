@@ -56,4 +56,4 @@ jobs:
         run: |
           timoni mod push ./deploy/modules/auth-app \
             oci://docker.io/zsdima/auth-app \
-            --version 1.0.0-beta.3
+            --version 1.0.0-beta.3 --latest=false 
