@@ -52,7 +52,7 @@ app.*.map.json
 **/*.gen.dart
 **/*.freezed.dart
 **/*.mocks.dart
-**/gen/
+lib/**/gen/
 
 # Database
 **/*.db
