@@ -1,0 +1,57 @@
+name: Build & Push k8s artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        type: choice
+        required: true
+        default: 'staging'
+        options:
+          - production
+          - staging
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚥 Set environment   
+        run: |
+          echo "APP_ENVIRONMENT=$(
+          if ${{ github.event.inputs.environment != '' }}; then
+            echo ${{ github.event.inputs.environment }}
+          elif ${{ github.ref_name == 'test' }}; then
+            echo staging
+          elif ${{ github.ref_name == 'main' }}; then
+            echo production
+          else
+            echo unknown
+          fi
+          )" >> $GITHUB_ENV
+
+      - name: ✨ Get latest code
+        uses: actions/checkout@v3
+
+      - name: 🔑 Log into Docker registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_LOGIN_USERNAME }}
+          password: ${{ secrets.DOCKER_LOGIN_PASSWORD }}
+
+      - name: Setup Timoni
+        uses: stefanprodan/timoni/actions/setup@main
+
+      - name: Lint
+        run: |
+          timoni mod lint ./deploy/modules/auth-app
+
+      - name: Test instance build
+        run: |
+          timoni build -n testing test ./deploy/modules/auth-app
+
+      - name: 🐳 Push
+        run: |
+          timoni mod push ./deploy/modules/auth-app \
+            oci://docker.io/zs-dima/auth-app \
+            --version ${{ github.ref_name }}
