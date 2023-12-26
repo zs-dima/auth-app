@@ -53,5 +53,5 @@ jobs:
       - name: 🐳 Push
         run: |
           timoni mod push ./deploy/modules/auth-app \
-            oci://docker.io/zs-dima/auth-app \
+            oci://docker.io/zsdima/auth-app \
             --version ${{ github.ref_name }}
