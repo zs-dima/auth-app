@@ -48,7 +48,9 @@ jobs:
 
       - name: Test instance build
         run: |
-          timoni build -n auth-app auth-app ./deploy/modules/auth-app oci://docker.io/zsdima/auth-app --values values.yaml
+          timoni build -n auth-app auth-app ./deploy/modules/auth-app \
+            oci://docker.io/zsdima/auth-app \
+            --values ./deploy/modules/auth-app/values.yaml
 
       - name: 🐳 Push
         run: |
