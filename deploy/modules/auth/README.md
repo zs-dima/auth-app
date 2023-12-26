@@ -1,6 +1,6 @@
 # auth
 
-Timoni module for deploying auth app to Kubernetes clusters.
+Timoni module to deploy the auth app to Kubernetes clusters.
 
 ## Build yaml
 
