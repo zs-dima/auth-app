@@ -10,10 +10,10 @@ values: {
 	}
 	ingress: {
 		className: "traefik"
-		host:      "app.dmitrii.it"
+		host:      "app.${DOMAIN}"
 		// tls: {
 		// 	secretName: "app-tls"
-		// 	hosts: ["app.dmitrii.it"]
+		// 	hosts: ["app.${DOMAIN}"]
 		// }
 	}
 	autoscaling: enabled: false

@@ -5,15 +5,15 @@ values:
     className: traefik
     annotations:
       traefik.frontend.rule.type: PathPrefixStrip
-      external-dns.kubernetes.io/target: app.dmitrii.it
+      external-dns.kubernetes.io/target: app.${DOMAIN}
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.middlewares: auth-oauth-headers@kubernetescrd
       traefik.ingress.kubernetes.io/service.serversscheme: https
-    host: app.dmitrii.it
+    host: app.${DOMAIN}
     tls:
       - secretName: traefik-cert-prod
         hosts:
-          - app.dmitrii.it
+          - app.${DOMAIN}
   # autoscaling:
   #   enabled: false
   #   minReplicas: 3
