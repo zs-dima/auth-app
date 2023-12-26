@@ -1,0 +1,22 @@
+values:
+  image:
+    tag: latest
+  ingress:
+    className: traefik
+    annotations:
+      traefik.frontend.rule.type: PathPrefixStrip
+      external-dns.kubernetes.io/target: app.dmitrii.it
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.middlewares: auth-oauth-headers@kubernetescrd
+      traefik.ingress.kubernetes.io/service.serversscheme: https
+    host: app.dmitrii.it
+    tls:
+      - secretName: traefik-cert-prod
+        hosts:
+          - app.dmitrii.it
+  # autoscaling:
+  #   enabled: false
+  #   minReplicas: 3
+  # db:
+  #   enabled: false
+  #   provider: "google-official"
