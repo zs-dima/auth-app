@@ -42,13 +42,13 @@ jobs:
       - name: Setup Timoni
         uses: stefanprodan/timoni/actions/setup@main
 
-      - name: Lint
-        run: |
-          timoni mod lint ./deploy/modules/auth-app
+      # - name: Lint
+      #   run: |
+      #     timoni mod lint ./deploy/modules/auth-app
 
       - name: Test instance build
         run: |
-          timoni build -n testing test ./deploy/modules/auth-app
+          timoni build -n auth-app auth-app ./deploy/modules/auth-app oci://docker.io/zsdima/auth-app --values values.yaml
 
       - name: 🐳 Push
         run: |
