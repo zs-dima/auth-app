@@ -42,9 +42,9 @@ jobs:
       - name: Setup Timoni
         uses: stefanprodan/timoni/actions/setup@main
 
-      # - name: Lint
-      #   run: |
-      #     timoni mod lint ./deploy/modules/auth-app
+      - name: Lint
+        run: |
+          timoni mod lint ./deploy/modules/auth-app
 
       - name: Test instance build
         run: |
