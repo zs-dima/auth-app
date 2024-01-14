@@ -1,4 +1,4 @@
-import 'package:auth_app/app/theme/widget/theme_scope.dart';
+import 'package:auth_app/feature/settings/settings_scope.dart';
 import 'package:auth_app/feature/users/widget/user_avatar_widget.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +15,7 @@ class UserTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appTheme = ThemeScope.of(context).theme;
+    final appTheme = SettingsScope.themeOf(context).theme;
 
     final userTextStyle = user.deleted
         ? TextStyle(

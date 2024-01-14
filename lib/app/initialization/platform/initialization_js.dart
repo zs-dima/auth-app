@@ -1,15 +1,21 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 
-import 'dart:async';
 import 'dart:html' as html;
 
+//import 'package:flutter_web_plugins/url_strategy.dart';
 //import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-FutureOr<void> $platformInitialization() {
+Future<void> $platformInitialization() {
   //setUrlStrategy(const HashUrlStrategy());
+
+  // Remove splash screen
   Future<void>.delayed(
     const Duration(seconds: 1),
     () {
+      // Before running your app:
+      //setUrlStrategy(null); // const HashUrlStrategy();
+      //setUrlStrategy(NoHistoryUrlStrategy());
+
       html.document.getElementById('splash')?.remove();
       html.document.getElementById('splash-branding')?.remove();
       html.document.body?.style.background = 'transparent';
@@ -18,5 +24,14 @@ FutureOr<void> $platformInitialization() {
           .toList(growable: false)
           .forEach((element) => element.remove());
     },
-  ).ignore();
+  );
+
+  return Future.value();
 }
+
+/* class NoHistoryUrlStrategy extends PathUrlStrategy {
+  @override
+  void pushState(Object? state, String title, String url) =>
+      replaceState(state, title, url);
+}
+*/

@@ -170,6 +170,7 @@ linter:
     prefer_constructors_over_static_methods: false
     prefer_foreach: false
     avoid_positional_boolean_parameters: false
+    avoid_private_typedef_functions: false
 
     # Enabled
     avoid_web_libraries_in_flutter: true
@@ -320,7 +321,6 @@ linter:
     avoid_returning_null: true
     avoid_returning_this: true
     type_annotate_public_apis: true
-    avoid_private_typedef_functions: true
     hash_and_equals: true
     avoid_equals_and_hash_code_on_mutable_classes: true
     avoid_dynamic_calls: true
@@ -569,7 +569,7 @@ dart_code_metrics:
     #     name-pattern: ^handle[A-Z]+
     - prefer-correct-identifier-length:
         exceptions:
-          ["e", "i", "j", "k", "x", "y", "z", "id", "db", "h", "v", "js"]
+          ["e", "i", "j", "k", "x", "y", "z", "id", "db", "h", "v", "js", "fn"]
         max-identifier-length: 30
         min-identifier-length: 3
     - prefer-correct-json-casts
@@ -598,7 +598,7 @@ dart_code_metrics:
         include:
           - lib/**_widget.dart
     - prefer-moving-to-variable:
-        allowed-duplicated-chains: 3
+        allowed-duplicated-chains: 4
     - prefer-named-boolean-parameters
     - prefer-null-aware-spread
     # - prefer-named-imports
@@ -622,7 +622,7 @@ dart_code_metrics:
     - prefer-test-matchers
     - prefer-trailing-comma
     # - prefer-type-over-var
-    - prefer-typedefs-for-callbacks
+    # - prefer-typedefs-for-callbacks
     - prefer-unique-test-names
     - prefer-unwrapping-future-or
     - prefer-visible-for-testing-on-members

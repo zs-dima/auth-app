@@ -9,13 +9,6 @@ extension AppMessageScopeX on BuildContext {
   AppMessageController get message => AppMessageScope.of(this, listen: false);
 }
 
-/// {@template app_message_controller}
-/// A controller that holds and operates the app internal messages.
-/// {@endtemplate}
-abstract interface class AppMessageController {
-  AppMessageBloc get bloc;
-}
-
 /// {@template app_message_scope}
 /// Theme scope is responsible for handling theme-related stuff.
 ///
@@ -39,22 +32,21 @@ class AppMessageScope extends StatefulWidget {
   State<AppMessageScope> createState() => _AppMessageScopeState();
 }
 
-class _AppMessageScopeState extends State<AppMessageScope> implements AppMessageController {
+class _AppMessageScopeState extends State<AppMessageScope> {
   StreamSubscription<void>? _messageSubscription;
 
-  @override
-  late final AppMessageBloc bloc;
+  late final AppMessageController _controller;
 
   @override
   void initState() {
     super.initState();
 
-    bloc = AppMessageBloc();
+    _controller = AppMessageController();
   }
 
   void _subscribeMessages(BuildContext context) {
     _messageSubscription?.cancel();
-    _messageSubscription = bloc.stream.listen(
+    _messageSubscription = _controller.toStream().listen(
       (MessageState i) {
         if (!mounted) return;
         i.whenOrNull(
@@ -77,13 +69,13 @@ class _AppMessageScopeState extends State<AppMessageScope> implements AppMessage
   @override
   void dispose() {
     _messageSubscription?.cancel();
-    bloc.close();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => _AppMessageInherited(
-        controller: this,
+        controller: _controller,
         child: widget.child,
       );
 }

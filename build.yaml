@@ -13,9 +13,9 @@ targets:
           - lib/app/event_bus/**
           - lib/app/data/model/**
           - lib/app/environment/**
-          - lib/app/**_bloc.dart
+          - lib/app/**_controller.dart
           - lib/feature/**/model/**
-          - lib/feature/**_bloc.dart
+          - lib/feature/**_controller.dart
         options:
           any_map: false
           checked: false
@@ -29,7 +29,7 @@ targets:
       freezed:
         enabled: true
         generate_for:
-          - lib/app/**_bloc.dart
+          - lib/app/**_controller.dart
           - lib/app/theme/**
           - lib/app/event_bus/**
           - lib/app/environment/**
@@ -37,16 +37,20 @@ targets:
           - lib/app/theme/**
           - lib/app/data/model/**
           - lib/feature/**/model/**
-          - lib/feature/**_bloc.dart
+          - lib/feature/**_controller.dart
         options:
           union_key: type
           union_value_case: snake
           map: false
-          when: 
+          when:
             when: true
             maybe_when: false
             when_or_null: true
       drift_dev:
         enabled: true
         generate_for:
+          - lib/app/database/**
           - lib/core/data/**
+      pubspec_generator:
+        options:
+          output: lib/core/gen/constant/pubspec.yaml.g.dart

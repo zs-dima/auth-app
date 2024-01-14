@@ -71,7 +71,7 @@ class _RadialProgressIndicatorPainter extends CustomPainter {
 
   _RadialProgressIndicatorPainter({
     required Animation<double> animation,
-    Color color = Colors.blue, // TODO: use theme
+    Color color = Colors.blue,
   })  : _animation = animation,
         _arcPaint = Paint()
           ..strokeCap = StrokeCap.round

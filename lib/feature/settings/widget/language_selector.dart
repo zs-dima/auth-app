@@ -1,4 +1,4 @@
-import 'package:auth_app/app/locale/widget/locale_scope.dart';
+import 'package:auth_app/feature/settings/widget/language_card.dart';
 import 'package:flutter/material.dart';
 
 class LanguagesSelector extends StatelessWidget {
@@ -13,48 +13,13 @@ class LanguagesSelector extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           itemCount: _languages.length,
           itemBuilder: (context, index) {
-            final language = _languages[index];
+            final language = _languages.elementAt(index);
 
             return Padding(
               padding: const EdgeInsets.all(8),
-              child: _LanguageCard(language),
+              child: LanguageCard(language),
             );
           },
         ),
       );
-}
-
-class _LanguageCard extends StatelessWidget {
-  const _LanguageCard(this._language);
-
-  final Locale _language;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary,
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-        ),
-        child: InkWell(
-          onTap: () => LocaleScope.of(context).setLocale(_language),
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-          child: SizedBox(
-            width: 64,
-            child: Center(
-              child: Text(
-                _language.languageCode,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

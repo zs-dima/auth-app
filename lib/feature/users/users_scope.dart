@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:auth_app/app/app.dart';
-import 'package:auth_app/feature/auth/auth_scope.dart';
-import 'package:auth_app/feature/auth/bloc/auth_bloc.dart';
-import 'package:auth_app/feature/users/bloc/user_bloc.dart';
-import 'package:auth_app/feature/users/bloc/users_avatars_bloc.dart';
-import 'package:auth_app/feature/users/bloc/users_bloc.dart';
+import 'package:auth_app/feature/authentication/controller/authentication_controller.dart';
+import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/feature/users/controller/user_controller.dart';
+import 'package:auth_app/feature/users/controller/users_avatars_controller.dart';
+import 'package:auth_app/feature/users/controller/users_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:collection/collection.dart';
 import 'package:core_tool/core_tool.dart';
@@ -16,14 +16,14 @@ import 'package:ui_tool/ui_tool.dart';
 
 extension UsersScopeX on BuildContext {
   /// {@macro users_controller}
-  UsersController users({bool listen = false}) => UsersScope.of(this, listen: listen);
+  IUsersController users({bool listen = false}) => UsersScope.of(this, listen: listen);
 }
 
 /// {@template users_controller}
 /// A controller that holds and operates the app users.
 /// {@endtemplate}
-abstract interface class UsersController {
-  UsersBloc get bloc;
+abstract interface class IUsersController {
+  UsersController get controller;
   List<User> get users;
   User? byId(UserId id);
   Future<void> createUser(User user, String password);
@@ -43,7 +43,7 @@ class UsersScope extends StatefulWidget {
       context.scopeOf<_UsersScopeInherited>(listen: listen).users;
 
   /// Get the [UsersController] of the closest [UsersScope] ancestor.
-  static UsersController of(BuildContext context, {bool listen = false}) =>
+  static IUsersController of(BuildContext context, {bool listen = false}) =>
       context.scopeOf<_UsersScopeInherited>(listen: listen).controller;
 
   final Widget child;
@@ -52,33 +52,33 @@ class UsersScope extends StatefulWidget {
   State<UsersScope> createState() => _UsersScopeState();
 }
 
-class _UsersScopeState extends State<UsersScope> implements UsersController {
-  late AuthBloc _authBloc;
-  late UsersAvatarsBloc _avatarBloc;
+class _UsersScopeState extends State<UsersScope> implements IUsersController {
+  late AuthenticationController _authController;
+  late UsersAvatarsController _avatarController;
   IUserInfo? _currentUser;
-  late final UserBloc _userBloc;
+  late final UserController _userController;
 
   @override
-  late final UsersBloc bloc;
+  late final UsersController controller;
 
   @override
   void initState() {
     super.initState();
 
-    bloc = UsersBloc(
+    controller = UsersController(
       repository: context.dependencies.usersRepository,
-      messageBloc: context.message.bloc,
+      messageController: context.message,
     );
 
-    _userBloc = UserBloc(
+    _userController = UserController(
       repository: context.dependencies.usersRepository,
-      messageBloc: context.message.bloc,
+      messageController: context.message,
     );
 
-    _authBloc = context.auth(listen: false).bloc;
-    _avatarBloc = context.auth(listen: false).avatarBloc;
+    _authController = context.dependencies.authenticationController;
+    _avatarController = context.dependencies.avatarController;
 
-    _subscription = bloc.stream.listen(_listener);
+    _subscription = controller.toStream().listen(_listener);
   }
 
   void _listener(UsersState state) {
@@ -90,7 +90,7 @@ class _UsersScopeState extends State<UsersScope> implements UsersController {
         // Update authenticated user info
         final updatedUser = stateUsers.firstWhereOrNull((user) => user.id == _currentUser?.id);
         if (updatedUser != null && updatedUser != _currentUser) {
-          _authBloc.add(AuthEvent.updateUserInfo(updatedUser));
+          _authController.updateUserInfo(updatedUser);
           _currentUser = updatedUser;
         }
 
@@ -100,51 +100,51 @@ class _UsersScopeState extends State<UsersScope> implements UsersController {
   }
 
   @override
-  User? byId(UserId id) => bloc.state.whenOrNull(
+  User? byId(UserId id) => controller.state.whenOrNull(
         loaded: (_, stateUsers) => users.firstWhereOrNull((user) => user.id == id),
       );
 
   @override
   Future<void> createUser(User user, String password) async {
-    _userBloc.add(UserEvent.createUser(user, password));
-    await _userBloc.whereState<UserCreateState>().first;
+    _userController.createUser(user, password);
+    await _userController.toStream().where((i) => i is UserCreateState).first;
 
     final currentUser = _currentUser;
-    if (currentUser != null) bloc.add(UsersEvent.loadUsers(userId: currentUser.id));
+    if (currentUser != null) controller.loadUsers(currentUser.id);
   }
 
   @override
   Future<void> updateUser(User user) async {
-    if (user == bloc.state.users.firstWhereOrNull((u) => u.id == user.id)) {
+    if (user == controller.state.users.firstWhereOrNull((u) => u.id == user.id)) {
       return;
     }
-    _userBloc.add(UserEvent.updateUser(user));
-    await _userBloc.whereState<UserUpdateState>().first;
+    _userController.updateUser(user);
+    await _userController.toStream().where((i) => i is UserUpdateState).first;
 
     final currentUser = _currentUser;
-    if (currentUser != null) bloc.add(UsersEvent.loadUsers(userId: currentUser.id));
+    if (currentUser != null) controller.loadUsers(currentUser.id);
   }
 
   @override
-  void savePhoto(UserId userId, Uint8List? photo) => _avatarBloc.add(UsersAvatarsEvent.savePhoto(userId, photo));
+  void savePhoto(UserId userId, Uint8List? photo) => _avatarController.savePhoto(userId, photo);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final currentUser = AuthScope.userOf(context).maybeCast<AuthenticatedUser>()?.userInfo;
+    final currentUser = AuthenticationScope.userOf(context).maybeCast<AuthenticatedUser>()?.userInfo;
 
     if (_currentUser == currentUser) return;
     _currentUser = currentUser;
 
-    bloc.add(UsersEvent.loadUsers(userId: currentUser?.id ?? UserIdX.empty));
+    controller.loadUsers(currentUser?.id ?? UserIdX.empty);
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
-    bloc.close();
-    _userBloc.close();
+    controller.dispose();
+    _userController.dispose();
     super.dispose();
   }
 
@@ -169,7 +169,7 @@ class _UsersScopeInherited extends InheritedWidget {
     required super.child,
   });
 
-  final UsersController controller;
+  final IUsersController controller;
 
   final List<User> users;
 

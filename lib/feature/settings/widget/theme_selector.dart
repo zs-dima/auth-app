@@ -1,5 +1,5 @@
 import 'package:auth_app/app/theme/model/app_theme.dart';
-import 'package:auth_app/app/theme/widget/theme_scope.dart';
+import 'package:auth_app/feature/settings/settings_scope.dart';
 import 'package:flutter/material.dart';
 
 class ThemeSelector extends StatelessWidget {
@@ -39,7 +39,11 @@ class _ThemeCard extends StatelessWidget {
         color: _theme.seed ?? _theme.computeTheme(context).colorScheme.primary,
         borderRadius: const BorderRadius.all(Radius.circular(4)),
         child: InkWell(
-          onTap: () => ThemeScope.of(context).setTheme(_theme),
+          onTap: () {
+            SettingsScope.themeOf(context).setTheme(
+              AppTheme(mode: _theme.mode, seed: null, size: _theme.size),
+            );
+          },
           borderRadius: const BorderRadius.all(Radius.circular(4)),
           child: SizedBox(
             width: 64,

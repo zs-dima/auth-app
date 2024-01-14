@@ -5,7 +5,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.1.2"
+  sdk: ">=3.2.3"
 
 dependencies:
   # SDK extensions
@@ -15,7 +15,7 @@ dependencies:
   uuid: any
 
   # Internationalization
-  intl: ^0.18.1
+  intl: any
 
 dev_dependencies:
   lints_tool:

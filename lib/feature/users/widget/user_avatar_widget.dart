@@ -1,8 +1,8 @@
-import 'package:auth_app/feature/auth/auth_scope.dart';
-import 'package:auth_app/feature/users/bloc/users_avatars_bloc.dart';
+import 'package:auth_app/app/app.dart';
+import 'package:auth_app/feature/users/controller/users_avatars_controller.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:control/control.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 
 class UserAvatarWidget extends StatefulWidget {
@@ -10,25 +10,27 @@ class UserAvatarWidget extends StatefulWidget {
     super.key,
     required this.user,
     required this.size,
+    this.onPressed,
   });
 
   final IUserInfo user;
   final int size;
+  final VoidCallback? onPressed;
 
   @override
   State<UserAvatarWidget> createState() => _UserAvatarWidgetState();
 }
 
 class _UserAvatarWidgetState extends State<UserAvatarWidget> {
-  late final UsersAvatarsBloc _avatarBloc;
+  late final UsersAvatarsController _avatarController;
 
   @override
   void initState() {
     super.initState();
 
-    _avatarBloc = context.auth(listen: false).avatarBloc;
-    if (_avatarBloc.state.avatar(widget.user.id) == null) {
-      _avatarBloc.add(UsersAvatarsEvent.loadAvatar(widget.user.id, reload: false));
+    _avatarController = context.dependencies.avatarController;
+    if (_avatarController.state.avatar(widget.user.id) == null) {
+      _avatarController.loadAvatar(widget.user.id, reload: false);
     }
   }
 
@@ -54,10 +56,10 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     final user = widget.user;
     final initials = _getInitials(user.name);
 
-    return BlocBuilder<UsersAvatarsBloc, UsersAvatarsState>(
-      bloc: _avatarBloc,
+    return StateConsumer<UsersAvatarsController, UsersAvatarsState>(
+      controller: _avatarController,
       buildWhen: (previous, current) => previous.avatar(user.id) != current.avatar(user.id),
-      builder: (_, avatarState) {
+      builder: (_, avatarState, __) {
         final avatarLength = avatarState.avatar(user.id)?.avatar?.length ?? 0;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 700),
@@ -74,7 +76,11 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
                 decodingHeight: widget.size,
               ),
             ),
-            child: avatarLength == 0 ? Text(initials) : null,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: avatarLength == 0 ? Text(initials) : const SizedBox.expand(),
+              onPressed: widget.onPressed,
+            ),
           ),
         );
       },

@@ -3,62 +3,62 @@ import 'dart:async';
 
 import 'package:auth_app/app/environment/model/environment.dart';
 import 'package:auth_app/app/log/logger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// A class which is responsible for disabling error tracking.
-abstract interface class IExceptionTrackingDisabler {
+/// {@template error_tracking_manager}
+/// A class which is responsible for enabling error tracking.
+/// {@endtemplate}
+abstract interface class IExceptionTrackingManager {
+  /// Enables error tracking.
+  ///
+  /// This method should be called when the user has opted in to error tracking.
+  Future<void> enableReporting();
+
   /// Disables error tracking.
   ///
   /// This method should be called when the user has opted out of error tracking
   Future<void> disableReporting();
 }
 
-// abstract interface class ILogManager {
-//   Future<void> log(String message, {StackTrace? stackTrace});
-// }
-
-abstract interface class IExceptionTrackingManager implements IExceptionTrackingDisabler {
-  /// Enables error tracking.
-  ///
-  /// This method should be called when the user has opted in to error tracking.
-  Future<void> enableReporting();
-}
-
-/// {@template exception_tracking_manager}
-/// A class that is responsible for managing exception tracking.
+/// {@template sentry_tracking_manager}
+/// A class that is responsible for managing Sentry error tracking.
 /// {@endtemplate}
 abstract base class ExceptionTrackingManager implements IExceptionTrackingManager {
-  final Logger _log;
+  final Logger _logger;
   StreamSubscription<LogMessage>? _subscription;
 
   /// Catch only warnings and errors
-  Stream<LogMessage> get _reportLogs => _log.logs.where(_isWarningOrError);
+  Stream<LogMessage> get _reportLogs => _logger.logs.where(_isWarningOrError);
 
-  /// {@macro exception_tracking_manager}
-  ExceptionTrackingManager({
-    required Logger logger,
-  }) : _log = logger;
+  /// {@macro sentry_tracking_manager}
+  ExceptionTrackingManager(this._logger);
 
-  @override
   @mustCallSuper
   @mustBeOverridden
+  @override
   Future<void> disableReporting() async {
     await _subscription?.cancel();
     _subscription = null;
   }
 
-  @override
   @mustCallSuper
   @mustBeOverridden
+  @override
   Future<void> enableReporting() async {
-    _subscription ??= _reportLogs.listen(_report);
+    _subscription ??= _reportLogs.listen((log) async {
+      if (_shouldReport(log.error)) {
+        await _report(log);
+      }
+    });
   }
 
-  static bool _isWarningOrError(LogMessage log) => switch (log.level) {
-        LogLevel.shout || LogLevel.error || LogLevel.warning => true,
-        _ => false,
-      };
+  static bool _isWarningOrError(LogMessage log) => log.level.compareTo(LogLevel.warning) >= 0;
+
+  /// Returns `true` if the error should be reported.
+  @pragma('vm:prefer-inline', 'dart2js:tryInline')
+  bool _shouldReport(Object? error) => true;
 
   /// Handles the log message.
   ///
@@ -67,27 +67,30 @@ abstract base class ExceptionTrackingManager implements IExceptionTrackingManage
 }
 
 /// {@template sentry_tracking_manager}
-/// A class that is responsible for managing Sentry exceptions tracking.
+/// A class that is responsible for managing Sentry error tracking.
 /// {@endtemplate}
 final class SentryTrackingManager extends ExceptionTrackingManager {
-  final String _sentryDsn;
-  final Environment _environment;
+  /// The Sentry DSN.
+  final String sentryDsn;
+
+  /// The Sentry environment.
+  final EnvironmentFlavor environment;
 
   /// {@macro sentry_tracking_manager}
   SentryTrackingManager({
-    required Environment environment,
-    required String sentryDsn,
-    required super.logger,
-  })  : _environment = environment,
-        _sentryDsn = sentryDsn;
+    required this.sentryDsn,
+    required this.environment,
+    required Logger logger,
+  }) : super(logger);
 
   @override
   Future<void> enableReporting() async {
     await SentryFlutter.init(
       (options) => options
-        ..dsn = _sentryDsn
-        ..environment = _environment.toString()
-        ..tracesSampleRate = 1,
+        ..dsn = sentryDsn
+        ..tracesSampleRate = 0.2 // Set the sample rate to 20% of events.
+        ..debug = kDebugMode
+        ..environment = environment.toString(),
     );
     await super.enableReporting();
   }
@@ -100,14 +103,24 @@ final class SentryTrackingManager extends ExceptionTrackingManager {
 
   @override
   Future<void> _report(LogMessage log) async {
-    final buffer = StringBuffer()..write(log.message);
-    if (log.error != null) {
-      buffer.write('| ${log.error}');
+    final error = log.error;
+    final stackTrace = log.stackTrace;
+
+    if (error == null && stackTrace == null && log.message is String) {
+      await Sentry.captureMessage(log.message as String);
+      return;
     }
-    await Sentry.captureException(
-      buffer.toString(),
-      stackTrace: log.stackTrace,
-    );
+
+    await Sentry.captureException(error ?? log.message, stackTrace: stackTrace);
+
+    // final buffer = StringBuffer()..write(log.message);
+    // if (log.error != null) {
+    //   buffer.write('| ${log.error}');
+    // }
+    // await Sentry.captureException(
+    //   buffer.toString(),
+    //   stackTrace: log.stackTrace,
+    // );
   }
 
   // static Future<SentryId> _captureException(LogMessage msg) => Sentry.captureException(

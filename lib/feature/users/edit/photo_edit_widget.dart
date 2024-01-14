@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:auth_app/feature/auth/auth_scope.dart';
-import 'package:auth_app/feature/users/bloc/users_avatars_bloc.dart';
+import 'package:auth_app/app/app.dart';
+import 'package:auth_app/feature/users/controller/users_avatars_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ui_tool/ui_tool.dart';
 
 typedef PhotoCallback = void Function(Uint8List? avatar);
 
@@ -29,27 +28,28 @@ class PhotoEditWidget extends StatefulWidget {
 
 class _PhotoEditWidgetState extends State<PhotoEditWidget> {
   late UserAvatar _userAvatar;
-  late final UsersAvatarsBloc _avatarBloc;
+  late final UsersAvatarsController _avatarController;
   StreamSubscription? _userAvatarSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    _avatarBloc = context.auth(listen: false).avatarBloc;
+    _avatarController = context.dependencies.avatarController;
     final userAvatar = widget.userPhoto == null
-        ? _avatarBloc.state.avatar(widget.user.id)
+        ? _avatarController.state.avatar(widget.user.id)
         : UserAvatar(userId: widget.user.id, avatar: widget.userPhoto, loaded: true);
     _userAvatar = userAvatar ?? UserAvatar.empty.copyWith(userId: widget.user.id);
 
     if (userAvatar == null) {
-      _avatarBloc.add(UsersAvatarsEvent.loadAvatar(widget.user.id, reload: false));
+      _avatarController.loadAvatar(widget.user.id, reload: false);
     } else if (widget.userPhoto == null) {
       widget.onPhotoChanged(_userAvatar.avatar);
     }
 
-    _userAvatarSubscription = _avatarBloc //
-        .whereState<UsersAvatarsLoadedState>()
+    _userAvatarSubscription = _avatarController //
+        .toStream()
+        .where((i) => i is UsersAvatarsLoadedState)
         .map((state) => state.avatar(widget.user.id))
         .where((state) => state != null)
         .distinct()

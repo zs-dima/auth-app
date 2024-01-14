@@ -1,19 +1,19 @@
-import 'package:auth_app/app/initialization/model/dependencies.dart';
+import 'package:auth_app/app/app.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
-typedef AppDependenciesErrorBuilderCallback = Widget Function(Object error, StackTrace? stackTrace);
+extension DependenciesScopeX on BuildContext {
+  /// {@macro dependencies}
+  Dependencies get dependencies => DependenciesScope.of(this);
+}
 
 /// {@template dependencies_scope}
 /// DependenciesScope widget.
 /// {@endtemplate}
-class DependenciesScope extends StatelessWidget {
+class DependenciesScope extends InheritedWidget {
   /// {@macro dependencies_scope}
   const DependenciesScope({
-    required this.initialization,
-    required this.splashScreen,
-    required this.child,
-    this.errorBuilder,
+    required this.dependencies,
+    required super.child,
     super.key,
   });
 
@@ -26,55 +26,16 @@ class DependenciesScope extends StatelessWidget {
   /// that encloses the given context, if any.
   /// e.g. `DependenciesScope.maybeOf(context)`.
   static Dependencies? maybeOf(BuildContext context) =>
-      switch (context.getElementForInheritedWidgetOfExactType<_DependenciesScopeInherited>()?.widget) {
-        final _DependenciesScopeInherited inheritedDependencies => inheritedDependencies.dependencies,
-        _ => null,
-      };
+      (context.getElementForInheritedWidgetOfExactType<DependenciesScope>()?.widget as DependenciesScope?)
+          ?.dependencies;
 
   static Never _notFoundInheritedWidgetOfExactType() => throw ArgumentError(
         'Out of scope, not found inherited widget a DependenciesScope of the exact type',
         'out_of_scope',
       );
 
-  /// Initialization of the dependencies.
-  final Future<Dependencies> initialization;
-
-  /// Splash screen widget.
-  final Widget splashScreen;
-
-  /// Error widget.
-  final AppDependenciesErrorBuilderCallback? errorBuilder;
-
-  /// The widget below this widget in the tree.
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder<Dependencies>(
-        future: initialization,
-        builder: (_, snapshot) => switch ((snapshot.data, snapshot.error, snapshot.stackTrace)) {
-          (final Dependencies dependencies, null, null) => _DependenciesScopeInherited(
-              dependencies: dependencies,
-              child: child,
-            ),
-          (_, final Object error, final StackTrace? stackTrace) =>
-            errorBuilder?.call(error, stackTrace) ?? ErrorWidget(error),
-          _ => splashScreen,
-        },
-      );
-}
-
-/// {@template inherited_dependencies}
-/// InheritedDependencies widget.
-/// {@endtemplate}
-class _DependenciesScopeInherited extends InheritedWidget {
-  /// {@macro inherited_dependencies}
-  const _DependenciesScopeInherited({
-    required this.dependencies,
-    required super.child,
-  });
-
   final Dependencies dependencies;
 
   @override
-  bool updateShouldNotify(covariant _DependenciesScopeInherited oldWidget) => false;
+  bool updateShouldNotify(DependenciesScope oldWidget) => false;
 }

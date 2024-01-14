@@ -72,7 +72,7 @@ base class LogOptions {
 /// {@endtemplate}
 base class LogMessage {
   /// Log message
-  final String message;
+  final Object message;
 
   final String? hint;
   final Object? error;
@@ -106,7 +106,7 @@ abstract base class Logger {
 
   /// Logs the error to the console
   void e(
-    String message, {
+    Object message, {
     Object? error,
     StackTrace? stackTrace,
     String? hint,
@@ -115,7 +115,7 @@ abstract base class Logger {
 
   /// Logs the warning to the console
   void w(
-    String message, {
+    Object message, {
     Object? error,
     StackTrace? stackTrace,
     String? hint,
@@ -124,21 +124,21 @@ abstract base class Logger {
 
   /// Logs the info to the console
   void i(
-    String message, {
+    Object message, {
     String? hint,
     Object? data,
   });
 
   /// Logs the debug to the console
-  void d(String message);
+  void d(Object message);
 
   /// Logs the verbose to the console
-  void v(String message);
-  void v2(String message);
-  void v3(String message);
-  void v4(String message);
-  void v5(String message);
-  void v6(String message);
+  void v(Object message);
+  void v2(Object message);
+  void v3(Object message);
+  void v4(Object message);
+  void v5(Object message);
+  void v6(Object message);
 
   /// Set up the logger
   L runLogging<L>(
@@ -148,18 +148,23 @@ abstract base class Logger {
 
   /// Handy method to log zoneError
   void logZoneError(Object error, StackTrace stackTrace) {
-    e('Top-level error: $error $stackTrace', stackTrace: stackTrace);
+    e(
+      'Zone(${Zone.current.hashCode}) error: $error',
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
   /// Handy method to log [FlutterError]
   void logFlutterError(FlutterErrorDetails details) {
+    final exception = details.exception;
     final stackTrace = details.stack ?? StackTrace.current;
-    e('Flutter error: ${details.exceptionAsString()} $stackTrace', stackTrace: stackTrace);
+    e('FLUTTER ERROR:\r\n $details', error: exception, stackTrace: stackTrace);
   }
 
   /// Handy method to log [PlatformDispatcher] error
   bool logPlatformDispatcherError(Object error, StackTrace stackTrace) {
-    e('PlatformDispatcher error: $error', stackTrace: stackTrace);
+    e('PLATFORM ERROR:\r\n', error: error, stackTrace: stackTrace);
     return true;
   }
 }
@@ -203,13 +208,13 @@ final class AppLogger$L extends Logger {
           ..write(level.emoji)
           ..write(' ');
       }
-      buffer.writeln(message);
+      buffer.write(message);
 
       return buffer.toString();
     }
 
     final logOptions = logging.LogOptions(
-      printColors: kDebugMode,
+      printColors: options.printColors,
       handlePrint: true,
       outputInRelease: options.logInRelease,
       messageFormatting: formatLoggerMessage,
@@ -220,13 +225,24 @@ final class AppLogger$L extends Logger {
 
   @override
   void e(
-    String message, {
+    Object message, {
     Object? error,
     StackTrace? stackTrace,
     String? hint,
     Object? data,
   }) {
-    _log.e(message, stackTrace);
+    final buffer = StringBuffer(message);
+    if (error != null) {
+      buffer
+        ..write(', error: ')
+        ..write(error);
+    }
+    if (stackTrace != null) {
+      buffer
+        ..write(', stack trace: ')
+        ..write(stackTrace);
+    }
+    _log.e(buffer.toString(), stackTrace);
     _logController.add(
       LogMessage(
         message: message,
@@ -241,7 +257,7 @@ final class AppLogger$L extends Logger {
 
   @override
   void w(
-    String message, {
+    Object message, {
     Object? error,
     StackTrace? stackTrace,
     String? hint,
@@ -262,7 +278,7 @@ final class AppLogger$L extends Logger {
 
   @override
   void i(
-    String message, {
+    Object message, {
     String? hint,
     Object? data,
   }) {
@@ -278,19 +294,19 @@ final class AppLogger$L extends Logger {
   }
 
   @override
-  void d(String message) => _log.d(message);
+  void d(Object message) => _log.d(message);
   @override
-  void v(String message) => _log.v(message);
+  void v(Object message) => _log.v(message);
   @override
-  void v2(String message) => _log.vv(message);
+  void v2(Object message) => _log.vv(message);
   @override
-  void v3(String message) => _log.vvv(message);
+  void v3(Object message) => _log.vvv(message);
   @override
-  void v4(String message) => _log.vvvv(message);
+  void v4(Object message) => _log.vvvv(message);
   @override
-  void v5(String message) => _log.vvvvv(message);
+  void v5(Object message) => _log.vvvvv(message);
   @override
-  void v6(String message) => _log.vvvvvv(message);
+  void v6(Object message) => _log.vvvvvv(message);
 }
 
 extension on logging.LogLevel {

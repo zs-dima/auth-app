@@ -5,12 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-FutureOr<void> $platformInitialization() => //
-    io.Platform.isAndroid || io.Platform.isIOS //
-        ? _mobileInitialization()
-        : _desktopInitialization();
+Future<void> $platformInitialization() {
+  io.Platform.isAndroid || io.Platform.isIOS //
+      ? _mobileInitialization()
+      : _desktopInitialization();
+  return Future.value();
+}
 
-FutureOr<void> _mobileInitialization() {}
+void _mobileInitialization() {}
 
 Future<void> _desktopInitialization() async {
   // Must add this line.
@@ -24,7 +26,7 @@ Future<void> _desktopInitialization() async {
         : ThemeData.light().colorScheme.background,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.hidden,
-    windowButtonVisibility: false,
+    // windowButtonVisibility: false,
     fullScreen: false,
     title: 'Auth app',
   );

@@ -12,7 +12,6 @@ class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
   const UserListHeaderDelegate(this.title);
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // TODO: refresh on ThemeScope theme change
     final theme = Theme.of(context);
 
     return SizedBox(
@@ -43,5 +42,5 @@ class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
 }

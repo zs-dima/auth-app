@@ -24,7 +24,7 @@ class InitializationSplashScreen extends StatelessWidget {
                 size: 128,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
-                  builder: (_, value, __) => Text(
+                  builder: (context, value, _) => Text(
                     '${value.progress}%',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -41,7 +41,7 @@ class InitializationSplashScreen extends StatelessWidget {
                 opacity: 0.25,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
-                  builder: (_, value, __) => Text(
+                  builder: (context, value, _) => Text(
                     value.message,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 3,

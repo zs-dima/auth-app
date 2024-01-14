@@ -61,7 +61,7 @@ extension ScreenUtilExtension on BuildContext {
 /// tablet  | 600..1023 dp | 8 column
 /// desktop | >= 1024 dp   | 12 column
 /// {@endtemplate}
-sealed class ScreenUtil {
+abstract final class ScreenUtil {
   /// {@macro screen_util}
   static ScreenSize get screenSize {
     final view = ui.PlatformDispatcher.instance.implicitView;
@@ -70,19 +70,19 @@ sealed class ScreenUtil {
     return _screenSizeFromSize(size);
   }
 
-  /// Portrait or Landscape
-  static Orientation get orientation {
-    final view = ui.PlatformDispatcher.instance.implicitView;
-    final size = view?.physicalSize;
-    return size == null || size.height > size.width ? Orientation.portrait : Orientation.landscape;
-  }
-
   static ScreenSize from(Size size) => _screenSizeFromSize(size);
 
   /// {@macro screen_util}
   static ScreenSize screenSizeOf(final BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return _screenSizeFromSize(size);
+  }
+
+  /// Portrait or Landscape
+  static Orientation orientation() {
+    final view = ui.PlatformDispatcher.instance.implicitView;
+    final size = view?.physicalSize;
+    return size == null || size.height > size.width ? Orientation.portrait : Orientation.landscape;
   }
 
   /// Portrait or Landscape

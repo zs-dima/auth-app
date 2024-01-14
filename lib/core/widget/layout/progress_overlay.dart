@@ -5,7 +5,6 @@ import 'package:auth_app/app/app.dart';
 import 'package:auth_app/core/widget/window_scope.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ui_tool/ui_tool.dart';
 
 class ProgressOverlay extends StatefulWidget {
   const ProgressOverlay({
@@ -22,7 +21,7 @@ class ProgressOverlay extends StatefulWidget {
 class _ProgressOverlayState extends State<ProgressOverlay> {
   OverlayEntry? _overlayEntry;
 
-  AppMessageBloc? _messageBloc;
+  AppMessageController? _messageController;
 
   StreamSubscription? _messageSubscription;
 
@@ -30,9 +29,10 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
     _unsubscribeMessages();
     _messageSubscription =
         //
-        _messageBloc!
-            .whereState<AppProgressState>()
-            .where((i) => [AppProgress.started, AppProgress.done].contains(i.progress))
+        _messageController!
+            .toStream()
+            .where((i) => i is AppProgressState && [AppProgress.started, AppProgress.done].contains(i.progress))
+            .map((i) => i as AppProgressState)
             .listen(
       (AppProgressState i) {
         if (!mounted) return;
@@ -88,9 +88,9 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final messageBloc = context.message.bloc;
-    if (_messageBloc == messageBloc) return;
-    _messageBloc = messageBloc;
+    final messageController = context.message;
+    if (_messageController == messageController) return;
+    _messageController = messageController;
 
     _subscribeMessages();
   }
@@ -99,6 +99,9 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
   void dispose() {
     _unsubscribeMessages();
     _removeProgressOverlay();
+
+    _messageController?.dispose();
+
     super.dispose();
   }
 

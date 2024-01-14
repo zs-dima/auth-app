@@ -1,5 +1,5 @@
 import 'package:auth_app/app/theme/extension/theme_sizes.dart';
-import 'package:auth_app/app/theme/widget/theme_scope.dart';
+import 'package:auth_app/feature/settings/settings_scope.dart';
 import 'package:auth_app/feature/users/edit/user_edit_widget.dart';
 import 'package:auth_app/feature/users/users_scope.dart';
 import 'package:auth_model/auth_model.dart';
@@ -16,7 +16,7 @@ void editUserDialog(
       builder: (BuildContext ctx) {
         final theme = Theme.of(ctx);
         final colorScheme = theme.colorScheme;
-        final appTheme = ThemeScope.of(context).theme;
+        final appTheme = SettingsScope.themeOf(context).theme;
 
         return AlertDialog(
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))), // TODO: to theme

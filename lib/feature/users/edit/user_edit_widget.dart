@@ -1,9 +1,8 @@
 import 'package:auth_app/app/app.dart';
 import 'package:auth_app/app/theme/extension/theme_sizes.dart';
-import 'package:auth_app/app/theme/widget/theme_scope.dart';
 import 'package:auth_app/core/widget/form/switch_form_field.dart';
-import 'package:auth_app/feature/auth/auth_scope.dart';
-import 'package:auth_app/feature/users/bloc/users_avatars_bloc.dart';
+import 'package:auth_app/feature/settings/settings_scope.dart';
+import 'package:auth_app/feature/users/controller/users_avatars_controller.dart';
 import 'package:auth_app/feature/users/edit/photo_edit_widget.dart';
 import 'package:auth_app/feature/users/users_scope.dart';
 import 'package:auth_model/auth_model.dart';
@@ -23,7 +22,7 @@ class UserEditWidget extends StatefulWidget {
   final User user;
   final bool createNewUser;
 
-  final UsersController usersController;
+  final IUsersController usersController;
 
   @override
   State createState() => _UserEditWidgetState();
@@ -58,7 +57,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
         await widget.usersController.createUser(_user, _password!);
         widget.usersController.savePhoto(_user.id, _userAvatar);
       } else {
-        final avatar = context.auth(listen: false).avatarBloc.state.avatar(_user.id)?.avatar;
+        final avatar = context.dependencies.avatarController.state.avatar(_user.id)?.avatar;
         await widget.usersController.updateUser(_user);
         if (_userAvatar != avatar) {
           widget.usersController.savePhoto(_user.id, _userAvatar);
@@ -72,7 +71,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final appTheme = ThemeScope.of(context).theme;
+    final appTheme = SettingsScope.themeOf(context).theme;
 
     final isPhone = appTheme.size.isPhone;
 

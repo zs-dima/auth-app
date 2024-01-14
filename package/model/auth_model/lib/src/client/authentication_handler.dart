@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:html';
 
 import 'package:meta/meta.dart';
 
@@ -10,6 +9,7 @@ enum AuthenticationState {
 }
 
 typedef AuthenticationCallback = void Function(AuthenticationState state);
+typedef void VoidCallback();
 
 abstract interface class IAuthenticationHandler implements Stream<AuthenticationState> {
   void handleAuthenticationError();
