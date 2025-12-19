@@ -41,7 +41,7 @@ class _AppMessageScopeState extends State<AppMessageScope> {
   void initState() {
     super.initState();
 
-    _controller = AppMessageController();
+    _controller = context.dependencies.messageController;
   }
 
   void _subscribeMessages(BuildContext context) {

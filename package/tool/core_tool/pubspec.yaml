@@ -5,13 +5,13 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.2.3"
+  sdk: ">=3.10.4"
 
 dependencies:
   # SDK extensions
   meta: any
   collection: any
-  characters: ^1.3.0
+  characters: any
   uuid: any
 
   # Internationalization

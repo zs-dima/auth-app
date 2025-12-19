@@ -57,6 +57,7 @@ mixin AppMessageControllerMixin {
     } else {
       _log.e('gRPC Error: $message\n$error', stackTrace: s);
     }
+
     _messageController.showNetError(error, message);
   }
 

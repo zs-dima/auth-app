@@ -9,7 +9,7 @@ COPY ./tool/web_env.dart ./tool/
 RUN dart compile exe tool/web_env.dart -o tool/web-env
 
 
-FROM plugfox/flutter:3.13.5-web AS build_web
+FROM plugfox/flutter:3.38.5-web AS build_web
 WORKDIR /home
 COPY --chown=101:101 . .
 

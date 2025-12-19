@@ -5,7 +5,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.2.3"
+  sdk: ">=3.10.4"
 
 dependencies:
   # SDK extensions
@@ -13,7 +13,7 @@ dependencies:
   meta: any
 
   # Code generation
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   lints_tool:

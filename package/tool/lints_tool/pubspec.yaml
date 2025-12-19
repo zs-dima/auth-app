@@ -4,4 +4,4 @@ repository: https://github.com/zs-dima/lints_tool
 version: 1.0.1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.10.4 <4.0.0"

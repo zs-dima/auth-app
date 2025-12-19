@@ -7,7 +7,7 @@ part 'app_environment_model.freezed.dart';
 part 'app_environment_model.g.dart';
 
 @freezed
-class AppEnvironmentModel with _$AppEnvironmentModel {
+sealed class AppEnvironmentModel with _$AppEnvironmentModel {
   const factory AppEnvironmentModel({
     // --- APP --- //
     @JsonKey(name: EnvironmentVariables.appVersion) String? version,

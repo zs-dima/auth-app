@@ -6,16 +6,10 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 
 @freezed
-class User with _$User implements IUserInfo, Comparable<User> {
+sealed class User with _$User implements IUserInfo, Comparable<User> {
   static const type = '2204CA60-2D98-4BF7-8140-9BF746F4CFE1';
 
-  static const empty = User(
-    id: Uuid.NAMESPACE_NIL,
-    name: '',
-    email: '',
-    role: UserRole.user,
-    deleted: false,
-  );
+  static const empty = User(id: Uuid.NAMESPACE_NIL, name: '', email: '', role: UserRole.user, deleted: false);
 
   const User._();
 

@@ -1,8 +1,10 @@
+import 'dart:developer' as developer;
 import 'dart:typed_data';
 
 import 'package:core_model/core_model.dart';
 import 'package:fixnum/fixnum.dart' as fn;
 import 'package:grpc/grpc.dart';
+import 'package:grpc/protos.dart' show DebugInfo;
 import 'package:grpc_model/grpc_model.dart' as rpc;
 import 'package:uuid/uuid.dart';
 
@@ -64,45 +66,23 @@ extension GrpcErrorX on GrpcError {
     if (details != null) {
       for (final detail in details) {
         if (detail is DebugInfo) {
-          print(detail); // TODO: log details
+          developer.log(detail.toString(), name: 'GrpcError', error: this);
         }
       }
     }
 
-    switch (code) {
-      case StatusCode.unauthenticated:
-        final shortMessage = message;
-        if (shortMessage?.isNotEmpty ?? false) return '$caption. $shortMessage';
-        return caption;
-
-      case StatusCode.permissionDenied:
-        return '$caption: Permission denied';
-
-      case StatusCode.unavailable:
-        return 'Backend unavailable. Please contact support'; // '$caption: GRPC unavailable';
-
-      case StatusCode.aborted:
-        return '$caption: Network request aborted';
-
-      case StatusCode.dataLoss:
-        return '$caption: Network data loss';
-
-      case StatusCode.deadlineExceeded:
-        return 'Backend error. Please contact support'; // '$caption: GRPC deadline exceeded';
-
-      case StatusCode.cancelled:
-        return '$caption: Network request cancelled';
-
-      case StatusCode.internal:
-        return '$caption: $message';
-
-      case StatusCode.failedPrecondition:
-        return '$caption: Network request failed precondition';
-
-      case StatusCode.unknown:
-        if (message?.contains('CORS') ?? false) return '$caption: CORS error';
-    }
-
-    return '$caption: Network error: $this';
+    return switch (code) {
+      StatusCode.unauthenticated => (message?.isNotEmpty ?? false) ? '$caption. $message' : caption,
+      StatusCode.permissionDenied => '$caption: Permission denied',
+      StatusCode.unavailable => 'Backend unavailable. Please contact support',
+      StatusCode.aborted => '$caption: Network request aborted',
+      StatusCode.dataLoss => '$caption: Network data loss',
+      StatusCode.deadlineExceeded => 'Backend error. Please contact support',
+      StatusCode.cancelled => '$caption: Network request cancelled',
+      StatusCode.internal => '$caption: $message',
+      StatusCode.failedPrecondition => '$caption: Network request failed precondition',
+      StatusCode.unknown when message?.contains('CORS') ?? false => '$caption: CORS error',
+      _ => '$caption: Network error: $this',
+    };
   }
 }

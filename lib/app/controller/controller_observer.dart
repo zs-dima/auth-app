@@ -17,6 +17,11 @@ class ControllerObserver with _SentryTransactionMixin implements IControllerObse
   }
 
   @override
+  void onHandler(HandlerContext context) {
+    _log.v6('🪢 ${context.controller.runtimeType}.${context.name} | Started');
+  }
+
+  @override
   void onDispose(Controller controller) {
     _finishTransaction(controller, true);
     _log.v5('🪢 ${controller.runtimeType} | Disposed');
@@ -33,7 +38,7 @@ class ControllerObserver with _SentryTransactionMixin implements IControllerObse
   void onError(Controller controller, Object error, StackTrace stackTrace) {
     _log.w('🪢 ${controller.runtimeType}', error: error, stackTrace: stackTrace);
     _finishTransaction(controller, false);
-    if (platform.isIO) {
+    if (platform.desktop) {
       // ErrorSound.instance.play();
     }
   }

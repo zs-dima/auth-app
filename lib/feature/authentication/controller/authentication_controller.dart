@@ -51,88 +51,53 @@ final class AuthenticationController extends StateController<AuthenticationState
 
   /// Sign in with the given [data].
   void signIn(SignInData data) => handle(
-        () async {
-          setState(
-            AuthenticationState.processing(
-              user: state.user,
-              message: 'Logging in...',
-            ),
-          );
-          final device = await DeviceInfo.instance(data.installationId);
-          await _repository.signIn(data, device);
-        },
-        (error, stackTrace) {
-          setError('Signin error', error, stackTrace);
-          setState(
-            AuthenticationState.idle(
-              user: state.user,
-              error: 'Signin error',
-            ),
-          );
-        },
-        () => setState(
-          AuthenticationState.idle(user: state.user),
-        ),
-      );
+    () async {
+      setState(AuthenticationState.processing(user: state.user, message: 'Logging in...'));
+      final device = await DeviceInfo.instance(data.installationId);
+      await _repository.signIn(data, device);
+    },
+    error: (error, stackTrace) async {
+      setError('Signin error', error, stackTrace);
+      setState(AuthenticationState.idle(user: state.user, error: 'Signin error'));
+    },
+    done: () async => setState(AuthenticationState.idle(user: state.user)),
+  );
 
   /// Sign out.
   void signOut() => handle(
-        () async {
-          setState(
-            AuthenticationState.processing(
-              user: state.user,
-              message: 'Logging out...',
-            ),
-          );
-          await _repository.signOut();
-        },
-        (error, stackTrace) {
-          setError('Logout error', error, stackTrace);
-          setState(
-            AuthenticationState.idle(
-              user: state.user,
-              error: 'Logout error', // TODO ErrorUtil.formatMessage(error)
-            ),
-          );
-        },
-        () => setState(
-          const AuthenticationState.idle(
-            user: AuthUser.unauthenticated(),
-          ),
+    () async {
+      setState(AuthenticationState.processing(user: state.user, message: 'Logging out...'));
+      await _repository.signOut();
+    },
+    error: (error, stackTrace) async {
+      setError('Logout error', error, stackTrace);
+      setState(
+        AuthenticationState.idle(
+          user: state.user,
+          error: 'Logout error', // TODO ErrorUtil.formatMessage(error)
         ),
       );
+    },
+    done: () async => setState(const AuthenticationState.idle(user: AuthUser.unauthenticated())),
+  );
 
   /// Update UserInfo.
   void updateUserInfo(IUserInfo user) => handle(
-        () async {
-          final currentUser = state.user;
-          if (currentUser is! AuthenticatedUser) return;
-          if (currentUser.userInfo.id != user.id) return;
+    () async {
+      final currentUser = state.user;
+      if (currentUser is! AuthenticatedUser) return;
+      if (currentUser.userInfo.id != user.id) return;
 
-          setState(
-            AuthenticationState.processing(
-              user: state.user,
-              message: 'Updating user information...',
-            ),
-          );
+      setState(AuthenticationState.processing(user: state.user, message: 'Updating user information...'));
 
-          await _repository.updateUserInfo(user);
-        },
-        (error, stackTrace) {
-          setError('Updating user error', error, stackTrace);
-          setState(
-            AuthenticationState.idle(
-              user: state.user,
-              error: 'Updating user information error',
-            ),
-          );
-        },
-        () => setState(
-          AuthenticationState.idle(
-            user: _repository.user,
-          ),
-        ),
-      );
+      await _repository.updateUserInfo(user);
+    },
+    error: (error, stackTrace) async {
+      setError('Updating user error', error, stackTrace);
+      setState(AuthenticationState.idle(user: state.user, error: 'Updating user information error'));
+    },
+    done: () async => setState(AuthenticationState.idle(user: _repository.user)),
+  );
 
   @override
   void dispose() {

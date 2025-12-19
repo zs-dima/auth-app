@@ -48,55 +48,28 @@ final class SettingsController extends StateController<SettingsState> with Dropp
   final ISettingsRepository _repository;
   StreamSubscription<SettingsState>? _userSubscription;
 
-  SettingsController({
-    required ISettingsRepository repository,
-    required super.initialState,
-  }) : _repository = repository;
+  SettingsController({required ISettingsRepository repository, required super.initialState}) : _repository = repository;
 
   void updateTheme(AppTheme appTheme) => handle(
-        () async {
-          setState(
-            SettingsState.processing(
-              appTheme: state.appTheme,
-              locale: state.locale,
-            ),
-          );
-          await _repository.setThemeColor(appTheme.seed);
-          await _repository.setThemeMode(appTheme.mode);
-        },
-        (error, _) => setState(
-          SettingsState.error(
-            appTheme: state.appTheme,
-            locale: state.locale,
-            cause: error,
-          ),
-        ),
-        () => setState(
-          SettingsState.idle(appTheme: appTheme, locale: state.locale),
-        ),
-      );
+    () async {
+      setState(SettingsState.processing(appTheme: state.appTheme, locale: state.locale));
+      await _repository.setThemeColor(appTheme.seed);
+      await _repository.setThemeMode(appTheme.mode);
+    },
+    error: (error, _) async =>
+        setState(SettingsState.error(appTheme: state.appTheme, locale: state.locale, cause: error)),
+    done: () async => setState(SettingsState.idle(appTheme: appTheme, locale: state.locale)),
+  );
 
   void updateLocale(Locale locale) => handle(
-        () async {
-          setState(
-            SettingsState.processing(
-              appTheme: state.appTheme,
-              locale: state.locale,
-            ),
-          );
-          await _repository.setLocale(locale);
-        },
-        (error, _) => setState(
-          SettingsState.error(
-            appTheme: state.appTheme,
-            locale: state.locale,
-            cause: error,
-          ),
-        ),
-        () => setState(
-          SettingsState.idle(appTheme: state.appTheme, locale: locale),
-        ),
-      );
+    () async {
+      setState(SettingsState.processing(appTheme: state.appTheme, locale: state.locale));
+      await _repository.setLocale(locale);
+    },
+    error: (error, _) async =>
+        setState(SettingsState.error(appTheme: state.appTheme, locale: state.locale, cause: error)),
+    done: () async => setState(SettingsState.idle(appTheme: state.appTheme, locale: locale)),
+  );
 
   @override
   void dispose() {

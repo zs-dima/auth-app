@@ -10,7 +10,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'users_controller.freezed.dart';
 
 @freezed
-class UsersState with _$UsersState {
+sealed class UsersState with _$UsersState {
   const factory UsersState.loading(UserId userId, UnmodifiableListView<User> users) = _usersLoadingState;
   const factory UsersState.loaded(UserId userId, UnmodifiableListView<User> users) = UsersLoadedState;
 }
@@ -22,34 +22,32 @@ final class UsersController extends StateController<UsersState>
   List<User> _users = const <User>[];
   String? _query;
 
-  UsersController({
-    required IUsersRepository repository,
-    required AppMessageController messageController,
-  })  : _repository = repository,
-        super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
+  UsersController({required IUsersRepository repository, required AppMessageController messageController})
+    : _repository = repository,
+      super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
     this.messageController = messageController;
   }
 
   void loadUsers(UserId currentUserId) => handle(
-        () async {
-          if (currentUserId.isEmpty) {
-            setState(UsersState.loaded(currentUserId, UnmodifiableListView<User>([])));
-            return;
-          }
+    () async {
+      if (currentUserId.isEmpty) {
+        setState(UsersState.loaded(currentUserId, UnmodifiableListView<User>([])));
+        return;
+      }
 
-          setState(UsersState.loading(currentUserId, state.users));
-          setProgress(AppProgress.started);
+      setState(UsersState.loading(currentUserId, state.users));
+      setProgress(AppProgress.started);
 
-          final users = await _repository.loadUsers(currentUserId).toList();
-          users.sort();
-          _users = users;
-          final result = _filter(users, _query);
+      final users = await _repository.loadUsers(currentUserId).toList();
+      users.sort();
+      _users = users;
+      final result = _filter(users, _query);
 
-          setState(UsersState.loaded(currentUserId, result));
-        },
-        (error, stackTrace) => setError('Error on loading users', error, stackTrace),
-        () => setProgress(AppProgress.done),
-      );
+      setState(UsersState.loaded(currentUserId, result));
+    },
+    error: (error, stackTrace) async => setError('Error on loading users', error, stackTrace),
+    done: () async => setProgress(AppProgress.done),
+  );
 
   void filterUsers(String q) {
     final query = q.toUpperCase();

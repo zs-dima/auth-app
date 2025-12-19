@@ -12,7 +12,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'users_avatars_controller.freezed.dart';
 
 @freezed
-class UsersAvatarsState with _$UsersAvatarsState {
+sealed class UsersAvatarsState with _$UsersAvatarsState {
   const factory UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar> avatars) = UsersAvatarsLoadedState;
 }
 
@@ -26,64 +26,62 @@ final class UsersAvatarsController extends StateController<UsersAvatarsState>
     with DroppableControllerHandler, AppMessageControllerMixin {
   final IUsersRepository _repository;
 
-  UsersAvatarsController({
-    required IUsersRepository usersRepository,
-    required AppMessageController messageController,
-  })  : _repository = usersRepository,
-        super(initialState: UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([]))) {
+  UsersAvatarsController({required IUsersRepository usersRepository, required AppMessageController messageController})
+    : _repository = usersRepository,
+      super(initialState: UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([]))) {
     this.messageController = messageController;
   }
 
   void loadAvatar(UserId userId, {required bool reload}) => handle(
-        () async {
-          if (userId.isNullOrEmpty) return;
+    () async {
+      if (userId.isNullOrEmpty) return;
 
-          final stateAvatar = state.avatars.firstWhereOrNull((i) => i.userId == userId);
-          if (stateAvatar != null && stateAvatar.loaded && !reload) return;
+      final stateAvatar = state.avatars.firstWhereOrNull((i) => i.userId == userId);
+      if (stateAvatar != null && stateAvatar.loaded && !reload) return;
 
-          final avatars = state.avatars.where((i) => i.userId != userId);
-          final loadingAvatar = UserAvatar.empty.copyWith(userId: userId);
-          setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadingAvatar])));
+      final avatars = state.avatars.where((i) => i.userId != userId);
+      final loadingAvatar = UserAvatar.empty.copyWith(userId: userId);
+      setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadingAvatar])));
 
-          setProgress(AppProgress.started);
+      setProgress(AppProgress.started);
 
-          // TODO: loadAvatar: (List<UserId>
-          final loadedAvatar =
-              (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ?? loadingAvatar.copyWith(loaded: true);
+      // TODO: loadAvatar: (List<UserId>
+      final loadedAvatar =
+          (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ?? loadingAvatar.copyWith(loaded: true);
 
-          setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
-        },
-        (error, stackTrace) {
-          setError('Error on loading user avatar', error, stackTrace);
-          Error.throwWithStackTrace(error, stackTrace);
-        },
-        () {
-          setProgress(AppProgress.done);
-          // setState(const UsersAvatarsState.idle());
-        },
-      );
+      setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
+    },
+    error: (error, stackTrace) async {
+      setError('Error on loading user avatar', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async {
+      setProgress(AppProgress.done);
+      // setState(const UsersAvatarsState.idle());
+    },
+  );
 
   void savePhoto(UserId userId, Uint8List? photo) => handle(
-        () async {
-          setProgress(AppProgress.started);
+    () async {
+      setProgress(AppProgress.started);
 
-          final result = await _repository.saveUserPhoto(userId, photo);
-          if (!result) {
-            setError('Error on saving user avatar');
-            return;
-          }
+      final result = await _repository.saveUserPhoto(userId, photo);
+      if (!result) {
+        setError('Error on saving user avatar');
+        return;
+      }
 
-          loadAvatar(userId, reload: true);
-        },
-        (error, stackTrace) {
-          setError('Error on saving user avatar', error, stackTrace);
-          Error.throwWithStackTrace(error, stackTrace);
-        },
-        () {
-          setProgress(AppProgress.done);
-          // setState(const UsersAvatarsState.idle());
-        },
-      );
+      loadAvatar(userId, reload: true);
+    },
+    error: (error, stackTrace) async {
+      setError('Error on saving user avatar', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async {
+      setProgress(AppProgress.done);
+      // setState(const UsersAvatarsState.idle());
+    },
+  );
 }
 
 // TODO: move to auth_model package

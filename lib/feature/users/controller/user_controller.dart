@@ -28,46 +28,46 @@ final class UserController extends StateController<UserState>
   }
 
   void createUser(User user, String password) => handle(
-        () async {
-          setProgress(AppProgress.started);
+    () async {
+      setProgress(AppProgress.started);
 
-          // TODO: generate user blurhash
-          final result = await _repository.createUser(user, password);
-          result //
-              ? setMessage('User successfully saved', Colors.green[700])
-              : setError('Error on saving user');
+      // TODO: generate user blurhash
+      final result = await _repository.createUser(user, password);
+      result //
+          ? setMessage('User successfully saved', Colors.green[700])
+          : setError('Error on saving user');
 
-          setState(UserState.created(user));
-        },
-        (error, stackTrace) {
-          setError('Error on saving user', error, stackTrace);
-          Error.throwWithStackTrace(error, stackTrace);
-        },
-        () {
-          setProgress(AppProgress.done);
-          setState(const UserState.idle());
-        },
-      );
+      setState(UserState.created(user));
+    },
+    error: (error, stackTrace) async {
+      setError('Error on saving user', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async {
+      setProgress(AppProgress.done);
+      setState(const UserState.idle());
+    },
+  );
 
   void updateUser(User user) => handle(
-        () async {
-          setProgress(AppProgress.started);
+    () async {
+      setProgress(AppProgress.started);
 
-          // TODO: update user blurhash
-          final result = await _repository.updateUser(user);
-          result //
-              ? setMessage('User successfully saved', Colors.green[700])
-              : setError('Error on saving user');
+      // TODO: update user blurhash
+      final result = await _repository.updateUser(user);
+      result //
+          ? setMessage('User successfully saved', Colors.green[700])
+          : setError('Error on saving user');
 
-          setState(UserState.updated(user));
-        },
-        (error, stackTrace) {
-          setError('Error on saving user', error, stackTrace);
-          Error.throwWithStackTrace(error, stackTrace);
-        },
-        () {
-          setProgress(AppProgress.done);
-          setState(const UserState.idle());
-        },
-      );
+      setState(UserState.updated(user));
+    },
+    error: (error, stackTrace) async {
+      setError('Error on saving user', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async {
+      setProgress(AppProgress.done);
+      setState(const UserState.idle());
+    },
+  );
 }

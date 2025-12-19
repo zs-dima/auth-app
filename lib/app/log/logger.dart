@@ -190,25 +190,29 @@ final class AppLogger$L extends Logger {
     /// Formats the logger message
     ///
     /// Combines emoji, time and message
-    String formatLoggerMessage(
-      Object message,
-      logging.LogLevel level,
-      DateTime time,
+    Object formatLoggerMessage(
+      logging.LogMessage event,
     ) {
       final buffer = StringBuffer();
       if (options.showTime) {
         buffer
-          ..write(time.formatted)
+          ..write(event.timestamp.formatted)
           ..write(' ')
-          ..write(level.splitter)
+          ..write(event.level.splitter)
           ..write(' ');
       }
       if (options.showEmoji) {
         buffer
-          ..write(level.emoji)
+          ..write(event.level.emoji)
           ..write(' ');
       }
-      buffer.write(message);
+      buffer.write(event.message);
+
+      if (event is logging.LogMessageError && event.stackTrace != StackTrace.empty) {
+        buffer
+          ..writeln()
+          ..write(event.stackTrace);
+      }
 
       return buffer.toString();
     }

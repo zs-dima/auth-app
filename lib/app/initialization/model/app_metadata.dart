@@ -69,39 +69,43 @@ class AppMetadata {
   });
 
   factory AppMetadata.fromApp() => AppMetadata(
-        isWeb: platform.isWeb,
-        isRelease: platform.buildMode.isRelease,
-        appName: Pubspec.name,
-        appVersion: Pubspec.version.representation,
-        appVersionMajor: Pubspec.version.major,
-        appVersionMinor: Pubspec.version.minor,
-        appVersionPatch: Pubspec.version.patch,
-        appBuildTimestamp: Pubspec.version.build.isNotEmpty //
-            ? (int.tryParse(Pubspec.version.build.firstOrNull ?? '-1') ?? -1)
-            : -1,
-        operatingSystem: platform.operatingSystem.name,
-        processorsCount: platform.numberOfProcessors,
-        appLaunchedTimestamp: DateTime.now(),
-        locale: platform.locale,
-        deviceVersion: platform.version,
-        deviceScreenSize: ScreenUtil.screenSize.representation,
-      );
+    isWeb: platform.js,
+    isRelease: platform.buildMode.release,
+    appName: Pubspec.name,
+    appVersion: Pubspec.version.representation,
+    appVersionMajor: Pubspec.version.major,
+    appVersionMinor: Pubspec.version.minor,
+    appVersionPatch: Pubspec.version.patch,
+    appBuildTimestamp:
+        Pubspec
+            .version
+            .build
+            .isNotEmpty //
+        ? (int.tryParse(Pubspec.version.build.firstOrNull ?? '-1') ?? -1)
+        : -1,
+    operatingSystem: platform.operatingSystem.name,
+    processorsCount: platform.numberOfProcessors,
+    appLaunchedTimestamp: DateTime.now(),
+    locale: platform.locale,
+    deviceVersion: platform.version,
+    deviceScreenSize: ScreenUtil.screenSize.representation,
+  );
 
   /// Convert to headers
   Map<String, String> toHeaders() => <String, String>{
-        'X-Meta-Is-Web': isWeb ? 'true' : 'false',
-        'X-Meta-Is-Release': isRelease ? 'true' : 'false',
-        'X-Meta-App-Version': appVersion,
-        'X-Meta-App-Version-Major': appVersionMajor.toString(),
-        'X-Meta-App-Version-Minor': appVersionMinor.toString(),
-        'X-Meta-App-Version-Patch': appVersionPatch.toString(),
-        'X-Meta-App-Build-Timestamp': appBuildTimestamp.toString(),
-        'X-Meta-App-Name': appName,
-        'X-Meta-Operating-System': operatingSystem,
-        'X-Meta-Processors-Count': processorsCount.toString(),
-        'X-Meta-Locale': locale,
-        'X-Meta-Device-Version': deviceVersion,
-        'X-Meta-Device-Screen-Size': deviceScreenSize,
-        'X-Meta-App-Launched-Timestamp': appLaunchedTimestamp.millisecondsSinceEpoch.toString(),
-      };
+    'X-Meta-Is-Web': isWeb ? 'true' : 'false',
+    'X-Meta-Is-Release': isRelease ? 'true' : 'false',
+    'X-Meta-App-Version': appVersion,
+    'X-Meta-App-Version-Major': appVersionMajor.toString(),
+    'X-Meta-App-Version-Minor': appVersionMinor.toString(),
+    'X-Meta-App-Version-Patch': appVersionPatch.toString(),
+    'X-Meta-App-Build-Timestamp': appBuildTimestamp.toString(),
+    'X-Meta-App-Name': appName,
+    'X-Meta-Operating-System': operatingSystem,
+    'X-Meta-Processors-Count': processorsCount.toString(),
+    'X-Meta-Locale': locale,
+    'X-Meta-Device-Version': deviceVersion,
+    'X-Meta-Device-Screen-Size': deviceScreenSize,
+    'X-Meta-App-Launched-Timestamp': appLaunchedTimestamp.millisecondsSinceEpoch.toString(),
+  };
 }

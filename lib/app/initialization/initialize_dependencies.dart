@@ -29,9 +29,7 @@ import 'package:grpc_model/grpc_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Initializes the app and returns a [Dependencies] object
-Future<Dependencies> $initializeDependencies({
-  void Function(int progress, String message)? onProgress,
-}) async {
+Future<Dependencies> $initializeDependencies({void Function(int progress, String message)? onProgress}) async {
   final dependencies = Dependencies();
   final totalSteps = _initializationSteps.length;
   var currentStep = 0;
@@ -42,7 +40,9 @@ Future<Dependencies> $initializeDependencies({
       final percent = (currentStep * 100 ~/ totalSteps).clamp(0, 100);
       onProgress?.call(percent, step.key);
       final stepFunction = step.value(dependencies);
-      final _ = stepFunction is Future //
+      final _ =
+          stepFunction
+              is Future //
           ? await stepFunction
           : stepFunction;
       stopWatch.stop();
@@ -87,7 +87,9 @@ final _initializationSteps = <String, _InitializationStep>{
   'Connect to database': (dependencies) {
     final environment = dependencies.environment;
 
-    return (dependencies.database = environment.inMemoryDatabase //
+    return (dependencies.database =
+            environment
+                .inMemoryDatabase //
             ? Database.memory(environment.databaseName)
             : Database.lazy(environment.databaseName))
         .refresh();
@@ -95,14 +97,15 @@ final _initializationSteps = <String, _InitializationStep>{
   'Shrink database': (dependencies) async {
     await dependencies.database.customStatement('VACUUM;');
     await dependencies.database.transaction(() async {
-      final log = await (dependencies.database.select<LogTbl, LogTblData>(dependencies.database.logTbl)
-            ..orderBy([(tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc)])
-            ..limit(1, offset: 1000))
-          .getSingleOrNull();
+      final log =
+          await (dependencies.database.select<LogTbl, LogTblData>(dependencies.database.logTbl)
+                ..orderBy([(tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc)])
+                ..limit(1, offset: 1000))
+              .getSingleOrNull();
       if (log != null) {
-        await (dependencies.database.delete(dependencies.database.logTbl)
-              ..where((tbl) => tbl.time.isSmallerOrEqualValue(log.time)))
-            .go();
+        await (dependencies.database.delete(
+          dependencies.database.logTbl,
+        )..where((tbl) => tbl.time.isSmallerOrEqualValue(log.time))).go();
       }
     });
     if (DateTime.now().second % 10 == 0) await dependencies.database.customStatement('VACUUM;');
@@ -111,9 +114,7 @@ final _initializationSteps = <String, _InitializationStep>{
 
   'Settings': (dependencies) async {
     final sharedPreferences = await SharedPreferences.getInstance();
-    final preferencesDao = AppPreferencesDao(
-      sharedPreferences,
-    );
+    final preferencesDao = AppPreferencesDao(sharedPreferences);
     const secureStorage = FlutterSecureStorage();
     final securePreferencesDao = AppSecurePreferencesDao.instance(
       secureStorage,
@@ -155,10 +156,7 @@ final _initializationSteps = <String, _InitializationStep>{
     );
 
     final authChannel = GrpcClientChannel(environment.authService);
-    final authClient = AuthApiClient.instance(
-      channel: authChannel,
-      credentialsManager: credentialsManager,
-    );
+    final authClient = AuthApiClient(authChannel, credentialsManager: credentialsManager);
     final authApi = AuthApi(client: authClient);
 
     final authenticationRepository = AuthRepository(
@@ -178,17 +176,14 @@ final _initializationSteps = <String, _InitializationStep>{
     final userInfo = settings.user;
     final credentials = await settings.getCredentials();
     if (userInfo != null && credentials != null) {
-      final user = AuthenticatedUser(
-        userInfo: userInfo,
-        credentials: credentials,
-      );
+      final user = AuthenticatedUser(userInfo: userInfo, credentials: credentials);
       await authenticationRepository.validateCredentials(user);
     }
   },
   'Users avatars controller': (dependencies) => dependencies.avatarController = UsersAvatarsController(
-        usersRepository: dependencies.usersRepository,
-        messageController: dependencies.messageController,
-      ),
+    usersRepository: dependencies.usersRepository,
+    messageController: dependencies.messageController,
+  ),
 
   // 'Prepare authentication controller': (dependencies) =>
   //     dependencies.authenticationController = AuthenticationController(

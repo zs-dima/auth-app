@@ -1,6 +1,7 @@
 import 'package:auth_model/auth_model.dart';
 
-abstract class IUserInfo {
+/// User information contract for authentication.
+abstract interface class IUserInfo {
   UserId get id;
   String get name;
   String get email;

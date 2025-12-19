@@ -28,13 +28,15 @@ class DeviceInfo implements IDeviceInfo {
 
   static Future<DeviceInfo> instance(String installationId) async {
     final platform = Platform.instance;
-    if (platform.isWeb) {
+    final deviceOs = _mapOperatingSystem(platform.operatingSystem);
+
+    if (platform.js) {
       return DeviceInfo(
         installationId: installationId,
         deviceId: installationId,
         deviceName: 'Unknown device',
         deviceModel: 'Unknown model',
-        deviceOs: OsEnum.values.elementAt(platform.operatingSystem.index),
+        deviceOs: deviceOs,
         deviceOsVersion: platform.version,
       );
     }
@@ -42,18 +44,18 @@ class DeviceInfo implements IDeviceInfo {
     final deviceInfo = DeviceInfoPlugin();
 
     switch (platform.operatingSystem) {
-      case OperatingSystem.iOS:
+      case OperatingSystem$iOS():
         final iosInfo = await deviceInfo.iosInfo;
         return DeviceInfo(
           installationId: installationId,
           deviceId: iosInfo.identifierForVendor ?? installationId,
           deviceName: iosInfo.name,
           deviceModel: iosInfo.model,
-          deviceOs: OsEnum.values.elementAt(platform.operatingSystem.index),
+          deviceOs: deviceOs,
           deviceOsVersion: platform.version,
         );
 
-      case OperatingSystem.android:
+      case OperatingSystem$Android():
         const androidIdPlugin = AndroidId();
         final androidId = await androidIdPlugin.getId();
         final androidInfo = await deviceInfo.androidInfo;
@@ -62,7 +64,7 @@ class DeviceInfo implements IDeviceInfo {
           deviceId: androidId ?? installationId,
           deviceName: androidInfo.host,
           deviceModel: androidInfo.model,
-          deviceOs: OsEnum.values.elementAt(platform.operatingSystem.index),
+          deviceOs: deviceOs,
           deviceOsVersion: platform.version,
         );
 
@@ -72,9 +74,19 @@ class DeviceInfo implements IDeviceInfo {
           deviceId: installationId,
           deviceName: 'Unknown device',
           deviceModel: 'Unknown model',
-          deviceOs: OsEnum.values.elementAt(platform.operatingSystem.index),
+          deviceOs: deviceOs,
           deviceOsVersion: platform.version,
         );
     }
   }
+
+  static OsEnum _mapOperatingSystem(OperatingSystem os) => switch (os) {
+    OperatingSystem$Fuchsia() => OsEnum.fuchsia,
+    OperatingSystem$Linux() => OsEnum.linux,
+    OperatingSystem$MacOS() => OsEnum.macOS,
+    OperatingSystem$Windows() => OsEnum.windows,
+    OperatingSystem$iOS() => OsEnum.iOS,
+    OperatingSystem$Android() => OsEnum.android,
+    OperatingSystem$Unknown() => OsEnum.unknown,
+  };
 }

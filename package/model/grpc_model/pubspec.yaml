@@ -5,7 +5,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.2.3"
+  sdk: ">=3.10.4"
 
 dependencies:
   core_model:
@@ -15,11 +15,11 @@ dependencies:
   collection: any
   meta: any
   uuid: any
-  fixnum: ^1.1.0
+  fixnum: any
 
   # API
-  grpc: ^3.2.4
-  protobuf: ^3.1.0
+  grpc: ^5.1.0
+  protobuf: ^6.0.0
 
 dev_dependencies:
   lints_tool:

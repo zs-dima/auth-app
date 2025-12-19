@@ -5,7 +5,7 @@ part 'user_info.freezed.dart';
 part 'user_info.g.dart';
 
 @freezed
-class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo> {
+sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo> {
   static const type = '987FCBC3-C8EF-4AE6-8DBD-B9049DF84B4C';
 
   const UserInfo._();

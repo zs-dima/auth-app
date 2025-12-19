@@ -2,6 +2,7 @@ library auth_model;
 
 export 'src/api/auth_api.dart';
 export 'src/api/auth_api_client.dart';
+export 'src/api/auth_error.dart';
 export 'src/api/i_auth_api.dart';
 export 'src/client/authentication_handler.dart';
 export 'src/client/credentials_callbacks.dart';

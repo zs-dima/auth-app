@@ -7,7 +7,7 @@ import 'package:json_converter/json_converter.dart';
 part 'user_avatar.freezed.dart';
 
 @freezed
-class UserAvatar with _$UserAvatar implements Comparable<UserAvatar> {
+sealed class UserAvatar with _$UserAvatar implements Comparable<UserAvatar> {
   static const type = '8D15A784-AACD-47AA-9D90-0133C4D3801C';
 
   static const empty = UserAvatar(userId: UserIdX.empty, avatar: null, loaded: false);

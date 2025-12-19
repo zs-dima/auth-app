@@ -44,22 +44,23 @@ class _LogsListState extends State<_LogsList> {
     super.initState();
     final database = context.dependencies.database;
     Future<void>(() async {
-      final rows = await (database.select(database.logTbl)
+      final logTbl = database.logTbl;
+      final rows = await (database.select(logTbl)
             ..orderBy([(tbl) => db.OrderingTerm(expression: tbl.time, mode: db.OrderingMode.desc)]))
           .get();
       logs = rows
           .map(
-            (l) => l.stack != null
-                ? LogMessageWithStackTrace(
-                    date: DateTime.fromMillisecondsSinceEpoch(l.time * 1000),
+            (l) => l.stack == null
+                ? LogMessageVerbose(
+                    timestamp: DateTime.fromMillisecondsSinceEpoch(l.time * 1000),
+                    level: LogLevel.fromValue(l.level),
+                    message: l.message,
+                  )
+                : LogMessageError(
+                    timestamp: DateTime.fromMillisecondsSinceEpoch(l.time * 1000),
                     level: LogLevel.fromValue(l.level),
                     message: l.message,
                     stackTrace: StackTrace.fromString(l.stack!),
-                  )
-                : LogMessage(
-                    date: DateTime.fromMillisecondsSinceEpoch(l.time * 1000),
-                    level: LogLevel.fromValue(l.level),
-                    message: l.message,
                   ),
           )
           .toList();
@@ -161,7 +162,7 @@ class _LogTile extends StatelessWidget {
         children: [
           ListTile(
             title: Text(log.message.toString()),
-            subtitle: Text(log.date.format()),
+            subtitle: Text(log.timestamp.format()),
             leading: _LogIcon(log.level),
             dense: true,
             trailing: IconButton(
@@ -169,7 +170,7 @@ class _LogTile extends StatelessWidget {
               onPressed: () => Clipboard.setData(
                 ClipboardData(
                   text: switch (log) {
-                    final LogMessageWithStackTrace log => '${log.message}\n${log.stackTrace}',
+                    final LogMessageError err => '${err.message}\n${err.stackTrace}',
                     _ => '${log.message}',
                   },
                 ),

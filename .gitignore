@@ -12,7 +12,6 @@
 migrate_working_dir/
 config/
 
-
 # IntelliJ related
 *.iml
 *.ipr
@@ -66,7 +65,6 @@ coverage/
 .graphqlconfig
 
 # Flutter Version Manager related
-.fvm/flutter_sdk
 
 coverage/
 
@@ -77,3 +75,6 @@ coverage/
 
 # Melos
 pubspec_overrides.yaml
+
+# FVM Version Cache
+.fvm/
