@@ -1,6 +1,6 @@
 import 'dart:ui' as ui show FragmentProgram, FragmentShader;
 
-import 'package:auth_app/app/log/logger.dart';
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';

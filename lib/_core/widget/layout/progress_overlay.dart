@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io' as io;
 
-import 'package:auth_app/app/app.dart';
+import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/widget/window_scope.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

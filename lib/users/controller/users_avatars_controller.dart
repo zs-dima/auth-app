@@ -1,0 +1,106 @@
+import 'dart:typed_data';
+
+import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
+import 'package:auth_app/users/data/users_repository.dart';
+import 'package:auth_model/auth_model.dart';
+import 'package:collection/collection.dart';
+import 'package:control/control.dart';
+import 'package:core_tool/core_tool.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'users_avatars_controller.freezed.dart';
+
+@freezed
+sealed class UsersAvatarsState with _$UsersAvatarsState {
+  const factory UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar> avatars) = UsersAvatarsLoadedState;
+}
+
+// @freezed
+// class UsersAvatarsEvent with _$UsersAvatarsEvent {
+//   const factory UsersAvatarsEvent.loadAvatar(UserId userId, {required bool reload}) = _loadAvatarEvent;
+//   const factory UsersAvatarsEvent.savePhoto(UserId userId, Uint8List? photo) = _saveAvatarEvent;
+// }
+
+final class UsersAvatarsController extends StateController<UsersAvatarsState>
+    with DroppableControllerHandler, AppMessageControllerMixin {
+  UsersAvatarsController({required IUsersRepository usersRepository, required AppMessageController messageController})
+    : _repository = usersRepository,
+      super(initialState: UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([]))) {
+    this.messageController = messageController;
+  }
+
+  final IUsersRepository _repository;
+
+  void loadAvatar(UserId userId, {required bool reload}) => handle(
+    () {
+      setProgressStarted();
+
+      return _loadAvatarInternal(userId, reload: reload);
+    },
+    error: (error, stackTrace) async {
+      setError('Error on loading user avatar', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async => setProgressDone(),
+  );
+
+  void savePhoto(UserId userId, Uint8List? photo) => handle(
+    () async {
+      setProgressStarted();
+
+      final result = await _repository.saveUserPhoto(userId, photo);
+      if (!result) {
+        setError('Error on saving user avatar');
+        return;
+      }
+
+      await _loadAvatarInternal(userId, reload: true);
+    },
+    error: (error, stackTrace) async {
+      setError('Error on saving user avatar', error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    },
+    done: () async {
+      setProgressDone();
+      // setState(const UsersAvatarsState.idle());
+    },
+  );
+
+  Future<void> _loadAvatarInternal(UserId userId, {required bool reload}) async {
+    if (userId.isNullOrEmpty) return;
+
+    final stateAvatar = state.avatars.firstWhereOrNull((i) => i.userId == userId);
+    if (stateAvatar != null && stateAvatar.loaded && !reload) return;
+
+    final avatars = state.avatars.where((i) => i.userId != userId);
+    final loadingAvatar = UserAvatar.empty.copyWith(userId: userId);
+    setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadingAvatar])));
+
+    // TODO: loadAvatar: (List<UserId>
+    final loadedAvatar =
+        (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ?? loadingAvatar.copyWith(loaded: true);
+
+    setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
+  }
+}
+
+// TODO: move to auth_model package
+typedef UserAvatarMapCallback<T extends Object> = T Function(Uint8List avatar);
+typedef UserBlurhashMapCallback<T extends Object> = T Function(String blurhash);
+
+extension UsersAvatarsStateX on UsersAvatarsState {
+  UserAvatar? avatar(UserId userId) => avatars.firstWhereOrNull((i) => i.userId == userId);
+
+  T? mapAvatar<T extends Object>(
+    IUserInfo userInfo, {
+    UserAvatarMapCallback<T>? avatar,
+    UserBlurhashMapCallback<T>? blurhash,
+  }) {
+    final userAvatar = avatars.firstWhereOrNull((i) => i.userId == userInfo.id);
+    if (userAvatar == null || !userAvatar.loaded) {
+      return userInfo.blurhash.isNullOrSpace ? null : blurhash?.call(userInfo.blurhash!);
+    }
+    return userAvatar.avatar == null ? null : avatar?.call(userAvatar.avatar!);
+  }
+}

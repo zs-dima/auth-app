@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_web_libraries_in_flutter, prefer-static-class, avoid-unused-parameters
 
-import 'package:auth_app/app/log/logger.dart';
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
 

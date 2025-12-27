@@ -1,7 +1,7 @@
 import 'package:auth_app/_core/widget/common_actions.dart';
 import 'package:auth_app/_core/widget/layout/progress_overlay.dart';
-import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
-import 'package:auth_app/feature/users/widget/user_avatar_widget.dart';
+import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/users/widget/user_avatar_widget.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/material.dart';
 
