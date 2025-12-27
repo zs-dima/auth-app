@@ -1,13 +1,20 @@
 include: package:lints_tool/lints_tool.yaml
 
+formatter:
+  page_width: 120
+  trailing_commas: preserve
+
 analyzer:
   exclude:
     # Codegen
-    - "lib/core/gen/**"
+    - "lib/**/generated/**"
     # Tools
     - "tool/google_localizer/**"
     - "tool/setup_clone/**"
     - "tool/grind.dart"
     # App
-    - "lib/core/constant/*_icons.dart"
-    - "lib/core/constant/*_strings.dart"
+    - "lib/_core/constant/*_icons.dart"
+    - "lib/_core/constant/*_strings.dart"
+    # Web
+    - "web/*drift_worker.js"
+    - "web/web_env.dart"

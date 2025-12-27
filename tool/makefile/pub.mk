@@ -26,8 +26,7 @@ fluttergen:
 l10n:
 	@dart pub global activate intl_utils
 	@(dart pub global run intl_utils:generate)
-	@(flutter gen-l10n --arb-dir lib/src/common/localization --output-dir lib/src/common/localization/generated --template-arb-file intl_en.arb)
-
+	@(flutter gen-l10n --arb-dir lib/_core/localization --output-dir lib/_core/localization/generated --template-arb-file intl_en.arb)
 
 # Build runner
 build_runner:

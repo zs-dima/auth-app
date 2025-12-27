@@ -67,7 +67,7 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
             key: ValueKey('${widget.key}${widget.user.id}$avatarLength'),
             radius: widget.size.toDouble(),
             backgroundColor: _getIconColor(initials),
-            backgroundImage: avatarState.map<ImageProvider>(
+            backgroundImage: avatarState.mapAvatar<ImageProvider>(
               user,
               avatar: MemoryImage.new,
               blurhash: (blurhash) => BlurHashImage(

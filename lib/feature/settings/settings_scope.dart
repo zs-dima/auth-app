@@ -3,7 +3,7 @@ import 'package:auth_app/app/theme/model/app_theme.dart';
 import 'package:auth_app/feature/settings/controller/settings_controller.dart';
 import 'package:control/control.dart';
 import 'package:flutter/material.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 /// {@template theme_scope_controller}
 /// A controller that holds and operates the app theme.
@@ -43,7 +43,7 @@ enum _SettingsScopeAspect {
   theme,
 
   /// The locale aspect.
-  locale;
+  locale,
 }
 
 /// {@template settings_scope}
@@ -66,8 +66,7 @@ class SettingsScope extends StatefulWidget {
   static SettingsScopeController of(
     BuildContext context, {
     bool listen = true,
-  }) =>
-      context.scopeOf<_InheritedSettingsScope>(listen: listen).controller;
+  }) => context.scopeOf<_InheritedSettingsScope>(listen: listen).controller;
 
   /// Get the [ThemeScopeController] of the closest [SettingsScope] ancestor.
   static ThemeScopeController themeOf(BuildContext context) => context
@@ -105,13 +104,13 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
 
   @override
   void setThemeMode(ThemeMode themeMode) => widget.settingsController.updateTheme(
-        AppTheme(mode: themeMode, seed: theme.seed, size: theme.size),
-      );
+    AppTheme(mode: themeMode, seed: theme.seed, size: theme.size),
+  );
 
   @override
   void setThemeSeedColor(Color? color) => widget.settingsController.updateTheme(
-        AppTheme(mode: theme.mode, seed: color, size: theme.size),
-      );
+    AppTheme(mode: theme.mode, seed: color, size: theme.size),
+  );
 
   @override
   Locale get locale => widget.settingsController.state.locale ?? Localization.computeDefaultLocale;
@@ -121,13 +120,13 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
 
   @override
   Widget build(BuildContext context) => StateConsumer<SettingsController, SettingsState>(
-        controller: widget.settingsController,
-        builder: (context, state, _) => _InheritedSettingsScope(
-          controller: this,
-          state: state,
-          child: widget.child,
-        ),
-      );
+    controller: widget.settingsController,
+    builder: (context, state, _) => _InheritedSettingsScope(
+      controller: this,
+      state: state,
+      child: widget.child,
+    ),
+  );
 }
 
 class _InheritedSettingsScope extends InheritedModel<_SettingsScopeAspect> {

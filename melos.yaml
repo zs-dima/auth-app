@@ -1,9 +1,9 @@
 name: auth_app
 
 packages:
-  - package/**
+  - packages/**
 
 scripts:
   analyze:
-    exec: dart analyze .  
+    exec: dart analyze .
 sdkPath: .fvm/flutter_sdk

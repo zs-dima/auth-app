@@ -1,4 +1,4 @@
-import 'package:auth_app/core/widget/shadow_widget.dart';
+import 'package:auth_app/_core/widget/shadow_widget.dart';
 import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
 import 'package:auth_app/feature/users/controller/users_controller.dart';
 import 'package:auth_app/feature/users/edit/user_edit_dialog.dart';
@@ -65,7 +65,8 @@ class _UsersWidgetState extends State<UsersWidget> {
                 final allUsers = state.users;
 
                 if (allUsers.isEmpty) {
-                  return state is UsersLoadedState //
+                  return state
+                          is UsersLoadedState //
                       ? const Center(child: Text('No users found'))
                       : const Center(child: CircularProgressIndicator());
                 }
@@ -98,7 +99,7 @@ class _UsersWidgetState extends State<UsersWidget> {
                             SliverFixedExtentList(
                               itemExtent: 50,
                               delegate: SliverChildBuilderDelegate(
-                                (BuildContext ctx, int index) {
+                                (ctx, index) {
                                   final user = users[index];
 
                                   return InkWell(
@@ -107,9 +108,11 @@ class _UsersWidgetState extends State<UsersWidget> {
                                     onTap: () => editUserDialog(ctx, user),
                                     child: UserTileWidget(
                                       user: user,
-                                      tileColor: index.isEven //
+                                      tileColor:
+                                          index
+                                              .isEven //
                                           ? colorScheme.primary.withOpacity(0.1)
-                                          : colorScheme.background,
+                                          : colorScheme.surface,
                                     ),
                                   );
                                 },

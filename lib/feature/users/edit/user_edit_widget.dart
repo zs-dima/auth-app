@@ -1,15 +1,14 @@
+import 'package:auth_app/_core/widget/form/switch_form_field.dart';
 import 'package:auth_app/app/app.dart';
 import 'package:auth_app/app/theme/extension/theme_sizes.dart';
-import 'package:auth_app/core/widget/form/switch_form_field.dart';
 import 'package:auth_app/feature/settings/settings_scope.dart';
 import 'package:auth_app/feature/users/controller/users_avatars_controller.dart';
 import 'package:auth_app/feature/users/edit/photo_edit_widget.dart';
 import 'package:auth_app/feature/users/users_scope.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 class UserEditWidget extends StatefulWidget {
   const UserEditWidget({
@@ -144,22 +143,23 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                     labelText: 'Role',
                                     prefixIcon: Icon(Icons.shield_outlined),
                                   ),
-                                  value: _user.role,
+                                  initialValue: _user.role,
                                   validator: (role) => role == null ? 'User role required' : null,
                                   onSaved: (value) =>
                                       setState(() => _user = _user.copyWith(role: value ?? UserRole.user)),
                                   onChanged: (role) {},
-                                  items: [
-                                    UserRole.administrator,
-                                    UserRole.user,
-                                  ]
-                                      .map(
-                                        (role) => DropdownMenuItem<UserRole>(
-                                          value: role,
-                                          child: Text(role.name),
-                                        ),
-                                      )
-                                      .toList(),
+                                  items:
+                                      [
+                                            UserRole.administrator,
+                                            UserRole.user,
+                                          ]
+                                          .map(
+                                            (role) => DropdownMenuItem<UserRole>(
+                                              value: role,
+                                              child: Text(role.name),
+                                            ),
+                                          )
+                                          .toList(),
                                 ),
                                 const SizedBox(height: 20),
                                 if (widget.createNewUser)

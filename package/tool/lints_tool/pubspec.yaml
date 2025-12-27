@@ -1,7 +1,0 @@
-name: lints_tool
-description: A bunch of strict rules for Dart and Flutter projects.
-repository: https://github.com/zs-dima/lints_tool
-version: 1.0.1
-
-environment:
-  sdk: ">=3.10.4 <4.0.0"

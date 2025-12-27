@@ -1,7 +1,7 @@
 import 'package:auth_app/app/app.dart';
 import 'package:auth_app/app/router/router_state_mixin.dart';
-import 'package:auth_app/core/constant/config.dart';
-import 'package:auth_app/core/widget/window_scope.dart';
+import 'package:auth_app/_core/constant/config.dart';
+import 'package:auth_app/_core/widget/window_scope.dart';
 import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
 import 'package:auth_app/feature/settings/settings_scope.dart';
 import 'package:flutter/gestures.dart';

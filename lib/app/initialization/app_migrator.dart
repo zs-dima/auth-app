@@ -2,9 +2,9 @@
 
 import 'dart:math';
 
-import 'package:auth_app/app/database/database.dart';
-import 'package:auth_app/core/constant/config.dart';
-import 'package:auth_app/core/gen/constant/pubspec.yaml.g.dart';
+import 'package:auth_app/_core/constant/config.dart';
+import 'package:auth_app/_core/database/database.dart';
+import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
 import 'package:l/l.dart';
 
 /// Migrate application when version is changed.
@@ -20,7 +20,9 @@ sealed class AppMigrator {
       } else if (Pubspec.version.major != prevMajor ||
           Pubspec.version.minor != prevMinor ||
           Pubspec.version.patch != prevPatch) {
-        l.i('Migrating from $prevMajor.$prevMinor.$prevPatch to ${Pubspec.version.major}.${Pubspec.version.minor}.${Pubspec.version.patch}');
+        l.i(
+          'Migrating from $prevMajor.$prevMinor.$prevPatch to ${Pubspec.version.major}.${Pubspec.version.minor}.${Pubspec.version.patch}',
+        );
         /* ... */
       } else {
         l.i('App is up-to-date');

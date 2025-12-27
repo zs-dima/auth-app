@@ -19,7 +19,7 @@ init-firebase:
 #		-a tld.domain.app \
 #		-p project \
 #		-e email@gmail.com \
-#		-o lib/src/common/constant/firebase_options.g.dart
+#		-o lib/_core/constant/firebase_options.g.dart
 
 # "assets/images/products\/(\d+)\/(\d+)\.jpg"
 #downscale-images:

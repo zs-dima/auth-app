@@ -1,4 +1,4 @@
-import 'package:auth_app/core/widget/radial_progress_indicator.dart';
+import 'package:auth_app/_core/widget/radial_progress_indicator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 

@@ -10,9 +10,7 @@ import 'package:auth_model/auth_model.dart';
 import 'package:collection/collection.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 extension UsersScopeX on BuildContext {
   /// {@macro users_controller}
@@ -101,8 +99,8 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
 
   @override
   User? byId(UserId id) => controller.state.whenOrNull(
-        loaded: (_, stateUsers) => users.firstWhereOrNull((user) => user.id == id),
-      );
+    loaded: (_, stateUsers) => users.firstWhereOrNull((user) => user.id == id),
+  );
 
   @override
   Future<void> createUser(User user, String password) async {
@@ -133,11 +131,13 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     super.didChangeDependencies();
 
     final currentUser = AuthenticationScope.userOf(context).maybeCast<AuthenticatedUser>()?.userInfo;
-
     if (_currentUser == currentUser) return;
     _currentUser = currentUser;
 
-    controller.loadUsers(currentUser?.id ?? UserIdX.empty);
+    if (currentUser != null) {
+      debugPrint('UsersScope.didChangeDependencies: calling loadUsers');
+      controller.loadUsers(currentUser.id);
+    }
   }
 
   @override
@@ -155,10 +155,10 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
 
   @override
   Widget build(BuildContext context) => _UsersScopeInherited(
-        users: users,
-        controller: this,
-        child: widget.child,
-      );
+    users: users,
+    controller: this,
+    child: widget.child,
+  );
 }
 
 @immutable

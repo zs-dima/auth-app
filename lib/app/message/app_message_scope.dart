@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:auth_app/app/app.dart';
 import 'package:core_tool/core_tool.dart';
-import 'package:flutter/material.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 extension AppMessageScopeX on BuildContext {
   AppMessageController get message => AppMessageScope.of(this, listen: false);
@@ -75,9 +74,9 @@ class _AppMessageScopeState extends State<AppMessageScope> {
 
   @override
   Widget build(BuildContext context) => _AppMessageInherited(
-        controller: _controller,
-        child: widget.child,
-      );
+    controller: _controller,
+    child: widget.child,
+  );
 }
 
 class _AppMessageInherited extends InheritedWidget {

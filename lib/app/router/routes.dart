@@ -1,4 +1,4 @@
-import 'package:auth_app/core/constant/config.dart';
+import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/feature/account/widget/profile_screen.dart';
 import 'package:auth_app/feature/authentication/widget/signin_screen.dart';
 import 'package:auth_app/feature/authentication/widget/signup_screen.dart';
@@ -15,7 +15,8 @@ enum Routes with OctopusRoute {
   home('home', title: Config.appName),
   profile('profile', title: 'Profile'),
   developer('developer', title: 'Developer'),
-  settingsDialog('settings-dialog', title: 'Settings');
+  settingsDialog('settings-dialog', title: 'Settings')
+  ;
 
   const Routes(this.name, {this.title});
 
@@ -27,11 +28,11 @@ enum Routes with OctopusRoute {
 
   @override
   Widget builder(BuildContext context, OctopusState state, OctopusNode node) => switch (this) {
-        Routes.signin => const SignInScreen(),
-        Routes.signup => const SignUpScreen(),
-        Routes.home => const UsersScope(child: UsersScreen()),
-        Routes.profile => const ProfileScreen(),
-        Routes.developer => const DeveloperScreen(),
-        Routes.settingsDialog => const SettingsDialog(),
-      };
+    signin => const SignInScreen(),
+    signup => const SignUpScreen(),
+    home => const UsersScope(child: UsersScreen()),
+    profile => const ProfileScreen(),
+    developer => const DeveloperScreen(),
+    settingsDialog => const SettingsDialog(),
+  };
 }

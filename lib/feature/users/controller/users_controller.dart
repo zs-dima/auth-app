@@ -17,16 +17,16 @@ sealed class UsersState with _$UsersState {
 
 final class UsersController extends StateController<UsersState>
     with DroppableControllerHandler, AppMessageControllerMixin {
-  final IUsersRepository _repository;
-
-  List<User> _users = const <User>[];
-  String? _query;
-
   UsersController({required IUsersRepository repository, required AppMessageController messageController})
     : _repository = repository,
       super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
     this.messageController = messageController;
   }
+
+  final IUsersRepository _repository;
+  List<User> _users = const <User>[];
+
+  String? _query;
 
   void loadUsers(UserId currentUserId) => handle(
     () async {

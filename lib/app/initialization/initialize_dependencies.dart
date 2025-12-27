@@ -1,14 +1,15 @@
-// ignore_for_file: avoid-mutating-parameters, prefer-static-class
+// ignore_for_file: prefer-static-class
 
 import 'dart:async';
 
+import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/app/controller/controller_observer.dart';
-import 'package:auth_app/app/database/database.dart';
 import 'package:auth_app/app/environment/environment_loader.dart';
 import 'package:auth_app/app/initialization/app_migrator.dart';
+import 'package:auth_app/app/initialization/grpc_client_factory.dart';
 import 'package:auth_app/app/initialization/model/app_metadata.dart';
 import 'package:auth_app/app/initialization/model/dependencies.dart';
-import 'package:auth_app/app/initialization/platform/initialization.dart';
+import 'package:auth_app/app/initialization/platform/platform_initialization.dart';
 import 'package:auth_app/app/log/exception_tracking_manager.dart';
 import 'package:auth_app/app/log/logger.dart';
 import 'package:auth_app/app/message/controller/message_controller.dart';
@@ -59,8 +60,7 @@ Future<Dependencies> $initializeDependencies({void Function(int progress, String
   return dependencies;
 }
 
-typedef _InitializationStep = FutureOr<void> Function(Dependencies dependencies);
-final _initializationSteps = <String, _InitializationStep>{
+final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Platform pre-initialization': (_) => $platformInitialization(),
   'Creating app metadata': (dependencies) => dependencies.metadata = AppMetadata.fromApp(),
   'Observer state management': (_) => Controller.observer = ControllerObserver.instance(logger),
@@ -147,19 +147,30 @@ final _initializationSteps = <String, _InitializationStep>{
   'Authentication repository': (dependencies) async {
     final environment = dependencies.environment;
     final settings = dependencies.settings;
+    final metadata = dependencies.metadata;
 
-    final credentialsManager = CredentialsCallbacks(
-      getAccessCredentials: () => dependencies.authenticationRepository.getAccessCredentials(),
-      refreshTokens: (t) => dependencies.authenticationRepository.refreshTokens(t),
-      authHandler: dependencies.authenticationHandler,
-      allowAnonymous: true,
+    // Create repository first, then wire up credentials manager
+    late final AuthRepository authenticationRepository;
+
+    // Create the gRPC channel
+    final authChannel = GrpcClientChannel(environment.authService);
+
+    // Create middlewares for the gRPC client
+    final middlewares = createStandardMiddlewares(
+      environment: environment.type.name,
+      metadata: metadata.toHeaders(),
+      getToken: () async => (await authenticationRepository.getAccessCredentials())?.accessToken.token,
+      onAuthError: () => dependencies.authenticationHandler.handleAuthenticationError(),
     );
 
-    final authChannel = GrpcClientChannel(environment.authService);
-    final authClient = AuthApiClient(authChannel, credentialsManager: credentialsManager);
-    final authApi = AuthApi(client: authClient);
+    // Create auth client with middleware support
+    final authClient = GrpcAuthenticationClient.withMiddlewares(
+      authChannel,
+      middlewares: middlewares,
+    );
+    final authApi = GrpcAuthenticationApi(client: authClient);
 
-    final authenticationRepository = AuthRepository(
+    authenticationRepository = AuthRepository(
       apiClient: authApi,
       authHandler: dependencies.authenticationHandler,
       settings: settings,

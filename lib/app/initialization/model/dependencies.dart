@@ -1,6 +1,6 @@
 // ignore_for_file: avoid-unassigned-late-fields-keyword
 
-import 'package:auth_app/app/database/database.dart';
+import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/app/environment/model/app_environment.dart';
 import 'package:auth_app/app/initialization/model/app_metadata.dart';
 import 'package:auth_app/app/log/exception_tracking_manager.dart';
@@ -57,6 +57,4 @@ class Dependencies {
 
   /// Users avatars controller
   late final UsersAvatarsController avatarController;
-
-  Dependencies();
 }

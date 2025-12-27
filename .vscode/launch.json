@@ -1,0 +1,106 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "UI Kit (debug)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/packages/ui/example",
+      "args": [],
+    },
+    {
+      "name": "Run DEV (Debug)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      // "openDevTools": "network",
+      "args": [
+        "--wasm",
+        "--dart-define-from-file=config/development.env",
+        "--dart-define-from-file=config/keys.env",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Run DEV (Debug, Drop database)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--wasm",
+        "--dart-define-from-file=config/development.env",
+        "--dart-define-from-file=config/keys.env",
+        "--dart-define=DROP_DATABASE=true",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Run DEV (Debug, Memmory database)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--wasm",
+        "--dart-define-from-file=config/development.env",
+        "--dart-define-from-file=config/keys.env",
+        "--dart-define=IN_MEMORY_DATABASE=true",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Run DEV Web Server (Debug)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--wasm",
+        "--dart-define-from-file=config/development.env",
+        "--dart-define-from-file=config/keys.env",
+        "--device-id=web-server",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Run TEST (Staging)",
+      "type": "dart",
+      "request": "launch",
+      "flutterMode": "profile",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--dart-define-from-file=config/staging.env",
+        "--dart-define-from-file=config/keys.env",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Run PROD (Release)",
+      "type": "dart",
+      "request": "launch",
+      // "flutterMode": "release",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--dart-define-from-file=config/production.env",
+        "--dart-define-from-file=config/keys.env",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
+      "name": "Tag - make release",
+      "type": "dart",
+      "program": "tool/tag.dart",
+      "request": "launch",
+      "flutterMode": "release",
+      "cwd": "${workspaceFolder}",
+      "args": [],
+      "env": {}
+    }
+  ]
+}

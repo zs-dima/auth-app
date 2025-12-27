@@ -1,0 +1,27 @@
+name: grpc_model
+resolution: workspace
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  core_model:
+    path: ../../model/core_model
+
+  # SDK extensions
+  collection: any
+  meta: any
+  uuid: any
+  fixnum: any
+
+  # API
+  grpc: ^5.1.0
+  protobuf: ^6.0.0
+
+dev_dependencies:
+  lints_tool:
+    path: ../../tool/lints_tool

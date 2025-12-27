@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:auth_app/_core/tool/device_info.dart';
 import 'package:auth_app/app/message/controller/app_message_controller_mixin.dart';
 import 'package:auth_app/app/message/controller/message_controller.dart';
-import 'package:auth_app/core/tool/device_info.dart';
 import 'package:auth_app/feature/authentication/controller/authentication_state.dart';
 import 'package:auth_app/feature/authentication/data/auth_repository.dart';
 import 'package:auth_app/feature/authentication/data/model/sign_in_data.dart';
@@ -11,9 +11,6 @@ import 'package:control/control.dart';
 
 final class AuthenticationController extends StateController<AuthenticationState>
     with DroppableControllerHandler, AppMessageControllerMixin {
-  final IAuthRepository _repository;
-  StreamSubscription<AuthenticationState>? _userSubscription;
-
   AuthenticationController({
     super.initialState = const AuthenticationState.idle(user: AuthUser.unauthenticated()),
     required IAuthRepository repository,
@@ -26,6 +23,9 @@ final class AuthenticationController extends StateController<AuthenticationState
         .where((newState) => state.isProcessing || !identical(newState.user, state.user))
         .listen(setState, cancelOnError: false);
   }
+  final IAuthRepository _repository;
+
+  StreamSubscription<AuthenticationState>? _userSubscription;
 
   /// Restore the session from the cache.
   // void restore() => handle(
@@ -60,7 +60,7 @@ final class AuthenticationController extends StateController<AuthenticationState
       setError('Signin error', error, stackTrace);
       setState(AuthenticationState.idle(user: state.user, error: 'Signin error'));
     },
-    done: () async => setState(AuthenticationState.idle(user: state.user)),
+    done: () async => setState(AuthenticationState.idle(user: _repository.user)),
   );
 
   /// Sign out.

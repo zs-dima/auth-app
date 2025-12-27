@@ -1,5 +1,5 @@
-import 'package:auth_app/core/widget/common_actions.dart';
-import 'package:auth_app/core/widget/layout/app_layout.dart';
+import 'package:auth_app/_core/widget/common_actions.dart';
+import 'package:auth_app/_core/widget/layout/app_layout.dart';
 import 'package:auth_app/feature/users/edit/user_edit_dialog.dart';
 import 'package:auth_app/feature/users/users_widget.dart';
 import 'package:auth_model/auth_model.dart';

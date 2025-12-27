@@ -1,8 +1,8 @@
 import 'package:auth_app/app/router/routes.dart';
-import 'package:auth_app/core/widget/form/form_placeholder.dart';
-import 'package:auth_app/core/widget/scaffold_padding.dart';
-import 'package:auth_app/core/widget/shimmer.dart';
-import 'package:auth_app/core/widget/text_placeholder.dart';
+import 'package:auth_app/_core/widget/form/form_placeholder.dart';
+import 'package:auth_app/_core/widget/scaffold_padding.dart';
+import 'package:auth_app/_core/widget/shimmer.dart';
+import 'package:auth_app/_core/widget/text_placeholder.dart';
 import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
 import 'package:auth_app/feature/authentication/widget/log_out_button.dart';
 import 'package:auth_model/auth_model.dart';

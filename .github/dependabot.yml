@@ -13,8 +13,6 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
     directory: "/packages/model/core_model" # Location of package manifests
@@ -23,18 +21,14 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
-    directory: "/package/model/auth_model" # Location of package manifests
+    directory: "/packages/model/auth_model" # Location of package manifests
     schedule:
       interval: "weekly"
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
     directory: "/packages/model/grpc_model" # Location of package manifests
@@ -43,8 +37,6 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
     directory: "/packages/tool/core_tool" # Location of package manifests
@@ -53,8 +45,6 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
     directory: "/packages/tool/ui_tool" # Location of package manifests
@@ -63,8 +53,6 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"
 
   - package-ecosystem: "pub"
     directory: "/packages/tool/converter/json_converter" # Location of package manifests
@@ -73,5 +61,3 @@ updates:
     pull-request-branch-name:
       separator: /
     target-branch: "main"
-    reviewers:
-      - "zs-dima"

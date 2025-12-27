@@ -1,0 +1,6 @@
+class-name: GeneratedLocalization
+main-locale: en
+arb-dir: lib/_core/localization/translation
+output-dir: lib/_core/generated/localization
+template-arb-file: intl_en.arb
+use-deferred-loading: false

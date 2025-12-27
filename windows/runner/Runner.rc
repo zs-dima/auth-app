@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "auth_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "auth_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2023 app.dmitrii. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 app.dmitrii. All rights reserved." "\0"
             VALUE "OriginalFilename", "auth_app.exe" "\0"
             VALUE "ProductName", "auth_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

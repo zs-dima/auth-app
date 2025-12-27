@@ -3,8 +3,7 @@ import 'package:auth_app/app/app_widget.dart';
 import 'package:auth_app/app/theme/model/app_theme.dart';
 import 'package:auth_app/feature/settings/controller/settings_controller.dart';
 import 'package:auth_app/feature/settings/settings_scope.dart';
-import 'package:flutter/material.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 class AppTree extends StatelessWidget {
   const AppTree({super.key});

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:auth_app/app/app.dart';
-import 'package:auth_app/core/constant/config.dart';
+import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/feature/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/feature/authentication/controller/authentication_state.dart';
 import 'package:auth_app/feature/authentication/data/model/sign_in_data.dart';

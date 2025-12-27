@@ -1,0 +1,75 @@
+name: ui
+resolution: workspace
+
+description: "UI Kit"
+
+publish_to: "none"
+
+version: 0.0.1
+# homepage:
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Packages
+  core_tool:
+    path: ../tool/core_tool
+
+  # Flutter SDK
+  collection: any
+  characters: any
+  meta: any
+  uuid: any
+
+  # Internationalization
+  intl: any
+
+  # Platform
+  win32: ^5.14.0
+
+  # State management
+  control: ^0.2.0
+
+  # Utility
+  rxdart: ^0.28.0
+  pointer_interceptor: ^0.10.1+2 # TODO remove
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Packages
+  lints_tool:
+    path: ../tool/lints_tool
+
+flutter:
+  uses-material-design: true
+
+  shaders:
+    - packages/ui/shaders/shimmer.frag
+    - packages/ui/shaders/ai/progress.frag
+
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: packages/ui/fonts/Roboto-Regular.ttf
+
+    # - family: drawer
+    #   fonts:
+    #     - asset: packages/ui/fonts/drawer.ttf
+
+    # - family: icons
+    #   fonts:
+    #     - asset: packages/ui/fonts/icons.ttf
+
+    # - family: dashboard
+    #   fonts:
+    #     - asset: packages/ui/fonts/dashboard.ttf
+
+    # - family: SocialIcons
+    #   fonts:
+    #     - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf

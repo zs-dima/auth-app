@@ -16,7 +16,7 @@ COPY --chown=101:101 . .
 ARG APP_ENVIRONMENT
 ENV APP_ENVIRONMENT=$APP_ENVIRONMENT
 
-RUN (cd package/model/auth_model && flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs --release)
+RUN (cd packages/model/auth_model && flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs --release)
 RUN flutter pub get
 RUN dart run intl_utils:generate
 RUN flutter pub run build_runner build --delete-conflicting-outputs --release

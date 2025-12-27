@@ -6,7 +6,7 @@ import 'package:auth_app/feature/settings/widget/theme_color_selector.dart';
 import 'package:auth_app/feature/settings/widget/theme_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 /// {@template sample_page}
 /// SamplePage widget

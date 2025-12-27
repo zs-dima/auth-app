@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:auth_app/app/router/routes.dart';
-import 'package:auth_app/core/constant/config.dart';
+import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/feature/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/feature/authentication/controller/authentication_state.dart';
 import 'package:auth_app/feature/authentication/widget/authentication_scope.dart';
@@ -45,117 +45,117 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: math.max(16, (constraints.maxWidth - 620) / 2),
-                ),
-                child: StateConsumer<AuthenticationController, AuthenticationState>(
-                  controller: _authenticationController,
-                  buildWhen: (previous, current) => previous != current,
-                  builder: (context, state, _) => Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      SizedBox(
-                        height: 50,
-                        child: Text(
-                          'Sign-Up',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(height: 1),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      TextField(
-                        focusNode: _usernameFocusNode,
-                        enabled: state.isIdling,
-                        maxLines: 1,
-                        minLines: 1,
-                        controller: _usernameController,
-                        autocorrect: false,
-                        autofillHints: const <String>[AutofillHints.username, AutofillHints.email],
-                        keyboardType: TextInputType.emailAddress,
-                        inputFormatters: _usernameFormatters,
-                        decoration: InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'Enter your username',
-                          helperText: '',
-                          helperMaxLines: 1,
-                          errorText: _usernameError ?? state.error,
-                          errorMaxLines: 1,
-                          prefixIcon: const Icon(Icons.person),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        focusNode: _passwordFocusNode,
-                        enabled: state.isIdling,
-                        maxLines: 1,
-                        minLines: 1,
-                        controller: _passwordController,
-                        autocorrect: false,
-                        obscureText: _obscurePassword,
-                        maxLength: Config.passwordMaxLength,
-                        autofillHints: const <String>[AutofillHints.password],
-                        keyboardType: TextInputType.visiblePassword,
-                        onSubmitted: (_) => signUp(context),
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'Enter your password',
-                          helperText: '',
-                          helperMaxLines: 1,
-                          errorText: _passwordError ?? state.error,
-                          errorMaxLines: 1,
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.casino),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints.tightFor(
-                                  width: 48,
-                                  height: 48,
-                                ),
-                                tooltip: 'Generate password',
-                                onPressed: state.isIdling
-                                    ? () {
-                                        if (_obscurePassword) {
-                                          setState(
-                                            () => _obscurePassword = false,
-                                          );
-                                        }
-                                        generatePassword();
-                                      }
-                                    : null,
-                              ),
-                              IconButton(
-                                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        height: 48,
-                        child: _SignUpScreen$Buttons(
-                          cancel: () => Navigator.pop(context),
-                          signUp: null,
-                        ),
-                      ),
-                    ],
+    body: SafeArea(
+      child: Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: math.max(16, (constraints.maxWidth - 620) / 2),
+            ),
+            child: StateConsumer<AuthenticationController, AuthenticationState>(
+              controller: _authenticationController,
+              buildWhen: (previous, current) => previous != current,
+              builder: (context, state, _) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    height: 50,
+                    child: Text(
+                      'Sign-Up',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(height: 1),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 32),
+                  TextField(
+                    focusNode: _usernameFocusNode,
+                    enabled: state.isIdling,
+                    maxLines: 1,
+                    minLines: 1,
+                    controller: _usernameController,
+                    autocorrect: false,
+                    autofillHints: const <String>[AutofillHints.username, AutofillHints.email],
+                    keyboardType: TextInputType.emailAddress,
+                    inputFormatters: _usernameFormatters,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      hintText: 'Enter your username',
+                      helperText: '',
+                      helperMaxLines: 1,
+                      errorText: _usernameError ?? state.error,
+                      errorMaxLines: 1,
+                      prefixIcon: const Icon(Icons.person),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    focusNode: _passwordFocusNode,
+                    enabled: state.isIdling,
+                    maxLines: 1,
+                    minLines: 1,
+                    controller: _passwordController,
+                    autocorrect: false,
+                    obscureText: _obscurePassword,
+                    maxLength: Config.passwordMaxLength,
+                    autofillHints: const <String>[AutofillHints.password],
+                    keyboardType: TextInputType.visiblePassword,
+                    onSubmitted: (_) => signUp(context),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      helperText: '',
+                      helperMaxLines: 1,
+                      errorText: _passwordError ?? state.error,
+                      errorMaxLines: 1,
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.casino),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 48,
+                              height: 48,
+                            ),
+                            tooltip: 'Generate password',
+                            onPressed: state.isIdling
+                                ? () {
+                                    if (_obscurePassword) {
+                                      setState(
+                                        () => _obscurePassword = false,
+                                      );
+                                    }
+                                    generatePassword();
+                                  }
+                                : null,
+                          ),
+                          IconButton(
+                            icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    height: 48,
+                    child: _SignUpScreen$Buttons(
+                      cancel: () => Navigator.pop(context),
+                      signUp: null,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _SignUpScreen$Buttons extends StatelessWidget {
@@ -170,45 +170,45 @@ class _SignUpScreen$Buttons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Expanded(
-            flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: signUp,
-              icon: const Icon(Icons.person_add),
-              label: const Text(
-                'Sign-Up',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+    mainAxisSize: MainAxisSize.max,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      Expanded(
+        flex: 2,
+        child: ElevatedButton.icon(
+          onPressed: signUp,
+          icon: const Icon(Icons.person_add),
+          label: const Text(
+            'Sign-Up',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 1,
-            child: FilledButton.tonalIcon(
-              onPressed: cancel,
-              icon: const Icon(Icons.cancel),
-              label: const Text(
-                'Cancel',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+        ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        flex: 1,
+        child: FilledButton.tonalIcon(
+          onPressed: cancel,
+          icon: const Icon(Icons.cancel),
+          label: const Text(
+            'Cancel',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 }
 
 class _UsernameTextFormatter extends TextInputFormatter {
   const _UsernameTextFormatter();
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) => TextEditingValue(
-        text: newValue.text.toLowerCase(),
-        selection: newValue.selection,
-      );
+    text: newValue.text.toLowerCase(),
+    selection: newValue.selection,
+  );
 }
 
 mixin _UsernamePasswordFormStateMixin on State<SignUpScreen> {
@@ -220,11 +220,8 @@ mixin _UsernamePasswordFormStateMixin on State<SignUpScreen> {
       _ => null,
     };
     if (length != null) return length;
-    if (username.split('@').where((e) => e.isNotEmpty).length != 2) {
-      return 'Must be a valid email.';
-    }
     // If username passes all checks, return null
-    return null;
+    return username.split('@').where((e) => e.isNotEmpty).length != 2 ? 'Must be a valid email.' : null;
   }
 
   static String? _passwordValidator(String password) {

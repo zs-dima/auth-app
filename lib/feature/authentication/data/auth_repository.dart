@@ -14,7 +14,7 @@ abstract interface class IAuthRepository {
   Future<UserId?> getUserId();
 
   Future<AccessCredentials?> getAccessCredentials();
-  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken);
+  Future<AccessCredentials> refreshTokens(String accessToken, RefreshToken refreshToken);
   Future<void> validateCredentials(AuthenticatedUser credentials);
 
   Future<void> signIn(ISignInData signInData, IDeviceInfo device);
@@ -29,51 +29,50 @@ abstract interface class IAuthRepository {
 }
 
 class AuthRepository implements IAuthRepository {
-  @override
-  IAuthenticationHandler authHandler;
+  AuthRepository({
+    required final IAuthenticationApi apiClient,
+    required this.authHandler,
+    required final ISettingsRepository settings,
+  }) : _api = apiClient,
+       _settings = settings {
+    _userChangesSubscription =
+        userChanges //
+            .whereType<AuthenticatedUser>()
+            .listen((u) => authHandler.handleAuthenticated());
+
+    _authSubscription =
+        authHandler //
+            .where((i) => i == AuthenticationState.unauthenticated)
+            .listen(
+              (_) => signOut(),
+            );
+  }
 
   final ISettingsRepository _settings;
 
-  final IAuthApi _api;
+  final IAuthenticationApi _api;
 
   StreamSubscription? _authSubscription;
   StreamSubscription? _userChangesSubscription;
 
   final _userController = StreamController<AuthUser>.broadcast();
 
-  AuthUser _user = const AuthUser.unauthenticated();
+  @override
+  IAuthenticationHandler authHandler;
 
   @override
   Stream<AuthUser> get userChanges => _userController.stream;
 
+  AuthUser _user = const AuthUser.unauthenticated();
   @override
   AuthUser get user => _user;
-  AuthRepository({
-    required final IAuthApi apiClient,
-    required this.authHandler,
-    required final ISettingsRepository settings,
-  })  : _api = apiClient,
-        _settings = settings {
-    _userChangesSubscription = userChanges //
-        .whereType<AuthenticatedUser>()
-        .listen((u) => authHandler.handleAuthenticated());
-
-    _authSubscription = authHandler //
-        .where((i) => i == AuthenticationState.unauthenticated)
-        .listen((_) => signOut());
-  }
 
   @override
-  Future<AccessCredentials?> getAccessCredentials() {
-    switch (_user) {
-      case final AuthenticatedUser authUser:
-        final AuthenticatedUser(:AccessCredentials? credentials) = authUser;
-        return Future.value(credentials);
-
-      default:
-        // We don't use credentials for sign in
-        return Future.value(null);
+  Future<AccessCredentials?> getAccessCredentials() async {
+    if (_user case final AuthenticatedUser authUser) {
+      return authUser.credentials;
     }
+    return null;
   }
 
   @override
@@ -97,11 +96,11 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<AccessCredentials> refreshTokens(RefreshToken refreshToken) async {
+  Future<AccessCredentials> refreshTokens(String accessToken, RefreshToken refreshToken) async {
     switch (_user) {
       case final AuthenticatedUser authUser:
         final AuthenticatedUser(:IUserInfo userInfo) = authUser;
-        final refresh = await _api.refreshTokens(refreshToken);
+        final refresh = await _api.refreshTokens(accessToken, refreshToken);
 
         await _settings.setUser(userInfo);
         await _settings.setCredentials(refresh);
@@ -112,6 +111,9 @@ class AuthRepository implements IAuthRepository {
             userInfo: userInfo,
           ),
         );
+        if (refresh == null) {
+          throw Exception('Failed to refresh tokens');
+        }
         return refresh;
 
       default:
@@ -132,23 +134,18 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<void> signIn(ISignInData signInData, IDeviceInfo device) => Future<void>.sync(
-        () async => _userController.add(
-          _user = await _api.signIn(signInData, device),
-        ),
-      );
+  Future<void> signIn(ISignInData signInData, IDeviceInfo device) async {
+    final result = await _api.signIn(signInData, device);
+    _user = result;
+    _userController.add(_user);
+  }
 
   @override
-  Future<void> signOut() => Future<void>.sync(
-        () async {
-          final result = await _api.signOut();
-          if (result) {
-            _userController.add(
-              _user = const AuthUser.unauthenticated(),
-            );
-          }
-        },
-      );
+  Future<void> signOut() async {
+    final token = _user is AuthenticatedUser ? ((_user as AuthenticatedUser).credentials?.accessToken.token ?? '') : '';
+
+    return _api.signOut(token);
+  }
 
   @override
   Future<void> updateUserInfo(IUserInfo userInfo) async {
@@ -161,7 +158,6 @@ class AuthRepository implements IAuthRepository {
         await _settings.setUser(userInfo);
 
       default:
-        return;
     }
   }
 

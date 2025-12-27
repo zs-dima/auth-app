@@ -24,40 +24,22 @@ sealed class UsersAvatarsState with _$UsersAvatarsState {
 
 final class UsersAvatarsController extends StateController<UsersAvatarsState>
     with DroppableControllerHandler, AppMessageControllerMixin {
-  final IUsersRepository _repository;
-
   UsersAvatarsController({required IUsersRepository usersRepository, required AppMessageController messageController})
     : _repository = usersRepository,
       super(initialState: UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([]))) {
     this.messageController = messageController;
   }
 
+  final IUsersRepository _repository;
+
   void loadAvatar(UserId userId, {required bool reload}) => handle(
-    () async {
-      if (userId.isNullOrEmpty) return;
-
-      final stateAvatar = state.avatars.firstWhereOrNull((i) => i.userId == userId);
-      if (stateAvatar != null && stateAvatar.loaded && !reload) return;
-
-      final avatars = state.avatars.where((i) => i.userId != userId);
-      final loadingAvatar = UserAvatar.empty.copyWith(userId: userId);
-      setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadingAvatar])));
-
-      setProgress(AppProgress.started);
-
-      // TODO: loadAvatar: (List<UserId>
-      final loadedAvatar =
-          (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ?? loadingAvatar.copyWith(loaded: true);
-
-      setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
-    },
+    () => _loadAvatarInternal(userId, reload: reload),
     error: (error, stackTrace) async {
       setError('Error on loading user avatar', error, stackTrace);
       Error.throwWithStackTrace(error, stackTrace);
     },
     done: () async {
       setProgress(AppProgress.done);
-      // setState(const UsersAvatarsState.idle());
     },
   );
 
@@ -71,7 +53,7 @@ final class UsersAvatarsController extends StateController<UsersAvatarsState>
         return;
       }
 
-      loadAvatar(userId, reload: true);
+      await _loadAvatarInternal(userId, reload: true);
     },
     error: (error, stackTrace) async {
       setError('Error on saving user avatar', error, stackTrace);
@@ -82,6 +64,25 @@ final class UsersAvatarsController extends StateController<UsersAvatarsState>
       // setState(const UsersAvatarsState.idle());
     },
   );
+
+  Future<void> _loadAvatarInternal(UserId userId, {required bool reload}) async {
+    if (userId.isNullOrEmpty) return;
+
+    final stateAvatar = state.avatars.firstWhereOrNull((i) => i.userId == userId);
+    if (stateAvatar != null && stateAvatar.loaded && !reload) return;
+
+    final avatars = state.avatars.where((i) => i.userId != userId);
+    final loadingAvatar = UserAvatar.empty.copyWith(userId: userId);
+    setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadingAvatar])));
+
+    setProgress(AppProgress.started);
+
+    // TODO: loadAvatar: (List<UserId>
+    final loadedAvatar =
+        (await _repository.loadUserAvatar([userId]).toList()).firstOrNull ?? loadingAvatar.copyWith(loaded: true);
+
+    setState(UsersAvatarsState.loaded(UnmodifiableListView<UserAvatar>([...avatars, loadedAvatar])));
+  }
 }
 
 // TODO: move to auth_model package
@@ -91,7 +92,7 @@ typedef UserBlurhashMapCallback<T extends Object> = T Function(String blurhash);
 extension UsersAvatarsStateX on UsersAvatarsState {
   UserAvatar? avatar(UserId userId) => avatars.firstWhereOrNull((i) => i.userId == userId);
 
-  T? map<T extends Object>(
+  T? mapAvatar<T extends Object>(
     IUserInfo userInfo, {
     UserAvatarMapCallback<T>? avatar,
     UserBlurhashMapCallback<T>? blurhash,

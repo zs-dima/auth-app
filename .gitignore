@@ -5,9 +5,11 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 .gradle/
 migrate_working_dir/
 config/
@@ -19,7 +21,7 @@ config/
 .idea/
 
 # VS Code related
-.vscode/
+#.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -30,8 +32,8 @@ config/
 .packages
 .pub-cache/
 .pub/
-**/build/
-pubspec.lock
+/build/
+/coverage/
 
 # Symbolication related
 app.*.symbols
@@ -59,14 +61,9 @@ lib/**/gen/
 
 # Logs
 logs/
-coverage/
 
 # GraphQL
 .graphqlconfig
-
-# Flutter Version Manager related
-
-coverage/
 
 # Android Studio will place build artifacts here
 /android/app/debug

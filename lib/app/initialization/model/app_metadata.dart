@@ -1,13 +1,53 @@
-import 'package:auth_app/core/gen/constant/pubspec.yaml.g.dart';
-import 'package:meta/meta.dart';
+import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
 import 'package:platform_info/platform_info.dart';
-import 'package:ui_tool/ui_tool.dart';
+import 'package:ui/ui.dart';
 
 /// {@template app_metadata}
 /// App metadata
 /// {@endtemplate}
 @immutable
 class AppMetadata {
+  /// {@macro app_metadata}
+  const AppMetadata({
+    required this.isWeb,
+    required this.isRelease,
+    required this.appVersion,
+    required this.appVersionMajor,
+    required this.appVersionMinor,
+    required this.appVersionPatch,
+    required this.appBuildTimestamp,
+    required this.appName,
+    required this.operatingSystem,
+    required this.processorsCount,
+    required this.locale,
+    required this.deviceVersion,
+    required this.deviceScreenSize,
+    required this.appLaunchedTimestamp,
+  });
+
+  factory AppMetadata.fromApp() => AppMetadata(
+    isWeb: platform.js,
+    isRelease: platform.buildMode.release,
+    appName: Pubspec.name,
+    appVersion: Pubspec.version.representation,
+    appVersionMajor: Pubspec.version.major,
+    appVersionMinor: Pubspec.version.minor,
+    appVersionPatch: Pubspec.version.patch,
+    appBuildTimestamp:
+        Pubspec
+            .version
+            .build
+            .isNotEmpty //
+        ? (int.tryParse(Pubspec.version.build.firstOrNull ?? '-1') ?? -1)
+        : -1,
+    operatingSystem: platform.operatingSystem.name,
+    processorsCount: platform.numberOfProcessors,
+    appLaunchedTimestamp: DateTime.now(),
+    locale: platform.locale,
+    deviceVersion: platform.version,
+    deviceScreenSize: ScreenUtil.screenSize.representation,
+  );
+
   /// Is web platform
   final bool isWeb;
 
@@ -49,47 +89,6 @@ class AppMetadata {
 
   /// App launched timestamp
   final DateTime appLaunchedTimestamp;
-
-  /// {@macro app_metadata}
-  const AppMetadata({
-    required this.isWeb,
-    required this.isRelease,
-    required this.appVersion,
-    required this.appVersionMajor,
-    required this.appVersionMinor,
-    required this.appVersionPatch,
-    required this.appBuildTimestamp,
-    required this.appName,
-    required this.operatingSystem,
-    required this.processorsCount,
-    required this.locale,
-    required this.deviceVersion,
-    required this.deviceScreenSize,
-    required this.appLaunchedTimestamp,
-  });
-
-  factory AppMetadata.fromApp() => AppMetadata(
-    isWeb: platform.js,
-    isRelease: platform.buildMode.release,
-    appName: Pubspec.name,
-    appVersion: Pubspec.version.representation,
-    appVersionMajor: Pubspec.version.major,
-    appVersionMinor: Pubspec.version.minor,
-    appVersionPatch: Pubspec.version.patch,
-    appBuildTimestamp:
-        Pubspec
-            .version
-            .build
-            .isNotEmpty //
-        ? (int.tryParse(Pubspec.version.build.firstOrNull ?? '-1') ?? -1)
-        : -1,
-    operatingSystem: platform.operatingSystem.name,
-    processorsCount: platform.numberOfProcessors,
-    appLaunchedTimestamp: DateTime.now(),
-    locale: platform.locale,
-    deviceVersion: platform.version,
-    deviceScreenSize: ScreenUtil.screenSize.representation,
-  );
 
   /// Convert to headers
   Map<String, String> toHeaders() => <String, String>{
