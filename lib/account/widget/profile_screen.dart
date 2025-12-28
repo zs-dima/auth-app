@@ -3,7 +3,7 @@ import 'package:auth_app/_core/widget/form/form_placeholder.dart';
 import 'package:auth_app/_core/widget/scaffold_padding.dart';
 import 'package:auth_app/_core/widget/shimmer.dart';
 import 'package:auth_app/_core/widget/text_placeholder.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/widget/log_out_button.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/material.dart';
@@ -99,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     subtitle: Text(
-                      currentUser.userInfo.name,
+                      AuthenticationScope.userInfoOf(context).name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

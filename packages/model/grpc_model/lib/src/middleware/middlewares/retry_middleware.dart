@@ -2,106 +2,84 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:grpc/grpc.dart';
-import 'package:grpc_model/src/middleware/grpc_middleware.dart';
 import 'package:meta/meta.dart';
-
-/// Callback to evaluate whether a request should be retried.
-///
-/// [error] is the error that occurred.
-/// [attempt] is the current attempt number (0-indexed).
-/// Returns true if the request should be retried.
-typedef RetryEvaluator = bool Function(Object error, int attempt);
 
 /// {@template grpc_retry_middleware}
 /// Middleware for automatic retry of failed gRPC requests.
-///
-/// Implements exponential backoff and configurable retry logic.
 /// {@endtemplate}
 @immutable
-class GrpcRetryMiddleware extends GrpcMiddlewareBase {
+class GrpcRetryMiddleware extends ClientInterceptor {
   /// {@macro grpc_retry_middleware}
   GrpcRetryMiddleware({
     this.retries = 3,
     this.retryEvaluator,
     this.retryDelays = const [Duration(seconds: 1), Duration(seconds: 2), Duration(seconds: 4)],
   }) : assert(retries >= 0, 'Retries must be non-negative'),
-       assert(retryDelays.isNotEmpty && retryDelays.every((d) => d > Duration.zero), 'Retry delays must be positive'),
-       assert(retryDelays.length >= retries, 'Retry delays must be at least as many as retries');
+       assert(retryDelays.isNotEmpty, 'Retry delays must not be empty');
 
-  /// Maximum number of retry attempts.
   final int retries;
-
-  /// Custom evaluator to determine if a request should be retried.
-  ///
-  /// If null, uses [defaultRetryEvaluator].
-  final RetryEvaluator? retryEvaluator;
-
-  /// Delays between retry attempts.
+  final bool Function(Object error, int attempt)? retryEvaluator;
   final List<Duration> retryDelays;
 
-  /// Default retry evaluator that determines which errors are retryable.
-  static bool defaultRetryEvaluator(Object error, int attempt) {
-    // Don't retry authentication errors
-    if (error is GrpcClientException$Authentication) return false;
-    if (error is GrpcError && error.code == StatusCode.unauthenticated) return false;
-    if (error is GrpcError && error.code == StatusCode.permissionDenied) return false;
-
-    // Retry on timeout
-    if (error is TimeoutException || error is GrpcClientException$Timeout) return true;
-
-    // Retry on specific gRPC errors
-    if (error is GrpcError) {
-      return const {
-        StatusCode.unavailable,
-        StatusCode.resourceExhausted,
-        StatusCode.aborted,
-        StatusCode.internal,
-        StatusCode.deadlineExceeded,
-      }.contains(error.code);
-    }
-
-    if (error is GrpcClientException) {
-      final statusCode = error.statusCode;
-      if (statusCode == null) return true;
-      return const {
-        StatusCode.unavailable,
-        StatusCode.resourceExhausted,
-        StatusCode.aborted,
-        StatusCode.internal,
-        StatusCode.deadlineExceeded,
-      }.contains(statusCode);
-    }
-
-    return true;
-  }
-
   @override
-  GrpcHandler<Q, R> call<Q, R>(GrpcHandler<Q, R> next) => (request, context) async {
-    final noRetry = context['no-retry'] == true;
-    final maxRetries = math.min(
-      switch (context['retries']) {
-        final int r when r >= 0 => r,
-        _ => retries,
-      },
-      retryDelays.length,
-    );
+  ResponseFuture<R> interceptUnary<Q, R>(
+    ClientMethod<Q, R> method,
+    Q request,
+    CallOptions options,
+    ClientUnaryInvoker<Q, R> invoker,
+  ) => _RetryResponseFuture(_executeWithRetry(() => invoker(method, request, options)));
 
-    if (noRetry || maxRetries < 1 || retryDelays.isEmpty) {
-      return next(request, context);
-    }
-
+  Future<R> _executeWithRetry<R>(ResponseFuture<R> Function() invoke) async {
     var attempt = 0;
     while (true) {
       try {
-        return await next(request, context);
+        return await invoke();
       } on Object catch (e) {
-        final shouldRetry = retryEvaluator?.call(e, attempt) ?? defaultRetryEvaluator(e, attempt);
-        if (attempt >= maxRetries || !shouldRetry) rethrow;
-
-        // Wait before retrying with exponential backoff
+        final shouldRetry = retryEvaluator?.call(e, attempt) ?? _defaultRetryEvaluator(e);
+        if (attempt >= retries || !shouldRetry) rethrow;
+        // Exponential backoff delay before retrying
         await Future<void>.delayed(retryDelays[math.min(attempt, retryDelays.length - 1)]);
         attempt++;
       }
     }
+  }
+
+  static bool _defaultRetryEvaluator(Object error) => switch (error) {
+    GrpcError(:final code) => const {
+      StatusCode.unavailable,
+      StatusCode.resourceExhausted,
+      StatusCode.aborted,
+      StatusCode.internal,
+      StatusCode.deadlineExceeded,
+    }.contains(code),
+    _ => false,
   };
+}
+
+/// ResponseFuture wrapper for retry logic.
+class _RetryResponseFuture<R> implements ResponseFuture<R> {
+  const _RetryResponseFuture(this._future);
+  final Future<R> _future;
+
+  @override
+  Future<Map<String, String>> get headers async => {};
+  @override
+  Future<Map<String, String>> get trailers async => {};
+  @override
+  Future<void> cancel() async {}
+  @override
+  Stream<R> asStream() => _future.asStream();
+  @override
+  // ignore: prefer-explicit-function-type
+  Future<R> catchError(Function onError, {bool Function(Object error)? test}) =>
+      _future.catchError(onError, test: test);
+  @override
+  // ignore: prefer-explicit-function-type
+  Future<S> then<S>(FutureOr<S> Function(R value) onValue, {Function? onError}) =>
+      _future.then(onValue, onError: onError);
+  @override
+  Future<R> timeout(Duration timeLimit, {FutureOr<R> Function()? onTimeout}) =>
+      _future.timeout(timeLimit, onTimeout: onTimeout);
+  @override
+  Future<R> whenComplete(FutureOr<void> Function() action) => _future.whenComplete(action);
 }

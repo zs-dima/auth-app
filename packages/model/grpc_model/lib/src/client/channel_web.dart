@@ -4,6 +4,5 @@ import 'package:grpc_model/src/client/channel_config.dart';
 
 ClientChannelBase createClientChannel(
   Uri address, {
-  // ignore: avoid-unused-parameters
   GrpcChannelConfig config = GrpcChannelConfig.defaultConfig,
 }) => GrpcWebClientChannel.xhr(address);

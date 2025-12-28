@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:meta/meta.dart';
 import 'package:platform_info/platform_info.dart';
 
@@ -10,6 +10,17 @@ import 'package:platform_info/platform_info.dart';
 /// {@endtemplate}
 @immutable
 class AppMetadata {
+  /// The operating system of the device.
+  static final xOperatingSystem = switch (platform.operatingSystem) {
+    OperatingSystem$Android() => 'android',
+    OperatingSystem$Fuchsia() => 'fuchsia',
+    OperatingSystem$iOS() => 'ios',
+    OperatingSystem$Linux() => 'linux',
+    OperatingSystem$MacOS() => 'macos',
+    OperatingSystem$Windows() => 'windows',
+    OperatingSystem$Unknown() => 'linux',
+  };
+
   /// {@macro app_metadata}
   const AppMetadata({
     required this.appName,
@@ -99,19 +110,36 @@ class AppMetadata {
 
   /// Convert to headers
   Map<String, String> toHeaders() => <String, String>{
-    'X-Meta-Is-Web': isWeb ? 'true' : 'false',
-    'X-Meta-Is-Release': isRelease ? 'true' : 'false',
-    'X-Meta-App-Version': appVersion,
-    'X-Meta-App-Version-Major': appVersionMajor.toString(),
-    'X-Meta-App-Version-Minor': appVersionMinor.toString(),
-    'X-Meta-App-Version-Patch': appVersionPatch.toString(),
-    'X-Meta-App-Build-Timestamp': appBuildTimestamp.millisecondsSinceEpoch.toString(),
-    'X-Meta-App-Name': appName,
-    'X-Meta-Operating-System': operatingSystem,
-    'X-Meta-Processors-Count': processorsCount.toString(),
-    'X-Meta-Locale': locale,
-    'X-Meta-Device-Version': deviceVersion,
-    'X-Meta-Device-Screen-Size': deviceScreenSize,
-    'X-Meta-App-Launched-Timestamp': appLaunchedTimestamp.millisecondsSinceEpoch.toString(),
+    'Accept-Language': locale,
+    'X-Platform': kIsWeb ? 'web' : 'native',
+    // 'X-Environment': environment,
+    'X-Is-Release': isRelease ? 'true' : 'false',
+    'X-App-Version': appVersion,
+    'X-App-Version-Major': appVersionMajor.toString(),
+    'X-App-Version-Minor': appVersionMinor.toString(),
+    'X-App-Version-Patch': appVersionPatch.toString(),
+    'X-App-Build-Timestamp': appBuildTimestamp.toUtc().toIso8601String(),
+    'X-App-Name': appName,
+    'X-Operating-System': xOperatingSystem,
+    'X-Processors-Count': processorsCount.toString(),
+    'X-Locale': locale,
+    // 'X-Device-Version' : deviceVersion,
+    'X-Device-Screen-Size': deviceScreenSize,
+    // 'X-Device-Identifier': deviceId,
+    'X-App-Launched-Timestamp': appLaunchedTimestamp.toUtc().toIso8601String(),
+    // 'X-Meta-Is-Web': isWeb ? 'true' : 'false',
+    // 'X-Meta-Is-Release': isRelease ? 'true' : 'false',
+    // 'X-Meta-App-Version': appVersion,
+    // 'X-Meta-App-Version-Major': appVersionMajor.toString(),
+    // 'X-Meta-App-Version-Minor': appVersionMinor.toString(),
+    // 'X-Meta-App-Version-Patch': appVersionPatch.toString(),
+    // 'X-Meta-App-Build-Timestamp': appBuildTimestamp.millisecondsSinceEpoch.toString(),
+    // 'X-Meta-App-Name': appName,
+    // 'X-Meta-Operating-System': operatingSystem,
+    // 'X-Meta-Processors-Count': processorsCount.toString(),
+    // 'X-Meta-Locale': locale,
+    // 'X-Meta-Device-Version': deviceVersion,
+    // 'X-Meta-Device-Screen-Size': deviceScreenSize,
+    // 'X-Meta-App-Launched-Timestamp': appLaunchedTimestamp.millisecondsSinceEpoch.toString(),
   };
 }

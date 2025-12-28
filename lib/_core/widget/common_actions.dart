@@ -4,7 +4,7 @@ import 'package:auth_app/_core/widget/history_button.dart';
 import 'package:auth_app/account/widget/profile_icon_button.dart';
 import 'package:auth_app/authentication/widget/log_out_button.dart';
 import 'package:auth_app/developer/widget/developer_button.dart';
-import 'package:auth_app/settings/settings_button.dart';
+import 'package:auth_app/settings/widget/settings_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 

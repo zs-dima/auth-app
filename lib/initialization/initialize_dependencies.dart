@@ -10,26 +10,37 @@ import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/_core/model/dependencies.dart';
-import 'package:auth_app/_core/settings/dao/app_preferences_dao.dart';
-import 'package:auth_app/_core/settings/dao/app_secure_preferences_dao.dart';
+import 'package:auth_app/_core/theme/theme_mode_codec.dart';
+import 'package:auth_app/authentication/controller/authenticated_user_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
-import 'package:auth_app/authentication/data/auth_repository.dart';
+import 'package:auth_app/authentication/data/authentication_repository.dart';
+import 'package:auth_app/impersonation/controller/impersonate_controller.dart';
+import 'package:auth_app/impersonation/data/impersonate_repository.dart';
 import 'package:auth_app/initialization/app_migrator.dart';
-import 'package:auth_app/initialization/grpc_client_factory.dart';
+import 'package:auth_app/settings/data/dao/app_preferences_dao.dart';
+import 'package:auth_app/settings/data/dao/app_secure_preferences_dao.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
-import 'package:auth_app/settings/data/theme_mode_codec.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
 import 'package:auth_app/users/controller/users_avatars_controller.dart';
+import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+StreamSubscription<List<LogMessage>>? _logSubscription;
+// StreamSubscription<List<LogTblCompanion>>? _logTblSubscription;
+StreamSubscription<AuthUser>? _authUserSubscription;
+StreamSubscription? _authUserInfoSubscription;
+StreamSubscription? _impersonationSubscription;
 
 /// Initializes the app and returns a [Dependencies] object
 Future<Dependencies> $initializeDependencies({void Function(int progress, String message)? onProgress}) async {
@@ -48,7 +59,7 @@ Future<Dependencies> $initializeDependencies({void Function(int progress, String
 
       stopWatch.stop();
       logger.v6(
-        '⚡${currentStep.toString().padLeft(2)}/$totalSteps ${percent.toString().padLeft(2)}%'
+        '💫${currentStep.toString().padLeft(2)}/$totalSteps ${percent.toString().padLeft(2)}%'
         '${percent == 100 ? '' : ' '}${stopWatch.elapsed.formattedMs.padLeft(5)} '
         '| ${step.key}',
       );
@@ -117,10 +128,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     final sharedPreferences = await SharedPreferences.getInstance();
     final preferencesDao = AppPreferencesDao(sharedPreferences);
     const secureStorage = FlutterSecureStorage();
-    final securePreferencesDao = AppSecurePreferencesDao.instance(
-      secureStorage,
-      getUserId: () => dependencies.authenticationRepository.getUserId(),
-    );
+    const securePreferencesDao = AppSecurePreferencesDao(secureStorage);
     final settings = SettingsRepository(
       preferences: preferencesDao,
       securePreferences: securePreferencesDao,
@@ -143,64 +151,207 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   final localeRepository = LocaleRepository(localeDataSource);
   //   dependencies.localeRepository = localeRepository;
   // },
-  'Messages controller': (dependencies) => dependencies.messageController = AppMessageController(),
-  'Updates check': (dependencies) => dependencies.updateCheckController = UpdateCheckController(
+  'gRPC Client factory': (dependencies) {
+    final apiBaseUrl = dependencies.environment.authService;
+
+    GrpcAuthenticationClient grpsFactory([Iterable<ClientInterceptor>? middlewares]) {
+      final list = <ClientInterceptor>[
+        // Add your interceptors here
+        // e.g. LoggerInterceptor(), RetryInterceptor(), etc.
+        // TODO: Deduplicate requests interceptor
+        // TODO: Cache interceptor
+
+        // Metadata middleware
+        GrpcMetadataMiddleware(
+          metadata: {
+            ...dependencies.metadata.toHeaders(),
+            'X-Environment': dependencies.environment.type.name,
+          },
+        ),
+
+        // Retry middleware
+        // GrpcRetryMiddleware(
+        //   retries: 3,
+        //   retryEvaluator: (error, attempt) =>
+        //       attempt <= 3 &&
+        //       switch (error) {
+        //         ApiClientException$Authentication() => false, // Do not retry on authentication errors
+        //         TimeoutException() || ApiClientException$Timeout() => true, // Retry on timeout exceptions
+        //         ApiClientException$Client(:final code) => !const <String>{
+        //           'canceled',
+        //           'aborted',
+        //           'cancel',
+        //           'cancelled',
+        //           'abort',
+        //           'unexpected_error',
+        //           'unknown error',
+        //         }.contains(code), // Do not retry on cancellation or abort errors
+        //         ApiClientException$Network(:final statusCode) => const <int>{
+        //           400, // Bad Request
+        //           //401, // Unauthorized
+        //           //403, // Forbidden
+        //           408, // Request Timeout
+        //           409, // Conflict
+        //           422, // Unprocessable Entity
+        //           //429, // Too Many Requests
+        //           500, // Internal Server Error
+        //           502, // Bad Gateway
+        //           503, // Service Unavailable
+        //           504, // Gateway Timeout
+        //         }.contains(statusCode), // Retry on specific network errors
+        //         _ => true, // Retry on other errors
+        //       },
+        //   retryDelays: const <Duration>[
+        //     Duration(seconds: 1), // wait 1 sec before first retry
+        //     Duration(seconds: 2), // wait 2 sec before second retry
+        //     Duration(seconds: 3), // wait 3 sec before third retry
+        //   ],
+        // ),
+
+        // Logger middleware
+        // const GrpcLoggerMiddleware(),
+
+        // Sentry middleware
+        // const GrpcSentryMiddleware(),
+
+        // Any other middlewares you need
+        ...?middlewares,
+      ];
+
+      // Create the gRPC channel
+      final environment = dependencies.environment;
+      final authChannel = GrpcClientChannel(environment.authService);
+
+      // Create auth client with middleware support
+      return GrpcAuthenticationClient(
+        GrpcClientOptions(
+          authChannel,
+          interceptors: middlewares,
+          timeout: const Duration(seconds: 30),
+        ),
+      );
+    }
+
+    dependencies.grpsAuthFactory = grpsFactory;
+  },
+
+  // General gRPC client initialization
+  'General gRPC Client': (dependencies) {
+    dependencies.authClient = dependencies.grpsAuthFactory([
+      GrpcAuthenticationMiddleware(
+        getToken: () async {
+          try {
+            return await dependencies.credentialsManager.getAccessCredentials();
+          } on Object catch (e, _) {
+            logger.w('Error getting token: $e');
+            return null;
+          }
+        },
+        onAuthError: () {
+          logger.w('Received "Not authenticated" gRPC response, logging out... ');
+          dependencies.authenticationController.signOut();
+        },
+        unauthenticatedPaths: const <String>{
+          '/auth.AuthService/SignIn',
+          '/auth.AuthService/RefreshTokens',
+          '/auth.AuthService/ResetPassword',
+        },
+      ),
+    ]);
+  },
+
+  ///
+  'Prepare notifications': (dependencies) => dependencies.messageController = AppMessageController(),
+  'Prepare updates check': (dependencies) => dependencies.updateCheckController = UpdateCheckController(
     updateCheckApi: const UpdateCheckApiImpl(),
     metadata: dependencies.metadata,
     messageController: dependencies.messageController,
   ),
-  'Authentication handler': (dependencies) => dependencies.authenticationHandler = AuthenticationHandler(),
-  'Authentication repository': (dependencies) async {
-    final environment = dependencies.environment;
+  'Prepare authentication handler': (dependencies) => dependencies.authenticationHandler = AuthenticationHandler(),
+  'Prepare authentication repository': (dependencies) {
     final settings = dependencies.settings;
-    final metadata = dependencies.metadata;
+    final authenticationHandler = dependencies.authenticationHandler;
 
-    // Create repository first, then wire up credentials manager
-    late final AuthRepository authenticationRepository;
-
-    // Create the gRPC channel
-    final authChannel = GrpcClientChannel(environment.authService);
-
-    // Create middlewares for the gRPC client
-    final middlewares = createStandardMiddlewares(
-      environment: environment.type.name,
-      metadata: metadata.toHeaders(),
-      getToken: () async => (await authenticationRepository.getAccessCredentials())?.accessToken.token,
-      onAuthError: () => dependencies.authenticationHandler.handleAuthenticationError(),
+    dependencies.credentialsManager = CredentialsCallbacks(
+      getAccessCredentials: () => dependencies.authenticationRepository.getAccessCredentials(),
+      getRefreshTokens: (_) async => null, // dependencies.authenticationRepository.refreshTokens(),
+      authHandler: authenticationHandler,
+      allowAnonymous: true,
     );
 
-    // Create auth client with middleware support
-    final authClient = GrpcAuthenticationClient.withMiddlewares(
-      authChannel,
-      middlewares: middlewares,
-    );
-    final authApi = GrpcAuthenticationApi(client: authClient);
-
-    authenticationRepository = AuthRepository(
-      apiClient: authApi,
-      authHandler: dependencies.authenticationHandler,
+    return dependencies.authenticationRepository = AuthenticationRepository(
+      api: dependencies.authClient,
+      authHandler: authenticationHandler,
       settings: settings,
     );
-
-    dependencies
-      ..authenticationRepository = authenticationRepository
-      ..authenticationController = AuthenticationController(
-        repository: authenticationRepository,
-        messageController: dependencies.messageController,
-      )
-      ..usersRepository = UsersRepository(apiClient: authApi);
-
-    final userInfo = settings.user;
-    final credentials = await settings.getCredentials();
-    if (userInfo != null && credentials != null) {
-      final user = AuthenticatedUser(userInfo: userInfo, credentials: credentials);
-      await authenticationRepository.validateCredentials(user);
-    }
   },
+
+  'Prepare authentication controller': (dependencies) =>
+      dependencies.authenticationController = AuthenticationController(
+        repository: dependencies.authenticationRepository,
+        messageController: dependencies.messageController,
+      ),
+  'Prepare users repository': (dependencies) {
+    dependencies
+      ..usersRepository = UsersRepository(
+        apiClient: dependencies.authClient,
+        getUserId: dependencies.authenticationRepository.getUserId,
+      )
+      ..usersController = UsersController(
+        repository: dependencies.usersRepository,
+        messageController: dependencies.messageController,
+      );
+  },
+  'Prepare authenticated user controller': (dependencies) =>
+      dependencies.authenticatedUserController = AuthenticatedUserController(
+        usersController: dependencies.usersController,
+        messageController: dependencies.messageController,
+      ),
   'Users avatars controller': (dependencies) => dependencies.avatarController = UsersAvatarsController(
     usersRepository: dependencies.usersRepository,
     messageController: dependencies.messageController,
   ),
+  'Prepare users handlers': (dependencies) {
+    final impersonateController = ImpersonateController(
+      repository: ImpersonateRepository(currentUser: dependencies.authenticatedUserController.state.user),
+      messageController: dependencies.messageController,
+    );
+
+    dependencies.impersonateController = impersonateController;
+    final authenticatedUserController = dependencies.authenticatedUserController;
+
+    _authUserSubscription = dependencies
+        .authenticationRepository
+        .userChanges //
+        .listen(
+          authenticatedUserController.loadUser,
+          // if (user case final AuthenticatedUser i) dependencies.avatarController.loadAvatar(i.userId, reload: false);
+          cancelOnError: false,
+        );
+
+    _authUserInfoSubscription =
+        authenticatedUserController //
+            .toStream()
+            .listen(
+              (state) => switch (state) {
+                AuthenticatedUserLoadedState(:final user) => impersonateController.impersonate(user),
+                _ => null,
+              },
+              cancelOnError: false,
+            );
+
+    _impersonationSubscription =
+        impersonateController //
+            .toStream()
+            .whereType<ImpersonateIdleState>()
+            .listen(
+              (state) {
+                // Update dependencies
+              },
+              cancelOnError: false,
+            );
+  },
+  'Restore credentials': (dependencies) => dependencies.authenticationController.restore(),
 
   // 'Prepare authentication controller': (dependencies) =>
   //     dependencies.authenticationController = AuthenticationController(
@@ -260,11 +411,10 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Log app initialized': (_) {},
 };
 
-// TODO
 Future<void> $disposeDependencies() async {
-  //   await _logSubscription?.cancel();
-  //   // await _logTblSubscription?.cancel();
-  //   await _authUserSubscription?.cancel();
-  //   await _authUserInfoSubscription?.cancel();
-  //   await _impersonationSubscription?.cancel();
+  await _logSubscription?.cancel();
+  // await _logTblSubscription?.cancel();
+  await _authUserSubscription?.cancel();
+  await _authUserInfoSubscription?.cancel();
+  await _impersonationSubscription?.cancel();
 }

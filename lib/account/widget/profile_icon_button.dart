@@ -1,5 +1,5 @@
 import 'package:auth_app/_core/router/routes.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/widget/user_avatar_widget.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/material.dart';
@@ -16,11 +16,12 @@ class ProfileIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = AuthenticationScope.userOf(context);
+    final authUser = AuthenticationScope.userInfoOf(context);
     return currentUser is AuthenticatedUser
         ? Tooltip(
-            message: currentUser.userInfo.name,
+            message: authUser.name,
             child: UserAvatarWidget(
-              user: currentUser.userInfo,
+              user: authUser,
               size: 15,
               onPressed: () {
                 Octopus.maybeOf(context)?.setState(

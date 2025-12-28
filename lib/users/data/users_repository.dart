@@ -4,7 +4,8 @@ import 'dart:typed_data';
 import 'package:auth_model/auth_model.dart';
 
 abstract interface class IUsersRepository {
-  Stream<User> loadUsers(UserId currentUserId);
+  Future<IUserInfo> loadUserInfo(UserId userId);
+  Stream<User> loadUsers();
 
   Stream<IUserInfo> loadUsersInfo();
   Stream<UserAvatar> loadUserAvatar([List<UserId>? userIds]);
@@ -16,12 +17,22 @@ abstract interface class IUsersRepository {
 class UsersRepository implements IUsersRepository {
   const UsersRepository({
     required final IUsersApi apiClient,
-  }) : _api = apiClient;
+    required UserIdCallback getUserId,
+  }) : _api = apiClient,
+       _getUserId = getUserId;
 
   final IUsersApi _api;
+  final UserIdCallback _getUserId;
 
   @override
-  Stream<User> loadUsers(UserId currentUserId) => _api.loadUsers(currentUserId).cast<User>();
+  Future<IUserInfo> loadUserInfo(UserId userId) async => _api.loadUserInfo(userId);
+
+  @override
+  Stream<User> loadUsers() async* {
+    final currentUserId = await _getUserId();
+    if (currentUserId == null) return;
+    yield* _api.loadUsers(currentUserId).cast<User>();
+  }
 
   @override
   Stream<IUserInfo> loadUsersInfo() => _api.loadUsersInfo();

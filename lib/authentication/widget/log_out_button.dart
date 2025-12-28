@@ -1,5 +1,5 @@
 import 'package:auth_app/_core/app.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

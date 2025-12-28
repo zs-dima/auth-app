@@ -1,5 +1,5 @@
 import 'package:auth_app/_core/widget/shadow_widget.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/edit/user_edit_dialog.dart';
 import 'package:auth_app/users/user_tile_widget.dart';
@@ -20,16 +20,16 @@ class UsersWidget extends StatefulWidget {
 
 class _UsersWidgetState extends State<UsersWidget> {
   UsersController? _usersController;
-  IUserInfo? _currentUser;
+  UserId? _currentUserId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final user = AuthenticationScope.userOf(context).maybeCast<AuthenticatedUser>()?.userInfo;
+    final userId = AuthenticationScope.userOf(context).maybeCast<AuthenticatedUser>()?.userId;
 
-    if (_currentUser != user) {
-      _currentUser = user;
+    if (_currentUserId != userId) {
+      _currentUserId = userId;
     }
 
     final usersController = context.users(listen: true).controller;
@@ -77,8 +77,8 @@ class _UsersWidgetState extends State<UsersWidget> {
                 ];
                 return RefreshIndicator(
                   onRefresh: () async {
-                    if (_currentUser == null) return;
-                    _usersController?.loadUsers(_currentUser!.id);
+                    if (_currentUserId == null) return;
+                    _usersController?.loadUsers(_currentUserId!);
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),

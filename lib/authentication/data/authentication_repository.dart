@@ -1,63 +1,185 @@
-// TODO
+import 'dart:async';
 
-// import 'dart:async';
-// import 'dart:convert';
+import 'package:auth_app/_core/tool/device_info.dart';
+import 'package:auth_app/_core/tool/http/mutex.dart';
+import 'package:auth_app/settings/data/settings_repository.dart';
+import 'package:auth_model/auth_model.dart';
+import 'package:core_tool/core_tool.dart';
+import 'package:rxdart/rxdart.dart';
 
-// import 'package:auth_app/authentication/model/sign_in_data.dart';
-// import 'package:auth_model/auth_model.dart';
-// import 'package:auth_app/settings/data/settings_repository.dart';
+abstract interface class IAuthenticationRepository {
+  Stream<AuthUser> get userChanges;
+  AuthUser get user;
+  Future<UserId> getUserId();
 
-// abstract interface class IAuthenticationRepository {
-//   Stream<User> userChanges();
-//   FutureOr<User> getUser();
-//   Future<void> signIn(SignInData data);
-//   Future<void> restore();
-//   Future<void> signOut();
-// }
+  Future<AuthUser> restore();
+  Future<AccessCredentials?> getAccessCredentials();
+  // Future<AccessCredentials?> refreshTokens();
 
-// class AuthenticationRepositoryImpl implements IAuthenticationRepository {
-//   static const _sessionKey = 'authentication.session';
-//   final ISettingsRepository _settings;
-//   final _userController = StreamController<User>.broadcast();
-//   User _user = const User.unauthenticated();
+  Future<AuthUser> signIn(ISignInData signInData);
+  Future<void> signOut();
 
-//   AuthenticationRepositoryImpl({
-//     required ISettingsRepository settings,
-//   }) : _settings = settings;
+  Future<bool> resetPassword(String email);
+  Future<bool> setPassword(UserId userId, String email, String password);
 
-//   @override
-//   FutureOr<User> getUser() => _user;
+  Future<void> terminate();
+}
 
-//   @override
-//   Stream<User> userChanges() => _userController.stream;
+class AuthenticationRepository implements IAuthenticationRepository {
+  /// Prevents concurrent refresh attempts
+  static final Mutex _refreshingMutex = Mutex();
 
-//   @override
-//   Future<void> signIn(SignInData data) => Future<void>.delayed(
-//         const Duration(seconds: 1),
-//         () {
-//           final user = User.authenticated(id: data.username);
-//           _settings.user = user;
-//           _userController.add(_user = user);
-//         },
-//       );
+  AuthenticationRepository({
+    required final IAuthenticationApi api,
+    required IAuthenticationHandler authHandler,
+    required final ISettingsRepository settings,
+  }) : _api = api,
+       _settings = settings {
+    _userChangesSubscription =
+        userChanges //
+            .whereType<AuthenticatedUser>()
+            .listen((u) => authHandler.handleAuthenticated(), cancelOnError: false);
 
-//   @override
-//   Future<void> restore() async {
-//     final session = _settings.getString(_sessionKey);
-//     if (session == null) return;
-//     final json = jsonDecode(session);
-//     if (json case final Map<String, Object?> jsonMap) {
-//       final user = User.fromJson(jsonMap);
-//       _userController.add(_user = user);
-//     }
-//   }
+    _authSubscription =
+        authHandler //
+            .where((i) => i == AuthenticationState.unauthenticated)
+            .listen((_) => signOut(), cancelOnError: false);
+  }
+  final IAuthenticationApi _api;
 
-//   @override
-//   Future<void> signOut() => Future<void>.sync(
-//         () {
-//           const user = User.unauthenticated();
-//           _settings.remove(_sessionKey).ignore();
-//           _userController.add(_user = user);
-//         },
-//       );
-// }
+  final ISettingsRepository _settings;
+  StreamSubscription? _authSubscription;
+
+  StreamSubscription? _userChangesSubscription;
+
+  final _userController = StreamController<AuthUser>.broadcast();
+  @override
+  Stream<AuthUser> get userChanges => _userController.stream;
+  @override
+  AuthUser get user => _user;
+
+  AuthUser _user = const AuthUser.unauthenticated();
+
+  @override
+  Future<AccessCredentials?> getAccessCredentials() async => _refreshingMutex.synchronize(_refreshTokens);
+
+  @override
+  Future<UserId> getUserId() async => switch (_user) {
+    AuthenticatedUser(:final userId) => userId,
+    _ => UserIdX.empty,
+  };
+
+  @override
+  Future<AuthUser> signIn(ISignInData signInData) async {
+    final deviceInfo = await DeviceInfo.instance(_settings.installationId);
+
+    final authUser = await _api.signIn(signInData, deviceInfo);
+
+    _userController.add(_user = authUser);
+
+    _settings.setUserId(authUser.userId).ignore();
+    _settings.setCredentials(authUser.credentials).ignore();
+
+    return _user;
+  }
+
+  @override
+  Future<void> signOut() => Future<void>.delayed(Duration.zero, () async {
+    try {
+      if (_user case final AuthenticatedUser authenticatedUser) {
+        final token = authenticatedUser.credentials?.accessToken.token;
+        if (token.isNullOrEmpty) _api.signOut(token!).ignore();
+      }
+    } finally {
+      _userController.add(_user = const AuthUser.unauthenticated());
+      _settings
+        ..setUserId(UserIdX.empty).ignore()
+        ..setCredentials(null).ignore();
+    }
+  });
+
+  @override
+  Future<bool> resetPassword(String email) => _api.resetPassword(email);
+
+  @override
+  Future<bool> setPassword(UserId userId, String email, String password) => _api.setPassword(userId, email, password);
+
+  @override
+  Future<AuthUser> restore() async {
+    final userId = _settings.userId;
+    final credentials = await _settings.getCredentials();
+
+    if (userId == UserIdX.empty || credentials == null) return _user;
+
+    _user = AuthUser.authenticated(userId: userId, credentials: credentials);
+    AccessCredentials? cr;
+    try {
+      cr = await _refreshingMutex.synchronize(_refreshTokens);
+    } finally {
+      if (cr != null) _userController.add(_user);
+    }
+    return _user;
+  }
+
+  @override
+  Future<void> terminate() async {
+    await _authSubscription?.cancel();
+    await _userChangesSubscription?.cancel();
+    await _userController.close();
+  }
+
+  // @override
+  Future<AccessCredentials?> _refreshTokens() async {
+    switch (_user) {
+      case final AuthenticatedUser authUser:
+        try {
+          final AuthenticatedUser(:AccessCredentials? credentials, :UserId userId) = authUser;
+          if (credentials == null || credentials.accessToken.token.isNullOrSpace) {
+            throw Exception('Credentials are missing');
+          }
+
+          if (!credentials.accessToken.expiresSoon) return credentials;
+
+          // print('>>> accessToken: ${DateFormat().format(credentials.accessToken.expiry)}');
+          // print('>>> accessToken: ${credentials.accessToken.token}');
+          // print('>>> refreshToken: ${credentials.refreshToken}');
+
+          final refresh = await _api.refreshTokens(
+            credentials.accessToken.token,
+            credentials.refreshToken,
+          );
+
+          if (refresh == null) {
+            _settings
+              ..setUserId(UserIdX.empty).ignore()
+              ..setCredentials(null).ignore();
+
+            _userController.add(_user = const AuthUser.unauthenticated());
+            return null;
+          }
+
+          _settings
+            ..setUserId(userId).ignore()
+            ..setCredentials(refresh).ignore();
+
+          _userController.add(_user = AuthUser.authenticated(credentials: refresh, userId: userId));
+
+          return refresh;
+        } on Object catch (error, stackTrace) {
+          _settings
+            ..setUserId(UserIdX.empty).ignore()
+            ..setCredentials(null).ignore();
+
+          _userController.add(_user = const AuthUser.unauthenticated());
+
+          // print('>>> Failed to refresh tokens: $error');
+
+          Error.throwWithStackTrace('Failed to refresh tokens "$error"', stackTrace);
+        }
+
+      default:
+        return null;
+      // throw Exception('User is not authenticated');
+    }
+  }
+}

@@ -19,33 +19,33 @@ import 'dart:typed_data' as $typed_data;
 const OS$json = {
   '1': 'OS',
   '2': [
-    {'1': 'fuchsia', '2': 0},
-    {'1': 'linux', '2': 1},
-    {'1': 'macOS', '2': 2},
-    {'1': 'windows', '2': 3},
-    {'1': 'iOS', '2': 4},
-    {'1': 'android', '2': 5},
-    {'1': 'unknown', '2': 6},
+    {'1': 'FUCHSIA', '2': 0},
+    {'1': 'LINUX', '2': 1},
+    {'1': 'MACOS', '2': 2},
+    {'1': 'WINDOWS', '2': 3},
+    {'1': 'IOS', '2': 4},
+    {'1': 'ANDROID', '2': 5},
+    {'1': 'UNKNOWN', '2': 6},
   ],
 };
 
 /// Descriptor for `OS`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List oSDescriptor =
-    $convert.base64Decode('CgJPUxILCgdmdWNoc2lhEAASCQoFbGludXgQARIJCgVtYWNPUxACEgsKB3dpbmRvd3MQAxIHCg'
-        'NpT1MQBBILCgdhbmRyb2lkEAUSCwoHdW5rbm93bhAG');
+    $convert.base64Decode('CgJPUxILCgdGVUNIU0lBEAASCQoFTElOVVgQARIJCgVNQUNPUxACEgsKB1dJTkRPV1MQAxIHCg'
+        'NJT1MQBBILCgdBTkRST0lEEAUSCwoHVU5LTk9XThAG');
 
 @$core.Deprecated('Use userRoleDescriptor instead')
 const UserRole$json = {
   '1': 'UserRole',
   '2': [
-    {'1': 'administrator', '2': 0},
-    {'1': 'user', '2': 1},
+    {'1': 'ADMINISTRATOR', '2': 0},
+    {'1': 'USER', '2': 1},
   ],
 };
 
 /// Descriptor for `UserRole`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List userRoleDescriptor =
-    $convert.base64Decode('CghVc2VyUm9sZRIRCg1hZG1pbmlzdHJhdG9yEAASCAoEdXNlchAB');
+    $convert.base64Decode('CghVc2VyUm9sZRIRCg1BRE1JTklTVFJBVE9SEAASCAoEVVNFUhAB');
 
 @$core.Deprecated('Use resetPasswordRequestDescriptor instead')
 const ResetPasswordRequest$json = {

@@ -15,22 +15,22 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class OS extends $pb.ProtobufEnum {
-  static const OS fuchsia = OS._(0, _omitEnumNames ? '' : 'fuchsia');
-  static const OS linux = OS._(1, _omitEnumNames ? '' : 'linux');
-  static const OS macOS = OS._(2, _omitEnumNames ? '' : 'macOS');
-  static const OS windows = OS._(3, _omitEnumNames ? '' : 'windows');
-  static const OS iOS = OS._(4, _omitEnumNames ? '' : 'iOS');
-  static const OS android = OS._(5, _omitEnumNames ? '' : 'android');
-  static const OS unknown = OS._(6, _omitEnumNames ? '' : 'unknown');
+  static const OS FUCHSIA = OS._(0, _omitEnumNames ? '' : 'FUCHSIA');
+  static const OS LINUX = OS._(1, _omitEnumNames ? '' : 'LINUX');
+  static const OS MACOS = OS._(2, _omitEnumNames ? '' : 'MACOS');
+  static const OS WINDOWS = OS._(3, _omitEnumNames ? '' : 'WINDOWS');
+  static const OS IOS = OS._(4, _omitEnumNames ? '' : 'IOS');
+  static const OS ANDROID = OS._(5, _omitEnumNames ? '' : 'ANDROID');
+  static const OS UNKNOWN = OS._(6, _omitEnumNames ? '' : 'UNKNOWN');
 
   static const $core.List<OS> values = <OS>[
-    fuchsia,
-    linux,
-    macOS,
-    windows,
-    iOS,
-    android,
-    unknown,
+    FUCHSIA,
+    LINUX,
+    MACOS,
+    WINDOWS,
+    IOS,
+    ANDROID,
+    UNKNOWN,
   ];
 
   static final $core.List<OS?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 6);
@@ -40,12 +40,12 @@ class OS extends $pb.ProtobufEnum {
 }
 
 class UserRole extends $pb.ProtobufEnum {
-  static const UserRole administrator = UserRole._(0, _omitEnumNames ? '' : 'administrator');
-  static const UserRole user = UserRole._(1, _omitEnumNames ? '' : 'user');
+  static const UserRole ADMINISTRATOR = UserRole._(0, _omitEnumNames ? '' : 'ADMINISTRATOR');
+  static const UserRole USER = UserRole._(1, _omitEnumNames ? '' : 'USER');
 
   static const $core.List<UserRole> values = <UserRole>[
-    administrator,
-    user,
+    ADMINISTRATOR,
+    USER,
   ];
 
   static final $core.List<UserRole?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 1);

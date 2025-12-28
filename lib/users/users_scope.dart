@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:auth_app/_core/app.dart';
-import 'package:auth_app/authentication/controller/authentication_controller.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/controller/user_controller.dart';
 import 'package:auth_app/users/controller/users_avatars_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
@@ -51,9 +48,9 @@ class UsersScope extends StatefulWidget {
 }
 
 class _UsersScopeState extends State<UsersScope> implements IUsersController {
-  late AuthenticationController _authController;
+  // late AuthenticationController _authController;
   late UsersAvatarsController _avatarController;
-  IUserInfo? _currentUser;
+  UserId _currentUserId = UserIdX.empty;
   late final UserController _userController;
 
   @override
@@ -63,38 +60,25 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   void initState() {
     super.initState();
 
-    controller = UsersController(
-      repository: context.dependencies.usersRepository,
-      messageController: context.message,
-    );
+    controller = context.dependencies.usersController;
 
     _userController = UserController(
       repository: context.dependencies.usersRepository,
       messageController: context.message,
     );
 
-    _authController = context.dependencies.authenticationController;
+    // _authController = context.dependencies.authenticationController;
     _avatarController = context.dependencies.avatarController;
-
-    _subscription = controller.toStream().listen(_listener);
   }
 
-  void _listener(UsersState state) {
+  Future<void> _reloadUsers() async {
     if (!mounted) return;
-    state.whenOrNull(
-      loaded: (_, stateUsers) {
-        if (users == stateUsers) return;
-
-        // Update authenticated user info
-        final updatedUser = stateUsers.firstWhereOrNull((user) => user.id == _currentUser?.id);
-        if (updatedUser != null && updatedUser != _currentUser) {
-          _authController.updateUserInfo(updatedUser);
-          _currentUser = updatedUser;
-        }
-
-        setState(() => users = stateUsers);
-      },
-    );
+    final currentUser = context.dependencies.authenticationController.state.user;
+    if (currentUser is AuthenticatedUser) {
+      controller.loadUsers(currentUser.userId);
+    } else {
+      await controller.reset();
+    }
   }
 
   @override
@@ -107,8 +91,7 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     _userController.createUser(user, password);
     await _userController.toStream().where((i) => i is UserCreateState).first;
 
-    final currentUser = _currentUser;
-    if (currentUser != null) controller.loadUsers(currentUser.id);
+    await _reloadUsers();
   }
 
   @override
@@ -119,8 +102,7 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     _userController.updateUser(user);
     await _userController.toStream().where((i) => i is UserUpdateState).first;
 
-    final currentUser = _currentUser;
-    if (currentUser != null) controller.loadUsers(currentUser.id);
+    await _reloadUsers();
   }
 
   @override
@@ -130,28 +112,28 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final currentUser = AuthenticationScope.userOf(context).maybeCast<AuthenticatedUser>()?.userInfo;
-    if (_currentUser == currentUser) return;
-    _currentUser = currentUser;
+    final currentUserId =
+        AuthenticationScope.userOf(context) //
+            .maybeCast<AuthenticatedUser>()
+            ?.userId ??
+        UserIdX.empty;
 
-    if (currentUser != null) {
-      debugPrint('UsersScope.didChangeDependencies: calling loadUsers');
-      controller.loadUsers(currentUser.id);
-    }
+    if (_currentUserId == currentUserId) return;
+    _currentUserId = currentUserId;
+
+    // TODO cleanup app data
+    if (currentUserId != UserIdX.empty) controller.loadUsers(currentUserId);
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
     controller.dispose();
-    _userController.dispose();
+    // _userController.dispose();
     super.dispose();
   }
 
   @override
   List<User> users = UnmodifiableListView<User>([]);
-
-  StreamSubscription<void>? _subscription;
 
   @override
   Widget build(BuildContext context) => _UsersScopeInherited(

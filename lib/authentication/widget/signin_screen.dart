@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/constant/config.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
-import 'package:auth_app/authentication/data/model/sign_in_data.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
+import 'package:auth_model/auth_model.dart' hide AuthenticationState;
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -202,7 +202,7 @@ mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
     final username = _usernameController.text;
     final password = _passwordController.text;
     _authenticationController.signIn(
-      SignInData(login: username, password: password, installationId: context.dependencies.settings.installationId),
+      SignInData(login: username, password: password),
     );
     // Unfocus after initiating sign-in to avoid interrupting the tap gesture
     FocusScope.of(context).unfocus();
@@ -220,12 +220,16 @@ mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
   void initState() {
     super.initState();
 
-    _authenticationController = AuthenticationScope.controllerOf(context);
-
     if (kDebugMode) {
       _usernameController.text = 'admin@mail.com';
       _passwordController.text = 'admin';
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _authenticationController = AuthenticationScope.controllerOf(context);
   }
 
   @override

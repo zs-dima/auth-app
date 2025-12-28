@@ -1,7 +1,7 @@
 library auth_model;
 
+export 'src/api/authentication_middleware.dart';
 // API
-export 'src/api/grpc_authentication_api.dart';
 export 'src/api/grpc_authentication_client.dart';
 export 'src/api/i_authentication_api.dart';
 export 'src/api/i_users_api.dart';
@@ -10,7 +10,6 @@ export 'src/api/mock/mock_users_api.dart';
 // Client utilities
 export 'src/client/authentication_handler.dart';
 export 'src/client/credentials_callbacks.dart';
-export 'src/client/grpc_authenticator.dart';
 // Models - Credentials
 export 'src/model/credentials/access_credentials.dart';
 export 'src/model/credentials/access_token.dart';

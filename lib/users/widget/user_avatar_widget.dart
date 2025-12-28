@@ -35,11 +35,11 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
   }
 
   String _getInitials(String name) {
-    final names = name.split(' ');
+    final names = name.split(' ').where((n) => n.isNotEmpty).toList();
     var initials = '';
     if (names.length > 1) {
       initials = names.first[0] + names.last[0];
-    } else if (names.length == 1) {
+    } else if (names.isNotEmpty) {
       initials = names.first[0];
     }
     return initials.toUpperCase();
@@ -47,6 +47,7 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
 
   Color _getIconColor(String initials) {
     // Use the ASCII value of the initials letters to get consistent color
+    if (initials.isEmpty) return Colors.primaries.first;
     final value = initials.codeUnitAt(0) + (initials.length > 1 ? initials.codeUnitAt(1) : 0);
     return Colors.primaries[value % Colors.primaries.length];
   }

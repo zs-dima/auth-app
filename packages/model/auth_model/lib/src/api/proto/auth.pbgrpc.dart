@@ -76,6 +76,13 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$setPassword, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.UserInfo> loadUserInfo(
+    $0.UserId request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$loadUserInfo, request, options: options);
+  }
+
   $grpc.ResponseStream<$0.UserInfo> loadUsersInfo(
     $1.Empty request, {
     $grpc.CallOptions? options,
@@ -138,6 +145,8 @@ class AuthServiceClient extends $grpc.Client {
       '/auth.AuthService/SetPassword',
       ($0.SetPasswordRequest value) => value.writeToBuffer(),
       $2.ResultReply.fromBuffer);
+  static final _$loadUserInfo = $grpc.ClientMethod<$0.UserId, $0.UserInfo>(
+      '/auth.AuthService/LoadUserInfo', ($0.UserId value) => value.writeToBuffer(), $0.UserInfo.fromBuffer);
   static final _$loadUsersInfo = $grpc.ClientMethod<$1.Empty, $0.UserInfo>(
       '/auth.AuthService/LoadUsersInfo', ($1.Empty value) => value.writeToBuffer(), $0.UserInfo.fromBuffer);
   static final _$loadUserAvatar = $grpc.ClientMethod<$0.LoadUserAvatarRequest, $0.UserAvatar>(
@@ -196,6 +205,8 @@ abstract class AuthServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.SetPasswordRequest.fromBuffer(value),
         ($2.ResultReply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UserId, $0.UserInfo>('LoadUserInfo', loadUserInfo_Pre, false, false,
+        ($core.List<$core.int> value) => $0.UserId.fromBuffer(value), ($0.UserInfo value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$1.Empty, $0.UserInfo>('LoadUsersInfo', loadUsersInfo_Pre, false, true,
         ($core.List<$core.int> value) => $1.Empty.fromBuffer(value), ($0.UserInfo value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.LoadUserAvatarRequest, $0.UserAvatar>(
@@ -269,6 +280,12 @@ abstract class AuthServiceBase extends $grpc.Service {
   }
 
   $async.Future<$2.ResultReply> setPassword($grpc.ServiceCall call, $0.SetPasswordRequest request);
+
+  $async.Future<$0.UserInfo> loadUserInfo_Pre($grpc.ServiceCall $call, $async.Future<$0.UserId> $request) async {
+    return loadUserInfo($call, await $request);
+  }
+
+  $async.Future<$0.UserInfo> loadUserInfo($grpc.ServiceCall call, $0.UserId request);
 
   $async.Stream<$0.UserInfo> loadUsersInfo_Pre($grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async* {
     yield* loadUsersInfo($call, await $request);

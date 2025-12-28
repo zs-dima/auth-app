@@ -10,12 +10,19 @@ part 'user_info.g.dart';
 sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo> {
   static const type$ = '987FCBC3-C8EF-4AE6-8DBD-B9049DF84B4C';
 
+  static const empty = UserInfo(
+    id: UserIdX.empty,
+    name: '',
+    email: '',
+    role: UserRole.user,
+  );
+
   const factory UserInfo({
     required UserId id,
     required String name,
     required String email,
     required UserRole role,
-    required String? blurhash,
+    String? blurhash,
   }) = _UserInfo;
 
   const UserInfo._();

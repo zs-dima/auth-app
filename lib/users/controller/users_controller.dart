@@ -24,9 +24,22 @@ final class UsersController extends StateController<UsersState>
   }
 
   final IUsersRepository _repository;
-  List<User> _users = const <User>[];
+  List<User> _users = <User>[];
 
   String? _query;
+
+  Future<void> reset() async {
+    _users.clear();
+    _query = null;
+    setState(UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([])));
+  }
+
+  Future<IUserInfo> getUserInfo(UserId userId) async {
+    final user = _users.firstWhereOrNull((i) => i.id == userId);
+    if (user != null) return user;
+
+    return _repository.loadUserInfo(userId);
+  }
 
   void loadUsers(UserId currentUserId) => handle(
     () async {
@@ -38,7 +51,7 @@ final class UsersController extends StateController<UsersState>
       setState(UsersState.loading(currentUserId, state.users));
       setProgressStarted();
 
-      final users = await _repository.loadUsers(currentUserId).toList();
+      final users = await _repository.loadUsers().toList();
       users.sort();
       _users = users;
       final result = _filter(users, _query);

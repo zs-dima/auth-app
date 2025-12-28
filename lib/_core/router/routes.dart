@@ -3,7 +3,8 @@ import 'package:auth_app/account/widget/profile_screen.dart';
 import 'package:auth_app/authentication/widget/signin_screen.dart';
 import 'package:auth_app/authentication/widget/signup_screen.dart';
 import 'package:auth_app/developer/widget/developer_screen.dart';
-import 'package:auth_app/settings/settings_dialog.dart';
+import 'package:auth_app/settings/settings_screen.dart';
+import 'package:auth_app/settings/widget/settings_dialog.dart';
 import 'package:auth_app/users/users_scope.dart';
 import 'package:auth_app/users/users_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ enum Routes with OctopusRoute {
   home('home', title: Config.appName),
   profile('profile', title: 'Profile'),
   developer('developer', title: 'Developer'),
+
+  settings('settings', title: 'Settings'),
   settingsDialog('settings-dialog', title: 'Settings')
   ;
 
@@ -35,6 +38,9 @@ enum Routes with OctopusRoute {
     home => const UsersScope(child: UsersScreen()),
     profile => const ProfileScreen(),
     developer => const DeveloperScreen(),
+
+    settings => const SettingsScreen(),
+    // Routes.developer => const DeveloperScreen(),
     settingsDialog => const SettingsDialog(),
   };
 }

@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/_core/router/routes.dart';
+import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
-import 'package:auth_app/authentication/widget/authentication_scope.dart';
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -290,14 +290,18 @@ mixin _UsernamePasswordFormStateMixin on State<SignUpScreen> {
   @override
   void initState() {
     super.initState();
-
-    _authenticationController = AuthenticationScope.controllerOf(context);
     generatePassword();
 
     if (kDebugMode) {
       _usernameController.text = 'admin@mail.com';
       _passwordController.text = 'admin';
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _authenticationController = AuthenticationScope.controllerOf(context);
   }
 
   @override
