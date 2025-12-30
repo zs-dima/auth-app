@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applicationInformation => 'Application information';
 
   @override
-  String get conectedDevices => 'Connected devices';
+  String get connectedDevices => 'Connected devices';
 
   @override
   String get renewalDate => 'Renewal date';
@@ -340,4 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ofSeparator => 'of';
+
+  @override
+  String get textSize => 'Text size';
 }

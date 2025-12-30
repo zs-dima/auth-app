@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:auth_app/_core/api/http/mutex.dart';
 import 'package:auth_app/_core/tool/device_info.dart';
-import 'package:auth_app/_core/tool/http/mutex.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';

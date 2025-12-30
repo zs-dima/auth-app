@@ -3,7 +3,7 @@ import 'package:auth_app/_core/widget/layout/progress_overlay.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/widget/user_avatar_widget.dart';
 import 'package:auth_model/auth_model.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 class AppLayout extends StatelessWidget {
   const AppLayout({
@@ -38,9 +38,8 @@ class AppLayout extends StatelessWidget {
                 ),
               )
             : null,
-        title: Text(
+        title: AppText.headlineMedium(
           title,
-          style: theme.textTheme.headlineMedium,
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,

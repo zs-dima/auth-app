@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:auth_app/_core/widget/shimmer.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 /// {@template text_placeholder}
 /// TextPlaceholder widget.
@@ -19,13 +18,13 @@ class TextPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, constraints) => Shimmer(
-          size: Size(
-            math.min(size.width, constraints.maxWidth - 16),
-            size.height,
-          ),
-          color: Colors.grey[400],
-          backgroundColor: Colors.grey[100],
-        ),
-      );
+    builder: (context, constraints) => Shimmer(
+      size: Size(
+        math.min(size.width, constraints.maxWidth - 16),
+        size.height,
+      ),
+      highlight: Colors.grey[400]!,
+      background: Colors.grey[100]!,
+    ),
+  );
 }

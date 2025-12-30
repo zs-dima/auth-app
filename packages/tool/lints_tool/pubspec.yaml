@@ -8,6 +8,6 @@ version: 1.0.1
 repository: https://github.com/zs-dima/lints_tool
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.10.1
 # dependencies:
 #   dart_code_metrics_presets: ^2.11.0

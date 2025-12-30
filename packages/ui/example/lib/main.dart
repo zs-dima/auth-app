@@ -5,6 +5,8 @@ import 'package:example/widgets/ui_kit_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:ui/ui.dart';
 
+// flutter create --platforms=android,ios,web,windows,macos,linux .
+
 void main() {
   runApp(const MyApp());
 }
@@ -98,26 +100,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 AppText.bodyLarge('Body Large'),
                 AppText.bodyMedium('Body Medium'),
                 AppText.bodySmall('Body Small'),
-                // AppText.labelLarge('Label Large'),
-                // AppText.labelMedium('Label Medium'),
-                // AppText.labelSmall('Label Small'),
+                AppText.labelLarge('Label Large'),
+                AppText.labelMedium('Label Medium'),
+                AppText.labelSmall('Label Small'),
               ],
             ),
           ),
 
-          Row(
+          const Row(
             children: [
-              const Spacer(),
+              Spacer(),
               Expanded(
                 child: UiKitCard(
                   title: 'Logo',
                   child: ColoredBox(
-                    color: Colors.grey[900]!,
-                    child: const Padding(padding: EdgeInsets.all(8.0), child: AppLogo()),
+                    color: Colors.white,
+                    child: Padding(padding: EdgeInsets.all(8.0), child: AppleLogo()),
                   ),
                 ),
               ),
-              const Spacer(),
+              Spacer(),
             ],
           ),
 
@@ -150,7 +152,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
           ),
-
           const UiKitCard(
             title: 'Icons (app)',
             child: Wrap(
@@ -158,33 +159,11 @@ class _MyHomePageState extends State<MyHomePage> {
               runSpacing: 24,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                UiKitIcon('add', Icons.add),
-                UiKitIcon('chevron down', Icons.arrow_drop_down),
-                UiKitIcon('question', Icons.help_outline),
-              ],
-            ),
-          ),
-
-          const UiKitCard(
-            title: 'Icons (drawer)',
-            child: Wrap(
-              spacing: 20.0,
-              runSpacing: 24,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // UiKitIcon('BO outline', DrawerIcons.BoOutline),
-              ],
-            ),
-          ),
-
-          const UiKitCard(
-            title: 'Icons (dashboard)',
-            child: Wrap(
-              spacing: 20.0,
-              runSpacing: 24,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // UiKitIcon('high', DashboardIcons.high),
+                UiKitIcon('apple', AppIcons.apple),
+                UiKitIcon('windows', AppIcons.windows),
+                UiKitIcon('windows outline', AppIcons.windowsOutline),
+                UiKitIcon('google', AppIcons.google),
+                UiKitIcon('sun', AppIcons.sun),
               ],
             ),
           ),

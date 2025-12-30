@@ -1,11 +1,12 @@
-import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
+import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/_core/widget/scaffold_padding.dart';
 import 'package:auth_app/developer/widget/logs_dialog.dart';
+import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:drift_db_viewer/drift_db_viewer.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:octopus/octopus.dart';
+import 'package:ui/ui.dart';
 import 'package:url_launcher/url_launcher_string.dart' as url_launcher;
 
 /// {@template developer_screen}
@@ -106,11 +107,11 @@ class _GroupSeparator extends StatelessWidget {
                 endIndent: 16,
               ),
             ),
-            Text(
+            AppText.titleMedium(
               title,
+              height: 1,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(height: 1),
             ),
             const Expanded(
               child: Divider(

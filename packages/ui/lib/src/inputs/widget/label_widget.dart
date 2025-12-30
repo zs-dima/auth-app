@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:ui/src/fonts/text.dart';
 
 class LabelWidget extends StatelessWidget {
   const LabelWidget({
@@ -12,19 +13,19 @@ class LabelWidget extends StatelessWidget {
   final String label;
   // final Widget Function(Widget label)? getLabelWidget;
 
-  final double? spacing;
+  final double spacing;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     if (label.isEmpty) return child;
 
-    final labelWidget = Text(label, style: Theme.of(context).textTheme.titleMedium);
+    final labelWidget = AppText.titleMedium(label);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: spacing ?? 0.0,
+      spacing: spacing,
       children: [
         labelWidget,
         // if (getLabelWidget == null) labelWidget else getLabelWidget!(labelWidget),

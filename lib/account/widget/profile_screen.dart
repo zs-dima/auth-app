@@ -1,13 +1,12 @@
 import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/_core/widget/form/form_placeholder.dart';
 import 'package:auth_app/_core/widget/scaffold_padding.dart';
-import 'package:auth_app/_core/widget/shimmer.dart';
 import 'package:auth_app/_core/widget/text_placeholder.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/widget/log_out_button.dart';
 import 'package:auth_model/auth_model.dart';
-import 'package:flutter/material.dart';
 import 'package:octopus/octopus.dart';
+import 'package:ui/ui.dart';
 
 /// {@template profile_screen}
 /// ProfileScreen widget.
@@ -41,9 +40,9 @@ class ProfileScreen extends StatelessWidget {
                     children: <Widget>[
                       Shimmer(
                         size: const Size(128, 128),
-                        color: Colors.grey[400],
-                        backgroundColor: Colors.grey[100],
-                        cornerRadius: 42,
+                        highlight: Colors.grey[400]!,
+                        background: Colors.grey[100]!,
+                        radius: const Radius.circular(42),
                       ),
                       const SizedBox(width: 16),
                       Column(

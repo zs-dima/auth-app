@@ -710,11 +710,11 @@ abstract class AppLocalizations {
   /// **'Application information'**
   String get applicationInformation;
 
-  /// No description provided for @conectedDevices.
+  /// No description provided for @connectedDevices.
   ///
   /// In en, this message translates to:
   /// **'Connected devices'**
-  String get conectedDevices;
+  String get connectedDevices;
 
   /// No description provided for @renewalDate.
   ///
@@ -757,6 +757,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'of'**
   String get ofSeparator;
+
+  /// No description provided for @textSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get textSize;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

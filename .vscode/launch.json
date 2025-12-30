@@ -2,27 +2,31 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Run DEV (Debug)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}",
+      // "openDevTools": "network",
+      "args": [
+        // "--wasm",
+        "-t${workspaceFolder}/lib/main.dart",
+        "--dart-define-from-file=config/development.env",
+        "--dart-define-from-file=config/keys.env",
+        "--web-port=8008"
+      ],
+      "env": {}
+    },
+    {
       "name": "UI Kit (debug)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "debug",
       "program": "lib/main.dart",
       "cwd": "${workspaceFolder}/packages/ui/example",
-      "args": [],
-    },
-    {
-      "name": "Run DEV (Debug)",
-      "type": "dart",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      // "openDevTools": "network",
       "args": [
-        "--wasm",
-        "--dart-define-from-file=config/development.env",
-        "--dart-define-from-file=config/keys.env",
-        "--web-port=8008"
+        // "--wasm",
       ],
-      "env": {}
     },
     {
       "name": "Run DEV (Debug, Drop database)",

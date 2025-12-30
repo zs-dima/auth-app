@@ -1,4 +1,4 @@
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/_core/theme/extension/theme_sizes.dart';
 import 'package:auth_app/_core/widget/form/switch_form_field.dart';
 import 'package:auth_app/settings/settings_scope.dart';

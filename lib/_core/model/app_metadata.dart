@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
@@ -110,7 +111,7 @@ class AppMetadata {
 
   /// Convert to headers
   Map<String, String> toHeaders() => <String, String>{
-    'Accept-Language': locale,
+    HttpHeaders.acceptLanguageHeader: locale,
     'X-Platform': kIsWeb ? 'web' : 'native',
     // 'X-Environment': environment,
     'X-Is-Release': isRelease ? 'true' : 'false',

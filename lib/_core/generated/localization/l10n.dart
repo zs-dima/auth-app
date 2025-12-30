@@ -818,10 +818,10 @@ class GeneratedLocalization {
   }
 
   /// `Connected devices`
-  String get conectedDevices {
+  String get connectedDevices {
     return Intl.message(
       'Connected devices',
-      name: 'conectedDevices',
+      name: 'connectedDevices',
       desc: '',
       args: [],
     );
@@ -865,6 +865,11 @@ class GeneratedLocalization {
   /// `of`
   String get ofSeparator {
     return Intl.message('of', name: 'ofSeparator', desc: '', args: []);
+  }
+
+  /// `Text size`
+  String get textSize {
+    return Intl.message('Text size', name: 'textSize', desc: '', args: []);
   }
 }
 

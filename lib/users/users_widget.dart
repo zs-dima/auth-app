@@ -22,6 +22,15 @@ class _UsersWidgetState extends State<UsersWidget> {
   UsersController? _usersController;
   UserId? _currentUserId;
 
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController = ScrollController();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -40,7 +49,7 @@ class _UsersWidgetState extends State<UsersWidget> {
 
   @override
   void dispose() {
-    _usersController?.dispose();
+    _scrollController.dispose();
 
     super.dispose();
   }
@@ -82,7 +91,7 @@ class _UsersWidgetState extends State<UsersWidget> {
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    controller: ScrollController(),
+                    controller: _scrollController,
                     slivers: [
                       // SliverOverlapInjector(
                       //   handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
@@ -111,7 +120,7 @@ class _UsersWidgetState extends State<UsersWidget> {
                                       tileColor:
                                           index
                                               .isEven //
-                                          ? colorScheme.primary.withOpacity(0.1)
+                                          ? colorScheme.primary.withValues(alpha: 0.1)
                                           : colorScheme.surface,
                                     ),
                                   );

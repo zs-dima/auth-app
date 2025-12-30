@@ -80,7 +80,6 @@ class _ImpersonateScopeState extends State<ImpersonateScope> implements IImperso
   @override
   void dispose() {
     _authUserSubscription?.cancel();
-    controller.dispose();
     super.dispose();
   }
 

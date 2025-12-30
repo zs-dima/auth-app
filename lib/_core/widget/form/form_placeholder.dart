@@ -1,6 +1,5 @@
-import 'package:auth_app/_core/widget/shimmer.dart';
 import 'package:auth_app/_core/widget/text_placeholder.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 /// {@template form_placeholder}
 /// FormPlaceholder widget.
@@ -22,9 +21,9 @@ class FormPlaceholder extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           child: Shimmer(
             size: const Size(64, 64),
-            color: Colors.grey[400],
-            backgroundColor: Colors.grey[100],
-            cornerRadius: 24,
+            highlight: Colors.grey[400]!,
+            background: Colors.grey[100]!,
+            radius: const Radius.circular(24),
           ),
         ),
       const SizedBox(height: 16),

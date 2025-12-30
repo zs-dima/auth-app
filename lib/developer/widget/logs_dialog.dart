@@ -1,5 +1,5 @@
-import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/database/database.dart' as db;
+import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

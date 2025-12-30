@@ -55,11 +55,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "badRequest": MessageLookupByLibrary.simpleMessage("Bad request"),
     "badStateError": MessageLookupByLibrary.simpleMessage("Bad state error"),
     "cancelButton": MessageLookupByLibrary.simpleMessage("Cancel"),
-    "conectedDevices": MessageLookupByLibrary.simpleMessage(
-      "Connected devices",
-    ),
     "confirmButton": MessageLookupByLibrary.simpleMessage("Confirm"),
     "confirmPassword": MessageLookupByLibrary.simpleMessage("Confirm password"),
+    "connectedDevices": MessageLookupByLibrary.simpleMessage(
+      "Connected devices",
+    ),
     "continueButton": MessageLookupByLibrary.simpleMessage("Continue"),
     "copied": MessageLookupByLibrary.simpleMessage("Copied"),
     "copyButton": MessageLookupByLibrary.simpleMessage("Copy"),
@@ -167,6 +167,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "status": MessageLookupByLibrary.simpleMessage("Status"),
     "storage": MessageLookupByLibrary.simpleMessage("Storage"),
     "surname": MessageLookupByLibrary.simpleMessage("Surname"),
+    "textSize": MessageLookupByLibrary.simpleMessage("Text size"),
     "time": MessageLookupByLibrary.simpleMessage("Time"),
     "timeOutExceeded": MessageLookupByLibrary.simpleMessage(
       "Time out exceeded",

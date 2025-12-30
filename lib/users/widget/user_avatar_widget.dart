@@ -1,4 +1,4 @@
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/users/controller/users_avatars_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
@@ -65,7 +65,7 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 700),
           child: CircleAvatar(
-            key: ValueKey('${widget.key}${widget.user.id}$avatarLength'),
+            key: ValueKey('${user.id}$avatarLength'),
             radius: widget.size.toDouble(),
             backgroundColor: _getIconColor(initials),
             backgroundImage: avatarState.mapAvatar<ImageProvider>(

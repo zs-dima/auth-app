@@ -20,7 +20,7 @@ class UserTileWidget extends StatelessWidget {
     final userTextStyle = user.deleted
         ? TextStyle(
             decoration: TextDecoration.lineThrough,
-            color: DefaultTextStyle.of(context).style.color?.withOpacity(0.5),
+            color: DefaultTextStyle.of(context).style.color?.withValues(alpha: 0.5),
           )
         : null;
 

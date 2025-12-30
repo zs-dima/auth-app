@@ -34,22 +34,25 @@ class _FilterUsersWidgetState extends State<FilterUsersWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => TextField(
-        focusNode: _searchPartFocus,
-        controller: _searchPartController,
-        decoration: InputDecoration(
-          labelText: 'Search...',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: IconButton(
-            onPressed: () {
-              HapticFeedback.mediumImpact().ignore();
-              _searchPartFocus!.unfocus();
-              _searchPartController!.clear();
-              widget.onChanged?.call('');
-            },
-            icon: const Icon(Icons.close),
-          ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 5.0),
+    child: TextField(
+      focusNode: _searchPartFocus,
+      controller: _searchPartController,
+      decoration: InputDecoration(
+        labelText: 'Search...',
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: IconButton(
+          onPressed: () {
+            HapticFeedback.mediumImpact().ignore();
+            _searchPartFocus!.unfocus();
+            _searchPartController!.clear();
+            widget.onChanged?.call('');
+          },
+          icon: const Icon(Icons.close),
         ),
-        onChanged: (v) => widget.onChanged?.call(v),
-      );
+      ),
+      onChanged: (v) => widget.onChanged?.call(v),
+    ),
+  );
 }

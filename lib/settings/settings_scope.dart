@@ -101,7 +101,7 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
       repository: settings,
       initialState: SettingsState.idle(
         appTheme: AppTheme(
-          mode: settings.themeMode ?? ThemeMode.light, // TODO ThemeMode.system
+          mode: settings.themeMode ?? ThemeMode.system,
           seed: settings.themeColor,
           size: ScreenUtil.screenSize,
         ),

@@ -1,4 +1,4 @@
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/controller/user_controller.dart';
 import 'package:auth_app/users/controller/users_avatars_controller.dart';
@@ -127,7 +127,6 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
 
   @override
   void dispose() {
-    controller.dispose();
     // _userController.dispose();
     super.dispose();
   }

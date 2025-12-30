@@ -1,5 +1,5 @@
-import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/constant/config.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/_core/router/router_state_mixin.dart';
 import 'package:auth_app/_core/widget/window_scope.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
@@ -31,7 +31,10 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
   Widget build(BuildContext context) {
     final theme = SettingsScope.themeOf(context).theme;
     final locale = SettingsScope.localeOf(context).locale;
+    final textScale = SettingsScope.textScaleOf(context).textScale;
     final environment = context.dependencies.environment.type;
+
+    final mediaQueryData = MediaQuery.of(context);
 
     return MaterialApp.router(
       // key: _globalKey, // TODO
@@ -65,18 +68,20 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
         key: _builderKey,
         // Override the default text scaling behavior.
         // Can be a range: minScaleFactor: 1.0, maxScaleFactor: 2.0
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.noScaling,
+        data: mediaQueryData.copyWith(
+          // textScaler: TextScaler.noScaling,
+          textScaler: TextScaler.linear(mediaQueryData.textScaler.scale(textScale).clamp(0.5, 2)),
         ),
         child: WindowScope(
           title: Localization.of(context).appTitle,
           height: 24, // TODO
           child: OctopusTools(
-            enable: true,
+            enable: !environment.isProduction,
             octopus: router,
             child: AppMessageScope(
+              octopus: router,
               child: AuthenticationScope(
-                child: child ?? const SizedBox.shrink(), // TODO const UsersScope(child: UsersWidget())
+                child: child ?? const SizedBox.shrink(),
               ),
             ),
           ),

@@ -328,7 +328,7 @@ abstract final class _AiProgressShaderManager {
   static Future<ui.FragmentProgram?> _loadProgram() async {
     const assetPath = 'packages/ui/shaders/ai/progress.frag';
     try {
-      return ui.FragmentProgram.fromAsset(assetPath).timeout(const Duration(seconds: 5));
+      return await ui.FragmentProgram.fromAsset(assetPath).timeout(const Duration(seconds: 5));
     } on UnsupportedError {
       // Shader not supported (e.g., Web or older device)
       return null;

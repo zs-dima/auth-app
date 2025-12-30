@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:auth_app/_core/tool/http/api_client.dart';
+import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:control/control.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:grpc/grpc.dart';

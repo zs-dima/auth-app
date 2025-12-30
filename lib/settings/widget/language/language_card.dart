@@ -1,5 +1,5 @@
 import 'package:auth_app/settings/settings_scope.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 class LanguageCard extends StatelessWidget {
   const LanguageCard(this._language, {super.key});
@@ -19,9 +19,9 @@ class LanguageCard extends StatelessWidget {
         child: SizedBox(
           width: 64,
           child: Center(
-            child: Text(
+            child: AppText.bodyMedium(
               _language.languageCode,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
         ),

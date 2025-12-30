@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/src/fonts/text.dart';
 
 class DropdownSuggestion extends StatelessWidget {
   const DropdownSuggestion({
@@ -27,11 +28,10 @@ class DropdownSuggestion extends StatelessWidget {
           const SizedBox(width: 12),
         ],
         Expanded(
-          child: Text(
+          child: AppText.bodyLarge(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),
         const SizedBox(width: 14),

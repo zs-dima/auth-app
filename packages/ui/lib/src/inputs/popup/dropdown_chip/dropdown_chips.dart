@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:ui/src/fonts/app_icons.dart';
 import 'package:ui/src/inputs/form/chip_field.dart';
 import 'package:ui/src/inputs/popup/core/dropdown_entry.dart';
 import 'package:ui/src/inputs/popup/core/dropdown_suggestions.dart';
@@ -404,7 +403,7 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
             addNewButton: widget.onAddNew == null
                 ? null
                 : TextButton.icon(
-                    icon: const Icon(AppIcons.add),
+                    icon: const Icon(Icons.add),
                     style: TextButton.styleFrom(
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(

@@ -7,9 +7,9 @@ import 'package:auth_app/authentication/controller/authentication_controller.dar
 import 'package:auth_app/authentication/controller/authentication_state.dart';
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:octopus/octopus.dart';
+import 'package:ui/ui.dart';
 
 /// {@template signup_screen}
 /// SignUpScreen widget.
@@ -58,14 +58,14 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
               builder: (context, state, _) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  SizedBox(
+                  const SizedBox(
                     height: 50,
-                    child: Text(
+                    child: AppText.headlineLarge(
                       'Sign-Up',
+                      height: 1,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(height: 1),
                     ),
                   ),
                   const SizedBox(height: 32),

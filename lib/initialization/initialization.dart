@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/log/logger.dart';
+import 'package:auth_app/_core/model/dependencies.dart';
 import 'package:auth_app/initialization/initialize_dependencies.dart';
 import 'package:auth_app/initialization/platform/platform_initialization.dart' as platform_initialization;
 /* import 'package:database/database.dart'; */

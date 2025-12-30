@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ui/src/fonts/text.dart';
 
 class LabelField extends StatelessWidget {
   const LabelField({
@@ -39,10 +40,9 @@ class LabelField extends StatelessWidget {
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
     ),
-    child: Text(
+    child: AppText.bodyLarge(
       label,
-      // TODO AppText
-      style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: enabled ? null : Theme.of(context).disabledColor),
+      color: enabled ? null : Theme.of(context).disabledColor,
     ),
   );
 }

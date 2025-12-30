@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-// import 'package:grpc/grpc.dart';
+import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/message/controller/message_controller.dart';
-import 'package:auth_app/_core/tool/http/api_client.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/protos.dart';
 
@@ -30,12 +29,9 @@ mixin AppMessageControllerMixin {
     final msg = formatMessage(message);
 
     switch (e) {
-      // case GrpcError _:
-      //   _setGrpcError(msg, e);
-      //   break;
-      // TODO: dio case ApiValidationException _:
-      //   _setAppError('$msg\n$e', e, s);
-      //   break;
+      case GrpcError _:
+        _setGrpcError(msg, e);
+        break;
 
       case ApiClientException _:
         _setApiError(msg, e, s);
@@ -109,42 +105,42 @@ mixin AppMessageControllerMixin {
   };
 }
 
-// extension GrpcErrorX on GrpcError {
-//   String detail(String caption) {
-//     switch (code) {
-//       case StatusCode.unauthenticated:
-//         final shortMessage = message;
-//         if (shortMessage?.isNotEmpty ?? false) return '$caption. $shortMessage';
-//         return caption;
+extension GrpcErrorX on GrpcError {
+  String detail(String caption) {
+    switch (code) {
+      case StatusCode.unauthenticated:
+        final shortMessage = message;
+        if (shortMessage?.isNotEmpty ?? false) return '$caption. $shortMessage';
+        return caption;
 
-//       case StatusCode.permissionDenied:
-//         return '$caption: Permission denied';
+      case StatusCode.permissionDenied:
+        return '$caption: Permission denied';
 
-//       case StatusCode.unavailable:
-//         return 'Backend unavailable. Please contact support'; // '$caption: GRPC unavailable';
+      case StatusCode.unavailable:
+        return 'Backend unavailable. Please contact support'; // '$caption: GRPC unavailable';
 
-//       case StatusCode.aborted:
-//         return '$caption: Network request aborted';
+      case StatusCode.aborted:
+        return '$caption: Network request aborted';
 
-//       case StatusCode.dataLoss:
-//         return '$caption: Network data loss';
+      case StatusCode.dataLoss:
+        return '$caption: Network data loss';
 
-//       case StatusCode.deadlineExceeded:
-//         return 'Backend error. Please contact support'; // '$caption: GRPC deadline exceeded';
+      case StatusCode.deadlineExceeded:
+        return 'Backend error. Please contact support'; // '$caption: GRPC deadline exceeded';
 
-//       case StatusCode.cancelled:
-//         return '$caption: Network request cancelled';
+      case StatusCode.cancelled:
+        return '$caption: Network request cancelled';
 
-//       case StatusCode.internal:
-//         return '$caption: $message';
+      case StatusCode.internal:
+        return '$caption: $message';
 
-//       case StatusCode.failedPrecondition:
-//         return '$caption: Network request failed precondition';
+      case StatusCode.failedPrecondition:
+        return '$caption: Network request failed precondition';
 
-//       case StatusCode.unknown:
-//         if (message?.contains('CORS') ?? false) return '$caption: CORS error';
-//     }
+      case StatusCode.unknown:
+        if (message?.contains('CORS') ?? false) return '$caption: CORS error';
+    }
 
-//     return '$caption: Network error: $this';
-//   }
-// }
+    return '$caption: Network error: $this';
+  }
+}

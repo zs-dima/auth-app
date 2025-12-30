@@ -1,10 +1,10 @@
 library auth_model;
 
-export 'src/api/authentication_middleware.dart';
 // API
 export 'src/api/grpc_authentication_client.dart';
 export 'src/api/i_authentication_api.dart';
 export 'src/api/i_users_api.dart';
+export 'src/api/middlewares/authentication_middleware.dart';
 export 'src/api/mock/mock_authentication_api.dart';
 export 'src/api/mock/mock_users_api.dart';
 // Client utilities

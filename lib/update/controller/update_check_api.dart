@@ -1,10 +1,11 @@
 // ignore_for_file: argument_type_not_assignable, avoid_web_libraries_in_flutter
 import 'dart:convert';
 
+// Conditional import for web only
+import 'package:auth_app/update/controller/platform/update_check.dart';
 import 'package:auth_app/update/model/version_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web/web.dart' as web;
 
 abstract class UpdateCheckApi {
   Future<VersionModel> getNewVersion();
@@ -36,7 +37,7 @@ class UpdateCheckApiImpl implements UpdateCheckApi {
     // Set flag to reload second time website after application updated
     await preferences.setBool('wait_update', true);
 
-    web.window.location.reload();
+    reloadWebApp();
   }
 
   @override
@@ -50,6 +51,6 @@ class UpdateCheckApiImpl implements UpdateCheckApi {
 
     // Try to reload website second time after application updated,
     // as first reload updates scripts only
-    web.window.location.reload();
+    reloadWebApp();
   }
 }

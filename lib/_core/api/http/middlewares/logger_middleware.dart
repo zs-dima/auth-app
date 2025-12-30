@@ -1,7 +1,7 @@
 import 'dart:developer' as developer;
 
-import 'package:auth_app/_core/tool/http/api_client.dart';
-import 'package:l/l.dart';
+import 'package:auth_app/_core/api/http/api_client.dart';
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:meta/meta.dart';
 
 /// {@template logger_middleware}
@@ -27,7 +27,7 @@ class LoggerMiddleware {
       }
       final response = await innerHandler(request, context);
       if (logResponse) {
-        l.v4(
+        logger.v4(
           '🌍 '
           '[${request.method}] '
           '${request.url.path} '
@@ -38,7 +38,7 @@ class LoggerMiddleware {
       return response;
     } on Object catch (e, s) {
       if (logError) {
-        l.w(
+        logger.w(
           '🌍 '
           '[${request.method}] '
           '${request.url.path} '
@@ -47,7 +47,7 @@ class LoggerMiddleware {
             _ => 'error',
           }} '
           '| ${stopwatch.elapsedMilliseconds}ms',
-          s,
+          stackTrace: s,
         );
       }
       rethrow;

@@ -9,7 +9,7 @@ version: 0.0.1
 # homepage:
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.10.1
 
 dependencies:
   flutter:
@@ -58,17 +58,9 @@ flutter:
       fonts:
         - asset: packages/ui/fonts/Roboto-Regular.ttf
 
-    # - family: drawer
-    #   fonts:
-    #     - asset: packages/ui/fonts/drawer.ttf
-
-    # - family: icons
-    #   fonts:
-    #     - asset: packages/ui/fonts/icons.ttf
-
-    # - family: dashboard
-    #   fonts:
-    #     - asset: packages/ui/fonts/dashboard.ttf
+    - family: icons
+      fonts:
+        - asset: packages/ui/fonts/icons.ttf
 
     # - family: SocialIcons
     #   fonts:

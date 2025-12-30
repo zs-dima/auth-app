@@ -1,6 +1,6 @@
 import 'package:auth_app/_core/theme/model/app_theme.dart';
 import 'package:auth_app/settings/settings_scope.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 class ThemeSelector extends StatelessWidget {
   const ThemeSelector(this._themes, {super.key});
@@ -28,23 +28,19 @@ class _ThemeCard extends StatelessWidget {
   final AppTheme _theme;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Material(
-        color: _theme.seed ?? _theme.computeTheme(context).colorScheme.primary,
+  Widget build(BuildContext context) => Card(
+    child: Material(
+      color: _theme.seed ?? _theme.computeTheme(context).colorScheme.primary,
+      borderRadius: const BorderRadius.all(Radius.circular(4)),
+      child: InkWell(
+        onTap: () =>
+            SettingsScope.themeOf(context).setTheme(AppTheme(mode: _theme.mode, seed: null, size: _theme.size)),
         borderRadius: const BorderRadius.all(Radius.circular(4)),
-        child: InkWell(
-          onTap: () =>
-              SettingsScope.themeOf(context).setTheme(AppTheme(mode: _theme.mode, seed: null, size: _theme.size)),
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-          child: SizedBox.square(
-            dimension: 64,
-            child: Center(child: Text(_theme.mode.name, style: theme.textTheme.bodyMedium)),
-          ),
+        child: SizedBox.square(
+          dimension: 64,
+          child: Center(child: AppText.bodyMedium(_theme.mode.name)),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

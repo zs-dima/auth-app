@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';

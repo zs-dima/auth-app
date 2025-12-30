@@ -86,7 +86,7 @@
 //     child: SizedBox(
 //       height: widget.multiline ? null : 56,
 //       child: Center(
-//         child: TextField(
+//         child: AppTextField.titleMedium(
 //           style: Theme.of(context).textTheme.bodyMedium,
 //           onSubmitted: widget.onSubmitted,
 //           focusNode: widget.focusNode,

@@ -1,6 +1,6 @@
 import 'package:auth_app/_core/widget/radial_progress_indicator.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 class InitializationSplashScreen extends StatelessWidget {
   const InitializationSplashScreen({required this.progress, super.key});
@@ -24,12 +24,12 @@ class InitializationSplashScreen extends StatelessWidget {
                 size: 128,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
-                  builder: (context, value, _) => Text(
+                  builder: (context, value, _) => AppText.titleLarge(
                     '${value.progress}%',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                    height: 1,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(height: 1, fontSize: 32),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -38,12 +38,11 @@ class InitializationSplashScreen extends StatelessWidget {
                 opacity: 0.25,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
-                  builder: (context, value, _) => Text(
+                  builder: (context, value, _) => AppText.titleSmall(
                     value.message,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 3,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(height: 1),
                   ),
                 ),
               ),

@@ -110,7 +110,7 @@
     "currentUser": "Current user",
     "applicationVersion": "Application version",
     "applicationInformation": "Application information",
-    "conectedDevices": "Connected devices",
+    "connectedDevices": "Connected devices",
     "renewalDate": "Renewal date",
     "apiDomain": "API domain",
     "noPlan": "No plan",
@@ -118,5 +118,6 @@
     "help": "Help",
     "selected": "Selected",
     "@ For example: 'of' in '5 of 20' is 25%": {},
-    "ofSeparator": "of"
+    "ofSeparator": "of",
+    "textSize": "Text size"
 }

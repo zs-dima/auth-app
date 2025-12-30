@@ -5,7 +5,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.10.1
 
 # workspace:
 #   - packages/ui
@@ -14,13 +14,14 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Packages
+  ui:
+    path: ../
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # Packages
-  ui:
-    path: ../
   lints_tool:
     path: ../../tool/lints_tool
 

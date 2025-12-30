@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const UserListHeaderDelegate(this.title);
   final String title;
 
   @override
@@ -8,8 +9,6 @@ class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   double get minExtent => 35;
-
-  const UserListHeaderDelegate(this.title);
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final theme = Theme.of(context);
@@ -22,18 +21,16 @@ class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Text(
+              child: AppText.bodyLarge(
                 title,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                fontWeight: FontWeight.bold,
                 textAlign: TextAlign.right,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.key, color: IconTheme.of(context).color?.withOpacity(0.5)),
+            Icon(Icons.key, color: IconTheme.of(context).color?.withValues(alpha: 0.5)),
             const SizedBox(width: 28),
           ],
         ),

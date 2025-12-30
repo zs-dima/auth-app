@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/users/controller/users_avatars_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';
@@ -35,14 +35,15 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
   void initState() {
     super.initState();
 
+    final user = widget.user;
     _avatarController = context.dependencies.avatarController;
     final userAvatar = widget.userPhoto == null
-        ? _avatarController.state.avatar(widget.user.id)
-        : UserAvatar(userId: widget.user.id, avatar: widget.userPhoto, loaded: true);
-    _userAvatar = userAvatar ?? UserAvatar.empty.copyWith(userId: widget.user.id);
+        ? _avatarController.state.avatar(user.id)
+        : UserAvatar(userId: user.id, avatar: widget.userPhoto, loaded: true);
+    _userAvatar = userAvatar ?? UserAvatar.empty.copyWith(userId: user.id);
 
     if (userAvatar == null) {
-      _avatarController.loadAvatar(widget.user.id, reload: false);
+      _avatarController.loadAvatar(user.id, reload: false);
     } else if (widget.userPhoto == null) {
       widget.onPhotoChanged(_userAvatar.avatar);
     }
@@ -51,7 +52,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
         _avatarController //
             .toStream()
             .where((i) => i is UsersAvatarsLoadedState)
-            .map((state) => state.avatar(widget.user.id))
+            .map((state) => state.avatar(user.id))
             .where((state) => state != null)
             .distinct()
             .listen((avatar) {
@@ -123,7 +124,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
                 right: 5,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.background.withAlpha(170),
+                    color: theme.colorScheme.surface.withAlpha(170),
                     borderRadius: const BorderRadius.all(
                       Radius.circular(5),
                     ),
@@ -132,14 +133,14 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.upload),
-                        color: theme.colorScheme.onBackground,
+                        color: theme.colorScheme.onSurface,
                         onPressed: _uploadPhoto,
                         tooltip: 'Upload photo',
                       ),
                       const SizedBox(width: 1),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        color: theme.colorScheme.onBackground,
+                        color: theme.colorScheme.onSurface,
                         onPressed: _deletePhoto,
                         tooltip: 'Delete photo',
                       ),

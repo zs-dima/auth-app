@@ -6,9 +6,9 @@ import 'dart:convert' show Converter, JsonEncoder, JsonDecoder, Utf8Decoder, Utf
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:auth_app/_core/tool/http/platform/http_client_vm.dart'
+import 'package:auth_app/_core/api/http/platform/http_client_vm.dart'
     // ignore: uri_does_not_exist
-    if (dart.library.js_interop) 'package:auth_app/_core/tool/http/platform/http_client_js.dart';
+    if (dart.library.js_interop) 'package:auth_app/_core/api/http/platform/http_client_js.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http_package;
 

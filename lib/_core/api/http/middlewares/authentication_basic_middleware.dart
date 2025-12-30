@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:auth_app/_core/tool/http/api_client.dart';
+import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:meta/meta.dart';
 
 /// {@template authentication_basic_middleware}

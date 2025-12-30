@@ -5,9 +5,12 @@ import 'package:auth_app/_core/message/controller/app_message_controller_mixin.d
 import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
+// Conditional import for web only
+import 'package:auth_app/update/controller/update_check_web_stub.dart'
+    if (dart.library.html) 'package:auth_app/update/controller/update_check_web_impl.dart';
 import 'package:control/control.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:web/web.dart' as web;
 
 part 'update_check_controller.freezed.dart';
 
@@ -50,7 +53,7 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
   void update() => handle(
     () async {
       setState(UpdateCheckState.idle(state.version));
-      web.window.location.reload();
+      reloadWebApp();
     },
     error: (error, stackTrace) async => setError('Error on update ${state.version}', error, stackTrace),
     name: 'update',
@@ -58,6 +61,7 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
 
   void checkForUpdates() => handle(
     () async {
+      if (!kIsWeb) return; // TODO
       final newVersion = await _updateCheckApi.getNewVersion();
       final newAppVersion = newVersion.version;
 
@@ -65,7 +69,7 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
 
       setState(UpdateCheckState.updateAvailable(newAppVersion));
     },
-    error: (error, stackTrace) async => setError('Error on loading creatives', error, stackTrace),
+    error: (error, stackTrace) async => setError('Error on check for updates', error, stackTrace),
     name: '_checkForUpdates',
   );
 

@@ -1,16 +1,16 @@
 import 'dart:math' as math;
 
-import 'package:auth_app/_core/app.dart';
 import 'package:auth_app/_core/constant/config.dart';
+import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
 import 'package:auth_model/auth_model.dart' hide AuthenticationState;
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:octopus/octopus.dart';
+import 'package:ui/ui.dart';
 
 /// {@template signin_screen}
 /// SignInScreen widget.
@@ -56,22 +56,22 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
               buildWhen: (previous, current) => previous != current,
               builder: (context, state, _) => Column(
                 children: <Widget>[
-                  SizedBox(
+                  const SizedBox(
                     height: 50,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
-                        const SizedBox(width: 50),
-                        Text(
+                        SizedBox(width: 50),
+                        AppText.headlineLarge(
                           'Sign-In',
+                          height: 1,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(height: 1),
                         ),
-                        const SizedBox(width: 50),
+                        SizedBox(width: 50),
                       ],
                     ),
                   ),
@@ -191,7 +191,8 @@ class _UsernameTextFormatter extends TextInputFormatter {
 }
 
 mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
-  late final AuthenticationController _authenticationController;
+  late AuthenticationController _authenticationController;
+  bool _authControllerInitialized = false;
   final _usernameController = TextEditingController(text: 'test@gmail.com');
   final _passwordController = TextEditingController();
   String? _usernameError;
@@ -229,7 +230,10 @@ mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _authenticationController = AuthenticationScope.controllerOf(context);
+    if (!_authControllerInitialized) {
+      _authenticationController = AuthenticationScope.controllerOf(context);
+      _authControllerInitialized = true;
+    }
   }
 
   @override

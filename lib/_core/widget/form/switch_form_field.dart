@@ -21,9 +21,8 @@ class SwitchFormField extends StatelessWidget {
         onChanged: onChanged,
       ),
       const SizedBox(width: 5),
-      Text(
+      AppText.bodyLarge(
         caption,
-        style: context.theme.textTheme.bodyLarge,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
       ),

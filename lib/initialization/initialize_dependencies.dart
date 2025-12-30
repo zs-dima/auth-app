@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:auth_app/_core/api/grpc/middlewares/logger_middleware.dart';
+import 'package:auth_app/_core/api/grpc/middlewares/sentry_middleware.dart';
 import 'package:auth_app/_core/controller/controller_observer.dart';
 import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/_core/environment/environment_loader.dart';
@@ -209,10 +211,10 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         // ),
 
         // Logger middleware
-        // const GrpcLoggerMiddleware(),
+        const GrpcLoggerMiddleware(),
 
         // Sentry middleware
-        // const GrpcSentryMiddleware(),
+        const GrpcSentryMiddleware(),
 
         // Any other middlewares you need
         ...?middlewares,
@@ -226,7 +228,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       return GrpcAuthenticationClient(
         GrpcClientOptions(
           authChannel,
-          interceptors: middlewares,
+          interceptors: list,
           timeout: const Duration(seconds: 30),
         ),
       );

@@ -13,6 +13,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.textAlign,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   });
@@ -24,6 +26,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.displayLarge;
@@ -35,6 +39,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.displayMedium;
@@ -46,6 +52,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.displaySmall;
@@ -57,6 +65,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.headlineLarge;
@@ -68,6 +78,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.headlineMedium;
@@ -79,6 +91,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.headlineSmall;
@@ -90,6 +104,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.titleLarge;
@@ -101,6 +117,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.titleMedium;
@@ -112,6 +130,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.titleSmall;
@@ -123,6 +143,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.bodyLarge;
@@ -134,6 +156,8 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.bodyMedium;
@@ -145,9 +169,50 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.fontWeight,
+    this.height,
     this.color,
     super.key,
   }) : style = AppTextStyle.bodySmall;
+
+  /// {@macro text}
+  const AppText.labelLarge(
+    this.text, {
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+    this.fontWeight,
+    this.height,
+    this.color,
+    super.key,
+  }) : style = AppTextStyle.labelLarge;
+
+  /// {@macro text}
+  const AppText.labelMedium(
+    this.text, {
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+    this.fontWeight,
+    this.height,
+    this.color,
+    super.key,
+  }) : style = AppTextStyle.labelMedium;
+
+  /// {@macro text}
+  const AppText.labelSmall(
+    this.text, {
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+    this.fontWeight,
+    this.height,
+    this.color,
+    super.key,
+  }) : style = AppTextStyle.labelSmall;
 
   /// The text to display.
   final String text;
@@ -167,14 +232,24 @@ class AppText extends StatelessWidget {
   /// Whether to allow soft wrapping of the text.
   final bool? softWrap;
 
+  /// The font weight of the text.
+  final FontWeight? fontWeight;
+
+  /// The height of the text.
+  final double? height;
+
   /// The color of the text.
   final Color? color;
 
   @override
   Widget build(BuildContext context) => Text(
     text,
-    style: style
-        .style, // final palette = Theme.of(context).colorPalette; style.copyWith(color: color ?? palette.foreground),
+    style: style.style.copyWith(
+      color: color,
+      fontWeight: fontWeight,
+      height: height,
+    ),
+    // final palette = Theme.of(context).colorPalette; style.copyWith(color: color ?? palette.foreground),
     maxLines: maxLines,
     overflow: overflow,
     textAlign: textAlign,

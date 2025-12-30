@@ -3,7 +3,7 @@ import 'package:auth_app/settings/settings_scope.dart';
 import 'package:auth_app/users/edit/user_edit_widget.dart';
 import 'package:auth_app/users/users_scope.dart';
 import 'package:auth_model/auth_model.dart';
-import 'package:flutter/material.dart';
+import 'package:ui/ui.dart';
 
 void editUserDialog(
   BuildContext context,
@@ -12,7 +12,7 @@ void editUserDialog(
 }) => showDialog(
   context: context,
   barrierDismissible: false,
-  builder: (BuildContext ctx) {
+  builder: (ctx) {
     final theme = Theme.of(ctx);
     final colorScheme = theme.colorScheme;
     final appTheme = SettingsScope.themeOf(context).theme;
@@ -33,14 +33,12 @@ void editUserDialog(
         ),
         child: Padding(
           padding: theme.paddings.tiny,
-          child: Text(
+          child: AppText.bodyLarge(
             createNewUser //
                 ? 'Create new user'
                 : 'Edit ${user.name}',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             maxLines: 1,

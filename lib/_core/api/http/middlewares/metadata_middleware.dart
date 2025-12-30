@@ -1,5 +1,5 @@
+import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
-import 'package:auth_app/_core/tool/http/api_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:platform_info/platform_info.dart';
 

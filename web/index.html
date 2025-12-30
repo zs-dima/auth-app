@@ -263,7 +263,7 @@
 </head>
 <body>
   <!-- Loading indicator -->
-  <div id="loading">
+  <output id="loading">
     <div class="logo-container">
       <svg class="progress-ring" viewBox="0 0 140 140">
         <circle class="progress-ring-circle" cx="70" cy="70" r="65" vector-effect="non-scaling-stroke"></circle>
@@ -271,7 +271,6 @@
       </svg>
       <img src="icons/Icon-192.png" class="logo-image" alt="Logo">
     </div>
-    <h1>Service Worker</h1>
     <div class="progress-text">
       <span id="progress-text">Initializing</span>
       <span class="loading-dots"></span>
@@ -285,7 +284,7 @@
         Loading appears to be stuck. Click to clear cache, unregister service worker, and reload the page.
       </span>
     </div>
-  </div>  
+  </output>  
 
   <script>
     // Progress management
@@ -350,7 +349,7 @@
 
       // Update text
       progressPercentage.textContent = `${Math.round(currentProgress)}%`;
-      if (text) progressText.innerHTML = `${text}<span class="loading-dots"></span>`;
+      if (text) progressText.textContent = text;
 
       // Console logging
       if (currentProgress <= 90)

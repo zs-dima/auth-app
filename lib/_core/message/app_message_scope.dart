@@ -148,7 +148,7 @@ class _AppMessageScopeState extends State<AppMessageScope> {
 
             // i.whenOrNull(
             //   appMessage:
-            //       (message, backgroundColor) => context.showInfo(message, backgroundColor: colorScheme.background),
+            //       (message, backgroundColor) => context.showInfo(message, backgroundColor: colorScheme.surface),
             //   appError: (error, _) => context.showError(error),
             //   netError: (error, _) => context.showError(error),
             //   progress: (progress, type, message) => message.isNullOrSpace ? null : context.showProgress('$message'),

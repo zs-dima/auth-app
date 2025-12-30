@@ -3,6 +3,7 @@ library grpc_model;
 // Channel and configuration
 export 'src/client/channel.dart';
 export 'src/client/channel_config.dart';
+export 'src/client/grpc_client.dart';
 export 'src/client/root_certificates.dart';
 // Middleware infrastructure and implementations
 export 'src/middleware/middleware.dart';

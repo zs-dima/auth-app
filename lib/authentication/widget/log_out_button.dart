@@ -1,7 +1,7 @@
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ui/ui.dart';
 
 /// {@template log_out_button}
 /// LogOutButton widget
@@ -25,22 +25,19 @@ class LogOutButton extends StatelessWidget {
             children: <Widget>[
               const Icon(Icons.logout, size: 24),
               const SizedBox(width: 16),
-              Text(
+              AppText.headlineSmall(
                 Localization.of(context).logOutButton,
+                height: 1,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  height: 1,
-                ),
               ),
               const SizedBox(width: 24),
             ],
           ),
         ),
-        content: Text(
+        content: const AppText.bodyMedium(
           'Are you sure you want to log out?',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
         ),
         actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: <Widget>[

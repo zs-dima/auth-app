@@ -723,7 +723,7 @@ dart_code_metrics:
     # - prefer-bytes-builder #
     # - prefer-class-destructuring #
     # - prefer-commenting-analyzer-ignores #
-    - prefer-commenting-future-delayed
+    # - prefer-commenting-future-delayed #
     - prefer-compound-assignment-operators
     - prefer-conditional-expressions
     - prefer-contains

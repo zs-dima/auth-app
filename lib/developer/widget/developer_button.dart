@@ -1,4 +1,5 @@
-import 'package:auth_app/_core/app.dart';
+import 'package:auth_app/_core/localization/localization.dart';
+import 'package:auth_app/_core/router/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:octopus/octopus.dart';
 
