@@ -12,7 +12,7 @@ import 'package:auth_app/impersonation/controller/impersonate_controller.dart';
 import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
-import 'package:auth_app/users/controller/users_avatars_controller.dart';
+import 'package:auth_app/users/controller/avatar_cache.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
@@ -66,6 +66,9 @@ class Dependencies {
   /// Users controller
   late final UsersController usersController;
 
+  /// AvatarCache
+  late final AvatarCache avatarCache;
+
   /// Database
   late final Database database;
 
@@ -86,7 +89,4 @@ class Dependencies {
 
   /// Impersonate controller
   late final ImpersonateController impersonateController;
-
-  /// Users avatars controller
-  late final UsersAvatarsController avatarController;
 }

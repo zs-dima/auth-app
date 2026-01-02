@@ -18,7 +18,6 @@ sealed class User with _$User implements IUserInfo, Comparable<User> {
     required String name,
     required String email,
     required UserRole role,
-    String? blurhash,
     required bool deleted,
   }) = _User;
 

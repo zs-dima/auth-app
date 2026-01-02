@@ -1,7 +1,6 @@
 import 'package:auth_app/_core/core.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/controller/user_controller.dart';
-import 'package:auth_app/users/controller/users_avatars_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:collection/collection.dart';
@@ -23,7 +22,16 @@ abstract interface class IUsersController {
   User? byId(UserId id);
   Future<void> createUser(User user, String password);
   Future<void> updateUser(User user);
-  void savePhoto(UserId userId, Uint8List? photo);
+
+  /// Upload avatar using presigned S3 URL workflow.
+  /// Returns the presigned upload URL info, or null if getting URL failed.
+  Future<AvatarUploadUrl?> getAvatarUploadUrl(UserId userId, String contentType, int contentSize);
+
+  /// Confirm avatar upload after successful S3 upload.
+  Future<bool> confirmAvatarUpload(UserId userId);
+
+  /// Delete user avatar.
+  Future<bool> deleteUserAvatar(UserId userId);
 }
 
 @immutable
@@ -49,7 +57,6 @@ class UsersScope extends StatefulWidget {
 
 class _UsersScopeState extends State<UsersScope> implements IUsersController {
   // late AuthenticationController _authController;
-  late UsersAvatarsController _avatarController;
   UserId _currentUserId = UserIdX.empty;
   late final UserController _userController;
 
@@ -68,7 +75,6 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     );
 
     // _authController = context.dependencies.authenticationController;
-    _avatarController = context.dependencies.avatarController;
   }
 
   Future<void> _reloadUsers() async {
@@ -106,7 +112,36 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   }
 
   @override
-  void savePhoto(UserId userId, Uint8List? photo) => _avatarController.savePhoto(userId, photo);
+  Future<AvatarUploadUrl?> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) async {
+    try {
+      return await context.dependencies.usersRepository.getAvatarUploadUrl(userId, contentType, contentSize);
+    } on Exception {
+      if (mounted) context.showError('Failed to get avatar upload URL.');
+      return null;
+    }
+  }
+
+  @override
+  Future<bool> confirmAvatarUpload(UserId userId) async {
+    final result = await context.dependencies.usersRepository.confirmAvatarUpload(userId);
+    if (result) {
+      await _reloadUsers();
+    } else if (mounted) {
+      context.showError('Failed to confirm avatar upload.');
+    }
+    return result;
+  }
+
+  @override
+  Future<bool> deleteUserAvatar(UserId userId) async {
+    final result = await context.dependencies.usersRepository.deleteUserAvatar(userId);
+    if (result) {
+      await _reloadUsers();
+    } else if (mounted) {
+      context.showError('Failed to delete user avatar.');
+    }
+    return result;
+  }
 
   @override
   void didChangeDependencies() {

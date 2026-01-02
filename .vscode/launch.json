@@ -9,7 +9,7 @@
       "cwd": "${workspaceFolder}",
       // "openDevTools": "network",
       "args": [
-        // "--wasm",
+        "--wasm",
         "-t${workspaceFolder}/lib/main.dart",
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",

@@ -76,25 +76,11 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$setPassword, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.UserInfo> loadUserInfo(
-    $0.UserId request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createUnaryCall(_$loadUserInfo, request, options: options);
-  }
-
   $grpc.ResponseStream<$0.UserInfo> loadUsersInfo(
-    $1.Empty request, {
+    $0.LoadUsersInfoRequest request, {
     $grpc.CallOptions? options,
   }) {
     return $createStreamingCall(_$loadUsersInfo, $async.Stream.fromIterable([request]), options: options);
-  }
-
-  $grpc.ResponseStream<$0.UserAvatar> loadUserAvatar(
-    $0.LoadUserAvatarRequest request, {
-    $grpc.CallOptions? options,
-  }) {
-    return $createStreamingCall(_$loadUserAvatar, $async.Stream.fromIterable([request]), options: options);
   }
 
   $grpc.ResponseStream<$0.User> loadUsers(
@@ -118,11 +104,29 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$updateUser, request, options: options);
   }
 
-  $grpc.ResponseFuture<$2.ResultReply> saveUserPhoto(
-    $0.UserPhoto request, {
+  /// Avatar management with presigned URLs (client uploads directly to S3)
+  /// Get a presigned URL for uploading avatar directly to S3
+  $grpc.ResponseFuture<$0.AvatarUploadUrl> getAvatarUploadUrl(
+    $0.GetAvatarUploadUrlRequest request, {
     $grpc.CallOptions? options,
   }) {
-    return $createUnaryCall(_$saveUserPhoto, request, options: options);
+    return $createUnaryCall(_$getAvatarUploadUrl, request, options: options);
+  }
+
+  /// Confirm avatar upload completed
+  $grpc.ResponseFuture<$2.ResultReply> confirmAvatarUpload(
+    $0.ConfirmAvatarUploadRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$confirmAvatarUpload, request, options: options);
+  }
+
+  /// Delete user avatar from S3
+  $grpc.ResponseFuture<$2.ResultReply> deleteUserAvatar(
+    $0.UserId request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$deleteUserAvatar, request, options: options);
   }
 
   // method descriptors
@@ -145,22 +149,26 @@ class AuthServiceClient extends $grpc.Client {
       '/auth.AuthService/SetPassword',
       ($0.SetPasswordRequest value) => value.writeToBuffer(),
       $2.ResultReply.fromBuffer);
-  static final _$loadUserInfo = $grpc.ClientMethod<$0.UserId, $0.UserInfo>(
-      '/auth.AuthService/LoadUserInfo', ($0.UserId value) => value.writeToBuffer(), $0.UserInfo.fromBuffer);
-  static final _$loadUsersInfo = $grpc.ClientMethod<$1.Empty, $0.UserInfo>(
-      '/auth.AuthService/LoadUsersInfo', ($1.Empty value) => value.writeToBuffer(), $0.UserInfo.fromBuffer);
-  static final _$loadUserAvatar = $grpc.ClientMethod<$0.LoadUserAvatarRequest, $0.UserAvatar>(
-      '/auth.AuthService/LoadUserAvatar',
-      ($0.LoadUserAvatarRequest value) => value.writeToBuffer(),
-      $0.UserAvatar.fromBuffer);
+  static final _$loadUsersInfo = $grpc.ClientMethod<$0.LoadUsersInfoRequest, $0.UserInfo>(
+      '/auth.AuthService/LoadUsersInfo',
+      ($0.LoadUsersInfoRequest value) => value.writeToBuffer(),
+      $0.UserInfo.fromBuffer);
   static final _$loadUsers = $grpc.ClientMethod<$0.UserId, $0.User>(
       '/auth.AuthService/LoadUsers', ($0.UserId value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$createUser = $grpc.ClientMethod<$0.CreateUserRequest, $2.ResultReply>(
       '/auth.AuthService/CreateUser', ($0.CreateUserRequest value) => value.writeToBuffer(), $2.ResultReply.fromBuffer);
   static final _$updateUser = $grpc.ClientMethod<$0.UpdateUserRequest, $2.ResultReply>(
       '/auth.AuthService/UpdateUser', ($0.UpdateUserRequest value) => value.writeToBuffer(), $2.ResultReply.fromBuffer);
-  static final _$saveUserPhoto = $grpc.ClientMethod<$0.UserPhoto, $2.ResultReply>(
-      '/auth.AuthService/SaveUserPhoto', ($0.UserPhoto value) => value.writeToBuffer(), $2.ResultReply.fromBuffer);
+  static final _$getAvatarUploadUrl = $grpc.ClientMethod<$0.GetAvatarUploadUrlRequest, $0.AvatarUploadUrl>(
+      '/auth.AuthService/GetAvatarUploadUrl',
+      ($0.GetAvatarUploadUrlRequest value) => value.writeToBuffer(),
+      $0.AvatarUploadUrl.fromBuffer);
+  static final _$confirmAvatarUpload = $grpc.ClientMethod<$0.ConfirmAvatarUploadRequest, $2.ResultReply>(
+      '/auth.AuthService/ConfirmAvatarUpload',
+      ($0.ConfirmAvatarUploadRequest value) => value.writeToBuffer(),
+      $2.ResultReply.fromBuffer);
+  static final _$deleteUserAvatar = $grpc.ClientMethod<$0.UserId, $2.ResultReply>(
+      '/auth.AuthService/DeleteUserAvatar', ($0.UserId value) => value.writeToBuffer(), $2.ResultReply.fromBuffer);
 }
 
 @$pb.GrpcServiceName('auth.AuthService')
@@ -205,17 +213,13 @@ abstract class AuthServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.SetPasswordRequest.fromBuffer(value),
         ($2.ResultReply value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.UserId, $0.UserInfo>('LoadUserInfo', loadUserInfo_Pre, false, false,
-        ($core.List<$core.int> value) => $0.UserId.fromBuffer(value), ($0.UserInfo value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.Empty, $0.UserInfo>('LoadUsersInfo', loadUsersInfo_Pre, false, true,
-        ($core.List<$core.int> value) => $1.Empty.fromBuffer(value), ($0.UserInfo value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.LoadUserAvatarRequest, $0.UserAvatar>(
-        'LoadUserAvatar',
-        loadUserAvatar_Pre,
+    $addMethod($grpc.ServiceMethod<$0.LoadUsersInfoRequest, $0.UserInfo>(
+        'LoadUsersInfo',
+        loadUsersInfo_Pre,
         false,
         true,
-        ($core.List<$core.int> value) => $0.LoadUserAvatarRequest.fromBuffer(value),
-        ($0.UserAvatar value) => value.writeToBuffer()));
+        ($core.List<$core.int> value) => $0.LoadUsersInfoRequest.fromBuffer(value),
+        ($0.UserInfo value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.UserId, $0.User>('LoadUsers', loadUsers_Pre, false, true,
         ($core.List<$core.int> value) => $0.UserId.fromBuffer(value), ($0.User value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.CreateUserRequest, $2.ResultReply>(
@@ -232,13 +236,22 @@ abstract class AuthServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.UpdateUserRequest.fromBuffer(value),
         ($2.ResultReply value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.UserPhoto, $2.ResultReply>(
-        'SaveUserPhoto',
-        saveUserPhoto_Pre,
+    $addMethod($grpc.ServiceMethod<$0.GetAvatarUploadUrlRequest, $0.AvatarUploadUrl>(
+        'GetAvatarUploadUrl',
+        getAvatarUploadUrl_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $0.UserPhoto.fromBuffer(value),
+        ($core.List<$core.int> value) => $0.GetAvatarUploadUrlRequest.fromBuffer(value),
+        ($0.AvatarUploadUrl value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.ConfirmAvatarUploadRequest, $2.ResultReply>(
+        'ConfirmAvatarUpload',
+        confirmAvatarUpload_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.ConfirmAvatarUploadRequest.fromBuffer(value),
         ($2.ResultReply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UserId, $2.ResultReply>('DeleteUserAvatar', deleteUserAvatar_Pre, false, false,
+        ($core.List<$core.int> value) => $0.UserId.fromBuffer(value), ($2.ResultReply value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.AuthInfo> signIn_Pre($grpc.ServiceCall $call, $async.Future<$0.SignInRequest> $request) async {
@@ -281,24 +294,12 @@ abstract class AuthServiceBase extends $grpc.Service {
 
   $async.Future<$2.ResultReply> setPassword($grpc.ServiceCall call, $0.SetPasswordRequest request);
 
-  $async.Future<$0.UserInfo> loadUserInfo_Pre($grpc.ServiceCall $call, $async.Future<$0.UserId> $request) async {
-    return loadUserInfo($call, await $request);
-  }
-
-  $async.Future<$0.UserInfo> loadUserInfo($grpc.ServiceCall call, $0.UserId request);
-
-  $async.Stream<$0.UserInfo> loadUsersInfo_Pre($grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async* {
+  $async.Stream<$0.UserInfo> loadUsersInfo_Pre(
+      $grpc.ServiceCall $call, $async.Future<$0.LoadUsersInfoRequest> $request) async* {
     yield* loadUsersInfo($call, await $request);
   }
 
-  $async.Stream<$0.UserInfo> loadUsersInfo($grpc.ServiceCall call, $1.Empty request);
-
-  $async.Stream<$0.UserAvatar> loadUserAvatar_Pre(
-      $grpc.ServiceCall $call, $async.Future<$0.LoadUserAvatarRequest> $request) async* {
-    yield* loadUserAvatar($call, await $request);
-  }
-
-  $async.Stream<$0.UserAvatar> loadUserAvatar($grpc.ServiceCall call, $0.LoadUserAvatarRequest request);
+  $async.Stream<$0.UserInfo> loadUsersInfo($grpc.ServiceCall call, $0.LoadUsersInfoRequest request);
 
   $async.Stream<$0.User> loadUsers_Pre($grpc.ServiceCall $call, $async.Future<$0.UserId> $request) async* {
     yield* loadUsers($call, await $request);
@@ -320,9 +321,23 @@ abstract class AuthServiceBase extends $grpc.Service {
 
   $async.Future<$2.ResultReply> updateUser($grpc.ServiceCall call, $0.UpdateUserRequest request);
 
-  $async.Future<$2.ResultReply> saveUserPhoto_Pre($grpc.ServiceCall $call, $async.Future<$0.UserPhoto> $request) async {
-    return saveUserPhoto($call, await $request);
+  $async.Future<$0.AvatarUploadUrl> getAvatarUploadUrl_Pre(
+      $grpc.ServiceCall $call, $async.Future<$0.GetAvatarUploadUrlRequest> $request) async {
+    return getAvatarUploadUrl($call, await $request);
   }
 
-  $async.Future<$2.ResultReply> saveUserPhoto($grpc.ServiceCall call, $0.UserPhoto request);
+  $async.Future<$0.AvatarUploadUrl> getAvatarUploadUrl($grpc.ServiceCall call, $0.GetAvatarUploadUrlRequest request);
+
+  $async.Future<$2.ResultReply> confirmAvatarUpload_Pre(
+      $grpc.ServiceCall $call, $async.Future<$0.ConfirmAvatarUploadRequest> $request) async {
+    return confirmAvatarUpload($call, await $request);
+  }
+
+  $async.Future<$2.ResultReply> confirmAvatarUpload($grpc.ServiceCall call, $0.ConfirmAvatarUploadRequest request);
+
+  $async.Future<$2.ResultReply> deleteUserAvatar_Pre($grpc.ServiceCall $call, $async.Future<$0.UserId> $request) async {
+    return deleteUserAvatar($call, await $request);
+  }
+
+  $async.Future<$2.ResultReply> deleteUserAvatar($grpc.ServiceCall call, $0.UserId request);
 }

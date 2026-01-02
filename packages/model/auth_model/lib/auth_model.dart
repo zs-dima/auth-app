@@ -20,8 +20,8 @@ export 'src/model/credentials/sign_in_data.dart';
 export 'src/model/role/role.dart';
 // Models - User
 export 'src/model/user/auth_user.dart';
+export 'src/model/user/avatar_upload_url.dart';
 export 'src/model/user/i_user_info.dart';
 export 'src/model/user/user.dart';
-export 'src/model/user/user_avatar.dart';
 export 'src/model/user/user_id.dart';
 export 'src/model/user/user_info.dart';

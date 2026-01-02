@@ -24,7 +24,7 @@ import 'package:auth_app/settings/data/dao/app_secure_preferences_dao.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
-import 'package:auth_app/users/controller/users_avatars_controller.dart';
+import 'package:auth_app/users/controller/avatar_cache.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
@@ -291,6 +291,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         repository: dependencies.authenticationRepository,
         messageController: dependencies.messageController,
       ),
+  'Prepare avatars cache': (dependencies) => dependencies.avatarCache = AvatarCache(),
   'Prepare users repository': (dependencies) {
     dependencies
       ..usersRepository = UsersRepository(
@@ -307,10 +308,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         usersController: dependencies.usersController,
         messageController: dependencies.messageController,
       ),
-  'Users avatars controller': (dependencies) => dependencies.avatarController = UsersAvatarsController(
-    usersRepository: dependencies.usersRepository,
-    messageController: dependencies.messageController,
-  ),
   'Prepare users handlers': (dependencies) {
     final impersonateController = ImpersonateController(
       repository: ImpersonateRepository(currentUser: dependencies.authenticatedUserController.state.user),

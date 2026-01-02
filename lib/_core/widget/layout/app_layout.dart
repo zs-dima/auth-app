@@ -1,8 +1,6 @@
 import 'package:auth_app/_core/widget/common_actions.dart';
 import 'package:auth_app/_core/widget/layout/progress_overlay.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
-import 'package:auth_app/users/widget/user_avatar_widget.dart';
-import 'package:auth_model/auth_model.dart';
 import 'package:ui/ui.dart';
 
 class AppLayout extends StatelessWidget {
@@ -28,16 +26,16 @@ class AppLayout extends StatelessWidget {
       floatingActionButton: floatingActionButton,
       appBar: AppBar(
         scrolledUnderElevation: 0,
-        leading: switch (currentUser) {
-          AuthenticatedUser() => Tooltip(
-            message: authUser.name,
-            child: UserAvatarWidget(
-              user: authUser,
-              size: 15,
-            ),
-          ),
-          _ => null,
-        },
+        // leading: switch (currentUser) {
+        //   AuthenticatedUser() => Tooltip(
+        //     message: authUser.name,
+        //     child: UserAvatarWidget(
+        //       user: authUser,
+        //       size: 15,
+        //     ),
+        //   ),
+        //   _ => null,
+        // },
         title: AppText.headlineMedium(
           title,
         ),

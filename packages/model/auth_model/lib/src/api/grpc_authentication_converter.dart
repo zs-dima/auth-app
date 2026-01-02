@@ -1,10 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
-import 'package:auth_model/src/model/user/user_avatar.dart';
 import 'package:auth_model/src/model/user/user_info.dart';
 import 'package:grpc_model/grpc_model.dart';
 
@@ -22,7 +19,6 @@ extension AuthInfoX on rpc.AuthInfo {
     name: userName,
     email: email,
     role: userRole.toRole(),
-    blurhash: hasBlurhash() ? blurhash : null,
   );
 }
 
@@ -32,7 +28,6 @@ extension UserInfoX on rpc.UserInfo {
     name: name,
     email: email,
     role: role.toRole(),
-    blurhash: hasBlurhash() ? blurhash : null,
   );
 }
 
@@ -43,29 +38,14 @@ extension UserX on rpc.User {
     email: email,
     role: role.toRole(),
     deleted: deleted,
-    blurhash: hasBlurhash() ? blurhash : null,
   );
 }
 
 extension AppUserX on User {
-  rpc.User toUser() {
-    final user = rpc.User()
-      ..id = id.toUUID()
-      ..name = name
-      ..email = email
-      ..role = role.toRole()
-      ..deleted = deleted;
-
-    if (blurhash != null) user.blurhash = blurhash!;
-
-    return user;
-  }
-}
-
-extension UserAvatarX on rpc.UserAvatar {
-  UserAvatar toUserAvatar() => .new(
-    userId: userId.toId(),
-    avatar: hasAvatar() ? Uint8List.fromList(avatar) : null,
-    loaded: true,
-  );
+  rpc.User toUser() => rpc.User()
+    ..id = id.toUUID()
+    ..name = name
+    ..email = email
+    ..role = role.toRole()
+    ..deleted = deleted;
 }

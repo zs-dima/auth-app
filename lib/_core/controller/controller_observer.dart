@@ -33,17 +33,19 @@ class ControllerObserver with _SentryTransactionMixin implements IControllerObse
   @override
   void onStateChanged<S extends Object>(StateController<S> controller, S prevState, S nextState) {
     final context = Controller.context;
+    final prev = _truncateState(prevState);
+    final next = _truncateState(nextState);
     if (context == null) {
       // State change occurred outside of the handler
       _log.d(
         '🪢 ${controller.name} | '
-        '$prevState -> $nextState',
+        '$prev -> $next',
       );
     } else {
       // State change occurred inside the handler
       _log.d(
         '🪢 ${controller.name}.${context.name} | '
-        '$prevState -> $nextState',
+        '$prev -> $next',
         // context.meta,
       );
     }
@@ -72,6 +74,15 @@ class ControllerObserver with _SentryTransactionMixin implements IControllerObse
   void onDispose(Controller controller) {
     _finishTransaction(controller, true);
     _log.v5('🪢 ${controller.name} | Disposed');
+  }
+
+  /// Truncates state string representation if it exceeds max length.
+  // ignore: avoid-substring
+  static String _truncateState(Object state) {
+    const maxLength = 200;
+    final str = state.toString();
+    if (str.length <= maxLength) return str;
+    return '${str.substring(0, maxLength)}... (truncated, ${str.length} chars)';
   }
 }
 

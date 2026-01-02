@@ -1,10 +1,9 @@
 /*import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:auth_model/src/api/i_users_api.dart';
 import 'package:auth_model/src/model/role/role.dart';
+import 'package:auth_model/src/model/user/avatar_upload_url.dart';
 import 'package:auth_model/src/model/user/user.dart';
-import 'package:auth_model/src/model/user/user_avatar.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
 
 class MockUsersApi implements IUsersApi {
@@ -54,17 +53,19 @@ class MockUsersApi implements IUsersApi {
       );
 
   @override
-  Stream<UserAvatar> loadUserAvatar([List<UserId>? userIds]) => Stream<UserAvatar>.fromIterable(
-        [],
-      );
-
-  @override
   Future<bool> createUser(User user, String password) async => true;
 
   @override
   Future<bool> updateUser(User user) async => true;
 
   @override
-  Future<bool> saveUserPhoto(UserId userId, Uint8List? photo) async => true;
+  Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) async =>
+      const AvatarUploadUrl(uploadUrl: 'https://mock-s3-url.example.com/upload', expiresIn: 3600);
+
+  @override
+  Future<bool> confirmAvatarUpload(UserId userId) async => true;
+
+  @override
+  Future<bool> deleteUserAvatar(UserId userId) async => true;
 }
 */

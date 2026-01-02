@@ -7,7 +7,6 @@ abstract interface class IUserInfo {
   String get name;
   String get email;
   UserRole get role;
-  String? get blurhash;
 
   Map<String, dynamic> toJson();
 }

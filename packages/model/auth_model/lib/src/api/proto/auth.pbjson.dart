@@ -32,65 +32,67 @@ final $typed_data.Uint8List userRoleDescriptor =
 const ResetPasswordRequest$json = {
   '1': 'ResetPasswordRequest',
   '2': [
-    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
+    {'1': 'email', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'email'},
   ],
 };
 
 /// Descriptor for `ResetPasswordRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resetPasswordRequestDescriptor =
-    $convert.base64Decode('ChRSZXNldFBhc3N3b3JkUmVxdWVzdBIUCgVlbWFpbBgBIAEoCVIFZW1haWw=');
+    $convert.base64Decode('ChRSZXNldFBhc3N3b3JkUmVxdWVzdBIdCgVlbWFpbBgBIAEoCUIH+kIEcgJgAVIFZW1haWw=');
 
 @$core.Deprecated('Use setPasswordRequestDescriptor instead')
 const SetPasswordRequest$json = {
   '1': 'SetPasswordRequest',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
-    {'1': 'email', '3': 2, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'password', '3': 3, '4': 1, '5': 9, '10': 'password'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'userId'},
+    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'email'},
+    {'1': 'password', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'password'},
   ],
 };
 
 /// Descriptor for `SetPasswordRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List setPasswordRequestDescriptor =
-    $convert.base64Decode('ChJTZXRQYXNzd29yZFJlcXVlc3QSIwoHdXNlcl9pZBgBIAEoCzIKLmNvcmUuVVVJRFIGdXNlck'
-        'lkEhQKBWVtYWlsGAIgASgJUgVlbWFpbBIaCghwYXNzd29yZBgDIAEoCVIIcGFzc3dvcmQ=');
-
-@$core.Deprecated('Use loadUserAvatarRequestDescriptor instead')
-const LoadUserAvatarRequest$json = {
-  '1': 'LoadUserAvatarRequest',
-  '2': [
-    {'1': 'user_id', '3': 1, '4': 3, '5': 11, '6': '.core.UUID', '10': 'userId'},
-  ],
-};
-
-/// Descriptor for `LoadUserAvatarRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List loadUserAvatarRequestDescriptor =
-    $convert.base64Decode('ChVMb2FkVXNlckF2YXRhclJlcXVlc3QSIwoHdXNlcl9pZBgBIAMoCzIKLmNvcmUuVVVJRFIGdX'
-        'Nlcklk');
+    $convert.base64Decode('ChJTZXRQYXNzd29yZFJlcXVlc3QSLQoHdXNlcl9pZBgBIAEoCzIKLmNvcmUuVVVJREII+kIFig'
+        'ECEAFSBnVzZXJJZBIdCgVlbWFpbBgCIAEoCUIH+kIEcgJgAVIFZW1haWwSIwoIcGFzc3dvcmQY'
+        'AyABKAlCB/pCBHICEAVSCHBhc3N3b3Jk');
 
 @$core.Deprecated('Use signInRequestDescriptor instead')
 const SignInRequest$json = {
   '1': 'SignInRequest',
   '2': [
-    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'password', '3': 2, '4': 1, '5': 9, '10': 'password'},
-    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '10': 'installationId'},
-    {'1': 'device_info', '3': 4, '4': 1, '5': 11, '6': '.auth.DeviceInfo', '10': 'deviceInfo'},
+    {'1': 'email', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'email'},
+    {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
+    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'device_info', '3': 4, '4': 1, '5': 11, '6': '.auth.DeviceInfo', '8': {}, '10': 'deviceInfo'},
   ],
 };
 
 /// Descriptor for `SignInRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List signInRequestDescriptor =
-    $convert.base64Decode('Cg1TaWduSW5SZXF1ZXN0EhQKBWVtYWlsGAEgASgJUgVlbWFpbBIaCghwYXNzd29yZBgCIAEoCV'
-        'IIcGFzc3dvcmQSMwoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMgouY29yZS5VVUlEUg5pbnN0YWxs'
-        'YXRpb25JZBIxCgtkZXZpY2VfaW5mbxgEIAEoCzIQLmF1dGguRGV2aWNlSW5mb1IKZGV2aWNlSW'
-        '5mbw==');
+    $convert.base64Decode('Cg1TaWduSW5SZXF1ZXN0Eh0KBWVtYWlsGAEgASgJQgf6QgRyAmABUgVlbWFpbBIjCghwYXNzd2'
+        '9yZBgCIAEoCUIH+kIEcgIQBVIIcGFzc3dvcmQSPQoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMgou'
+        'Y29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSOwoLZGV2aWNlX2luZm8YBCABKA'
+        'syEC5hdXRoLkRldmljZUluZm9CCPpCBYoBAhABUgpkZXZpY2VJbmZv');
+
+@$core.Deprecated('Use loadUsersInfoRequestDescriptor instead')
+const LoadUsersInfoRequest$json = {
+  '1': 'LoadUsersInfoRequest',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
+    {'1': 'user_ids', '3': 2, '4': 3, '5': 11, '6': '.core.UUID', '10': 'userIds'},
+  ],
+};
+
+/// Descriptor for `LoadUsersInfoRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List loadUsersInfoRequestDescriptor =
+    $convert.base64Decode('ChRMb2FkVXNlcnNJbmZvUmVxdWVzdBIjCgd1c2VyX2lkGAEgASgLMgouY29yZS5VVUlEUgZ1c2'
+        'VySWQSJQoIdXNlcl9pZHMYAiADKAsyCi5jb3JlLlVVSURSB3VzZXJJZHM=');
 
 @$core.Deprecated('Use deviceInfoDescriptor instead')
 const DeviceInfo$json = {
   '1': 'DeviceInfo',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'id'},
+    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'id'},
     {'1': 'model', '3': 2, '4': 1, '5': 9, '10': 'model'},
     {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
     {'1': 'os_info', '3': 4, '4': 1, '5': 11, '6': '.auth.OsInfo', '10': 'osInfo'},
@@ -99,9 +101,9 @@ const DeviceInfo$json = {
 
 /// Descriptor for `DeviceInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List deviceInfoDescriptor =
-    $convert.base64Decode('CgpEZXZpY2VJbmZvEhoKAmlkGAEgASgLMgouY29yZS5VVUlEUgJpZBIUCgVtb2RlbBgCIAEoCV'
-        'IFbW9kZWwSEgoEbmFtZRgDIAEoCVIEbmFtZRIlCgdvc19pbmZvGAQgASgLMgwuYXV0aC5Pc0lu'
-        'Zm9SBm9zSW5mbw==');
+    $convert.base64Decode('CgpEZXZpY2VJbmZvEiQKAmlkGAEgASgLMgouY29yZS5VVUlEQgj6QgWKAQIQAVICaWQSFAoFbW'
+        '9kZWwYAiABKAlSBW1vZGVsEhIKBG5hbWUYAyABKAlSBG5hbWUSJQoHb3NfaW5mbxgEIAEoCzIM'
+        'LmF1dGguT3NJbmZvUgZvc0luZm8=');
 
 @$core.Deprecated('Use osInfoDescriptor instead')
 const OsInfo$json = {
@@ -120,14 +122,14 @@ final $typed_data.Uint8List osInfoDescriptor =
 const RefreshTokenRequest$json = {
   '1': 'RefreshTokenRequest',
   '2': [
-    {'1': 'refresh_token', '3': 1, '4': 1, '5': 9, '10': 'refreshToken'},
+    {'1': 'refresh_token', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'refreshToken'},
   ],
 };
 
 /// Descriptor for `RefreshTokenRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List refreshTokenRequestDescriptor =
-    $convert.base64Decode('ChNSZWZyZXNoVG9rZW5SZXF1ZXN0EiMKDXJlZnJlc2hfdG9rZW4YASABKAlSDHJlZnJlc2hUb2'
-        'tlbg==');
+    $convert.base64Decode('ChNSZWZyZXNoVG9rZW5SZXF1ZXN0EiwKDXJlZnJlc2hfdG9rZW4YASABKAlCB/pCBHICEAFSDH'
+        'JlZnJlc2hUb2tlbg==');
 
 @$core.Deprecated('Use refreshTokenReplyDescriptor instead')
 const RefreshTokenReply$json = {
@@ -150,12 +152,8 @@ const AuthInfo$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
     {'1': 'user_name', '3': 2, '4': 1, '5': 9, '10': 'userName'},
     {'1': 'user_role', '3': 3, '4': 1, '5': 14, '6': '.auth.UserRole', '10': 'userRole'},
-    {'1': 'blurhash', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'blurhash', '17': true},
-    {'1': 'refresh_token', '3': 5, '4': 1, '5': 9, '10': 'refreshToken'},
-    {'1': 'access_token', '3': 6, '4': 1, '5': 9, '10': 'accessToken'},
-  ],
-  '8': [
-    {'1': '_blurhash'},
+    {'1': 'refresh_token', '3': 4, '4': 1, '5': 9, '10': 'refreshToken'},
+    {'1': 'access_token', '3': 5, '4': 1, '5': 9, '10': 'accessToken'},
   ],
 };
 
@@ -163,9 +161,8 @@ const AuthInfo$json = {
 final $typed_data.Uint8List authInfoDescriptor =
     $convert.base64Decode('CghBdXRoSW5mbxIjCgd1c2VyX2lkGAEgASgLMgouY29yZS5VVUlEUgZ1c2VySWQSGwoJdXNlcl'
         '9uYW1lGAIgASgJUgh1c2VyTmFtZRIrCgl1c2VyX3JvbGUYAyABKA4yDi5hdXRoLlVzZXJSb2xl'
-        'Ugh1c2VyUm9sZRIfCghibHVyaGFzaBgEIAEoCUgAUghibHVyaGFzaIgBARIjCg1yZWZyZXNoX3'
-        'Rva2VuGAUgASgJUgxyZWZyZXNoVG9rZW4SIQoMYWNjZXNzX3Rva2VuGAYgASgJUgthY2Nlc3NU'
-        'b2tlbkILCglfYmx1cmhhc2g=');
+        'Ugh1c2VyUm9sZRIjCg1yZWZyZXNoX3Rva2VuGAQgASgJUgxyZWZyZXNoVG9rZW4SIQoMYWNjZX'
+        'NzX3Rva2VuGAUgASgJUgthY2Nlc3NUb2tlbg==');
 
 @$core.Deprecated('Use userInfoDescriptor instead')
 const UserInfo$json = {
@@ -175,11 +172,7 @@ const UserInfo$json = {
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
     {'1': 'role', '3': 4, '4': 1, '5': 14, '6': '.auth.UserRole', '10': 'role'},
-    {'1': 'blurhash', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'blurhash', '17': true},
-    {'1': 'deleted', '3': 6, '4': 1, '5': 8, '10': 'deleted'},
-  ],
-  '8': [
-    {'1': '_blurhash'},
+    {'1': 'deleted', '3': 5, '4': 1, '5': 8, '10': 'deleted'},
   ],
 };
 
@@ -187,8 +180,7 @@ const UserInfo$json = {
 final $typed_data.Uint8List userInfoDescriptor =
     $convert.base64Decode('CghVc2VySW5mbxIaCgJpZBgBIAEoCzIKLmNvcmUuVVVJRFICaWQSEgoEbmFtZRgCIAEoCVIEbm'
         'FtZRIUCgVlbWFpbBgDIAEoCVIFZW1haWwSIgoEcm9sZRgEIAEoDjIOLmF1dGguVXNlclJvbGVS'
-        'BHJvbGUSHwoIYmx1cmhhc2gYBSABKAlIAFIIYmx1cmhhc2iIAQESGAoHZGVsZXRlZBgGIAEoCF'
-        'IHZGVsZXRlZEILCglfYmx1cmhhc2g=');
+        'BHJvbGUSGAoHZGVsZXRlZBgFIAEoCFIHZGVsZXRlZA==');
 
 @$core.Deprecated('Use userDescriptor instead')
 const User$json = {
@@ -198,11 +190,7 @@ const User$json = {
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
     {'1': 'role', '3': 4, '4': 1, '5': 14, '6': '.auth.UserRole', '10': 'role'},
-    {'1': 'blurhash', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'blurhash', '17': true},
-    {'1': 'deleted', '3': 6, '4': 1, '5': 8, '10': 'deleted'},
-  ],
-  '8': [
-    {'1': '_blurhash'},
+    {'1': 'deleted', '3': 5, '4': 1, '5': 8, '10': 'deleted'},
   ],
 };
 
@@ -210,63 +198,72 @@ const User$json = {
 final $typed_data.Uint8List userDescriptor =
     $convert.base64Decode('CgRVc2VyEhoKAmlkGAEgASgLMgouY29yZS5VVUlEUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEh'
         'QKBWVtYWlsGAMgASgJUgVlbWFpbBIiCgRyb2xlGAQgASgOMg4uYXV0aC5Vc2VyUm9sZVIEcm9s'
-        'ZRIfCghibHVyaGFzaBgFIAEoCUgAUghibHVyaGFzaIgBARIYCgdkZWxldGVkGAYgASgIUgdkZW'
-        'xldGVkQgsKCV9ibHVyaGFzaA==');
+        'ZRIYCgdkZWxldGVkGAUgASgIUgdkZWxldGVk');
 
-@$core.Deprecated('Use userPhotoDescriptor instead')
-const UserPhoto$json = {
-  '1': 'UserPhoto',
+@$core.Deprecated('Use getAvatarUploadUrlRequestDescriptor instead')
+const GetAvatarUploadUrlRequest$json = {
+  '1': 'GetAvatarUploadUrlRequest',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
-    {'1': 'photo', '3': 2, '4': 1, '5': 12, '9': 0, '10': 'photo', '17': true},
-  ],
-  '8': [
-    {'1': '_photo'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'userId'},
+    {'1': 'content_type', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'contentType'},
+    {'1': 'content_size', '3': 3, '4': 1, '5': 4, '8': {}, '10': 'contentSize'},
   ],
 };
 
-/// Descriptor for `UserPhoto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List userPhotoDescriptor =
-    $convert.base64Decode('CglVc2VyUGhvdG8SIwoHdXNlcl9pZBgBIAEoCzIKLmNvcmUuVVVJRFIGdXNlcklkEhkKBXBob3'
-        'RvGAIgASgMSABSBXBob3RviAEBQggKBl9waG90bw==');
+/// Descriptor for `GetAvatarUploadUrlRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getAvatarUploadUrlRequestDescriptor =
+    $convert.base64Decode('ChlHZXRBdmF0YXJVcGxvYWRVcmxSZXF1ZXN0Ei0KB3VzZXJfaWQYASABKAsyCi5jb3JlLlVVSU'
+        'RCCPpCBYoBAhABUgZ1c2VySWQSSwoMY29udGVudF90eXBlGAIgASgJQij6QiVyI1IKaW1hZ2Uv'
+        'anBlZ1IJaW1hZ2UvcG5nUgppbWFnZS93ZWJwUgtjb250ZW50VHlwZRIvCgxjb250ZW50X3Npem'
+        'UYAyABKARCDPpCCTIHGICAgAUgAFILY29udGVudFNpemU=');
 
-@$core.Deprecated('Use userAvatarDescriptor instead')
-const UserAvatar$json = {
-  '1': 'UserAvatar',
+@$core.Deprecated('Use avatarUploadUrlDescriptor instead')
+const AvatarUploadUrl$json = {
+  '1': 'AvatarUploadUrl',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
-    {'1': 'avatar', '3': 2, '4': 1, '5': 12, '9': 0, '10': 'avatar', '17': true},
-  ],
-  '8': [
-    {'1': '_avatar'},
+    {'1': 'upload_url', '3': 1, '4': 1, '5': 9, '10': 'uploadUrl'},
+    {'1': 'expires_in', '3': 2, '4': 1, '5': 4, '10': 'expiresIn'},
   ],
 };
 
-/// Descriptor for `UserAvatar`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List userAvatarDescriptor =
-    $convert.base64Decode('CgpVc2VyQXZhdGFyEiMKB3VzZXJfaWQYASABKAsyCi5jb3JlLlVVSURSBnVzZXJJZBIbCgZhdm'
-        'F0YXIYAiABKAxIAFIGYXZhdGFyiAEBQgkKB19hdmF0YXI=');
+/// Descriptor for `AvatarUploadUrl`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List avatarUploadUrlDescriptor =
+    $convert.base64Decode('Cg9BdmF0YXJVcGxvYWRVcmwSHQoKdXBsb2FkX3VybBgBIAEoCVIJdXBsb2FkVXJsEh0KCmV4cG'
+        'lyZXNfaW4YAiABKARSCWV4cGlyZXNJbg==');
+
+@$core.Deprecated('Use confirmAvatarUploadRequestDescriptor instead')
+const ConfirmAvatarUploadRequest$json = {
+  '1': 'ConfirmAvatarUploadRequest',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'userId'},
+  ],
+};
+
+/// Descriptor for `ConfirmAvatarUploadRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List confirmAvatarUploadRequestDescriptor =
+    $convert.base64Decode('ChpDb25maXJtQXZhdGFyVXBsb2FkUmVxdWVzdBItCgd1c2VyX2lkGAEgASgLMgouY29yZS5VVU'
+        'lEQgj6QgWKAQIQAVIGdXNlcklk');
 
 @$core.Deprecated('Use userIdDescriptor instead')
 const UserId$json = {
   '1': 'UserId',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'id'},
+    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'id'},
   ],
 };
 
 /// Descriptor for `UserId`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List userIdDescriptor =
-    $convert.base64Decode('CgZVc2VySWQSGgoCaWQYASABKAsyCi5jb3JlLlVVSURSAmlk');
+    $convert.base64Decode('CgZVc2VySWQSJAoCaWQYASABKAsyCi5jb3JlLlVVSURCCPpCBYoBAhABUgJpZA==');
 
 @$core.Deprecated('Use createUserRequestDescriptor instead')
 const CreateUserRequest$json = {
   '1': 'CreateUserRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'id'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'password', '3': 4, '4': 1, '5': 9, '10': 'password'},
+    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'id'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'name'},
+    {'1': 'email', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'email'},
+    {'1': 'password', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'password'},
     {'1': 'role', '3': 5, '4': 1, '5': 14, '6': '.auth.UserRole', '10': 'role'},
     {'1': 'deleted', '3': 6, '4': 1, '5': 8, '10': 'deleted'},
   ],
@@ -274,18 +271,18 @@ const CreateUserRequest$json = {
 
 /// Descriptor for `CreateUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List createUserRequestDescriptor =
-    $convert.base64Decode('ChFDcmVhdGVVc2VyUmVxdWVzdBIaCgJpZBgBIAEoCzIKLmNvcmUuVVVJRFICaWQSEgoEbmFtZR'
-        'gCIAEoCVIEbmFtZRIUCgVlbWFpbBgDIAEoCVIFZW1haWwSGgoIcGFzc3dvcmQYBCABKAlSCHBh'
-        'c3N3b3JkEiIKBHJvbGUYBSABKA4yDi5hdXRoLlVzZXJSb2xlUgRyb2xlEhgKB2RlbGV0ZWQYBi'
-        'ABKAhSB2RlbGV0ZWQ=');
+    $convert.base64Decode('ChFDcmVhdGVVc2VyUmVxdWVzdBIkCgJpZBgBIAEoCzIKLmNvcmUuVVVJREII+kIFigECEAFSAm'
+        'lkEh4KBG5hbWUYAiABKAlCCvpCB3IFEAEY/wFSBG5hbWUSHQoFZW1haWwYAyABKAlCB/pCBHIC'
+        'YAFSBWVtYWlsEiMKCHBhc3N3b3JkGAQgASgJQgf6QgRyAhAFUghwYXNzd29yZBIiCgRyb2xlGA'
+        'UgASgOMg4uYXV0aC5Vc2VyUm9sZVIEcm9sZRIYCgdkZWxldGVkGAYgASgIUgdkZWxldGVk');
 
 @$core.Deprecated('Use updateUserRequestDescriptor instead')
 const UpdateUserRequest$json = {
   '1': 'UpdateUserRequest',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'id'},
-    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
+    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'id'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'name'},
+    {'1': 'email', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'email'},
     {'1': 'role', '3': 4, '4': 1, '5': 14, '6': '.auth.UserRole', '10': 'role'},
     {'1': 'deleted', '3': 5, '4': 1, '5': 8, '10': 'deleted'},
   ],
@@ -293,6 +290,7 @@ const UpdateUserRequest$json = {
 
 /// Descriptor for `UpdateUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateUserRequestDescriptor =
-    $convert.base64Decode('ChFVcGRhdGVVc2VyUmVxdWVzdBIaCgJpZBgBIAEoCzIKLmNvcmUuVVVJRFICaWQSEgoEbmFtZR'
-        'gCIAEoCVIEbmFtZRIUCgVlbWFpbBgDIAEoCVIFZW1haWwSIgoEcm9sZRgEIAEoDjIOLmF1dGgu'
-        'VXNlclJvbGVSBHJvbGUSGAoHZGVsZXRlZBgFIAEoCFIHZGVsZXRlZA==');
+    $convert.base64Decode('ChFVcGRhdGVVc2VyUmVxdWVzdBIkCgJpZBgBIAEoCzIKLmNvcmUuVVVJREII+kIFigECEAFSAm'
+        'lkEh4KBG5hbWUYAiABKAlCCvpCB3IFEAEY/wFSBG5hbWUSHQoFZW1haWwYAyABKAlCB/pCBHIC'
+        'YAFSBWVtYWlsEiIKBHJvbGUYBCABKA4yDi5hdXRoLlVzZXJSb2xlUgRyb2xlEhgKB2RlbGV0ZW'
+        'QYBSABKAhSB2RlbGV0ZWQ=');

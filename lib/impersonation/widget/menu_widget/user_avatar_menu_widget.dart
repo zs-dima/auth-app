@@ -191,35 +191,6 @@ class UserAvatarMenuWidget extends StatelessWidget {
                           child: Text(initials, style: const TextStyle(fontSize: 12.0)),
                         ),
                       ),
-                      /*StateConsumer<UsersAvatarsController, UsersAvatarsState>(
-                  controller: _avatarController,
-                  buildWhen: (previous, current) => previous.avatar(user.id) != current.avatar(user.id),
-                  builder: (_, avatarState, __) {
-                    final avatarLength = avatarState.avatar(user.id)?.avatar?.length ?? 0;
-                    return AnimatedSwitcher(
-                      duration: Durations.extralong1,
-                      child: CircleAvatar(
-                          key: ValueKey('${currentUser.email}${userAvatarState.avatarLoaded}'),
-                        radius: 15.0,
-                        backgroundColor: _getIconColor(initials),
-                        backgroundImage: avatarState.mapAvatar<ImageProvider>(
-                          user,
-                          avatar: MemoryImage.new,
-                          blurhash: (blurhash) => BlurHashImage(
-                            blurhash,
-                            decodingWidth: widget.size,
-                            decodingHeight: widget.size,
-                          ),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: avatarLength == 0 ? Text(initials) : const SizedBox.expand(),
-                          onPressed: widget.onPressed,
-                        ),
-                      ),
-                    );
-                  },
-                ),*/
                       const SizedBox(width: 5.0),
                       Expanded(
                         child: Text(

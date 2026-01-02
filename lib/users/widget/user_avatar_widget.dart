@@ -1,11 +1,9 @@
 import 'package:auth_app/_core/core.dart';
-import 'package:auth_app/users/controller/users_avatars_controller.dart';
 import 'package:auth_model/auth_model.dart';
-import 'package:control/control.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:flutter/scheduler.dart';
 
-class UserAvatarWidget extends StatefulWidget {
+class UserAvatarWidget extends StatelessWidget {
   const UserAvatarWidget({
     super.key,
     required this.user,
@@ -17,36 +15,14 @@ class UserAvatarWidget extends StatefulWidget {
   final int size;
   final VoidCallback? onPressed;
 
-  @override
-  State<UserAvatarWidget> createState() => _UserAvatarWidgetState();
-}
-
-class _UserAvatarWidgetState extends State<UserAvatarWidget> {
-  late final UsersAvatarsController _avatarController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _avatarController = context.dependencies.avatarController;
-    if (_avatarController.state.avatar(widget.user.id) == null) {
-      _avatarController.loadAvatar(widget.user.id, reload: false);
-    }
-  }
-
   String _getInitials(String name) {
     final names = name.split(' ').where((n) => n.isNotEmpty).toList();
-    var initials = '';
-    if (names.length > 1) {
-      initials = names.first[0] + names.last[0];
-    } else if (names.isNotEmpty) {
-      initials = names.first[0];
-    }
-    return initials.toUpperCase();
+    if (names.isEmpty) return '';
+    if (names.length > 1) return '${names.first[0]}${names.last[0]}'.toUpperCase();
+    return names.first[0].toUpperCase();
   }
 
-  Color _getIconColor(String initials) {
-    // Use the ASCII value of the initials letters to get consistent color
+  Color _getBackgroundColor(String initials) {
     if (initials.isEmpty) return Colors.primaries.first;
     final value = initials.codeUnitAt(0) + (initials.length > 1 ? initials.codeUnitAt(1) : 0);
     return Colors.primaries[value % Colors.primaries.length];
@@ -54,37 +30,80 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
     final initials = _getInitials(user.name);
 
-    return StateConsumer<UsersAvatarsController, UsersAvatarsState>(
-      controller: _avatarController,
-      buildWhen: (previous, current) => previous.avatar(user.id) != current.avatar(user.id),
-      builder: (_, avatarState, __) {
-        final avatarLength = avatarState.avatar(user.id)?.avatar?.length ?? 0;
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 700),
-          child: CircleAvatar(
-            key: ValueKey('${user.id}$avatarLength'),
-            radius: widget.size.toDouble(),
-            backgroundColor: _getIconColor(initials),
-            backgroundImage: avatarState.mapAvatar<ImageProvider>(
-              user,
-              avatar: MemoryImage.new,
-              blurhash: (blurhash) => BlurHashImage(
-                blurhash,
-                decodingWidth: widget.size,
-                decodingHeight: widget.size,
-              ),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: avatarLength == 0 ? Text(initials) : const SizedBox.expand(),
-              onPressed: widget.onPressed,
-            ),
-          ),
+    final avatarCache = context.dependencies.avatarCache;
+
+    return ListenableBuilder(
+      listenable: avatarCache,
+      builder: (context, _) {
+        final avatarUrl = avatarCache.getUrl(user.id);
+        final avatarVersion = avatarCache.getVersion(user.id);
+
+        return _AvatarCircle(
+          key: ValueKey('${user.id}_$avatarVersion'),
+          avatarUrl: avatarUrl,
+          initials: initials,
+          size: size,
+          backgroundColor: _getBackgroundColor(initials),
+          onPressed: onPressed,
         );
       },
+    );
+  }
+}
+
+class _AvatarCircle extends StatefulWidget {
+  const _AvatarCircle({
+    super.key,
+    required this.avatarUrl,
+    required this.initials,
+    required this.size,
+    required this.backgroundColor,
+    this.onPressed,
+  });
+
+  final String? avatarUrl;
+  final String initials;
+  final int size;
+  final Color backgroundColor;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_AvatarCircle> createState() => _AvatarCircleState();
+}
+
+class _AvatarCircleState extends State<_AvatarCircle> {
+  bool _imageLoadFailed = false;
+
+  @override
+  void didUpdateWidget(_AvatarCircle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.avatarUrl != widget.avatarUrl) {
+      _imageLoadFailed = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showImage = widget.avatarUrl != null && !_imageLoadFailed;
+
+    return GestureDetector(
+      onTap: widget.onPressed,
+      child: CircleAvatar(
+        radius: widget.size.toDouble(),
+        backgroundColor: widget.backgroundColor,
+        foregroundImage: showImage ? NetworkImage(widget.avatarUrl!) : null,
+        onForegroundImageError: showImage
+            ? (_, __) => SchedulerBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _imageLoadFailed = true);
+                })
+            : null,
+        child: Text(
+          widget.initials,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 }

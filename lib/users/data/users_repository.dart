@@ -1,17 +1,22 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:auth_model/auth_model.dart';
 
 abstract interface class IUsersRepository {
-  Future<IUserInfo> loadUserInfo(UserId userId);
   Stream<User> loadUsers();
+  Stream<IUserInfo> loadUsersInfo({List<UserId>? userIds});
 
-  Stream<IUserInfo> loadUsersInfo();
-  Stream<UserAvatar> loadUserAvatar([List<UserId>? userIds]);
   Future<bool> createUser(User user, String password);
   Future<bool> updateUser(User user);
-  Future<bool> saveUserPhoto(UserId userId, Uint8List? photo);
+
+  /// Get a presigned URL for uploading avatar directly to S3.
+  Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize);
+
+  /// Confirm avatar upload.
+  Future<bool> confirmAvatarUpload(UserId userId);
+
+  /// Delete user avatar from S3.
+  Future<bool> deleteUserAvatar(UserId userId);
 }
 
 class UsersRepository implements IUsersRepository {
@@ -25,9 +30,6 @@ class UsersRepository implements IUsersRepository {
   final UserIdCallback _getUserId;
 
   @override
-  Future<IUserInfo> loadUserInfo(UserId userId) async => _api.loadUserInfo(userId);
-
-  @override
   Stream<User> loadUsers() async* {
     final currentUserId = await _getUserId();
     if (currentUserId == null) return;
@@ -35,10 +37,12 @@ class UsersRepository implements IUsersRepository {
   }
 
   @override
-  Stream<IUserInfo> loadUsersInfo() => _api.loadUsersInfo();
+  Stream<IUserInfo> loadUsersInfo({List<UserId>? userIds}) async* {
+    final currentUserId = await _getUserId();
+    if (currentUserId == null) return;
 
-  @override
-  Stream<UserAvatar> loadUserAvatar([List<UserId>? userIds]) => _api.loadUserAvatar(userIds);
+    yield* _api.loadUsersInfo(currentUserId, userIds: userIds);
+  }
 
   @override
   Future<bool> createUser(User user, String password) => _api.createUser(user, password);
@@ -46,5 +50,12 @@ class UsersRepository implements IUsersRepository {
   Future<bool> updateUser(User user) => _api.updateUser(user);
 
   @override
-  Future<bool> saveUserPhoto(UserId userId, Uint8List? photo) => _api.saveUserPhoto(userId, photo);
+  Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) =>
+      _api.getAvatarUploadUrl(userId, contentType, contentSize);
+
+  @override
+  Future<bool> confirmAvatarUpload(UserId userId) => _api.confirmAvatarUpload(userId);
+
+  @override
+  Future<bool> deleteUserAvatar(UserId userId) => _api.deleteUserAvatar(userId);
 }

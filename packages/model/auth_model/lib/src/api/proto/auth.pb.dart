@@ -12,6 +12,7 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'auth.pbenum.dart';
@@ -149,51 +150,6 @@ class SetPasswordRequest extends $pb.GeneratedMessage {
   void clearPassword() => $_clearField(3);
 }
 
-class LoadUserAvatarRequest extends $pb.GeneratedMessage {
-  factory LoadUserAvatarRequest({
-    $core.Iterable<$2.UUID>? userId,
-  }) {
-    final result = create();
-    if (userId != null) result.userId.addAll(userId);
-    return result;
-  }
-
-  LoadUserAvatarRequest._();
-
-  factory LoadUserAvatarRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory LoadUserAvatarRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LoadUserAvatarRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
-    ..pPM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  LoadUserAvatarRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  LoadUserAvatarRequest copyWith(void Function(LoadUserAvatarRequest) updates) =>
-      super.copyWith((message) => updates(message as LoadUserAvatarRequest)) as LoadUserAvatarRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static LoadUserAvatarRequest create() => LoadUserAvatarRequest._();
-  @$core.override
-  LoadUserAvatarRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static LoadUserAvatarRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LoadUserAvatarRequest>(create);
-  static LoadUserAvatarRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<$2.UUID> get userId => $_getList(0);
-}
-
 class SignInRequest extends $pb.GeneratedMessage {
   factory SignInRequest({
     $core.String? email,
@@ -281,6 +237,65 @@ class SignInRequest extends $pb.GeneratedMessage {
   void clearDeviceInfo() => $_clearField(4);
   @$pb.TagNumber(4)
   DeviceInfo ensureDeviceInfo() => $_ensure(3);
+}
+
+class LoadUsersInfoRequest extends $pb.GeneratedMessage {
+  factory LoadUsersInfoRequest({
+    $2.UUID? userId,
+    $core.Iterable<$2.UUID>? userIds,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (userIds != null) result.userIds.addAll(userIds);
+    return result;
+  }
+
+  LoadUsersInfoRequest._();
+
+  factory LoadUsersInfoRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LoadUsersInfoRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LoadUsersInfoRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+    ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
+    ..pPM<$2.UUID>(2, _omitFieldNames ? '' : 'userIds', subBuilder: $2.UUID.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoadUsersInfoRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoadUsersInfoRequest copyWith(void Function(LoadUsersInfoRequest) updates) =>
+      super.copyWith((message) => updates(message as LoadUsersInfoRequest)) as LoadUsersInfoRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LoadUsersInfoRequest create() => LoadUsersInfoRequest._();
+  @$core.override
+  LoadUsersInfoRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LoadUsersInfoRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LoadUsersInfoRequest>(create);
+  static LoadUsersInfoRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.UUID get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($2.UUID value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $2.UUID ensureUserId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$2.UUID> get userIds => $_getList(1);
 }
 
 class DeviceInfo extends $pb.GeneratedMessage {
@@ -551,7 +566,6 @@ class AuthInfo extends $pb.GeneratedMessage {
     $2.UUID? userId,
     $core.String? userName,
     UserRole? userRole,
-    $core.String? blurhash,
     $core.String? refreshToken,
     $core.String? accessToken,
   }) {
@@ -559,7 +573,6 @@ class AuthInfo extends $pb.GeneratedMessage {
     if (userId != null) result.userId = userId;
     if (userName != null) result.userName = userName;
     if (userRole != null) result.userRole = userRole;
-    if (blurhash != null) result.blurhash = blurhash;
     if (refreshToken != null) result.refreshToken = refreshToken;
     if (accessToken != null) result.accessToken = accessToken;
     return result;
@@ -578,9 +591,8 @@ class AuthInfo extends $pb.GeneratedMessage {
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'userName')
     ..aE<UserRole>(3, _omitFieldNames ? '' : 'userRole', enumValues: UserRole.values)
-    ..aOS(4, _omitFieldNames ? '' : 'blurhash')
-    ..aOS(5, _omitFieldNames ? '' : 'refreshToken')
-    ..aOS(6, _omitFieldNames ? '' : 'accessToken')
+    ..aOS(4, _omitFieldNames ? '' : 'refreshToken')
+    ..aOS(5, _omitFieldNames ? '' : 'accessToken')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -630,31 +642,22 @@ class AuthInfo extends $pb.GeneratedMessage {
   void clearUserRole() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get blurhash => $_getSZ(3);
+  $core.String get refreshToken => $_getSZ(3);
   @$pb.TagNumber(4)
-  set blurhash($core.String value) => $_setString(3, value);
+  set refreshToken($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasBlurhash() => $_has(3);
+  $core.bool hasRefreshToken() => $_has(3);
   @$pb.TagNumber(4)
-  void clearBlurhash() => $_clearField(4);
+  void clearRefreshToken() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get refreshToken => $_getSZ(4);
+  $core.String get accessToken => $_getSZ(4);
   @$pb.TagNumber(5)
-  set refreshToken($core.String value) => $_setString(4, value);
+  set accessToken($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasRefreshToken() => $_has(4);
+  $core.bool hasAccessToken() => $_has(4);
   @$pb.TagNumber(5)
-  void clearRefreshToken() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.String get accessToken => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set accessToken($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasAccessToken() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearAccessToken() => $_clearField(6);
+  void clearAccessToken() => $_clearField(5);
 }
 
 class UserInfo extends $pb.GeneratedMessage {
@@ -663,7 +666,6 @@ class UserInfo extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? email,
     UserRole? role,
-    $core.String? blurhash,
     $core.bool? deleted,
   }) {
     final result = create();
@@ -671,7 +673,6 @@ class UserInfo extends $pb.GeneratedMessage {
     if (name != null) result.name = name;
     if (email != null) result.email = email;
     if (role != null) result.role = role;
-    if (blurhash != null) result.blurhash = blurhash;
     if (deleted != null) result.deleted = deleted;
     return result;
   }
@@ -690,8 +691,7 @@ class UserInfo extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'email')
     ..aE<UserRole>(4, _omitFieldNames ? '' : 'role', enumValues: UserRole.values)
-    ..aOS(5, _omitFieldNames ? '' : 'blurhash')
-    ..aOB(6, _omitFieldNames ? '' : 'deleted')
+    ..aOB(5, _omitFieldNames ? '' : 'deleted')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -750,22 +750,13 @@ class UserInfo extends $pb.GeneratedMessage {
   void clearRole() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get blurhash => $_getSZ(4);
+  $core.bool get deleted => $_getBF(4);
   @$pb.TagNumber(5)
-  set blurhash($core.String value) => $_setString(4, value);
+  set deleted($core.bool value) => $_setBool(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasBlurhash() => $_has(4);
+  $core.bool hasDeleted() => $_has(4);
   @$pb.TagNumber(5)
-  void clearBlurhash() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.bool get deleted => $_getBF(5);
-  @$pb.TagNumber(6)
-  set deleted($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasDeleted() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearDeleted() => $_clearField(6);
+  void clearDeleted() => $_clearField(5);
 }
 
 class User extends $pb.GeneratedMessage {
@@ -774,7 +765,6 @@ class User extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? email,
     UserRole? role,
-    $core.String? blurhash,
     $core.bool? deleted,
   }) {
     final result = create();
@@ -782,7 +772,6 @@ class User extends $pb.GeneratedMessage {
     if (name != null) result.name = name;
     if (email != null) result.email = email;
     if (role != null) result.role = role;
-    if (blurhash != null) result.blurhash = blurhash;
     if (deleted != null) result.deleted = deleted;
     return result;
   }
@@ -800,8 +789,7 @@ class User extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'email')
     ..aE<UserRole>(4, _omitFieldNames ? '' : 'role', enumValues: UserRole.values)
-    ..aOS(5, _omitFieldNames ? '' : 'blurhash')
-    ..aOB(6, _omitFieldNames ? '' : 'deleted')
+    ..aOB(5, _omitFieldNames ? '' : 'deleted')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -859,65 +847,62 @@ class User extends $pb.GeneratedMessage {
   void clearRole() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get blurhash => $_getSZ(4);
+  $core.bool get deleted => $_getBF(4);
   @$pb.TagNumber(5)
-  set blurhash($core.String value) => $_setString(4, value);
+  set deleted($core.bool value) => $_setBool(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasBlurhash() => $_has(4);
+  $core.bool hasDeleted() => $_has(4);
   @$pb.TagNumber(5)
-  void clearBlurhash() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.bool get deleted => $_getBF(5);
-  @$pb.TagNumber(6)
-  set deleted($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasDeleted() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearDeleted() => $_clearField(6);
+  void clearDeleted() => $_clearField(5);
 }
 
-class UserPhoto extends $pb.GeneratedMessage {
-  factory UserPhoto({
+/// Request for presigned upload URL
+class GetAvatarUploadUrlRequest extends $pb.GeneratedMessage {
+  factory GetAvatarUploadUrlRequest({
     $2.UUID? userId,
-    $core.List<$core.int>? photo,
+    $core.String? contentType,
+    $fixnum.Int64? contentSize,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
-    if (photo != null) result.photo = photo;
+    if (contentType != null) result.contentType = contentType;
+    if (contentSize != null) result.contentSize = contentSize;
     return result;
   }
 
-  UserPhoto._();
+  GetAvatarUploadUrlRequest._();
 
-  factory UserPhoto.fromBuffer($core.List<$core.int> data,
+  factory GetAvatarUploadUrlRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UserPhoto.fromJson($core.String json, [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+  factory GetAvatarUploadUrlRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UserPhoto',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetAvatarUploadUrlRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'photo', $pb.PbFieldType.OY)
+    ..aOS(2, _omitFieldNames ? '' : 'contentType')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'contentSize', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserPhoto clone() => deepCopy();
+  GetAvatarUploadUrlRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserPhoto copyWith(void Function(UserPhoto) updates) =>
-      super.copyWith((message) => updates(message as UserPhoto)) as UserPhoto;
+  GetAvatarUploadUrlRequest copyWith(void Function(GetAvatarUploadUrlRequest) updates) =>
+      super.copyWith((message) => updates(message as GetAvatarUploadUrlRequest)) as GetAvatarUploadUrlRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UserPhoto create() => UserPhoto._();
+  static GetAvatarUploadUrlRequest create() => GetAvatarUploadUrlRequest._();
   @$core.override
-  UserPhoto createEmptyInstance() => create();
+  GetAvatarUploadUrlRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UserPhoto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UserPhoto>(create);
-  static UserPhoto? _defaultInstance;
+  static GetAvatarUploadUrlRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetAvatarUploadUrlRequest>(create);
+  static GetAvatarUploadUrlRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $2.UUID get userId => $_getN(0);
@@ -931,56 +916,128 @@ class UserPhoto extends $pb.GeneratedMessage {
   $2.UUID ensureUserId() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $core.List<$core.int> get photo => $_getN(1);
+  $core.String get contentType => $_getSZ(1);
   @$pb.TagNumber(2)
-  set photo($core.List<$core.int> value) => $_setBytes(1, value);
+  set contentType($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasPhoto() => $_has(1);
+  $core.bool hasContentType() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPhoto() => $_clearField(2);
+  void clearContentType() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get contentSize => $_getI64(2);
+  @$pb.TagNumber(3)
+  set contentSize($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasContentSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearContentSize() => $_clearField(3);
 }
 
-class UserAvatar extends $pb.GeneratedMessage {
-  factory UserAvatar({
-    $2.UUID? userId,
-    $core.List<$core.int>? avatar,
+/// Response with presigned URL for direct S3 upload
+class AvatarUploadUrl extends $pb.GeneratedMessage {
+  factory AvatarUploadUrl({
+    $core.String? uploadUrl,
+    $fixnum.Int64? expiresIn,
   }) {
     final result = create();
-    if (userId != null) result.userId = userId;
-    if (avatar != null) result.avatar = avatar;
+    if (uploadUrl != null) result.uploadUrl = uploadUrl;
+    if (expiresIn != null) result.expiresIn = expiresIn;
     return result;
   }
 
-  UserAvatar._();
+  AvatarUploadUrl._();
 
-  factory UserAvatar.fromBuffer($core.List<$core.int> data,
+  factory AvatarUploadUrl.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UserAvatar.fromJson($core.String json, [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+  factory AvatarUploadUrl.fromJson($core.String json, [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UserAvatar',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AvatarUploadUrl',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
-    ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'avatar', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'uploadUrl')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'expiresIn', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserAvatar clone() => deepCopy();
+  AvatarUploadUrl clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserAvatar copyWith(void Function(UserAvatar) updates) =>
-      super.copyWith((message) => updates(message as UserAvatar)) as UserAvatar;
+  AvatarUploadUrl copyWith(void Function(AvatarUploadUrl) updates) =>
+      super.copyWith((message) => updates(message as AvatarUploadUrl)) as AvatarUploadUrl;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UserAvatar create() => UserAvatar._();
+  static AvatarUploadUrl create() => AvatarUploadUrl._();
   @$core.override
-  UserAvatar createEmptyInstance() => create();
+  AvatarUploadUrl createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UserAvatar getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UserAvatar>(create);
-  static UserAvatar? _defaultInstance;
+  static AvatarUploadUrl getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AvatarUploadUrl>(create);
+  static AvatarUploadUrl? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get uploadUrl => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set uploadUrl($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUploadUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get expiresIn => $_getI64(1);
+  @$pb.TagNumber(2)
+  set expiresIn($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasExpiresIn() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearExpiresIn() => $_clearField(2);
+}
+
+/// Confirm avatar upload completed
+class ConfirmAvatarUploadRequest extends $pb.GeneratedMessage {
+  factory ConfirmAvatarUploadRequest({
+    $2.UUID? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  ConfirmAvatarUploadRequest._();
+
+  factory ConfirmAvatarUploadRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ConfirmAvatarUploadRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfirmAvatarUploadRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+    ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ConfirmAvatarUploadRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ConfirmAvatarUploadRequest copyWith(void Function(ConfirmAvatarUploadRequest) updates) =>
+      super.copyWith((message) => updates(message as ConfirmAvatarUploadRequest)) as ConfirmAvatarUploadRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ConfirmAvatarUploadRequest create() => ConfirmAvatarUploadRequest._();
+  @$core.override
+  ConfirmAvatarUploadRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ConfirmAvatarUploadRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConfirmAvatarUploadRequest>(create);
+  static ConfirmAvatarUploadRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $2.UUID get userId => $_getN(0);
@@ -992,15 +1049,6 @@ class UserAvatar extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
   @$pb.TagNumber(1)
   $2.UUID ensureUserId() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.List<$core.int> get avatar => $_getN(1);
-  @$pb.TagNumber(2)
-  set avatar($core.List<$core.int> value) => $_setBytes(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasAvatar() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearAvatar() => $_clearField(2);
 }
 
 class UserId extends $pb.GeneratedMessage {

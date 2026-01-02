@@ -22,7 +22,6 @@ sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo>
     required String name,
     required String email,
     required UserRole role,
-    String? blurhash,
   }) = _UserInfo;
 
   const UserInfo._();

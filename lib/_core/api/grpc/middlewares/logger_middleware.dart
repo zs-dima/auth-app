@@ -25,7 +25,7 @@ class GrpcLoggerMiddleware extends GrpcMiddleware {
     final stopwatch = Stopwatch()..start();
     try {
       if (logRequest) {
-        developer.log(path, name: 'gRPC1', time: DateTime.now(), level: 300);
+        developer.log(path, name: 'gRPC', time: DateTime.now(), level: 300);
       }
       await invoker(path, metadata);
       if (logResponse) {

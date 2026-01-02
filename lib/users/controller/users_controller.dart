@@ -35,10 +35,23 @@ final class UsersController extends StateController<UsersState>
   }
 
   Future<IUserInfo> getUserInfo(UserId userId) async {
+    // First check if user is already in cache
+    final cachedUser = _users.firstWhereOrNull((i) => i.id == userId);
+    if (cachedUser != null) return cachedUser;
+
+    // If users are currently loading, wait for the load to complete
+    if (state is _usersLoadingState) {
+      final loadedState = await toStream().firstWhere((s) => s is UsersLoadedState);
+      final user = loadedState.users.firstWhereOrNull((i) => i.id == userId);
+      if (user != null) return user;
+    }
+
+    // Check again after loading completed
     final user = _users.firstWhereOrNull((i) => i.id == userId);
     if (user != null) return user;
 
-    return _repository.loadUserInfo(userId);
+    // Only fetch from API if user is not found after loading
+    return _repository.loadUsersInfo(userIds: [userId]).first;
   }
 
   void loadUsers(UserId currentUserId) => handle(

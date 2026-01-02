@@ -31,7 +31,6 @@ final class UserController extends StateController<UserState>
     () async {
       setProgressStarted();
 
-      // TODO: generate user blurhash
       final result = await _repository.createUser(user, password);
       result //
           ? setMessage('User successfully saved', Colors.green[700])
@@ -53,7 +52,6 @@ final class UserController extends StateController<UserState>
     () async {
       setProgressStarted();
 
-      // TODO: update user blurhash
       final result = await _repository.updateUser(user);
       result //
           ? setMessage('User successfully saved', Colors.green[700])

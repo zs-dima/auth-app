@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:auth_model/src/api/grpc_authentication_converter.dart';
 import 'package:auth_model/src/api/i_authentication_api.dart';
@@ -11,11 +10,12 @@ import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
 import 'package:auth_model/src/model/user/auth_user.dart';
+import 'package:auth_model/src/model/user/avatar_upload_url.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
-import 'package:auth_model/src/model/user/user_avatar.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:core_model/core_model.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:grpc_model/grpc_model.dart' as rpc;
 
 /// gRPC client for authentication service.
@@ -111,29 +111,13 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   }
 
   @override
-  Future<IUserInfo> loadUserInfo(UserId userId) async {
-    final result = await client.loadUserInfo(
-      rpc.UserId(id: userId.toUUID()),
+  Stream<IUserInfo> loadUsersInfo(UserId currentUserId, {List<UserId>? userIds}) async* {
+    final users = client.loadUsersInfo(
+      rpc.LoadUsersInfoRequest()
+        ..userId = currentUserId.toUUID()
+        ..userIds.addAll(userIds?.map((e) => e.toUUID()) ?? []),
     );
-    return result.toUserInfo();
-  }
-
-  @override
-  Stream<IUserInfo> loadUsersInfo() async* {
-    final users = client.loadUsersInfo(rpc.Empty());
     yield* users.where((i) => !i.deleted).map((i) => i.toUserInfo());
-  }
-
-  @override
-  Stream<UserAvatar> loadUserAvatar([List<UserId>? userId]) async* {
-    final request = userId == null
-        ? rpc.LoadUserAvatarRequest()
-        : (rpc.LoadUserAvatarRequest()..userId.addAll(userId.map((i) => i.toUUID())));
-
-    final avatars = client.loadUserAvatar(request);
-    yield* avatars.map(
-      (i) => i.toUserAvatar(),
-    );
   }
 
   @override
@@ -172,11 +156,41 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   }
 
   @override
-  Future<bool> saveUserPhoto(UserId userId, Uint8List? photo) async {
-    final userPhoto = rpc.UserPhoto()..userId = userId.toUUID();
-    if (photo != null) userPhoto.photo = photo;
-    final result = await client.saveUserPhoto(userPhoto);
+  Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) async {
+    final result = await client.getAvatarUploadUrl(
+      rpc.GetAvatarUploadUrlRequest()
+        ..userId = userId.toUUID()
+        ..contentType = contentType
+        ..contentSize = Int64(contentSize),
+    );
 
-    return result.result;
+    return AvatarUploadUrl(
+      uploadUrl: result.uploadUrl,
+      expiresIn: result.expiresIn.toInt(),
+    );
+  }
+
+  @override
+  Future<bool> confirmAvatarUpload(UserId userId) async {
+    try {
+      final result = await client.confirmAvatarUpload(
+        rpc.ConfirmAvatarUploadRequest()..userId = userId.toUUID(),
+      );
+      return result.result;
+    } on Exception {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteUserAvatar(UserId userId) async {
+    try {
+      final result = await client.deleteUserAvatar(
+        rpc.UserId(id: userId.toUUID()),
+      );
+      return result.result;
+    } on Exception {
+      return false;
+    }
   }
 }

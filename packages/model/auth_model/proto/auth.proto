@@ -7,6 +7,8 @@ option csharp_namespace = "Proto.Auth";
 
 import "google/protobuf/empty.proto";
 
+import "validate/validate.proto";
+
 import "core.proto";
 
 service AuthService {
@@ -18,38 +20,44 @@ service AuthService {
   rpc ResetPassword(ResetPasswordRequest) returns (core.ResultReply);
   rpc SetPassword(SetPasswordRequest) returns (core.ResultReply);
 
-  rpc LoadUserInfo(UserId) returns (UserInfo);
-  rpc LoadUsersInfo(google.protobuf.Empty) returns (stream UserInfo);
-  rpc LoadUserAvatar(LoadUserAvatarRequest) returns (stream UserAvatar);
+  rpc LoadUsersInfo(LoadUsersInfoRequest) returns (stream UserInfo);
   rpc LoadUsers(UserId) returns (stream User);
   rpc CreateUser(CreateUserRequest) returns (core.ResultReply);
   rpc UpdateUser(UpdateUserRequest) returns (core.ResultReply);
-  rpc SaveUserPhoto(UserPhoto) returns (core.ResultReply);
+
+  // Avatar management with presigned URLs (client uploads directly to S3)
+  // Get a presigned URL for uploading avatar directly to S3
+  rpc GetAvatarUploadUrl(GetAvatarUploadUrlRequest) returns (AvatarUploadUrl);
+  // Confirm avatar upload completed
+  rpc ConfirmAvatarUpload(ConfirmAvatarUploadRequest) returns (core.ResultReply);
+  // Delete user avatar from S3
+  rpc DeleteUserAvatar(UserId) returns (core.ResultReply);
 }
 
 message ResetPasswordRequest {
-  string email = 1;
+  string email = 1 [(validate.rules).string.email = true];
 }
 
 message SetPasswordRequest {
-  core.UUID user_id  = 1;
-  string    email    = 2;
-  string    password = 3;
-}
-
-message LoadUserAvatarRequest {
-  repeated core.UUID user_id = 1;
+  core.UUID user_id  = 1 [(validate.rules).message.required = true];
+  string    email    = 2 [(validate.rules).string.email = true];
+  string    password = 3 [(validate.rules).string.min_len = 5];
 }
 
 message SignInRequest {
-  string     email           = 1;
-  string     password        = 2;
-  core.UUID  installation_id = 3;
-  DeviceInfo device_info     = 4;
+  string     email           = 1 [(validate.rules).string.email = true];
+  string     password        = 2 [(validate.rules).string.min_len = 5];
+  core.UUID  installation_id = 3 [(validate.rules).message.required = true];
+  DeviceInfo device_info     = 4 [(validate.rules).message.required = true];
+}
+
+message LoadUsersInfoRequest {
+  core.UUID          user_id  = 1; // Impersonated user id
+  repeated core.UUID user_ids = 2; // Optional; if empty, load all users
 }
 
 message DeviceInfo {
-  core.UUID id      = 1;
+  core.UUID id      = 1 [(validate.rules).message.required = true];
   string    model   = 2;
   string    name    = 3;
   OsInfo    os_info = 4;
@@ -60,84 +68,79 @@ message OsInfo {
   string version = 2;
 }
 
-// enum OS {
-//   FUCHSIA = 0;
-//   LINUX   = 1;
-//   MACOS   = 2;
-//   WINDOWS = 3;
-//   IOS     = 4;
-//   ANDROID = 5;
-//   UNKNOWN = 6;
-// }
+message RefreshTokenRequest {
+  string refresh_token = 1 [(validate.rules).string.min_len = 1];
+}
 
-  message RefreshTokenRequest {
-    string refresh_token = 1;
-  }
+message RefreshTokenReply {
+  string refresh_token = 1;
+  string access_token  = 2;
+}
 
-  message RefreshTokenReply {
-    string refresh_token = 1;
-    string access_token  = 2;
-  }
+message AuthInfo {
+  core.UUID user_id       = 1;
+  string    user_name     = 2;
+  UserRole  user_role     = 3;
+  string    refresh_token = 4;
+  string    access_token  = 5;
+}
 
-  message AuthInfo {
-    core.UUID       user_id       = 1;
-    string          user_name     = 2;
-    UserRole        user_role     = 3;
-    optional string blurhash      = 4;
-    string          refresh_token = 5;
-    string          access_token  = 6;
-  }
+enum UserRole {
+  ADMINISTRATOR = 0;
+  USER          = 1;
+}
 
-  enum UserRole {
-    ADMINISTRATOR = 0;
-    USER          = 1;
-  }
+message UserInfo {
+  core.UUID id      = 1;
+  string    name    = 2;
+  string    email   = 3;
+  UserRole  role    = 4;
+  bool      deleted = 5;
+}
 
-  message UserInfo {
-    core.UUID       id       = 1;
-    string          name     = 2;
-    string          email    = 3;
-    UserRole        role     = 4;
-    optional string blurhash = 5;
-    bool            deleted  = 6;
-  }
+message User {
+  core.UUID id      = 1;
+  string    name    = 2;
+  string    email   = 3;
+  UserRole  role    = 4;
+  bool      deleted = 5;
+}
 
-  message User {
-    core.UUID       id       = 1;
-    string          name     = 2;
-    string          email    = 3;
-    UserRole        role     = 4;
-    optional string blurhash = 5;
-    bool            deleted  = 6;
-  }
+// Request for presigned upload URL
+message GetAvatarUploadUrlRequest {
+  core.UUID user_id      = 1 [(validate.rules).message.required = true];
+  string    content_type = 2 [(validate.rules).string = {in: ["image/jpeg", "image/png", "image/webp"]}];
+  uint64    content_size = 3 [(validate.rules).uint64 = {gt: 0, lte: 10485760}]; // Max 10MB
+}
 
-  message UserPhoto {
-    core.UUID      user_id = 1;
-    optional bytes photo   = 2;
-  }
+// Response with presigned URL for direct S3 upload
+message AvatarUploadUrl {
+  string upload_url = 1; // Presigned PUT URL for S3
+  uint64 expires_in = 2; // URL expiration in seconds
+}
 
-  message UserAvatar {
-    core.UUID      user_id = 1;
-    optional bytes avatar  = 2;
-  }
+// Confirm avatar upload completed
+message ConfirmAvatarUploadRequest {
+  core.UUID user_id = 1 [(validate.rules).message.required = true];
+}
 
-  message UserId {
-    core.UUID id = 1;
-  }
+message UserId {
+  core.UUID id = 1 [(validate.rules).message.required = true];
+}
 
-  message CreateUserRequest {
-    core.UUID id       = 1;
-    string    name     = 2;
-    string    email    = 3;
-    string    password = 4;
-    UserRole  role     = 5;
-    bool      deleted  = 6;
-  }
+message CreateUserRequest {
+  core.UUID id       = 1 [(validate.rules).message.required = true];
+  string    name     = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
+  string    email    = 3 [(validate.rules).string.email = true];
+  string    password = 4 [(validate.rules).string.min_len = 5];
+  UserRole  role     = 5;
+  bool      deleted  = 6;
+}
 
-  message UpdateUserRequest {
-    core.UUID id      = 1;
-    string    name    = 2;
-    string    email   = 3;
-    UserRole  role    = 4;
-    bool      deleted = 5;
-  }
+message UpdateUserRequest {
+  core.UUID id      = 1 [(validate.rules).message.required = true];
+  string    name    = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
+  string    email   = 3 [(validate.rules).string.email = true];
+  UserRole  role    = 4;
+  bool      deleted = 5;
+}
