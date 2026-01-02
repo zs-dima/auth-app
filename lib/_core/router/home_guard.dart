@@ -7,9 +7,7 @@ import 'package:octopus/octopus.dart';
 /// Check routes always contain the home route at the first position.
 /// Only exception for not authenticated users.
 class HomeGuard extends OctopusGuard {
-  static final _homeName = Routes.home.name;
-
-  HomeGuard();
+  static final String _homeName = Routes.home.name;
 
   @override
   FutureOr<OctopusState> call(
@@ -31,7 +29,7 @@ class HomeGuard extends OctopusGuard {
   }
 
   /// Change the state of the nested navigation.
-  OctopusState _fix(OctopusState$Mutable state) => state
+  static OctopusState _fix(OctopusState$Mutable state) => state
     ..clear()
     ..putIfAbsent(_homeName, () => Routes.home.node());
 }

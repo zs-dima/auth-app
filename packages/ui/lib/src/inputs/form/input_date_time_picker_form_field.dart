@@ -73,7 +73,7 @@ class InputDateTimePickerFormField extends FormField<DateTime> {
                            state.didChange(null);
                            onDateTimeChanged?.call(null);
                          },
-                         icon: const Icon(Icons.clear, size: 18),
+                         icon: const Icon(Icons.clear, size: 18.0),
                        )
                      : null,
                  // suffixIcon: const Icon(Icons.calendar_today),

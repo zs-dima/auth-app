@@ -14,11 +14,11 @@ class UiKitIcon extends StatelessWidget {
     child: SizedBox(
       width: 100,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         spacing: 12.0,
         children: [
           Icon(icon),
-          AppText.titleMedium(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          AppText.titleMedium(title, maxLines: 1, overflow: .ellipsis),
         ],
       ),
     ),

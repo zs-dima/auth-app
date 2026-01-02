@@ -50,32 +50,32 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
       child: Center(
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: math.max(16, (constraints.maxWidth - 620) / 2)),
+            padding: .symmetric(horizontal: math.max(16.0, (constraints.maxWidth - 620) / 2)),
             child: StateConsumer<AuthenticationController, AuthenticationState>(
               controller: _authenticationController,
               buildWhen: (previous, current) => previous != current,
               builder: (context, state, _) => Column(
                 children: <Widget>[
                   const SizedBox(
-                    height: 50,
+                    height: 50.0,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: .min,
+                      mainAxisAlignment: .center,
+                      crossAxisAlignment: .center,
                       children: <Widget>[
-                        SizedBox(width: 50),
+                        SizedBox(width: 50.0),
                         AppText.headlineLarge(
                           'Sign-In',
-                          height: 1,
+                          height: 1.0,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
+                          overflow: .ellipsis,
+                          textAlign: .center,
                         ),
-                        SizedBox(width: 50),
+                        SizedBox(width: 50.0),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 32.0),
                   TextField(
                     focusNode: _usernameFocusNode,
                     enabled: state.isIdling,
@@ -84,7 +84,7 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
                     controller: _usernameController,
                     autocorrect: false,
                     autofillHints: const <String>[AutofillHints.username, AutofillHints.email],
-                    keyboardType: TextInputType.emailAddress,
+                    keyboardType: .emailAddress,
                     inputFormatters: _usernameFormatters,
                     decoration: InputDecoration(
                       labelText: 'Username',
@@ -96,7 +96,7 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
                       prefixIcon: const Icon(Icons.person),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8.0),
                   TextField(
                     focusNode: _passwordFocusNode,
                     enabled: state.isIdling,
@@ -107,7 +107,7 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
                     obscureText: _obscurePassword,
                     maxLength: Config.passwordMaxLength,
                     autofillHints: const <String>[AutofillHints.password],
-                    keyboardType: TextInputType.visiblePassword,
+                    keyboardType: .visiblePassword,
                     onSubmitted: (_) => signIn(context),
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -123,9 +123,9 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 32.0),
                   SizedBox(
-                    height: 48,
+                    height: 48.0,
                     child: AnimatedBuilder(
                       animation: _formChangedNotifier,
                       builder: (context, _) {
@@ -154,29 +154,29 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
 class _SignInScreen$Buttons extends StatelessWidget {
   const _SignInScreen$Buttons({required this.signIn, required this.signUp, super.key});
 
-  final void Function()? signIn;
-  final void Function()? signUp;
+  final VoidCallback? signIn;
+  final VoidCallback? signUp;
 
   @override
   Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.max,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: .max,
+    crossAxisAlignment: .stretch,
+    spacing: 16.0,
     children: <Widget>[
       Expanded(
         flex: 2,
         child: ElevatedButton.icon(
           onPressed: signIn,
           icon: const Icon(Icons.login),
-          label: const Text('Sign-In', maxLines: 1, overflow: TextOverflow.ellipsis),
+          label: const Text('Sign-In', maxLines: 1, overflow: .ellipsis),
         ),
       ),
-      const SizedBox(width: 16),
       Expanded(
         flex: 1,
         child: FilledButton.tonalIcon(
           onPressed: signUp,
           icon: const Icon(Icons.person_add),
-          label: const Text('Sign-Up', maxLines: 1, overflow: TextOverflow.ellipsis),
+          label: const Text('Sign-Up', maxLines: 1, overflow: .ellipsis),
         ),
       ),
     ],
@@ -187,7 +187,7 @@ class _UsernameTextFormatter extends TextInputFormatter {
   const _UsernameTextFormatter();
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) =>
-      TextEditingValue(text: newValue.text.toLowerCase(), selection: newValue.selection);
+      .new(text: newValue.text.toLowerCase(), selection: newValue.selection);
 }
 
 mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {

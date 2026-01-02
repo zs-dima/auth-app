@@ -101,7 +101,7 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
       repository: settings,
       initialState: SettingsState.idle(
         appTheme: AppTheme(
-          mode: settings.themeMode ?? ThemeMode.system,
+          mode: settings.themeMode ?? .system,
           seed: settings.themeColor,
           size: ScreenUtil.screenSize,
         ),
@@ -119,7 +119,7 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
   @override
   void resetSettings() {
     _settingsController
-      ..updateTheme(AppTheme(mode: ThemeMode.light, seed: null, size: ScreenUtil.screenSize))
+      ..updateTheme(AppTheme(mode: .light, seed: null, size: ScreenUtil.screenSize))
       ..updateLocale(Localization.computeDefaultLocale)
       ..updateTextScale(1.0);
   }

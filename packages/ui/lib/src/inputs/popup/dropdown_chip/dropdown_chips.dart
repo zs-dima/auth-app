@@ -298,8 +298,8 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
         : null,
     child: PopupBuilder(
       controller: _overlayController,
-      followerAnchor: Alignment.topLeft,
-      targetAnchor: Alignment.bottomLeft,
+      followerAnchor: .topLeft,
+      targetAnchor: .bottomLeft,
       targetBuilder: (context, controller) => TapRegion(
         debugLabel: 'PopupDropdown',
         groupId: controller,
@@ -321,16 +321,16 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
                     suffixIcon:
                         widget.suffixIcon ??
                         SizedBox(
-                          width: 66,
-                          height: 30,
+                          width: 66.0,
+                          height: 30.0,
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize: .min,
                             children: <Widget>[
                               if (chipsState.selected.isEmpty)
-                                const SizedBox(width: 30)
+                                const SizedBox(width: 30.0)
                               else
                                 SizedBox.square(
-                                  dimension: 30,
+                                  dimension: 30.0,
                                   child: IconButton(
                                     padding: EdgeInsets.zero,
                                     onPressed: () {
@@ -338,16 +338,16 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
                                       _chipFocusNode.unfocus();
                                       _removeValues(chipsState.selected.toList());
                                     },
-                                    icon: const Icon(Icons.clear, size: 18),
+                                    icon: const Icon(Icons.clear, size: 18.0),
                                   ),
                                 ),
                               SizedBox.square(
-                                dimension: 30,
+                                dimension: 30.0,
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
                                   icon: const Icon(
                                     Icons.arrow_drop_down,
-                                    size: 14,
+                                    size: 14.0,
                                   ),
                                   onPressed: () {
                                     HapticFeedback.mediumImpact().ignore();
@@ -360,12 +360,12 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 6.0),
                             ],
                           ),
                         ),
                   ),
-            strutStyle: const StrutStyle(fontSize: 15),
+            strutStyle: const StrutStyle(fontSize: 15.0),
             onChanged: _setValues,
             onSubmitted: _onSubmitted,
             chipBuilder: _chipBuilder,
@@ -384,7 +384,7 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
         constraints: widget.intrinsicPopup
             ? const BoxConstraints()
             : BoxConstraints(
-                maxHeight: 300,
+                maxHeight: 300.0,
                 maxWidth: widget.popupMaxWidth,
               ),
         child: StateConsumer<DropdownChipController<T>, DropdownChipState<T>>(
@@ -406,8 +406,8 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
                     icon: const Icon(Icons.add),
                     style: TextButton.styleFrom(
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(8),
+                        borderRadius: .vertical(
+                          bottom: .circular(8.0),
                         ),
                       ),
                     ),

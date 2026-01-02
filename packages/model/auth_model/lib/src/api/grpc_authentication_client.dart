@@ -45,7 +45,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<AuthenticatedUser> signIn(ISignInData signInData, IDeviceInfo device) async {
     final osInfo = rpc.OsInfo()
-      ..os = device.deviceOs.toOs()
+      ..os = device.deviceOs
       ..version = device.deviceOsVersion;
 
     final deviceInfo = rpc.DeviceInfo()

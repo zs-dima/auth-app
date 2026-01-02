@@ -10,11 +10,11 @@ class ThemeColorCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: Material(
       color: _color,
-      borderRadius: const BorderRadius.all(Radius.circular(4)),
+      borderRadius: const .all(.circular(4.0)),
       child: InkWell(
         onTap: () => SettingsScope.themeOf(context).setThemeSeedColor(_color),
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
-        child: const SizedBox.square(dimension: 64),
+        borderRadius: const .all(.circular(4.0)),
+        child: const SizedBox.square(dimension: 64.0),
       ),
     ),
   );

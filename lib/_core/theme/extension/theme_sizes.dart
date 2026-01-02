@@ -5,16 +5,17 @@ extension ThemeDataX on ThemeData {
 }
 
 extension EdgeInsetsX on EdgeInsets {
-  EdgeInsets get h => copyWith(top: 0, bottom: 0);
-  EdgeInsets get v => copyWith(left: 0, right: 0);
+  EdgeInsets get h => copyWith(top: 0.0, bottom: 0.0);
+  EdgeInsets get v => copyWith(left: 0.0, right: 0.0);
 }
 
 class ThemePaddings extends ThemeExtension<ThemePaddings> {
-  static final defaultSmall = ThemePaddings.all(tiny: 2, small: 4, medium: 8, large: 16);
-  static final defaultMedium = ThemePaddings.all(tiny: 4, small: 8, medium: 16, large: 32);
-  static final defaultLarge = ThemePaddings.all(tiny: 6, small: 12, medium: 24, large: 48);
+  static final defaultSmall = ThemePaddings.all(tiny: 2.0, small: 4.0, medium: 8.0, large: 16.0);
+  static final defaultMedium = ThemePaddings.all(tiny: 4.0, small: 8.0, medium: 16.0, large: 32.0);
+  static final defaultLarge = ThemePaddings.all(tiny: 6.0, small: 12.0, medium: 24.0, large: 48.0);
 
   const ThemePaddings({required this.tiny, required this.small, required this.medium, required this.large});
+
   ThemePaddings.all({required double tiny, required double small, required double medium, required double large})
     : tiny = EdgeInsets.all(tiny),
       small = EdgeInsets.all(small),
@@ -33,7 +34,7 @@ class ThemePaddings extends ThemeExtension<ThemePaddings> {
   );
 
   @override
-  ThemePaddings copyWith({EdgeInsets? tiny, EdgeInsets? small, EdgeInsets? medium, EdgeInsets? large}) => ThemePaddings(
+  ThemePaddings copyWith({EdgeInsets? tiny, EdgeInsets? small, EdgeInsets? medium, EdgeInsets? large}) => .new(
     tiny: tiny ?? this.tiny,
     small: small ?? this.small,
     medium: medium ?? this.medium,

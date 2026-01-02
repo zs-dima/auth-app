@@ -18,7 +18,7 @@ class AppleLogo extends LeafRenderObjectWidget implements PreferredSizeWidget {
   final double size;
 
   @override
-  Size get preferredSize => Size.square(size);
+  Size get preferredSize => .square(size);
 
   @override
   RenderObject createRenderObject(BuildContext context) => _AppleLogoRenderObject().._targetSize = Size.square(size);
@@ -33,7 +33,7 @@ class _AppleLogoRenderObject extends RenderBox {
   static final ui.Picture _$logoPicture = () {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    const size = Size.square(128);
+    const size = Size.square(128.0);
     final path_0 = Path();
     path_0.moveTo(size.width * 0.5450875, size.height * 0.2307692);
     path_0.cubicTo(
@@ -195,13 +195,13 @@ class _AppleLogoRenderObject extends RenderBox {
       size.height,
     );
     path_0.close();
-    final paint0Fill = Paint()..style = PaintingStyle.fill;
+    final paint0Fill = Paint()..style = .fill;
     paint0Fill.color = const Color(0xFF000000);
     canvas.drawPath(path_0, paint0Fill);
     return recorder.endRecording();
   }();
 
-  Size _targetSize = Size.zero;
+  Size _targetSize = .zero;
 
   double _scale = 0.0;
 

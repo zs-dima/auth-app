@@ -15,7 +15,7 @@ import 'package:grpc_model/src/client/channel_io.dart'
 /// Automatically selects the appropriate channel implementation
 /// based on the current platform (web or IO).
 class GrpcClientChannel implements service_api.ClientChannel {
-  GrpcClientChannel(Uri address, {GrpcChannelConfig config = GrpcChannelConfig.defaultConfig}) {
+  GrpcClientChannel(Uri address, {GrpcChannelConfig config = .defaultConfig}) {
     _channel = createClientChannel(address, config: config);
   }
 

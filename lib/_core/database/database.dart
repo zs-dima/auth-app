@@ -157,10 +157,10 @@ mixin _DatabaseKeyValueMixin on _$Database implements IKeyValueStorage {
   final _$store = <String, Object>{};
 
   static KvTblCompanion? _kvCompanionFromKeyValue(String key, Object? value) => switch (value) {
-    final String vstring => KvTblCompanion.insert(k: key, vstring: Value(vstring)),
-    final int vint => KvTblCompanion.insert(k: key, vint: Value(vint)),
-    final double vdouble => KvTblCompanion.insert(k: key, vdouble: Value(vdouble)),
-    final bool vbool => KvTblCompanion.insert(k: key, vbool: Value(vbool ? 1 : 0)),
+    final String vstring => .insert(k: key, vstring: Value(vstring)),
+    final int vint => .insert(k: key, vint: Value(vint)),
+    final double vdouble => .insert(k: key, vdouble: Value(vdouble)),
+    final bool vbool => .insert(k: key, vbool: Value(vbool ? 1 : 0)),
     _ => null,
   };
 
@@ -170,7 +170,7 @@ mixin _DatabaseKeyValueMixin on _$Database implements IKeyValueStorage {
     _$store
       ..clear()
       ..addAll(<String, Object>{
-        for (final kv in values) kv.k: kv.vstring ?? kv.vint ?? kv.vdouble ?? kv.vbool == 1,
+        for (final kv in values) kv.k: kv.vstring ?? kv.vint ?? kv.vdouble ?? (kv.vbool == 1),
       });
   });
 
@@ -265,7 +265,7 @@ mixin _CloseOnDetachedAppLifecycleState on WidgetsBindingObserver, GeneratedData
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached) close();
+    if (state == .detached) close();
     super.didChangeAppLifecycleState(state);
   }
 

@@ -23,17 +23,17 @@ Future<void> _mobileInitialization() async {
     if (size.shortestSide < 600) {
       // If the device is a phone, set the preferred orientation to portrait only.
       await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp, // Portrait up orientation
-        DeviceOrientation.portraitDown, // Portrait down orientation
+        .portraitUp, // Portrait up orientation
+        .portraitDown, // Portrait down orientation
       ]);
     } else {
       // If the device is a tablet or larger, set the any orientation.
       // This will allow the app to be used in both landscape and portrait modes.
       await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp, // Portrait up orientation
-        DeviceOrientation.landscapeLeft, // Landscape left orientation
-        DeviceOrientation.landscapeRight, // Landscape right orientation
-        DeviceOrientation.portraitDown, // Portrait down orientation
+        .portraitUp, // Portrait up orientation
+        .landscapeLeft, // Landscape left orientation
+        .landscapeRight, // Landscape right orientation
+        .portraitDown, // Portrait down orientation
       ]);
     }
   }
@@ -44,16 +44,15 @@ Future<void> _desktopInitialization() async {
   // Must add this line.
   await windowManager.ensureInitialized();
   final windowOptions = WindowOptions(
-    minimumSize: const Size(360, 480),
-    size: const Size(960, 800),
-    // maximumSize: const Size(1440, 1080),
+    minimumSize: const Size(360.0, 480.0),
+    size: const Size(960.0, 800.0),
+    // maximumSize: const Size(1440.0, 1080.0),
     center: true,
-    backgroundColor:
-        ui.PlatformDispatcher.instance.platformBrightness == Brightness.dark
-            ? ThemeData.dark().colorScheme.surface
-            : ThemeData.light().colorScheme.surface,
+    backgroundColor: ui.PlatformDispatcher.instance.platformBrightness == .dark
+        ? ThemeData.dark().colorScheme.surface
+        : ThemeData.light().colorScheme.surface,
     skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
+    titleBarStyle: .hidden,
     /* alwaysOnTop: true, */
     fullScreen: false,
     title: '',

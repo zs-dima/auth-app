@@ -22,19 +22,19 @@ class DropdownChip<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(right: 5, top: 4),
+    padding: const .only(right: 5.0, top: 4.0),
     child: InputChip(
       tooltip: tooltip,
       key: ObjectKey(entry.value),
-      label: Text(entry.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      label: Text(entry.label, maxLines: 1, overflow: .ellipsis),
       avatar: icon == null ? null : Icon(icon),
       // avatar: CircleAvatar(
       //   child: Text('$value'[0].toUpperCase()),
       // ),
       onDeleted: onDeleted == null ? null : () => onDeleted?.call(entry.value),
       onSelected: (_) => onSelected(entry.value),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.all(2),
+      materialTapTargetSize: .shrinkWrap,
+      padding: const .all(2.0),
       side: side,
     ),
   );

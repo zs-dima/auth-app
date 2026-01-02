@@ -111,18 +111,18 @@ class _DropdownMenuFormFieldState<T> extends State<DropdownMenuFormField<T>> {
       child: DropdownMenuFormFieldBase<T>(
         label: (widget.largeScreen || widget.title == null)
             ? null
-            : Text(widget.title!, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start),
+            : Text(widget.title!, overflow: .ellipsis, textAlign: .start),
         controller: _dropdownController,
         enabled: widget.enabled,
         enableFilter: true,
         requestFocusOnTap: true,
-        expandedInsets: EdgeInsets.zero,
+        expandedInsets: .zero,
         trailingIcon:
             widget
                 .loading //
             ? const DropdownProgressIcon()
-            : const Icon(Icons.arrow_drop_down, size: 14),
-        selectedTrailingIcon: const RotatedBox(quarterTurns: 2, child: Icon(Icons.arrow_drop_down, size: 14)),
+            : const Icon(Icons.arrow_drop_down, size: 14.0),
+        selectedTrailingIcon: const RotatedBox(quarterTurns: 2, child: Icon(Icons.arrow_drop_down, size: 14.0)),
         // TODO https://github.com/flutter/flutter/issues/145637
         // inputDecorationTheme: Theme.of(context).inputDecorationTheme,
         inputDecorationTheme: inputDecorationTheme,
@@ -139,7 +139,7 @@ class _DropdownMenuFormFieldState<T> extends State<DropdownMenuFormField<T>> {
           // TODO workaround
           final text = _dropdownController.value.text.toLowerCase();
           if (widget.dropdownMenuEntries.every((i) => i.label.toLowerCase() != text)) {
-            _dropdownController.value = TextEditingValue.empty;
+            _dropdownController.value = .empty;
             return widget.validator?.call(null);
           }
           return widget.validator?.call(item);

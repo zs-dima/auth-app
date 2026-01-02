@@ -56,88 +56,88 @@ message DeviceInfo {
 }
 
 message OsInfo {
-  OS     os      = 1;
+  string os      = 1;
   string version = 2;
 }
 
-enum OS {
-  FUCHSIA = 0;
-  LINUX   = 1;
-  MACOS   = 2;
-  WINDOWS = 3;
-  IOS     = 4;
-  ANDROID = 5;
-  UNKNOWN = 6;
-}
+// enum OS {
+//   FUCHSIA = 0;
+//   LINUX   = 1;
+//   MACOS   = 2;
+//   WINDOWS = 3;
+//   IOS     = 4;
+//   ANDROID = 5;
+//   UNKNOWN = 6;
+// }
 
-message RefreshTokenRequest {
-  string refresh_token = 1;
-}
+  message RefreshTokenRequest {
+    string refresh_token = 1;
+  }
 
-message RefreshTokenReply {
-  string refresh_token = 1;
-  string access_token  = 2;
-}
+  message RefreshTokenReply {
+    string refresh_token = 1;
+    string access_token  = 2;
+  }
 
-message AuthInfo {
-  core.UUID       user_id       = 1;
-  string          user_name     = 2;
-  UserRole        user_role     = 3;
-  optional string blurhash      = 4;
-  string          refresh_token = 5;
-  string          access_token  = 6;
-}
+  message AuthInfo {
+    core.UUID       user_id       = 1;
+    string          user_name     = 2;
+    UserRole        user_role     = 3;
+    optional string blurhash      = 4;
+    string          refresh_token = 5;
+    string          access_token  = 6;
+  }
 
-enum UserRole {
-  ADMINISTRATOR = 0;
-  USER          = 1;
-}
+  enum UserRole {
+    ADMINISTRATOR = 0;
+    USER          = 1;
+  }
 
-message UserInfo {
-  core.UUID       id       = 1;
-  string          name     = 2;
-  string          email    = 3;
-  UserRole        role     = 4;
-  optional string blurhash = 5;
-  bool            deleted  = 6;
-}
+  message UserInfo {
+    core.UUID       id       = 1;
+    string          name     = 2;
+    string          email    = 3;
+    UserRole        role     = 4;
+    optional string blurhash = 5;
+    bool            deleted  = 6;
+  }
 
-message User {
-  core.UUID       id       = 1;
-  string          name     = 2;
-  string          email    = 3;
-  UserRole        role     = 4;
-  optional string blurhash = 5;
-  bool            deleted  = 6;
-}
+  message User {
+    core.UUID       id       = 1;
+    string          name     = 2;
+    string          email    = 3;
+    UserRole        role     = 4;
+    optional string blurhash = 5;
+    bool            deleted  = 6;
+  }
 
-message UserPhoto {
-  core.UUID      user_id = 1;
-  optional bytes photo   = 2;
-}
+  message UserPhoto {
+    core.UUID      user_id = 1;
+    optional bytes photo   = 2;
+  }
 
-message UserAvatar {
-  core.UUID      user_id = 1;
-  optional bytes avatar  = 2;
-}
+  message UserAvatar {
+    core.UUID      user_id = 1;
+    optional bytes avatar  = 2;
+  }
 
-message UserId {
-  core.UUID id = 1;
-}
+  message UserId {
+    core.UUID id = 1;
+  }
 
-message CreateUserRequest {
-  core.UUID id       = 1;
-  string    name     = 2;
-  string    email    = 3;
-  string    password = 4;
-  UserRole  role     = 5;
-  bool      deleted  = 6;
-}
+  message CreateUserRequest {
+    core.UUID id       = 1;
+    string    name     = 2;
+    string    email    = 3;
+    string    password = 4;
+    UserRole  role     = 5;
+    bool      deleted  = 6;
+  }
 
-message UpdateUserRequest {
-  core.UUID id      = 1;
-  string    name    = 2;
-  string    email   = 3;
-  UserRole  role    = 4;
-  bool      deleted = 5;
-}
+  message UpdateUserRequest {
+    core.UUID id      = 1;
+    string    name    = 2;
+    string    email   = 3;
+    UserRole  role    = 4;
+    bool      deleted = 5;
+  }

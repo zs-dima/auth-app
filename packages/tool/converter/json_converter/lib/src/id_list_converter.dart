@@ -6,7 +6,7 @@ class IdListConverter implements JsonConverter<IdList, List<int>> {
   const IdListConverter();
 
   @override
-  IdList fromJson(List<int> json) => IdList(json);
+  IdList fromJson(List<int> json) => .new(json);
 
   @override
   List<int> toJson(IdList object) => object.toList();
@@ -26,13 +26,13 @@ class IdListConverter implements JsonConverter<IdList, List<int>> {
 typedef Id = int;
 
 extension type const IdList(List<Id> _ids) implements Iterable<Id> {
-  IdList addFirst(Id id) => IdList(
+  IdList addFirst(Id id) => .new(
     td.Uint32List(_ids.length + 1)
       ..first = id
       ..setAll(1, _ids),
   );
 
-  IdList addLast(Id id) => IdList(
+  IdList addLast(Id id) => .new(
     td.Uint32List(_ids.length + 1)
       ..setAll(0, _ids)
       ..last = id,
@@ -40,7 +40,7 @@ extension type const IdList(List<Id> _ids) implements Iterable<Id> {
 
   IdList add(Id id) => addLast(id);
 
-  IdList remove(Id id) => IdList(td.Uint32List.fromList(_ids)..remove(id));
+  IdList remove(Id id) => .new(td.Uint32List.fromList(_ids)..remove(id));
 
   Id operator [](int index) => _ids[index];
 }

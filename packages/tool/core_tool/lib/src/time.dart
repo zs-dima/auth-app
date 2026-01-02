@@ -13,7 +13,7 @@ const JsonConverter<DateTime, String> kDateTimeJsonConverter = DateTimeJsonCodec
 /// Extension methods for the DateTime class.
 extension DateTimeX on DateTime {
   DateTime round({Duration delta = const Duration(minutes: 15)}) =>
-      DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch - millisecondsSinceEpoch % delta.inMilliseconds);
+      .fromMillisecondsSinceEpoch(millisecondsSinceEpoch - millisecondsSinceEpoch % delta.inMilliseconds);
 
   // ignore: avoid-duplicate-collection-elements
   static const _daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -36,9 +36,9 @@ extension DateTimeX on DateTime {
     return add(Duration(days: -1 * diff)).date;
   }
 
-  DateTime get date => DateTime(year, month, day);
+  DateTime get date => .new(year, month, day);
   Duration get time =>
-      Duration(hours: hour, minutes: minute, seconds: second, microseconds: microsecond, milliseconds: millisecond);
+      .new(hours: hour, minutes: minute, seconds: second, microseconds: microsecond, milliseconds: millisecond);
 
   DateTime addMonths(int value) {
     final months = value % 12;
@@ -83,7 +83,7 @@ DateTime fromJsonDateTime(Object json) =>
 DateTime? fromJsonDateTimeOrNull(Object? json) => switch (json) {
   final String s => DateTime.tryParse(s),
   null => null,
-  final int ms => DateTime.fromMillisecondsSinceEpoch(ms),
+  final int ms => .fromMillisecondsSinceEpoch(ms),
   final DateTime dt => dt,
   _ => throw ArgumentError.value(json, 'json', 'Invalid DateTime value'),
 };
@@ -91,15 +91,15 @@ DateTime? fromJsonDateTimeOrNull(Object? json) => switch (json) {
 String weekdayName(int weekday, [String? locale]) {
   final now = DateTime.now().toLocal();
   final diff = now.weekday - weekday;
-  DateTime udpatedDt;
+  DateTime updatedDt;
   if (diff > 0) {
-    udpatedDt = now.subtract(Duration(days: diff));
+    updatedDt = now.subtract(Duration(days: diff));
   } else if (diff == 0) {
-    udpatedDt = now;
+    updatedDt = now;
   } else {
-    udpatedDt = now.add(Duration(days: diff * -1));
+    updatedDt = now.add(Duration(days: diff * -1));
   }
-  return intl.DateFormat('EEEE', locale).format(udpatedDt);
+  return intl.DateFormat('EEEE', locale).format(updatedDt);
 }
 
 String weekdayWorkingName(int weekday, [String? locale]) {
@@ -133,7 +133,7 @@ extension DateTimeJsonNX on DateTime? {
 }
 
 extension DurationX on Duration? {
-  bool get isNullOrEmpty => this == null || this == Duration.zero;
+  bool get isNullOrEmpty => this == null || this == .zero;
 
   Duration? add(Duration duration) => (isNullOrEmpty || duration.isNullOrEmpty) ? null : this! + duration;
 

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:auth_app/_core/theme/model/app_theme.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:control/control.dart';
@@ -54,10 +52,12 @@ sealed class SettingsState with _$SettingsState {
 }
 
 final class SettingsController extends StateController<SettingsState> with SequentialControllerHandler {
-  SettingsController({required ISettingsRepository repository, required super.initialState}) : _repository = repository;
+  SettingsController({
+    required ISettingsRepository repository,
+    required super.initialState,
+  }) : _repository = repository;
 
   final ISettingsRepository _repository;
-  StreamSubscription<SettingsState>? _userSubscription;
 
   void updateTheme(AppTheme appTheme) => handle(
     () async {
@@ -134,10 +134,4 @@ final class SettingsController extends StateController<SettingsState> with Seque
     ),
     name: 'updateTextScale',
   );
-
-  @override
-  void dispose() {
-    _userSubscription?.cancel();
-    super.dispose();
-  }
 }

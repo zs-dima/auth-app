@@ -64,7 +64,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
 
   Future<void> _uploadPhoto() async {
     final image = await FilePicker.platform.pickFiles(
-      type: kIsWeb ? FileType.custom : FileType.image,
+      type: kIsWeb ? .custom : .image,
       allowMultiple: false,
       allowedExtensions: ['png', 'jpg'],
       withData: true,
@@ -100,7 +100,7 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
 
     return Card(
       child: SizedBox.square(
-        dimension: 140,
+        dimension: 140.0,
         child: switch (_userAvatar) {
           // TODO: Add blurhash placeholder.
           _ when !_userAvatar.loaded => const Center(child: CircularProgressIndicator()),
@@ -115,21 +115,20 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
               Positioned.fill(
                 child: Image.memory(
                   _userAvatar.avatar!,
-                  fit: BoxFit.contain,
+                  fit: .contain,
                   semanticLabel: 'User photo',
                 ),
               ),
               Positioned(
-                top: 5,
-                right: 5,
+                top: 5.0,
+                right: 5.0,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withAlpha(170),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(5),
-                    ),
+                    borderRadius: const .all(.circular(5.0)),
                   ),
                   child: Row(
+                    spacing: 1.0,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.upload),
@@ -137,7 +136,6 @@ class _PhotoEditWidgetState extends State<PhotoEditWidget> {
                         onPressed: _uploadPhoto,
                         tooltip: 'Upload photo',
                       ),
-                      const SizedBox(width: 1),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         color: theme.colorScheme.onSurface,

@@ -11,7 +11,7 @@ part 'user.g.dart';
 sealed class User with _$User implements IUserInfo, Comparable<User> {
   static const type$ = '2204CA60-2D98-4BF7-8140-9BF746F4CFE1';
 
-  static const empty = User(id: Uuid.NAMESPACE_NIL, name: '', email: '', role: UserRole.user, deleted: false);
+  static const empty = User(id: Uuid.NAMESPACE_NIL, name: '', email: '', role: .user, deleted: false);
 
   const factory User({
     required UserId id,

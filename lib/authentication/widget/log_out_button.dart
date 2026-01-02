@@ -19,31 +19,31 @@ class LogOutButton extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: Center(
           child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: .min,
+            mainAxisAlignment: .center,
+            crossAxisAlignment: .center,
             children: <Widget>[
-              const Icon(Icons.logout, size: 24),
-              const SizedBox(width: 16),
+              const Icon(Icons.logout, size: 24.0),
+              const SizedBox(width: 16.0),
               AppText.headlineSmall(
                 Localization.of(context).logOutButton,
-                height: 1,
+                height: 1.0,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 24.0),
             ],
           ),
         ),
         content: const AppText.bodyMedium(
           'Are you sure you want to log out?',
-          textAlign: TextAlign.center,
+          textAlign: .center,
         ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actionsAlignment: .spaceBetween,
         actions: <Widget>[
           SizedBox(
-            height: 48,
-            width: 128,
+            height: 48.0,
+            width: 128.0,
             child: FilledButton.icon(
               icon: const Icon(Icons.logout),
               label: Text(Localization.of(context).logOutButton),
@@ -54,8 +54,8 @@ class LogOutButton extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 48,
-            width: 128,
+            height: 48.0,
+            width: 128.0,
             child: ElevatedButton.icon(
               icon: const Icon(Icons.cancel),
               label: Text(Localization.of(context).cancelButton),

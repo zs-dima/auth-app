@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:auth_model/auth_model.dart';
+import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:json_converter/json_converter.dart';
 

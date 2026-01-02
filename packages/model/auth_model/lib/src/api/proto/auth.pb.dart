@@ -374,7 +374,7 @@ class DeviceInfo extends $pb.GeneratedMessage {
 
 class OsInfo extends $pb.GeneratedMessage {
   factory OsInfo({
-    OS? os,
+    $core.String? os,
     $core.String? version,
   }) {
     final result = create();
@@ -393,7 +393,7 @@ class OsInfo extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OsInfo',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
-    ..aE<OS>(1, _omitFieldNames ? '' : 'os', enumValues: OS.values)
+    ..aOS(1, _omitFieldNames ? '' : 'os')
     ..aOS(2, _omitFieldNames ? '' : 'version')
     ..hasRequiredFields = false;
 
@@ -414,9 +414,9 @@ class OsInfo extends $pb.GeneratedMessage {
   static OsInfo? _defaultInstance;
 
   @$pb.TagNumber(1)
-  OS get os => $_getN(0);
+  $core.String get os => $_getSZ(0);
   @$pb.TagNumber(1)
-  set os(OS value) => $_setField(1, value);
+  set os($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
   $core.bool hasOs() => $_has(0);
   @$pb.TagNumber(1)

@@ -94,10 +94,9 @@ abstract base class _$AuthenticationStateBase {
 
   @override
   String toString() {
-    final buffer =
-        StringBuffer()
-          ..write('AuthenticationState{')
-          ..write('user: $user, ');
+    final buffer = StringBuffer()
+      ..write('AuthenticationState{')
+      ..write('user: $user, ');
     if (error != null) buffer.write('error: $error, ');
     buffer
       ..write('message: $message')

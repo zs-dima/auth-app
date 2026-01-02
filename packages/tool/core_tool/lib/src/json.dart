@@ -19,7 +19,7 @@ sealed class JsonTool {
   /// [int] - [DateTime] format: seconds since epoch
   static DateTime? extractDateTimeOrNull(Map<String, Object?> json, String key) => switch (json[key]) {
     final String value => DateTime.tryParse(value),
-    final int value => DateTime.fromMillisecondsSinceEpoch(value * 1000),
+    final int value => .fromMillisecondsSinceEpoch(value * 1000),
     _ => null,
   };
 }

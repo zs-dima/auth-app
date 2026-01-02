@@ -14,7 +14,7 @@ sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo>
     id: UserIdX.empty,
     name: '',
     email: '',
-    role: UserRole.user,
+    role: .user,
   );
 
   const factory UserInfo({

@@ -9,40 +9,40 @@ class InitializationSplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = View.of(context).platformDispatcher.platformBrightness == Brightness.dark
+    final theme = View.of(context).platformDispatcher.platformBrightness == .dark
         ? ThemeData.dark()
         : ThemeData.light();
     return Material(
       color: theme.primaryColor,
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: .ltr,
         child: Center(
           child: ListView(
             shrinkWrap: true,
             children: <Widget>[
               RadialProgressIndicator(
-                size: 128,
+                size: 128.0,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
                   builder: (context, value, _) => AppText.titleLarge(
                     '${value.progress}%',
-                    height: 1,
-                    textAlign: TextAlign.center,
+                    height: 1.0,
+                    textAlign: .center,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 16.0),
               Opacity(
                 opacity: 0.25,
                 child: ValueListenableBuilder<({String message, int progress})>(
                   valueListenable: progress,
                   builder: (context, value, _) => AppText.titleSmall(
                     value.message,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                     maxLines: 3,
-                    textAlign: TextAlign.center,
+                    textAlign: .center,
                   ),
                 ),
               ),

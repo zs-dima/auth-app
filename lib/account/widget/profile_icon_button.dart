@@ -17,22 +17,23 @@ class ProfileIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = AuthenticationScope.userOf(context);
     final authUser = AuthenticationScope.userInfoOf(context);
-    return currentUser is AuthenticatedUser
-        ? Tooltip(
-            message: authUser.name,
-            child: UserAvatarWidget(
-              user: authUser,
-              size: 15,
-              onPressed: () {
-                Octopus.maybeOf(context)?.setState(
-                  (state) => state
-                    ..removeByName(Routes.profile.name)
-                    ..add(Routes.profile.node()),
-                );
-                HapticFeedback.mediumImpact().ignore();
-              },
-            ),
-          )
-        : const SizedBox.shrink();
+    return switch (currentUser) {
+      AuthenticatedUser() => Tooltip(
+        message: authUser.name,
+        child: UserAvatarWidget(
+          user: authUser,
+          size: 15,
+          onPressed: () {
+            Octopus.maybeOf(context)?.setState(
+              (state) => state
+                ..removeByName(Routes.profile.name)
+                ..add(Routes.profile.node()),
+            );
+            HapticFeedback.mediumImpact().ignore();
+          },
+        ),
+      ),
+      _ => const SizedBox.shrink(),
+    };
   }
 }

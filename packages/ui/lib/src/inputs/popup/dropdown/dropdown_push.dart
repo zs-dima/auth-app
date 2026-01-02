@@ -58,7 +58,7 @@ class DropdownPush<T> extends StatelessWidget {
     final labelField = LabelField(
       title: largeScreen ? null : title,
       label: item?.label ?? '',
-      suffixIcon: const Icon(Icons.arrow_drop_down, size: 14),
+      suffixIcon: const Icon(Icons.arrow_drop_down, size: 14.0),
       prefixIcon: icon,
       errorText: errorText,
       helperText: helperText,
@@ -76,13 +76,13 @@ class DropdownPush<T> extends StatelessWidget {
           : null,
       child: enabled
           ? PopupBuilder(
-              followerAnchor: Alignment.topLeft,
-              targetAnchor: Alignment.bottomLeft,
+              followerAnchor: .topLeft,
+              targetAnchor: .bottomLeft,
               targetBuilder: (context, controller) => TapRegion(
                 debugLabel: 'PopupDropdown',
                 groupId: controller,
                 child: InkWell(
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  borderRadius: const .all(.circular(8.0)),
                   onTap: onSelected == null
                       ? null
                       : () {
@@ -96,7 +96,7 @@ class DropdownPush<T> extends StatelessWidget {
                 tapRegionGroupId: controller,
                 constraints: intrinsicPopup
                     ? const BoxConstraints()
-                    : const BoxConstraints(maxHeight: 300, maxWidth: 370),
+                    : const BoxConstraints(maxHeight: 300.0, maxWidth: 370.0),
                 child: DropdownSuggestions<T>(
                   suggestions: items,
                   onSelected: (i) {

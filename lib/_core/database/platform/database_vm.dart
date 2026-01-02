@@ -21,7 +21,7 @@ Future<QueryExecutor> $createQueryExecutor(
   if (kDebugMode) {
     // Close existing instances for hot restart
     try {
-      ffi.NativeDatabase.closeExistingInstances();
+      await ffi.NativeDatabase.closeExistingInstances();
     } on Object catch (e, st) {
       l.w("Can't close existing database instances, error: $e", st);
     }

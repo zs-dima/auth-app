@@ -79,21 +79,21 @@ class ChipsWidget<T> extends StatelessWidget {
                 )),
 
       child: Padding(
-        padding: const EdgeInsets.only(top: 4, bottom: 2),
+        padding: const .only(top: 4.0, bottom: 2.0),
         child: Wrap(
           spacing: spacing,
-          runSpacing: 8,
+          runSpacing: 8.0,
           children: [
             for (final suggestion in suggestions)
               FilterChip(
                 key: ValueKey(suggestion.value),
                 showCheckmark: itemShowCheckmark,
-                side: suggestion.icon == null ? itemSide : BorderSide.none,
+                side: suggestion.icon == null ? itemSide : .none,
                 avatar: suggestion.icon == null
                     ? null
                     : Icon(
                         suggestion.icon,
-                        size: 16,
+                        size: 16.0,
                         color: enabled ? null : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
 

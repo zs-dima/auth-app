@@ -20,8 +20,8 @@ class LogsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const Dialog(
     elevation: 8,
-    insetPadding: EdgeInsets.all(36),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(16))),
+    insetPadding: .all(36.0),
+    shape: RoundedRectangleBorder(borderRadius: .vertical(bottom: .circular(16.0))),
     child: _LogsList(),
   );
 }
@@ -36,8 +36,8 @@ class _LogsList extends StatefulWidget {
 /// State for widget _LogsList.
 class _LogsListState extends State<_LogsList> {
   final _controller = TextEditingController();
-  late List<LogMessage> logs = <LogMessage>[];
-  late List<LogMessage> filteredLogs = <LogMessage>[];
+  late List<LogMessage> _logs = <LogMessage>[];
+  late List<LogMessage> _filteredLogs = <LogMessage>[];
 
   @override
   void initState() {
@@ -48,7 +48,7 @@ class _LogsListState extends State<_LogsList> {
       final rows = await (database.select(
         logTbl,
       )..orderBy([(tbl) => db.OrderingTerm(expression: tbl.time, mode: db.OrderingMode.desc)])).get();
-      logs = rows
+      _logs = rows
           .map(
             (l) => l.stack == null
                 ? LogMessage.verbose(
@@ -72,19 +72,19 @@ class _LogsListState extends State<_LogsList> {
   Future<void> _filter() async {
     final search = _controller.text.toLowerCase();
     final stopwatch = Stopwatch()..start();
-    final buffer = logs.toList();
+    final buffer = _logs.toList();
     try {
       LogMessage log;
       var pos = 0;
       for (var i = 0; i < buffer.length; i++) {
-        if (stopwatch.elapsedMilliseconds > 8) await Future<void>.delayed(Duration.zero);
-        log = logs[i];
+        if (stopwatch.elapsedMilliseconds > 8) await Future<void>.delayed(.zero);
+        log = _logs[i];
         if (log.message.toString().toLowerCase().contains(search)) {
           buffer[pos] = log;
           pos++;
         }
       }
-      filteredLogs = buffer..length = pos;
+      _filteredLogs = buffer..length = pos;
     } finally {
       stopwatch.stop();
     }
@@ -99,21 +99,21 @@ class _LogsListState extends State<_LogsList> {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
+    padding: const .only(bottom: 8.0),
     child: CustomScrollView(
       slivers: <Widget>[
         SliverAppBar(
-          title: Text('Logs (${filteredLogs.length})'),
+          title: Text('Logs (${_filteredLogs.length})'),
           /* actions: <Widget>[
                 IconButton(icon: const Icon(Icons.delete), onPressed: () => buffer.clear()),
-                const SizedBox(width: 16),
+                const SizedBox(width: 16.0),
               ], */
           floating: true,
           pinned: MediaQuery.sizeOf(context).height > 600,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(72),
+            preferredSize: const Size.fromHeight(72.0),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const .symmetric(horizontal: 16.0, vertical: 8.0),
               child: Center(
                 child: TextField(
                   controller: _controller,
@@ -127,7 +127,7 @@ class _LogsListState extends State<_LogsList> {
             ),
           ),
         ),
-        if (filteredLogs.isEmpty)
+        if (_filteredLogs.isEmpty)
           const SliverFillRemaining(
             child: Center(
               child: Text('No logs found'),
@@ -135,11 +135,11 @@ class _LogsListState extends State<_LogsList> {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const .symmetric(horizontal: 24.0, vertical: 8.0),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _LogTile(filteredLogs[index], key: ObjectKey(filteredLogs[index])),
-                childCount: filteredLogs.length,
+                (context, index) => _LogTile(_filteredLogs[index], key: ObjectKey(_filteredLogs[index])),
+                childCount: _filteredLogs.length,
               ),
             ),
           ),
@@ -177,7 +177,7 @@ class _LogTile extends StatelessWidget {
           ),
         ),
       ),
-      const Divider(height: 1),
+      const Divider(height: 1.0),
     ],
   );
 }

@@ -126,7 +126,7 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   final Iterable<Rect> displayFeatureBounds;
 
   @override
-  EnhancedRenderFollowerLayer createRenderObject(BuildContext context) => EnhancedRenderFollowerLayer(
+  EnhancedRenderFollowerLayer createRenderObject(BuildContext context) => .new(
     link: link,
     showWhenUnlinked: showWhenUnlinked,
     leaderAnchor: targetAnchor,
@@ -171,8 +171,8 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   EnhancedRenderFollowerLayer({
     required EnhancedLayerLink link,
     required Iterable<Rect> displayFeatureBounds,
-    Alignment leaderAnchor = Alignment.topLeft,
-    Alignment followerAnchor = Alignment.topLeft,
+    Alignment leaderAnchor = .topLeft,
+    Alignment followerAnchor = .topLeft,
     bool showWhenUnlinked = true,
     bool flipWhenOverflow = true,
     bool moveWhenOverflow = true,
@@ -398,7 +398,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     var linkedOffset = Offset.zero;
 
     if (leaderRenderObject != null) {
-      final leaderGlobalPosition = leaderRenderObject.localToGlobal(Offset.zero);
+      final leaderGlobalPosition = leaderRenderObject.localToGlobal(.zero);
       final leaderSize = leaderRenderObject.size;
       final overlayRect = Offset.zero & constraints.biggest;
 
@@ -441,12 +441,12 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     context.pushLayer(
       layer!,
       super.paint,
-      Offset.zero,
+      .zero,
       childPaintBounds: const Rect.fromLTRB(
-        double.negativeInfinity,
-        double.negativeInfinity,
-        double.infinity,
-        double.infinity,
+        .negativeInfinity,
+        .negativeInfinity,
+        .infinity,
+        .infinity,
       ),
     );
 

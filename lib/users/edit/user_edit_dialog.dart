@@ -18,17 +18,17 @@ void editUserDialog(
     final appTheme = SettingsScope.themeOf(context).theme;
 
     return AlertDialog(
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))), // TODO: to theme
+      shape: const RoundedRectangleBorder(borderRadius: .all(.circular(8.0))),
       insetPadding:
           appTheme
               .size
               .isPhone //
-          ? EdgeInsets.zero
-          : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          ? .zero
+          : const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
       titlePadding: EdgeInsets.zero,
       title: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+          borderRadius: const .vertical(top: .circular(8.0)),
           color: colorScheme.primary,
         ),
         child: Padding(
@@ -38,16 +38,16 @@ void editUserDialog(
                 ? 'Create new user'
                 : 'Edit ${user.name}',
             color: colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+            fontWeight: .bold,
+            overflow: .ellipsis,
+            textAlign: .center,
             maxLines: 1,
           ),
         ),
       ),
       contentPadding: EdgeInsets.zero,
       content: SizedBox(
-        width: double.maxFinite,
+        width: .maxFinite,
         child: UserEditWidget(
           user: user,
           createNewUser: createNewUser,

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 final class DropdownEntry<T> {
   DropdownEntry(this.value, this.label, {this.icon, this.tooltip}) : labelLower = label.toLowerCase();
+
   DropdownEntry.value(this.value, {this.icon, this.tooltip}) : label = '$value', labelLower = '$value'.toLowerCase();
   final T value;
   final String label;

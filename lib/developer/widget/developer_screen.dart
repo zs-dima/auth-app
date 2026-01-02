@@ -34,10 +34,10 @@ class DeveloperScreen extends StatelessWidget {
         const _OpenUriTile(title: 'Refresh session', description: "Refresh current user's session"),
         const _OpenUriTile(title: 'Logout', description: 'Logout current user'),
         SliverPadding(
-          padding: ScaffoldPadding.of(context).copyWith(top: 16, bottom: 16),
+          padding: ScaffoldPadding.of(context).copyWith(top: 16.0, bottom: 16.0),
           sliver: const SliverToBoxAdapter(
             child: SizedBox(
-              height: 48,
+              height: 48.0,
               child: Placeholder(),
             ),
           ),
@@ -74,12 +74,12 @@ class DeveloperScreen extends StatelessWidget {
         const _OpenUriTile(title: 'Sentry', description: 'Sentry console'),
 
         /* SliverPadding(
-              padding: ScaffoldPadding.of(context).copyWith(top: 16, bottom: 16),
+              padding: ScaffoldPadding.of(context).copyWith(top: 16.0, bottom: 16.0),
               sliver: SliverList.list(
                 children: const <Widget>[],
               ),
             ), */
-        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24.0)),
       ],
     ),
   );
@@ -95,28 +95,28 @@ class _GroupSeparator extends StatelessWidget {
     padding: ScaffoldPadding.of(context),
     sliver: SliverToBoxAdapter(
       child: SizedBox(
-        height: 48,
+        height: 48.0,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: .center,
+          mainAxisSize: .max,
           children: <Widget>[
             const SizedBox(
-              width: 48,
+              width: 48.0,
               child: Divider(
-                indent: 16,
-                endIndent: 16,
+                indent: 16.0,
+                endIndent: 16.0,
               ),
             ),
             AppText.titleMedium(
               title,
-              height: 1,
+              height: 1.0,
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: .ellipsis,
             ),
             const Expanded(
               child: Divider(
-                indent: 16,
-                endIndent: 16,
+                indent: 16.0,
+                endIndent: 16.0,
               ),
             ),
           ],
@@ -142,7 +142,7 @@ class _CopyTile extends StatelessWidget {
         : Text(
             subtitle!,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
           ),
     onTap: () {
       Clipboard.setData(ClipboardData(text: content ?? (subtitle == null ? title : '$title: $subtitle')));
@@ -167,13 +167,13 @@ class _ShowApplicationInfoTile extends StatelessWidget {
         subtitle: const Text(
           'Show information about the application.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => Octopus.of(context).showDialog<void>(
           (context) => AboutDialog(
             /* applicationName: pubspec.name, */
             applicationVersion: Pubspec.version.representation,
-            applicationIcon: const SizedBox.square(dimension: 64, child: Icon(Icons.apps, size: 64)),
+            applicationIcon: const SizedBox.square(dimension: 64.0, child: Icon(Icons.apps, size: 64.0)),
             children: <Widget>[
               const _CopyTile(
                 title: 'Name',
@@ -220,13 +220,13 @@ class _ShowLicensePageTile extends StatelessWidget {
         subtitle: Text(
           MaterialLocalizations.of(context).licensesPageTitle,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => showLicensePage(
           context: context,
           applicationName: Pubspec.name,
           applicationVersion: Pubspec.version.representation,
-          applicationIcon: const SizedBox.square(dimension: 64, child: Icon(Icons.apps, size: 64)),
+          applicationIcon: const SizedBox.square(dimension: 64.0, child: Icon(Icons.apps, size: 64.0)),
           useRootNavigator: true,
         ),
       ),
@@ -246,39 +246,39 @@ class _ShowApplicationDependenciesTile extends StatelessWidget {
         subtitle: const Text(
           'Show dependencies.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => Octopus.of(context).showDialog<void>(
           (context) => Dialog(
-            insetPadding: const EdgeInsets.all(64),
+            insetPadding: const .all(64.0),
             alignment: Alignment.center,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const .all(16.0),
               child: SizedBox(
                 width: 480,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: <Widget>[
                     const Text(
                       'Dependencies',
                       style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 24.0,
+                        fontWeight: .bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 16.0),
                     Wrap(
                       children: <Widget>[
                         for (final dependency in Pubspec.dependencies.entries)
                           Padding(
-                            padding: const EdgeInsets.all(4),
+                            padding: const .all(4.0),
                             child: Chip(
                               label: Text('${dependency.key}: ${dependency.value}'),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 16.0),
                   ],
                 ),
               ),
@@ -302,39 +302,39 @@ class _ShowApplicationDevDependenciesTile extends StatelessWidget {
         subtitle: const Text(
           'Show developers dependencies.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => Octopus.of(context).showDialog<void>(
           (context) => Dialog(
-            insetPadding: const EdgeInsets.all(64),
+            insetPadding: const .all(64),
             alignment: Alignment.center,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const .all(16.0),
               child: SizedBox(
-                width: 480,
+                width: 480.0,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: <Widget>[
                     const Text(
                       'Dev Dependencies',
                       style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 24.0,
+                        fontWeight: .bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 16.0),
                     Wrap(
                       children: <Widget>[
                         for (final dependency in Pubspec.devDependencies.entries)
                           Padding(
-                            padding: const EdgeInsets.all(4),
+                            padding: const .all(4.0),
                             child: Chip(
                               label: Text('${dependency.key}: ${dependency.value}'),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 16.0),
                   ],
                 ),
               ),
@@ -358,7 +358,7 @@ class _ShowLogsScreenTile extends StatelessWidget {
         subtitle: const Text(
           'Show logs.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => LogsDialog.show(context).ignore(),
       ),
@@ -378,7 +378,7 @@ class _ResetNavigationTile extends StatelessWidget {
         subtitle: const Text(
           'Reset navigation stack.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => Octopus.of(context).popAll(),
       ),
@@ -398,7 +398,7 @@ class _ViewDatabaseTile extends StatelessWidget {
         subtitle: const Text(
           'View database content.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         onTap: () => Octopus.of(context).showDialog<void>(
           (_) => Dialog(
@@ -413,6 +413,41 @@ class _ViewDatabaseTile extends StatelessWidget {
 class _ClearDatabaseTile extends StatelessWidget {
   const _ClearDatabaseTile();
 
+  void _clearDatabase(BuildContext context) {
+    final db = context.dependencies.database;
+    Future<void>(() async {
+      await db.customStatement('PRAGMA foreign_keys = OFF');
+      try {
+        await db.batch((batch) {
+          // ignore: prefer_foreach
+          for (final table in db.allTables) {
+            batch.deleteAll(table);
+          }
+        });
+      } finally {
+        await db.customStatement('PRAGMA foreign_keys = ON');
+      }
+    }).then<void>(
+      (_) {
+        if (context.mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Database cleared'), duration: Duration(seconds: 3)),
+          );
+      },
+
+      onError: (error) {
+        if (context.mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Database clear failed: $error'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) => SliverPadding(
     padding: ScaffoldPadding.of(context),
@@ -422,36 +457,9 @@ class _ClearDatabaseTile extends StatelessWidget {
         subtitle: const Text(
           'Clear database content.',
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
-        onTap: () {
-          final db = context.dependencies.database;
-          Future<void>(() async {
-            await db.customStatement('PRAGMA foreign_keys = OFF');
-            try {
-              await db.batch((batch) {
-                // ignore: prefer_foreach
-                for (final table in db.allTables) {
-                  batch.deleteAll(table);
-                }
-              });
-            } finally {
-              await db.customStatement('PRAGMA foreign_keys = ON');
-            }
-          }).then<void>(
-            (_) => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Database cleared'), duration: Duration(seconds: 3)),
-            ),
-            // ignore: inference_failure_on_untyped_parameter
-            onError: (error) => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Database clear failed: $error'),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 3),
-              ),
-            ),
-          );
-        },
+        onTap: () => _clearDatabase(context),
       ),
     ),
   );
@@ -462,7 +470,6 @@ class _OpenUriTile extends StatelessWidget {
     required this.title,
     required this.description,
     this.uri,
-    super.key, // ignore: unused_element
   });
 
   final String title;
@@ -480,7 +487,7 @@ class _OpenUriTile extends StatelessWidget {
           subtitle: Text(
             description,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
           ),
           onTap: uri == null ? null : () => url_launcher.launchUrlString(uri!).ignore(),
         ),

@@ -42,7 +42,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
     _authSubscription =
         authHandler //
-            .where((i) => i == AuthenticationState.unauthenticated)
+            .where((i) => i == .unauthenticated)
             .listen((_) => signOut(), cancelOnError: false);
   }
   final IAuthenticationApi _api;
@@ -84,7 +84,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
   }
 
   @override
-  Future<void> signOut() => Future<void>.delayed(Duration.zero, () async {
+  Future<void> signOut() => Future<void>.delayed(.zero, () async {
     try {
       if (_user case final AuthenticatedUser authenticatedUser) {
         final token = authenticatedUser.credentials?.accessToken.token;

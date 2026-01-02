@@ -6,7 +6,6 @@ import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_avatar.dart';
 import 'package:auth_model/src/model/user/user_info.dart';
-import 'package:core_model/core_model.dart';
 import 'package:grpc_model/grpc_model.dart';
 
 extension AppUserRoleX on UserRole {
@@ -14,11 +13,7 @@ extension AppUserRoleX on UserRole {
 }
 
 extension UserRoleX on rpc.UserRole {
-  UserRole toRole() => UserRole.values[value];
-}
-
-extension OsEnumX on OsEnum {
-  rpc.OS toOs() => rpc.OS.valueOf(index)!;
+  UserRole toRole() => .values[value];
 }
 
 extension AuthInfoX on rpc.AuthInfo {
@@ -42,7 +37,7 @@ extension UserInfoX on rpc.UserInfo {
 }
 
 extension UserX on rpc.User {
-  User toUser() => User(
+  User toUser() => .new(
     id: id.toId(),
     name: name,
     email: email,
@@ -68,7 +63,7 @@ extension AppUserX on User {
 }
 
 extension UserAvatarX on rpc.UserAvatar {
-  UserAvatar toUserAvatar() => UserAvatar(
+  UserAvatar toUserAvatar() => .new(
     userId: userId.toId(),
     avatar: hasAvatar() ? Uint8List.fromList(avatar) : null,
     loaded: true,

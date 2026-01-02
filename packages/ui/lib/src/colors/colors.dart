@@ -29,8 +29,8 @@ class AppColors implements ThemeExtension<AppColors> {
       final theme = Theme.of(context);
       return theme.extension<AppColors>() ??
           switch (theme.brightness) {
-            Brightness.light => AppColors.light,
-            Brightness.dark => AppColors.dark,
+            .light => .light,
+            .dark => .dark,
           };
     } on Object {
       return AppColors.light;
@@ -44,10 +44,10 @@ class AppColors implements ThemeExtension<AppColors> {
   Object get type => AppColors;
 
   /// Returns true if the brightness is [Brightness.light].
-  bool get isLight => scheme.brightness == Brightness.light;
+  bool get isLight => scheme.brightness == .light;
 
   /// Returns true if the brightness is [Brightness.dark].
-  bool get isDark => scheme.brightness == Brightness.dark;
+  bool get isDark => scheme.brightness == .dark;
 
   /// Returns [ThemeMode] of the closest [Theme] ancestor.
   ///
@@ -55,8 +55,8 @@ class AppColors implements ThemeExtension<AppColors> {
   static ThemeMode themeModeOf(BuildContext context) {
     final theme = Theme.of(context);
     return switch (theme.brightness) {
-      Brightness.light => ThemeMode.light,
-      Brightness.dark => ThemeMode.dark,
+      .light => .light,
+      .dark => .dark,
     };
   }
 

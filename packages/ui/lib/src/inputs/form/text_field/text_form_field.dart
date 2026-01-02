@@ -19,7 +19,7 @@ class AppTextFormField extends StatelessWidget {
     this.controller,
     this.focusNode,
     this.undoController,
-    this.decoration = const InputDecoration(),
+    this.decoration,
     this.keyboardType,
     this.textInputAction,
     this.textCapitalization = TextCapitalization.none,
@@ -394,7 +394,7 @@ class AppTextFormField extends StatelessWidget {
   /// {@macro flutter.widgets.editableText.maxLines}
   ///  * [expands], which determines whether the field should fill the height of
   ///    its parent.
-  final int? maxLines;
+  final int maxLines;
 
   /// {@macro flutter.widgets.editableText.minLines}
   ///  * [expands], which determines whether the field should fill the height of
@@ -683,7 +683,7 @@ class AppTextFormField extends StatelessWidget {
 
   /// {@macro flutter.widgets.editableText.autofillHints}
   /// {@macro flutter.services.AutofillConfiguration.autofillHints}
-  final Iterable<String>? autofillHints;
+  final Iterable<String> autofillHints;
 
   /// {@macro flutter.material.Material.clipBehavior}
   ///

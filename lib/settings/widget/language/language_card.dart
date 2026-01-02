@@ -11,13 +11,13 @@ class LanguageCard extends StatelessWidget {
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary,
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        borderRadius: const .all(.circular(4.0)),
       ),
       child: InkWell(
         onTap: () => SettingsScope.localeOf(context).setLocale(_language),
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        borderRadius: const .all(.circular(4.0)),
         child: SizedBox(
-          width: 64,
+          width: 64.0,
           child: Center(
             child: AppText.bodyMedium(
               _language.languageCode,

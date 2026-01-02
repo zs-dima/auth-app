@@ -66,7 +66,7 @@ class UnauthenticatedUser extends AuthUser {
 
   @override
   AuthUser copyWith({AccessCredentials? credentials, UserId? userId}) =>
-      userId == null ? const UnauthenticatedUser() : AuthUser.authenticated(userId: userId, credentials: credentials!);
+      userId == null ? const UnauthenticatedUser() : .authenticated(userId: userId, credentials: credentials!);
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is UnauthenticatedUser;
@@ -123,7 +123,7 @@ final class AuthenticatedUser extends AuthUser {
 
   @override
   AuthenticatedUser copyWith({AccessCredentials? credentials, UserId? userId}) =>
-      AuthenticatedUser(credentials: credentials ?? this.credentials, userId: userId ?? this.userId);
+      .new(credentials: credentials ?? this.credentials, userId: userId ?? this.userId);
 
   @override
   bool operator ==(Object other) =>

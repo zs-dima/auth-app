@@ -21,7 +21,6 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final currentUser = AuthenticationScope.userOf(context);
     final authUser = AuthenticationScope.userInfoOf(context);
 
@@ -29,15 +28,16 @@ class AppLayout extends StatelessWidget {
       floatingActionButton: floatingActionButton,
       appBar: AppBar(
         scrolledUnderElevation: 0,
-        leading: currentUser is AuthenticatedUser
-            ? Tooltip(
-                message: authUser.name,
-                child: UserAvatarWidget(
-                  user: authUser,
-                  size: 15,
-                ),
-              )
-            : null,
+        leading: switch (currentUser) {
+          AuthenticatedUser() => Tooltip(
+            message: authUser.name,
+            child: UserAvatarWidget(
+              user: authUser,
+              size: 15,
+            ),
+          ),
+          _ => null,
+        },
         title: AppText.headlineMedium(
           title,
         ),

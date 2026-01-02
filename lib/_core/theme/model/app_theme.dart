@@ -15,7 +15,7 @@ final class AppTheme with Diagnosticable {
           fontFamilyFallback: const ['Roboto'],
           colorSchemeSeed: seed,
           colorScheme: seed == null ? kDarkColorScheme : null,
-          brightness: Brightness.dark,
+          brightness: .dark,
           useMaterial3: true,
           extensions: [ThemePaddings.adaptive(size)],
         ),
@@ -25,20 +25,20 @@ final class AppTheme with Diagnosticable {
           fontFamilyFallback: const ['Roboto'],
           colorSchemeSeed: seed,
           colorScheme: seed == null ? kLightColorScheme : null,
-          brightness: Brightness.light,
+          brightness: .light,
           useMaterial3: true,
           extensions: [ThemePaddings.adaptive(size)],
         ),
       );
 
   /// Light mode [AppTheme].
-  AppTheme.light(ScreenSize screenSize) : this(mode: ThemeMode.light, size: screenSize);
+  AppTheme.light(ScreenSize screenSize) : this(mode: .light, size: screenSize);
 
   /// Dark mode [AppTheme].
-  AppTheme.dark(ScreenSize screenSize) : this(mode: ThemeMode.dark, size: screenSize);
+  AppTheme.dark(ScreenSize screenSize) : this(mode: .dark, size: screenSize);
 
   /// System mode [AppTheme].
-  AppTheme.system(ScreenSize screenSize) : this(mode: ThemeMode.system, size: screenSize);
+  AppTheme.system(ScreenSize screenSize) : this(mode: .system, size: screenSize);
 
   /// The type of theme to use.
   final ThemeMode mode;
@@ -58,9 +58,9 @@ final class AppTheme with Diagnosticable {
   int get hashCode => Object.hash(mode, seed, size);
 
   /// All the system [AppTheme]s.
-  static List<AppTheme> values(ScreenSize screenSize) => List.generate(
+  static List<AppTheme> values(ScreenSize screenSize) => .generate(
     Colors.primaries.length,
-    (index) => AppTheme(seed: Colors.primaries[index], mode: ThemeMode.system, size: screenSize),
+    (index) => AppTheme(seed: Colors.primaries[index], mode: .system, size: screenSize),
   );
 
   /// The [ThemeData] for this [AppTheme].
@@ -68,14 +68,13 @@ final class AppTheme with Diagnosticable {
   ///
   /// Could be useful for theme showcase.
   ThemeData computeTheme(BuildContext context) => switch (mode) {
-    ThemeMode.light => lightTheme,
+    .light => lightTheme,
 
-    ThemeMode.dark => darkTheme,
+    .dark => darkTheme,
 
-    ThemeMode.system =>
+    .system =>
       View.of(context).platformDispatcher.platformBrightness ==
-              Brightness
-                  .dark //
+              .dark //
           ? darkTheme
           : lightTheme,
   };
@@ -103,20 +102,20 @@ final class AppTheme with Diagnosticable {
 
 ThemeData _$buildTheme(ThemeData theme) {
   const borderSide = BorderSide(
-    width: 1,
+    width: 1.0,
     color: Color.fromRGBO(0, 0, 0, 0.6), // Color.fromRGBO(43, 45, 39, 0.24)
     strokeAlign: BorderSide.strokeAlignInside,
   );
-  const radius = BorderRadius.all(Radius.circular(8));
+  const radius = BorderRadius.all(.circular(8.0));
   return theme.copyWith(
     inputDecorationTheme: theme.inputDecorationTheme.copyWith(
       isCollapsed: false,
       isDense: false,
       filled: false,
       // filled: true,
-      floatingLabelAlignment: FloatingLabelAlignment.start,
-      floatingLabelBehavior: FloatingLabelBehavior.always,
-      contentPadding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+      floatingLabelAlignment: .start,
+      floatingLabelBehavior: .always,
+      contentPadding: const .fromLTRB(16.0, 8.0, 4.0, 8.0),
       border: const OutlineInputBorder(borderRadius: radius, borderSide: borderSide),
       focusedBorder: OutlineInputBorder(
         borderRadius: radius,
@@ -144,7 +143,7 @@ ThemeData _$buildTheme(ThemeData theme) {
 }
 
 const ColorScheme kLightColorScheme = ColorScheme(
-  brightness: Brightness.light,
+  brightness: .light,
   primary: Color(0xFF1565C0),
   onPrimary: Color(0xFFFFFFFF),
   primaryContainer: Color(0xFF90CAF9),
@@ -194,7 +193,7 @@ const ColorScheme kLightColorScheme = ColorScheme(
 );
 
 const ColorScheme kDarkColorScheme = ColorScheme(
-  brightness: Brightness.dark,
+  brightness: .dark,
   primary: Color(0xFF90CAF9),
   onPrimary: Color(0xFF000000),
   primaryContainer: Color(0xFF0D47A1),

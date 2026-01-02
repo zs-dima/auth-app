@@ -72,7 +72,7 @@ class NumberTextInputFormatter extends TextInputFormatter {
       text: newFormatted,
       selection: TextSelection.collapsed(
         offset: newCursorPosition,
-        affinity: TextAffinity.upstream, // or downstream depending on your preference
+        affinity: .upstream, // or downstream depending on your preference
       ),
     );
   }
@@ -91,7 +91,7 @@ class NumberTextInputFormatter extends TextInputFormatter {
   /// If user only typed "123." and decimals are allowed, we keep "123." as is,
   /// but attempt parsing "123".
   static String _removeTrailingDecimalIfNeeded(String text, String decimalSymbol) =>
-      text.endsWith(decimalSymbol) ? text.substring(0, text.length - decimalSymbol.length) : text;
+      text.endsWith(decimalSymbol) ? text.characters.getRange(0, text.length - decimalSymbol.length).toString() : text;
 
   /// Count occurrences of a substring in a string.
   static int _countOccurrences(String input, String pattern) {
@@ -170,7 +170,7 @@ class NumberTextInputFormatter0 extends TextInputFormatter {
     if (newText == newValue.text) return newValue;
 
     return TextEditingValue(
-      text: _format.format(value),
+      text: newText,
       selection: TextSelection.collapsed(offset: newText.length, affinity: newValue.selection.affinity),
     );
   }

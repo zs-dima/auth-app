@@ -7,7 +7,7 @@ class InputDecorations {
     fillColor: Color(0xFFE8EDF2),
     enabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: Colors.white),
-      borderRadius: BorderRadius.all(Radius.circular(8)),
+      borderRadius: .all(.circular(8.0)),
     ),
   );
 
@@ -17,7 +17,7 @@ class InputDecorations {
     fillColor: Color(0xFFE8EDF2),
     enabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: Colors.white),
-      borderRadius: BorderRadius.all(Radius.circular(8)),
+      borderRadius: .all(.circular(8.0)),
     ),
   );
 

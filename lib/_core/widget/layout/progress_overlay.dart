@@ -36,7 +36,7 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
             .listen(
               (i) {
                 if (!mounted) return;
-                if (i.progress == AppProgress.started) {
+                if (i.progress == .started) {
                   _createProgressOverlay();
                 } else {
                   _removeProgressOverlay();
@@ -54,14 +54,14 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
 
     assert(_overlayEntry == null, 'OverlayEntry should be null when creating a new one.');
     final renderedWidget = context.findRenderObject() as RenderBox?;
-    final renderedOffset = renderedWidget?.localToGlobal(Offset.zero);
+    final renderedOffset = renderedWidget?.localToGlobal(.zero);
     final renderedSize = renderedWidget?.size;
 
     final padding = MediaQuery.paddingOf(context);
 
     final windowTitleHeigh = (kIsWeb || io.Platform.isAndroid || io.Platform.isIOS)
         ? 0
-        : context.findAncestorWidgetOfExactType<WindowScope>()?.height ?? 0;
+        : (context.findAncestorWidgetOfExactType<WindowScope>()?.height ?? 0);
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(

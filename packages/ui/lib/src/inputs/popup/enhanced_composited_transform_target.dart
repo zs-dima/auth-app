@@ -58,7 +58,7 @@ class EnhancedCompositedTransformTarget extends SingleChildRenderObjectWidget {
   final EnhancedLayerLink link;
 
   @override
-  EnhancedRenderLeaderLayer createRenderObject(BuildContext context) => EnhancedRenderLeaderLayer(link: link);
+  EnhancedRenderLeaderLayer createRenderObject(BuildContext context) => .new(link: link);
 
   @override
   void updateRenderObject(BuildContext context, EnhancedRenderLeaderLayer renderObject) {
@@ -123,7 +123,7 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
         ..link = link
         ..offset = offset;
     }
-    context.pushLayer(layer!, super.paint, Offset.zero);
+    context.pushLayer(layer!, super.paint, .zero);
     assert(() {
       layer!.debugCreator = debugCreator;
       return true;

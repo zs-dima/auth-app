@@ -19,7 +19,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Brightness _brightness = Brightness.light;
+  Brightness _brightness = .light;
 
   // This widget is the root of your application.
   @override
@@ -57,23 +57,23 @@ class _MyHomePageState extends State<MyHomePage> {
     // appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.inversePrimary, title: Text(widget.title)),
     body: SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: .start,
+        mainAxisSize: .min,
         spacing: 30.0,
         children: <Widget>[
           Row(
             children: [
               const Spacer(),
               IconButton(
-                iconSize: 64,
+                iconSize: 64.0,
                 onPressed: () => widget.onBrightnessChanged?.call(
-                  widget.brightness == Brightness.light ? Brightness.dark : Brightness.light,
+                  widget.brightness == .light ? .dark : .light,
                 ),
                 icon: Tooltip(
                   message: 'Switch theme',
                   child: Builder(
                     builder: (context) => switch (widget.brightness) {
-                      Brightness.light => const Icon(Icons.dark_mode, color: Colors.black87),
+                      .light => const Icon(Icons.dark_mode, color: Colors.black87),
                       _ => const Icon(Icons.light_mode, color: Colors.orange),
                     },
                   ),
@@ -84,8 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
           const UiKitCard(
             title: 'Typography',
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: .min,
+              crossAxisAlignment: .start,
               spacing: 10.0,
               children: [
                 AppText.displayLarge('Display Large'),
@@ -115,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   title: 'Logo',
                   child: ColoredBox(
                     color: Colors.white,
-                    child: Padding(padding: EdgeInsets.all(8.0), child: AppleLogo()),
+                    child: Padding(padding: .all(8.0), child: AppleLogo()),
                   ),
                 ),
               ),
@@ -126,8 +126,8 @@ class _MyHomePageState extends State<MyHomePage> {
           UiKitCard(
             title: 'Shaders',
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: .min,
+              crossAxisAlignment: .start,
               spacing: 10.0,
               children: [
                 MouseRegion(
@@ -143,12 +143,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   child: AiProgress(
                     background: _aiProgress ? Colors.black : null,
-                    size: const Size.square(250),
+                    size: const Size.square(250.0),
                     animate: _aiProgress,
                     child: _aiProgress ? Icon(Icons.mic_off, color: Colors.orange[700]) : null,
                   ),
                 ),
-                const Shimmer(size: Size(250, 50), radius: Radius.circular(5)),
+                const Shimmer(size: Size(250.0, 50.0), radius: .circular(5.0)),
               ],
             ),
           ),
@@ -157,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Wrap(
               spacing: 20.0,
               runSpacing: 24,
-              crossAxisAlignment: WrapCrossAlignment.center,
+              crossAxisAlignment: .center,
               children: [
                 UiKitIcon('apple', AppIcons.apple),
                 UiKitIcon('windows', AppIcons.windows),
@@ -168,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
 
-          const SizedBox(height: 50),
+          const SizedBox(height: 50.0),
         ],
       ),
     ),

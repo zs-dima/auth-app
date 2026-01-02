@@ -8,30 +8,31 @@ class UserListHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => minExtent;
 
   @override
-  double get minExtent => 35;
+  double get minExtent => 35.0;
+
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final theme = Theme.of(context);
 
     return SizedBox(
-      height: 35,
+      height: 35.0,
       child: Material(
         color: theme.colorScheme.surface,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: .center,
           children: [
             Expanded(
               child: AppText.bodyLarge(
                 title,
-                fontWeight: FontWeight.bold,
-                textAlign: TextAlign.right,
-                overflow: TextOverflow.ellipsis,
+                fontWeight: .bold,
+                textAlign: .right,
+                overflow: .ellipsis,
                 maxLines: 1,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 8.0),
             Icon(Icons.key, color: IconTheme.of(context).color?.withValues(alpha: 0.5)),
-            const SizedBox(width: 28),
+            const SizedBox(width: 28.0),
           ],
         ),
       ),

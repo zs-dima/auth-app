@@ -5,5 +5,5 @@ class DropdownProgressIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const SizedBox.square(dimension: 20, child: CircularProgressIndicator.adaptive(strokeWidth: 2));
+      const SizedBox.square(dimension: 20.0, child: CircularProgressIndicator.adaptive(strokeWidth: 2.0));
 }

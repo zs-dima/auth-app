@@ -11,11 +11,11 @@ class UiKitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card.outlined(
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const .all(16.0),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
+        mainAxisAlignment: .start,
         spacing: 20.0,
         children: [AppText.titleLarge(title), ?child],
       ),

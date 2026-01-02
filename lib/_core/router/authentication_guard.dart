@@ -6,6 +6,31 @@ import 'package:octopus/octopus.dart';
 
 /// A router guard that checks if the user is authenticated.
 class AuthenticationGuard extends OctopusGuard {
+  AuthenticationGuard({
+    required FutureOr<AuthUser> Function() getUser,
+    required Set<String> routes,
+    required OctopusState signinNavigation,
+    required OctopusState homeNavigation,
+    OctopusState? lastNavigation,
+    super.refresh,
+  }) : _getUser = getUser,
+       _routes = routes,
+       _lastNavigation = lastNavigation ?? homeNavigation,
+       _signinNavigation = signinNavigation {
+    // Get the last navigation from the platform default route.
+    if (lastNavigation == null) {
+      try {
+        final platformDefault = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+        final state = OctopusState.fromLocation(platformDefault);
+        if (state.isNotEmpty) {
+          _lastNavigation = state;
+        }
+      } on Object {
+        /* ignore */
+      }
+    }
+  }
+
   /// Get the current user.
   final FutureOr<AuthUser> Function() _getUser;
 
@@ -17,31 +42,6 @@ class AuthenticationGuard extends OctopusGuard {
 
   /// The navigation to use when the user is authenticated.
   OctopusState _lastNavigation;
-
-  AuthenticationGuard({
-    required FutureOr<AuthUser> Function() getUser,
-    required Set<String> routes,
-    required OctopusState signinNavigation,
-    required OctopusState homeNavigation,
-    OctopusState? lastNavigation,
-    super.refresh,
-  })  : _getUser = getUser,
-        _routes = routes,
-        _lastNavigation = lastNavigation ?? homeNavigation,
-        _signinNavigation = signinNavigation {
-    // Get the last navigation from the platform default route.
-    if (lastNavigation == null) {
-      try {
-        final platformDefault = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
-        final state = OctopusState.fromLocation(platformDefault);
-        if (state.isNotEmpty) {
-          _lastNavigation = state;
-        }
-      } on Object {
-/* ignore */
-      }
-    }
-  }
 
   @override
   FutureOr<OctopusState> call(

@@ -23,8 +23,8 @@ class LabelWidget extends StatelessWidget {
     final labelWidget = AppText.titleMedium(label);
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: .min,
+      crossAxisAlignment: .start,
       spacing: spacing,
       children: [
         labelWidget,

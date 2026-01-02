@@ -8,7 +8,7 @@ import 'package:ui/ui.dart';
 class TextPlaceholder extends StatelessWidget {
   /// {@macro text_placeholder}
   TextPlaceholder({
-    double width = double.infinity,
+    double width = .infinity,
     double height = 28,
     super.key,
   }) : size = Size(width, height);

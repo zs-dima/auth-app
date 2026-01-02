@@ -48,43 +48,44 @@ class _RadialProgressIndicatorState extends State<RadialProgressIndicator> with 
 
   @override
   Widget build(BuildContext context) => Center(
-        child: SizedBox.square(
-          dimension: widget.size,
-          child: RepaintBoundary(
-            child: CustomPaint(
-              painter: _RadialProgressIndicatorPainter(
-                animation: _curvedAnimation,
-                color: Theme.of(context).indicatorColor,
-              ),
-              child: Center(
-                child: widget.child,
-              ),
-            ),
+    child: SizedBox.square(
+      dimension: widget.size,
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _RadialProgressIndicatorPainter(
+            animation: _curvedAnimation,
+            color: Theme.of(context).progressIndicatorTheme.color ?? Theme.of(context).colorScheme.primary,
+          ),
+          child: Center(
+            child: widget.child,
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _RadialProgressIndicatorPainter extends CustomPainter {
-  final Animation<double> _animation;
-  final Paint _arcPaint;
-
   _RadialProgressIndicatorPainter({
     required Animation<double> animation,
     Color color = Colors.blue,
-  })  : _animation = animation,
-        _arcPaint = Paint()
-          ..strokeCap = StrokeCap.round
-          ..style = PaintingStyle.stroke
-          ..color = color,
-        super(repaint: animation);
+  }) : _animation = animation,
+       _arcPaint = Paint()
+         ..strokeCap = .round
+         ..style = .stroke
+         ..color = color,
+       super(repaint: animation);
+
+  final Animation<double> _animation;
+
+  final Paint _arcPaint;
 
   @override
   void paint(Canvas canvas, Size size) {
     _arcPaint.strokeWidth = size.shortestSide / 8;
     final progress = _animation.value;
     final rect = Rect.fromCircle(
-      center: size.center(Offset.zero),
+      center: size.center(.zero),
       radius: size.shortestSide / 2 - _arcPaint.strokeWidth / 2,
     );
     final rotate = math.pow(progress, 2) * math.pi * 2;

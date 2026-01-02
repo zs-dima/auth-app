@@ -22,19 +22,19 @@ class DropdownSuggestion extends StatelessWidget {
     onTap: onTap,
     child: Row(
       children: [
-        const SizedBox(width: 16),
+        const SizedBox(width: 16.0),
         if (icon != null) ...[
           Icon(icon),
-          const SizedBox(width: 12),
+          const SizedBox(width: 12.0),
         ],
         Expanded(
           child: AppText.bodyLarge(
             title,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 14.0),
       ],
     ),
   );
@@ -49,7 +49,7 @@ class DropdownSuggestion extends StatelessWidget {
             //         ),
             autofocus: autofocus,
             // shape: const RoundedRectangleBorder(
-            //   borderRadius: BorderRadius.all(Radius.circular(12)),
+            //   borderRadius: BorderRadius.all(Radius.circular(12.0)),
             // ),
             onTap: onTap,
           );*/

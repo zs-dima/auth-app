@@ -15,7 +15,7 @@ class RetryMiddleware {
     this.retryEvaluator,
     this.retryDelays = const [Duration(seconds: 1), Duration(seconds: 2), Duration(seconds: 4)],
   }) : assert(retries >= 0, 'Retries must be non-negative'),
-       assert(retryDelays.isNotEmpty && retryDelays.every((d) => d > Duration.zero), 'Retry delays must not be empty'),
+       assert(retryDelays.isNotEmpty && retryDelays.every((d) => d > .zero), 'Retry delays must not be empty'),
        assert(retryDelays.length >= retries, 'Retry delays must be at least as many as retries');
 
   /// Number of retries for the request.

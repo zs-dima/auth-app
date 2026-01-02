@@ -48,33 +48,33 @@ class DropdownSuggestions<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PointerInterceptor(
     child: Padding(
-      padding: const EdgeInsets.only(top: 1),
+      padding: const .only(top: 1.0),
       child: Material(
         elevation: 5,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: .all(.circular(8.0)),
         ),
         child: suggestions.isEmpty
             ? Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   const Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: .all(16.0),
                     child: Text('No items found'),
                   ),
                   if (addNewButton != null) ...[
-                    const Divider(height: 0),
-                    SizedBox(width: double.maxFinite, child: addNewButton),
+                    const Divider(height: 0.0),
+                    SizedBox(width: .maxFinite, child: addNewButton),
                   ],
                 ],
               )
             : Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const .only(top: 4.0),
                 child: intrinsicWidth
                     ? IntrinsicWidth(
                         child: SingleChildScrollView(
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize: .min,
                             children: suggestions.toIndexedList(
                               (index, suggestion) => _dropdownSuggestion(suggestion, index),
                             ),
@@ -82,15 +82,15 @@ class DropdownSuggestions<T> extends StatelessWidget {
                         ),
                       )
                     : Column(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: .min,
                         children: [
                           Flexible(
-                            fit: FlexFit.loose,
+                            fit: .loose,
                             child: CustomScrollView(
                               shrinkWrap: true,
                               slivers: [
                                 SliverFixedExtentList(
-                                  itemExtent: 42,
+                                  itemExtent: 42.0,
                                   delegate: SliverChildBuilderDelegate(
                                     (context, index) {
                                       if (loadMore != null && index >= suggestions.length - _nextPageThreshold) {
@@ -104,15 +104,13 @@ class DropdownSuggestions<T> extends StatelessWidget {
                                 ),
                                 if (loadMore != null && suggestions.length > 7)
                                   const SliverPadding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                    ),
+                                    padding: .symmetric(horizontal: 2.0),
                                     sliver: SliverToBoxAdapter(
                                       child: SizedBox(
-                                        width: double.maxFinite,
-                                        height: 6,
+                                        width: .maxFinite,
+                                        height: 6.0,
                                         child: LinearProgressIndicator(
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                          borderRadius: .all(.circular(8.0)),
                                         ),
                                       ),
                                     ),
@@ -121,9 +119,9 @@ class DropdownSuggestions<T> extends StatelessWidget {
                             ),
                           ),
                           if (addNewButton != null) ...[
-                            const Divider(height: 0),
+                            const Divider(height: 0.0),
                             SizedBox(
-                              width: double.maxFinite,
+                              width: .maxFinite,
                               child: addNewButton,
                             ),
                           ],

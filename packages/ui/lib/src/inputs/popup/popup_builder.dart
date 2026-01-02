@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ui/src/inputs/popup/enhanced_composited_transform_follower.dart';
 import 'package:ui/src/inputs/popup/enhanced_composited_transform_target.dart';
 
@@ -46,9 +45,10 @@ class PopupBuilder extends StatefulWidget {
   ///
   /// A [DisplayFeature] obstructs the screen when the area it occupies is
   /// not 0 or the `state` is [DisplayFeatureState.postureHalfOpened].
-  static Iterable<Rect> findDisplayFeatureBounds(List<DisplayFeature> features) => features
-      .where((d) => d.bounds.shortestSide > 0 || d.state == DisplayFeatureState.postureHalfOpened)
-      .map((d) => d.bounds);
+  static Iterable<Rect> findDisplayFeatureBounds(List<DisplayFeature> features) =>
+      features //
+          .where((d) => d.bounds.shortestSide > 0 || d.state == .postureHalfOpened)
+          .map((d) => d.bounds);
 
   /// The target widget that the follower widget [followerBuilder] is positioned relative to.
   final PopupWidgetBuilder targetBuilder;
@@ -284,7 +284,7 @@ class _PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserv
       actions: {DismissIntent: CallbackAction<DismissIntent>(onInvoke: (intent) => widget.onDismiss?.call())},
       child: Shortcuts(
         debugLabel: 'PopupFollower',
-        shortcuts: {LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent()},
+        shortcuts: {LogicalKeySet(.escape): const DismissIntent()},
         child: Semantics(
           container: true,
           explicitChildNodes: true,

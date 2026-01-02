@@ -9,14 +9,14 @@ class ThemeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 100,
+    height: 100.0,
     child: ListView.builder(
-      scrollDirection: Axis.horizontal,
+      scrollDirection: .horizontal,
       itemCount: _themes.length,
       itemBuilder: (context, index) {
         final theme = _themes[index];
 
-        return Padding(padding: const EdgeInsets.all(8), child: _ThemeCard(theme));
+        return Padding(padding: const .all(8.0), child: _ThemeCard(theme));
       },
     ),
   );
@@ -31,13 +31,13 @@ class _ThemeCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: Material(
       color: _theme.seed ?? _theme.computeTheme(context).colorScheme.primary,
-      borderRadius: const BorderRadius.all(Radius.circular(4)),
+      borderRadius: const .all(.circular(4.0)),
       child: InkWell(
         onTap: () =>
             SettingsScope.themeOf(context).setTheme(AppTheme(mode: _theme.mode, seed: null, size: _theme.size)),
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        borderRadius: const .all(.circular(4.0)),
         child: SizedBox.square(
-          dimension: 64,
+          dimension: 64.0,
           child: Center(child: AppText.bodyMedium(_theme.mode.name)),
         ),
       ),

@@ -1,3 +1,5 @@
+// ignore_for_file: prefer-async-callback
+
 import 'dart:async';
 import 'dart:math' as math;
 

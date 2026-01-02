@@ -10,7 +10,7 @@ class AiProgress extends SingleChildRenderObjectWidget {
     super.key,
     this.background,
     this.speed = 15.0,
-    this.size = const Size(128, 28),
+    this.size = const Size(128.0, 28.0),
     this.radius = const Radius.circular(8.0),
     this.initialSeed = 0.0,
     this.animate = true,
@@ -22,13 +22,13 @@ class AiProgress extends SingleChildRenderObjectWidget {
   final Color? background;
 
   /// The radius of the rounded corners of the shimmer box.
-  final Radius? radius;
+  final Radius radius;
 
   /// The speed of the shimmering effect (higher means faster).
   final double speed;
 
   /// The size of the widget. If not null, the shimmer box will be this size.
-  final Size? size;
+  final Size size;
 
   /// Initial offset (as fraction of width) for the shimmer animation.
   final double initialSeed;
@@ -81,9 +81,9 @@ class AiProgressShaderRenderObject extends RenderBox
        _animate = animate {
     // Initialize paint with background color
     _paint.color = _backgroundColor;
-    _paint.style = PaintingStyle.fill;
-    _paint.blendMode = BlendMode.srcOver;
-    _paint.filterQuality = FilterQuality.low;
+    _paint.style = .fill;
+    _paint.blendMode = .srcOver;
+    _paint.filterQuality = .low;
     _paint.isAntiAlias = true;
     // Begin loading the shader (if not already loaded)
     _AiProgressShaderManager.setShader(_paint);
@@ -106,7 +106,7 @@ class AiProgressShaderRenderObject extends RenderBox
 
   final Paint _paint = Paint();
   Ticker? _ticker;
-  Duration _elapsed = Duration.zero;
+  Duration _elapsed = .zero;
   int _activeFlag = 0; // bit flags to track if animation should pause (e.g., app not active or detached)
 
   @override
@@ -156,7 +156,7 @@ class AiProgressShaderRenderObject extends RenderBox
         if (_ticker == null) {
           _ticker = Ticker(_onTick, debugLabel: 'AiProgressShaderTicker')..start();
         } else {
-          _elapsed = Duration.zero; // reset elapsed time when re-enabling animation, if desired
+          _elapsed = .zero; // reset elapsed time when re-enabling animation, if desired
           _ticker!.start();
         }
       } else {
@@ -198,7 +198,7 @@ class AiProgressShaderRenderObject extends RenderBox
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     const lifecycleFlag = 1 << 0;
-    state == AppLifecycleState.resumed
+    state == .resumed
         ? // Clear lifecycle pause flag when app is resumed
           _activeFlag &= ~lifecycleFlag
         : // Set flag when app is not active (paused, inactive, detached)
@@ -219,8 +219,8 @@ class AiProgressShaderRenderObject extends RenderBox
     }
     // If no child and no size specified, default to the biggest allowed (or a default minimum)
     final constrained = constraints.biggest;
-    return constrained.width == double.infinity || constrained.height == double.infinity
-        ? constraints.constrain(const Size(128, 28))
+    return constrained.width == .infinity || constrained.height == .infinity
+        ? constraints.constrain(const Size(128.0, 28.0))
         : constrained;
   }
 
@@ -254,8 +254,8 @@ class AiProgressShaderRenderObject extends RenderBox
       ..translate(offset.dx, offset.dy);
     // Clip to rounded rectangle (or rect) so the shimmer effect and child are confined to the shape
     // if (_radius > 0.0) {
-    if (_radius case final Radius radius when radius != Radius.zero) {
-      canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, _radius ?? Radius.zero));
+    if (_radius case final Radius radius when radius != .zero) {
+      canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, _radius ?? .zero));
     } else {
       canvas.clipRect(Offset.zero & size);
     }
@@ -282,7 +282,7 @@ class AiProgressShaderRenderObject extends RenderBox
     }
     // Paint the child widget on top of the shimmer background (if any)
     if (child != null) {
-      context.paintChild(child!, Offset.zero);
+      context.paintChild(child!, .zero);
     }
     canvas.restore();
   }
@@ -310,17 +310,17 @@ abstract final class _AiProgressShaderManager {
         if (program == null) return;
         paint
           ..shader = program.fragmentShader()
-          ..blendMode = BlendMode.src
-          ..filterQuality = FilterQuality.low
+          ..blendMode = .src
+          ..filterQuality = .low
           ..isAntiAlias = false;
       }).ignore();
     } else {
       // If already loaded, attach shader
       paint
         ..shader = _fragmentProgram!.fragmentShader()
-        ..blendMode = BlendMode
+        ..blendMode =
             .src // use src blend for shader to directly apply its output
-        ..filterQuality = FilterQuality.low
+        ..filterQuality = .low
         ..isAntiAlias = false;
     }
   }

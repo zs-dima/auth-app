@@ -38,9 +38,9 @@ class SettingsWidget extends StatelessWidget {
           SliverList(
             delegate: SliverChildListDelegate.fixed(
               <Widget>[
-                const SizedBox(height: 16),
+                const SizedBox(height: 16.0),
                 Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const .all(8.0),
                   child: AppText.titleMedium(
                     Localization.of(context).textSize,
                   ),
@@ -55,14 +55,14 @@ class SettingsWidget extends StatelessWidget {
                   },
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const .all(8.0),
                   child: AppText.titleMedium(
                     Localization.of(context).locales,
                   ),
                 ),
                 LanguagesSelector(Localization.supportedLocales),
                 Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const .all(8.0),
                   child: AppText.titleMedium(
                     Localization.of(context).default_themes,
                   ),
@@ -72,7 +72,7 @@ class SettingsWidget extends StatelessWidget {
                   [lightTheme, darkTheme, systemTheme],
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 8),
+                  padding: const .only(left: 8.0, top: 8.0),
                   child: AppText.titleMedium(
                     Localization.of(context).custom_colors,
                   ),
@@ -92,7 +92,7 @@ class SettingsWidget extends StatelessWidget {
           Row(
             children: [
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const .all(8.0),
                 child: AppText.titleMedium(
                   'version ${context.dependencies.metadata.appVersion}',
                 ),
@@ -113,7 +113,7 @@ class SettingsWidget extends StatelessWidget {
                   child: Padding(
                     padding: ThemePaddings.defaultMedium.medium,
                     child: SizedBox(
-                      width: 120,
+                      width: 120.0,
                       child: OutlinedButton(
                         child: const Text('Cancel'),
                         onPressed: () {
@@ -130,11 +130,11 @@ class SettingsWidget extends StatelessWidget {
           // SliverToBoxAdapter(
           //   child: Center(
           //     child: SizedBox(
-          //       height: 100,
-          //       width: 100,
+          //       height: 100.0,
+          //       width: 100.0,
           //       child: Card(
           //         color: theme.colorScheme.primaryContainer,
-          //         margin: const EdgeInsets.all(8),
+          //         margin: const EdgeInsets.all(8.0),
           //       ),
           //     ),
           //   ),

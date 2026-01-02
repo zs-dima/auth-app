@@ -52,18 +52,18 @@ class UserAvatarMenuWidget extends StatelessWidget {
 
         return PopupMenuButton<String>(
           enabled: authenticated,
-          offset: const Offset(0, 50),
+          offset: const Offset(0.0, 50.0),
           tooltip: userName,
           itemBuilder: (context) => <PopupMenuEntry<String>>[
             PopupMenuItem<String>(
               enabled: false,
-              height: 10,
-              padding: EdgeInsets.zero,
+              height: 10.0,
+              padding: .zero,
               child: Center(
                 child: Text(
                   userName,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: .ellipsis,
                   softWrap: true,
                 ),
               ),
@@ -72,14 +72,14 @@ class UserAvatarMenuWidget extends StatelessWidget {
               value: 'Profile',
               child: ListTile(
                 leading: Icon(Icons.person_outline_rounded),
-                title: Text('Your profile', overflow: TextOverflow.ellipsis, maxLines: 1),
+                title: Text('Your profile', overflow: .ellipsis, maxLines: 1),
               ),
             ),
             const PopupMenuItem<String>(
               value: 'Settings',
               child: ListTile(
                 leading: Icon(Icons.settings_outlined),
-                title: Text('Settings', overflow: TextOverflow.ellipsis, maxLines: 1),
+                title: Text('Settings', overflow: .ellipsis, maxLines: 1),
               ),
             ),
             const PopupMenuDivider(),
@@ -87,14 +87,7 @@ class UserAvatarMenuWidget extends StatelessWidget {
               value: 'Users',
               child: ListTile(
                 leading: Icon(Icons.group_outlined),
-                title: Text('Users', overflow: TextOverflow.ellipsis, maxLines: 1),
-              ),
-            ),
-            const PopupMenuItem<String>(
-              value: 'Advertisers',
-              child: ListTile(
-                leading: Icon(Icons.campaign_outlined),
-                title: Text('Advertisers', overflow: TextOverflow.ellipsis, maxLines: 1),
+                title: Text('Users', overflow: .ellipsis, maxLines: 1),
               ),
             ),
             // if (authUser.role == UserRole.admin)
@@ -122,20 +115,12 @@ class UserAvatarMenuWidget extends StatelessWidget {
             //   ),
             // ),
             const PopupMenuDivider(),
-            const PopupMenuItem<String>(
-              value: 'Blocklists',
-              child: ListTile(
-                leading: Icon(Icons.comments_disabled_outlined),
-                title: Text('Blocklists', overflow: TextOverflow.ellipsis, maxLines: 1),
-              ),
-            ),
-            const PopupMenuDivider(),
 
             const PopupMenuItem<String>(
               value: 'Logout',
               child: ListTile(
                 leading: Icon(Icons.exit_to_app),
-                title: Text('Logout', overflow: TextOverflow.ellipsis, maxLines: 1),
+                title: Text('Logout', overflow: .ellipsis, maxLines: 1),
               ),
             ),
           ],
@@ -181,21 +166,21 @@ class UserAvatarMenuWidget extends StatelessWidget {
                   duration: Durations.extralong1,
                   child: CircleAvatar(
                     key: ValueKey(currentUser.email),
-                    radius: 14,
+                    radius: 14.0,
                     foregroundColor: Colors.white,
                     backgroundColor: _getIconColor(initials),
-                    child: Text(initials, style: const TextStyle(fontSize: 12)),
+                    child: Text(initials, style: const TextStyle(fontSize: 12.0)),
                   ),
                 )
               // ignore: dead_code
               : SizedBox(
-                  height: 45,
-                  width: 150,
+                  height: 45.0,
+                  width: 150.0,
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: .center,
+                    mainAxisSize: .min,
                     children: [
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 7.0),
                       AnimatedSwitcher(
                         duration: Durations.extralong1,
                         child: CircleAvatar(
@@ -203,7 +188,7 @@ class UserAvatarMenuWidget extends StatelessWidget {
                           radius: 12,
                           foregroundColor: Colors.white,
                           backgroundColor: _getIconColor(initials),
-                          child: Text(initials, style: const TextStyle(fontSize: 12)),
+                          child: Text(initials, style: const TextStyle(fontSize: 12.0)),
                         ),
                       ),
                       /*StateConsumer<UsersAvatarsController, UsersAvatarsState>(
@@ -215,7 +200,7 @@ class UserAvatarMenuWidget extends StatelessWidget {
                       duration: Durations.extralong1,
                       child: CircleAvatar(
                           key: ValueKey('${currentUser.email}${userAvatarState.avatarLoaded}'),
-                        radius: 15,
+                        radius: 15.0,
                         backgroundColor: _getIconColor(initials),
                         backgroundImage: avatarState.mapAvatar<ImageProvider>(
                           user,
@@ -235,18 +220,18 @@ class UserAvatarMenuWidget extends StatelessWidget {
                     );
                   },
                 ),*/
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 5.0),
                       Expanded(
                         child: Text(
                           userName,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          overflow: .ellipsis,
                           softWrap: true,
                         ),
                       ),
-                      const SizedBox(width: 3),
-                      // const Icon(AppIcons.chevronDown, size: 14), // Icons.arrow_drop_down, size: 16
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 3.0),
+                      // const Icon(AppIcons.chevronDown, size: 14.0), // Icons.arrow_drop_down, size: 16.0
+                      const SizedBox(width: 3.0),
                     ],
                   ),
                 ),

@@ -145,7 +145,7 @@ class IntlTextField extends StatelessWidget {
                   InputDecoration(
                     labelText: label,
                     prefixText: format.currencySymbol == 'USD' ? null : format.currencySymbol,
-                    // contentPadding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+                    // contentPadding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 8.0),
                     // isCollapsed: false,
                     // isDense: false,
                     // filled: false,
@@ -154,10 +154,10 @@ class IntlTextField extends StatelessWidget {
                     hintText: hint,
                     // helperText: null,
                     prefixIcon: prefixIcon,
-                    // prefixIconConstraints: const BoxConstraints.expand(width: 48, height: 48),
+                    // prefixIconConstraints: const BoxConstraints.expand(width: 48.0, height: 48.0),
                     suffixIcon: suffixIcon,
                     suffixText: suffixText,
-                    // suffixIconConstraints: const BoxConstraints.expand(width: 48, height: 48),
+                    // suffixIconConstraints: const BoxConstraints.expand(width: 48.0, height: 48.0),
                     // counter: const SizedBox.shrink(),
                     // errorText: null,
                     // helperMaxLines: 0,
@@ -172,9 +172,9 @@ class IntlTextField extends StatelessWidget {
         autocorrect: autocorrect,
         maxLines: null,
         // maxLines: multiline ? null : 1,
-        textAlignVertical: TextAlignVertical.center,
+        textAlignVertical: .center,
         // textAlignVertical: multiline ? TextAlignVertical.top : null,
-        keyboardType: decimalDigits ? TextInputType.numberWithOptions(decimal: decimalDigits) : TextInputType.number,
+        keyboardType: decimalDigits ? TextInputType.numberWithOptions(decimal: decimalDigits) : .number,
         // keyboardType: widget.keyboardType ?? (widget.multiline ? TextInputType.multiline : TextInputType.text),
         inputFormatters: [
           if (decimalDigits)

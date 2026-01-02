@@ -2,9 +2,10 @@ name: core_model
 resolution: workspace
 
 description: Core data classes
-version: 1.0.0+1
 
 publish_to: "none"
+
+version: 1.0.0+1
 
 environment:
   sdk: ^3.10.1

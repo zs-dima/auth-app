@@ -15,25 +15,6 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use oSDescriptor instead')
-const OS$json = {
-  '1': 'OS',
-  '2': [
-    {'1': 'FUCHSIA', '2': 0},
-    {'1': 'LINUX', '2': 1},
-    {'1': 'MACOS', '2': 2},
-    {'1': 'WINDOWS', '2': 3},
-    {'1': 'IOS', '2': 4},
-    {'1': 'ANDROID', '2': 5},
-    {'1': 'UNKNOWN', '2': 6},
-  ],
-};
-
-/// Descriptor for `OS`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List oSDescriptor =
-    $convert.base64Decode('CgJPUxILCgdGVUNIU0lBEAASCQoFTElOVVgQARIJCgVNQUNPUxACEgsKB1dJTkRPV1MQAxIHCg'
-        'NJT1MQBBILCgdBTkRST0lEEAUSCwoHVU5LTk9XThAG');
-
 @$core.Deprecated('Use userRoleDescriptor instead')
 const UserRole$json = {
   '1': 'UserRole',
@@ -126,15 +107,14 @@ final $typed_data.Uint8List deviceInfoDescriptor =
 const OsInfo$json = {
   '1': 'OsInfo',
   '2': [
-    {'1': 'os', '3': 1, '4': 1, '5': 14, '6': '.auth.OS', '10': 'os'},
+    {'1': 'os', '3': 1, '4': 1, '5': 9, '10': 'os'},
     {'1': 'version', '3': 2, '4': 1, '5': 9, '10': 'version'},
   ],
 };
 
 /// Descriptor for `OsInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List osInfoDescriptor =
-    $convert.base64Decode('CgZPc0luZm8SGAoCb3MYASABKA4yCC5hdXRoLk9TUgJvcxIYCgd2ZXJzaW9uGAIgASgJUgd2ZX'
-        'JzaW9u');
+    $convert.base64Decode('CgZPc0luZm8SDgoCb3MYASABKAlSAm9zEhgKB3ZlcnNpb24YAiABKAlSB3ZlcnNpb24=');
 
 @$core.Deprecated('Use refreshTokenRequestDescriptor instead')
 const RefreshTokenRequest$json = {

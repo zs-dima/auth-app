@@ -6,7 +6,7 @@ class TimeZoneConverter implements JsonConverter<Duration, String> {
   @override
   Duration fromJson(String json) {
     final parts = json.split(':');
-    if (parts.length != 2) return Duration.zero;
+    if (parts.length != 2) return .zero;
 
     final hours = int.parse(parts.first);
     final minutes = int.parse(parts.last);

@@ -4,7 +4,6 @@ import 'package:auth_app/_core/router/router_state_mixin.dart';
 import 'package:auth_app/_core/widget/window_scope.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/settings/settings_scope.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:octopus/octopus.dart';
 
@@ -51,10 +50,10 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
       locale: locale,
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         dragDevices: {
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.touch,
-          PointerDeviceKind.stylus,
-          PointerDeviceKind.unknown,
+          .mouse,
+          .touch,
+          .stylus,
+          .unknown,
         },
       ),
 
@@ -70,11 +69,11 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
         // Can be a range: minScaleFactor: 1.0, maxScaleFactor: 2.0
         data: mediaQueryData.copyWith(
           // textScaler: TextScaler.noScaling,
-          textScaler: TextScaler.linear(mediaQueryData.textScaler.scale(textScale).clamp(0.5, 2)),
+          textScaler: TextScaler.linear(mediaQueryData.textScaler.scale(textScale).clamp(0.5, 2.0)),
         ),
         child: WindowScope(
           title: Localization.of(context).appTitle,
-          height: 24, // TODO
+          height: 24.0, // TODO
           child: OctopusTools(
             enable: !environment.isProduction,
             octopus: router,

@@ -1,6 +1,7 @@
-// ignore_for_file: type_annotate_public_apis, avoid_dynamic, prefer-explicit-parameter-names, avoid-dynamic, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters
+// ignore_for_file: type_annotate_public_apis, avoid_dynamic, prefer-explicit-parameter-names, avoid-dynamic, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters, prefer-async-callback, prefer-explicit-function-type
 
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:grpc/grpc.dart';
 
@@ -202,7 +203,7 @@ class _DeferredResponseStream<R> implements ResponseStream<R> {
   StreamSubscription<R> listen(
     void Function(R event)? onData, {
     Function? onError,
-    void Function()? onDone,
+    VoidCallback? onDone,
     bool? cancelOnError,
   }) => _stream.listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
 

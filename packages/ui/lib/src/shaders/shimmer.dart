@@ -86,9 +86,9 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
        _paint = Paint() {
     _paint
       ..color = background
-      ..style = PaintingStyle.fill
-      ..blendMode = BlendMode.srcOver
-      ..filterQuality = FilterQuality.low
+      ..style = .fill
+      ..blendMode = .srcOver
+      ..filterQuality = .low
       ..isAntiAlias = true;
   }
 
@@ -107,11 +107,11 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
   /// Animation vsync ticker for the shimmer effect.
   Ticker? _animationTicker;
 
-  Size _$size = Size.zero;
+  Size _$size = .zero;
 
   int _activeFlag = 0;
 
-  Duration _elapsed = Duration.zero;
+  Duration _elapsed = .zero;
 
   @override
   bool get isRepaintBoundary => false;
@@ -160,7 +160,7 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     const lifecycleFlag = 1 << 0; // Flag to indicate lifecycle changes
-    state == AppLifecycleState.resumed ? _activeFlag &= ~lifecycleFlag : _activeFlag |= lifecycleFlag;
+    state == .resumed ? _activeFlag &= ~lifecycleFlag : _activeFlag |= lifecycleFlag;
   }
 
   @override
@@ -194,7 +194,7 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
 
   @override
   Size computeDryLayout(BoxConstraints constraints) => switch (_size) {
-    final Size size => constraints.constrain(size),
+    final Size s => constraints.constrain(s),
     _ => constraints.biggest,
   };
 
@@ -218,8 +218,8 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
       ..translate(offset.dx, offset.dy);
 
     // Clip the canvas to the size and radius if provided
-    if (_radius case final Radius radius when radius != Radius.zero) {
-      canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, _radius ?? Radius.zero));
+    if (_radius case final Radius radius when radius != .zero) {
+      canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, _radius ?? .zero));
     } else {
       canvas.clipRect(Offset.zero & size);
     }
@@ -265,16 +265,16 @@ abstract final class _ShimmerShaderManager {
     if (_$fragmentProgram case final ui.FragmentProgram program) {
       paint
         ..shader = program.fragmentShader()
-        ..blendMode = BlendMode.src
-        ..filterQuality = FilterQuality.low
+        ..blendMode = .src
+        ..filterQuality = .low
         ..isAntiAlias = false;
     } else {
-      _$loadfragmentProgramOnce.then((program) {
-        if (program == null) return;
+      _$loadfragmentProgramOnce.then((p) {
+        if (p == null) return;
         paint
-          ..shader = program.fragmentShader()
-          ..blendMode = BlendMode.src
-          ..filterQuality = FilterQuality.low
+          ..shader = p.fragmentShader()
+          ..blendMode = .src
+          ..filterQuality = .low
           ..isAntiAlias = false;
       }).ignore();
     }

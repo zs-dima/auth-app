@@ -4,6 +4,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 class ControllerObserver with _SentryTransactionMixin implements IControllerObserver {
   factory ControllerObserver.instance(Logger logger) => _instance ??= ControllerObserver._(logger);
+
   ControllerObserver._(Logger logger) {
     init(logger);
     _log.v4('🪢 observer created');
@@ -129,6 +130,7 @@ mixin _SentryTransactionMixin {
   }
 }
 
-extension _TypeX on Type {
-  String get typeName => toString().replaceAll(r'_$_', '').replaceAll(r'_$', '');
-}
+// Web JS type name fix
+// extension _TypeX on Type {
+//   String get typeName => toString().replaceAll(r'_$_', '').replaceAll(r'_$', '');
+// }

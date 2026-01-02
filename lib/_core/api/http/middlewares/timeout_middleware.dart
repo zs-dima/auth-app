@@ -20,7 +20,7 @@ class TimeoutMiddleware {
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
     final timeout = switch (context['timeout'] ?? context['duration']) {
-      final Duration d when d > Duration.zero => d,
+      final Duration d when d > .zero => d,
       final int ms when ms > 0 => Duration(milliseconds: ms),
       final DateTime d when d.isAfter(DateTime.now()) => d.difference(DateTime.now()).abs(),
       Duration() || int() || DateTime() => null, // Timeout should not be applied if the value is 0

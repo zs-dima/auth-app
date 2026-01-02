@@ -25,9 +25,9 @@ class WindowScope extends StatelessWidget {
   Widget build(BuildContext context) => kIsWeb || io.Platform.isAndroid || io.Platform.isIOS
       ? child
       : Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: .max,
+          mainAxisAlignment: .start,
+          crossAxisAlignment: .stretch,
           children: <Widget>[
             const _WindowTitle(),
             Expanded(child: child),
@@ -93,7 +93,7 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
     final title = scope?.title ?? Localization.of(context).app;
 
     return SizedBox(
-      height: scope?.height ?? 24,
+      height: scope?.height ?? 24.0,
       child: DragToMoveArea(
         child: Material(
           color: Theme.of(context).primaryColor,
@@ -105,8 +105,8 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
                   final size = MediaQuery.sizeOf(ctx);
                   return AnimatedPositioned(
                     duration: Durations.medium3,
-                    left: size.width < 800 ? 8 : 78,
-                    right: 78,
+                    left: size.width < 800 ? 8.0 : 78.0,
+                    right: 78.0,
                     top: 0,
                     bottom: 0,
                     child: Center(
@@ -118,9 +118,9 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
                         ),
                         child: AppText.labelLarge(
                           title,
-                          height: 1,
+                          height: 1.0,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          overflow: .ellipsis,
                         ),
                       ),
                     ),
@@ -175,9 +175,9 @@ class _WindowButtons$Windows extends StatelessWidget {
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerRight,
     child: Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: .min,
+      crossAxisAlignment: .center,
+      mainAxisAlignment: .center,
       children: <Widget>[
         // Is always on top
         ValueListenableBuilder<bool>(
@@ -202,7 +202,7 @@ class _WindowButtons$Windows extends StatelessWidget {
 
         // Close
         _WindowButton(onPressed: windowManager.close, icon: Icons.close),
-        const SizedBox(width: 4),
+        const SizedBox(width: 4.0),
       ],
     ),
   );
@@ -216,15 +216,15 @@ class _WindowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
+    padding: const .symmetric(horizontal: 4.0),
     child: IconButton(
       onPressed: onPressed,
       icon: Icon(icon),
-      iconSize: 16,
+      iconSize: 16.0,
       alignment: Alignment.center,
       padding: EdgeInsets.zero,
-      splashRadius: 12,
-      constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+      splashRadius: 12.0,
+      constraints: const BoxConstraints.tightFor(width: 24.0, height: 24.0),
     ),
   );
 }

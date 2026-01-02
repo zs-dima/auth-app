@@ -161,7 +161,7 @@ final class ApiClientResponse {
     bool? persistentConnection,
     ApiClientRequest? request,
     http_package.ByteStream? stream,
-  }) => ApiClientResponse(
+  }) => .new(
     statusCode: statusCode ?? this.statusCode,
     headers: headers ?? Map<String, String>.of(this.headers),
     contentLength: contentLength ?? this.contentLength,
@@ -409,7 +409,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Map<String, String>? headers,
     Iterable<ApiClientMiddleware>? middlewares,
     int? maxRedirects,
-  }) => ApiClient(
+  }) => .new(
     baseUrl: url ?? baseUrl,
     client: client,
     headers: headers ?? _headers,
@@ -458,7 +458,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   FutureApiClientResponse _sendUnstreamed({
     required String method,
     required Uri url,
-    required Map<String, String>? headers,
+    required Map<String, String> headers,
     required Object? body,
     required Map<String, Object?> context,
   }) {
@@ -467,7 +467,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
       ..maxRedirects = _maxRedirects
       ..followRedirects = _maxRedirects > 0;
 
-    if (headers != null) request.headers.addAll(headers);
+    request.headers.addAll(headers);
     switch (body) {
       case null:
         break; // No body, do nothing
@@ -730,7 +730,7 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
                 error: null,
                 data: <String, Object?>{'contentLength': contentLength, 'maxSize': _kMaxResponseSize},
               ),
-              StackTrace.current,
+              .current,
             );
             return;
           }
@@ -1011,7 +1011,7 @@ class MultipartFormDataBuilder {
     const prefix = 'http-boundary-';
     final list = List<int>.generate(
       boundaryLength - prefix.length,
-      (index) => _boundaryCharacters[_random.nextInt(_boundaryCharacters.length)],
+      (index) => kBoundaryCharacters[_random.nextInt(kBoundaryCharacters.length)],
       growable: false,
     );
     return '$prefix${String.fromCharCodes(list)}';
@@ -1026,7 +1026,7 @@ class MultipartFormDataBuilder {
 ///
 /// [RFC 2046]: http://tools.ietf.org/html/rfc2046#section-5.1.1.
 /// [RFC 1521]: https://tools.ietf.org/html/rfc1521#section-4
-const List<int> _boundaryCharacters = <int>[
+const List<int> kBoundaryCharacters = <int>[
   43,
   95,
   45,

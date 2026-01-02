@@ -13,6 +13,6 @@ abstract interface class IDeviceInfo {
   String get deviceName;
   String get deviceModel;
   String get deviceId;
-  OsEnum get deviceOs;
+  String get deviceOs;
   String get deviceOsVersion;
 }

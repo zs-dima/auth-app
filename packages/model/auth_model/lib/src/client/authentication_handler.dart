@@ -24,12 +24,12 @@ class AuthenticationHandler extends Stream<AuthenticationState> implements IAuth
 
   @override
   void handleAuthenticationError() {
-    if (_controller?.isClosed == false) _controller?.add(AuthenticationState.unauthenticated);
+    if (_controller?.isClosed == false) _controller?.add(.unauthenticated);
   }
 
   @override
   void handleAuthenticated() {
-    if (_controller?.isClosed == false) _controller?.add(AuthenticationState.authenticated);
+    if (_controller?.isClosed == false) _controller?.add(.authenticated);
   }
 
   @override

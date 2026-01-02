@@ -1,1 +1,10 @@
 include: package:lints_tool/lints_tool.yaml
+
+formatter:
+  page_width: 120
+  trailing_commas: preserve
+
+analyzer:
+  exclude:
+    # Generated
+    - "lib/**/generated/**"

@@ -23,74 +23,67 @@ class _AppUpdateAvailableDialogState extends State<AppUpdateAvailableDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return AlertDialog(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      title: const AppText.titleLarge(
-        'New update available',
-        textAlign: TextAlign.center,
-        fontWeight: FontWeight.bold,
-        // color: colorScheme.onSurface,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const AppText.titleLarge(
-            'New update available',
-            fontWeight: FontWeight.bold,
-            // color: colorScheme.onSurface,
-            textAlign: TextAlign.center,
+  Widget build(BuildContext context) => AlertDialog(
+    shape: const RoundedRectangleBorder(
+      borderRadius: .all(.circular(16.0)),
+    ),
+    insetPadding: const .symmetric(horizontal: 40.0, vertical: 24.0),
+    contentPadding: const .symmetric(horizontal: 24.0, vertical: 20.0),
+    title: const AppText.titleLarge(
+      'New update available',
+      textAlign: .center,
+      fontWeight: .bold,
+      // color: colorScheme.onSurface,
+    ),
+    content: Column(
+      mainAxisSize: .min,
+      children: [
+        const AppText.titleLarge(
+          'New update available',
+          fontWeight: .bold,
+          // color: colorScheme.onSurface,
+          textAlign: .center,
+        ),
+        const SizedBox(height: 28.0),
+        StateConsumer<UpdateCheckController, UpdateCheckState>(
+          controller: _updateCheckController,
+          builder: (_, updateState, __) => AppText.bodyLarge(
+            'A new version (v${updateState.version}) of the app is available.\nPlease update to continue for the best experience.',
+            textAlign: .center,
           ),
-          const SizedBox(height: 28),
-          StateConsumer<UpdateCheckController, UpdateCheckState>(
-            controller: _updateCheckController,
-            builder: (_, updateState, __) => AppText.bodyLarge(
-              'A new version (v${updateState.version}) of the app is available.\nPlease update to continue for the best experience.',
-              textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32.0),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            shape: const RoundedRectangleBorder(
+              borderRadius: .all(.circular(12.0)),
             ),
           ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-            ),
-            onPressed: () async {
-              HapticFeedback.mediumImpact().ignore();
-              // await context.octopus.pop();
-              _updateCheckController.update();
-              // Future.delayed(
-              //   const Duration(milliseconds: 10),
-              //   () => _updateCheckController.update(),
-              // );
-            },
-            child: const Text(
-              'Update Now',
-            ),
+          onPressed: () async {
+            HapticFeedback.mediumImpact().ignore();
+            // await context.octopus.pop();
+            _updateCheckController.update();
+            // Future.delayed(
+            //   const Duration(milliseconds: 10),
+            //   () => _updateCheckController.update(),
+            // );
+          },
+          child: const Text(
+            'Update Now',
           ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () {
-              HapticFeedback.mediumImpact().ignore();
-              _updateCheckController.ignoreUpdate();
-              context.octopus.pop();
-            },
-            child: const Text(
-              'Maybe Later',
-            ),
+        ),
+        const SizedBox(height: 10.0),
+        TextButton(
+          onPressed: () {
+            HapticFeedback.mediumImpact().ignore();
+            _updateCheckController.ignoreUpdate();
+            context.octopus.pop();
+          },
+          child: const Text(
+            'Maybe Later',
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

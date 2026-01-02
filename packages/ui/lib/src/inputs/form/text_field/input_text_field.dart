@@ -84,7 +84,7 @@
 //       null => null,
 //     },
 //     child: SizedBox(
-//       height: widget.multiline ? null : 56,
+//       height: widget.multiline ? null : 56.0,
 //       child: Center(
 //         child: AppTextField.titleMedium(
 //           style: Theme.of(context).textTheme.bodyMedium,
@@ -107,15 +107,15 @@
 //             isDense: false,
 //             filled: true,
 //             floatingLabelBehavior: widget.floatingLabelBehavior,
-//             contentPadding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+//             contentPadding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 8.0),
 //             //hoverColor: colorScheme.surface,
 //             labelText: widget.label,
 //             hintText: widget.hint,
 //             helperText: null,
 //             prefixIcon: widget.prefixIcon,
-//             prefixIconConstraints: const BoxConstraints.expand(width: 48, height: 48),
+//             prefixIconConstraints: const BoxConstraints.expand(width: 48.0, height: 48.0),
 //             suffixIcon: widget.suffixIcon,
-//             suffixIconConstraints: const BoxConstraints.expand(width: 48, height: 48),
+//             suffixIconConstraints: const BoxConstraints.expand(width: 48.0, height: 48.0),
 //             counter: const SizedBox.shrink(),
 //             errorText: null,
 //             helperMaxLines: 0,

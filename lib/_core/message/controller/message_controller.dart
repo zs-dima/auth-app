@@ -14,6 +14,7 @@ enum AppProgress {
   ;
 
   final int value;
+
   const AppProgress(this.value);
 }
 
@@ -36,14 +37,14 @@ final class AppMessageController extends StateController<MessageState> with Sequ
 
   void showProgress(AppProgress progress, [String? type, String? message]) {
     switch (progress) {
-      case AppProgress.started:
+      case .started:
         if (_progress == 0) {
           setState(MessageState.progress(progress, type: type, message: message));
         }
         _progress++;
         break;
 
-      case AppProgress.done:
+      case .done:
         if (_progress > 0) _progress--;
         if (_progress == 0) {
           setState(MessageState.progress(progress, type: type, message: message));
@@ -56,6 +57,6 @@ final class AppMessageController extends StateController<MessageState> with Sequ
   void showGrpcError(GrpcError e, String message) => setState(MessageState.netError(e.detail(message), e));
   void showApiError(ApiClientException e, String message) => setState(MessageState.netError(message, e));
 
-  void progressStarted({String? type, String? message}) => showProgress(AppProgress.started, type, message);
-  void progressDone({String? type, String? message}) => showProgress(AppProgress.done, type, message);
+  void progressStarted({String? type, String? message}) => showProgress(.started, type, message);
+  void progressDone({String? type, String? message}) => showProgress(.done, type, message);
 }

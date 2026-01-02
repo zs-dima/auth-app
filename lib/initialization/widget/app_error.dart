@@ -13,26 +13,26 @@ class AppError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'App Error',
-    theme:
-        View.of(context).platformDispatcher.platformBrightness == Brightness.dark
-            ? ThemeData.dark(useMaterial3: true)
-            : ThemeData.light(useMaterial3: true),
+    theme: View.of(context).platformDispatcher.platformBrightness == .dark
+        ? ThemeData.dark(useMaterial3: true)
+        : ThemeData.light(useMaterial3: true),
     home: Scaffold(
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const .all(8.0),
             child: Text(
               // ErrorUtil.formatMessage(error)
               error?.toString() ?? 'Something went wrong',
-              textScaler: TextScaler.noScaling,
+              textScaler: .noScaling,
             ),
           ),
         ),
       ),
     ),
-    builder:
-        (context, child) =>
-            MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling), child: child!),
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: .noScaling),
+      child: child!,
+    ),
   );
 }

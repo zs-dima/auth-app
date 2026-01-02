@@ -11,16 +11,16 @@ IKeyboardObserver $getKeyboardObserver$Windows() => _KeyboardObserver$Windows();
 @sealed
 class _KeyboardObserver$Windows with _IsKeyPressed, ChangeNotifier implements IKeyboardObserver {
   @override
-  bool get isControlPressed => isKeyPressed(VK.LCONTROL) || isKeyPressed(VK.RCONTROL);
+  bool get isControlPressed => isKeyPressed(.LCONTROL) || isKeyPressed(.RCONTROL);
 
   @override
-  bool get isShiftPressed => isKeyPressed(VK.LSHIFT) || isKeyPressed(VK.RSHIFT);
+  bool get isShiftPressed => isKeyPressed(.LSHIFT) || isKeyPressed(.RSHIFT);
 
   @override
-  bool get isAltPressed => isKeyPressed(VK.LMENU) || isKeyPressed(VK.RMENU);
+  bool get isAltPressed => isKeyPressed(.LMENU) || isKeyPressed(.RMENU);
 
   @override
-  bool get isMetaPressed => isKeyPressed(VK.LWIN) || isKeyPressed(VK.RWIN);
+  bool get isMetaPressed => isKeyPressed(.LWIN) || isKeyPressed(.RWIN);
 }
 
 mixin _IsKeyPressed {

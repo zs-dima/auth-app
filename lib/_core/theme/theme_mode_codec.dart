@@ -21,9 +21,9 @@ final class _ThemeModeDecoder extends Converter<String, ThemeMode> {
 
   @override
   ThemeMode convert(String input) => switch (input) {
-    'ThemeMode.dark' => ThemeMode.dark,
-    'ThemeMode.light' => ThemeMode.light,
-    'ThemeMode.system' => ThemeMode.system,
+    'ThemeMode.dark' => .dark,
+    'ThemeMode.light' => .light,
+    'ThemeMode.system' => .system,
     _ => throw ArgumentError.value(input, 'input', 'Cannot convert $input to $ThemeMode'),
   };
 }
@@ -33,8 +33,8 @@ final class _ThemeModeEncoder extends Converter<ThemeMode, String> {
 
   @override
   String convert(ThemeMode input) => switch (input) {
-    ThemeMode.dark => 'ThemeMode.dark',
-    ThemeMode.light => 'ThemeMode.light',
-    ThemeMode.system => 'ThemeMode.system',
+    .dark => 'ThemeMode.dark',
+    .light => 'ThemeMode.light',
+    .system => 'ThemeMode.system',
   };
 }

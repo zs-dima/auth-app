@@ -4,19 +4,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:platform_info/platform_info.dart';
 
 class DeviceInfo implements IDeviceInfo {
-  @override
-  final String installationId;
-  @override
-  final String deviceName;
-  @override
-  final String deviceModel;
-  @override
-  final String deviceId;
-  @override
-  final OsEnum deviceOs;
-  @override
-  final String deviceOsVersion;
-
   const DeviceInfo({
     required this.installationId,
     required this.deviceId,
@@ -26,9 +13,23 @@ class DeviceInfo implements IDeviceInfo {
     required this.deviceOsVersion,
   });
 
+  @override
+  final String installationId;
+  @override
+  final String deviceName;
+  @override
+  final String deviceModel;
+  @override
+  final String deviceId;
+  @override
+  final String deviceOs;
+
+  @override
+  final String deviceOsVersion;
+
   static Future<DeviceInfo> instance(String installationId) async {
     final platform = Platform.instance;
-    final deviceOs = _mapOperatingSystem(platform.operatingSystem);
+    final deviceOs = platform.operatingSystem.toString();
 
     if (platform.js) {
       return DeviceInfo(
@@ -79,14 +80,4 @@ class DeviceInfo implements IDeviceInfo {
         );
     }
   }
-
-  static OsEnum _mapOperatingSystem(OperatingSystem os) => switch (os) {
-    OperatingSystem$Fuchsia() => OsEnum.fuchsia,
-    OperatingSystem$Linux() => OsEnum.linux,
-    OperatingSystem$MacOS() => OsEnum.macOS,
-    OperatingSystem$Windows() => OsEnum.windows,
-    OperatingSystem$iOS() => OsEnum.iOS,
-    OperatingSystem$Android() => OsEnum.android,
-    OperatingSystem$Unknown() => OsEnum.unknown,
-  };
 }

@@ -20,15 +20,15 @@ class ShadowWidget extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      type: MaterialType.card,
+      type: .card,
       shadowColor: shadowColor ?? colorScheme.shadow,
       elevation: elevation ?? 0.0,
       shape: radius == null
           ? null
           : RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(radius!)),
+              borderRadius: .all(.circular(radius!)),
             ),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: child,
     );
   }

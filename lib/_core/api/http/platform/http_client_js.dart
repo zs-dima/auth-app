@@ -31,12 +31,7 @@ String $getOrigin() => _window.location.origin;
 ///
 /// Uses [BrowserClient] which leverages XMLHttpRequest/Fetch API
 /// and supports credentials for cross-origin requests.
-http.Client $createHttpClient() {
-  final client = browser_client.BrowserClient();
-
+http.Client $createHttpClient() => browser_client.BrowserClient()
   // Enable credentials (cookies) for cross-origin requests.
   // This is necessary for authentication to work properly with APIs.
-  client.withCredentials = true;
-
-  return client;
-}
+  ..withCredentials = true;

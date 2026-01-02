@@ -46,7 +46,6 @@ analyzer:
     - variance
     - const-functions
     - macros
-    - native-assets
 
   errors:
     # Allow having TODOs in the code
@@ -824,6 +823,23 @@ dart_code_metrics:
     - prefer-return-await
     - prefer-returning-condition
     - prefer-returning-conditional-expressions
+    - prefer-returning-shorthands
+    - prefer-shorthands-with-static-fields
+    - prefer-shorthands-with-enums
+    - avoid-nested-shorthands
+    - prefer-shorthands-with-constructors
+    - newline-before-constructor:
+        ignore-redirecting: true
+    - avoid-always-null-parameters
+    - avoid-unassigned-fields
+    # - pass-optional-argument:
+    #     entries:
+    #       - name: SomeClass
+    #         args:
+    #           - label
+    - avoid-immediately-invoked-functions
+    # - avoid-complex-conditions:
+    #     threshold: 15
     - prefer-simpler-boolean-expressions
     - prefer-simpler-patterns-null-check
     # - prefer-single-declaration-per-file

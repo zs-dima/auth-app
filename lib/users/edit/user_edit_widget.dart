@@ -82,9 +82,9 @@ class _UserEditWidgetState extends State<UserEditWidget> {
         children: [
           if (isPhone)
             Padding(
-              padding: defaultMediumPaddings.copyWith(bottom: 0, left: 8),
+              padding: defaultMediumPaddings.copyWith(bottom: 0.0, left: 8.0),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   SwitchFormField(
                     'Deleted',
@@ -106,15 +106,15 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: SizedBox(
-                    width: 640,
+                    width: 640.0,
                     child: Padding(
                       padding: isPhone ? EdgeInsets.zero : defaultMediumPaddings,
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: .start,
                         children: [
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: .start,
                               children: [
                                 TextFormField(
                                   decoration: const InputDecoration(
@@ -126,7 +126,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                   onSaved: (value) => setState(() => _user = _user.copyWith(name: '$value')),
                                   autocorrect: false,
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 20.0),
                                 TextFormField(
                                   decoration: const InputDecoration(
                                     prefixIcon: Icon(Icons.mail_outlined),
@@ -137,7 +137,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                   onSaved: (value) => setState(() => _user = _user.copyWith(email: '$value')),
                                   autocorrect: false,
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 20.0),
                                 DropdownButtonFormField(
                                   decoration: const InputDecoration(
                                     labelText: 'Role',
@@ -145,8 +145,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                   ),
                                   initialValue: _user.role,
                                   validator: (role) => role == null ? 'User role required' : null,
-                                  onSaved: (value) =>
-                                      setState(() => _user = _user.copyWith(role: value ?? UserRole.user)),
+                                  onSaved: (value) => setState(() => _user = _user.copyWith(role: value ?? .user)),
                                   onChanged: (role) {},
                                   items:
                                       [
@@ -161,7 +160,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                           )
                                           .toList(),
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 20.0),
                                 if (widget.createNewUser)
                                   TextFormField(
                                     decoration: const InputDecoration(
@@ -188,17 +187,17 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                             ),
                           ),
                           if (!isPhone) ...[
-                            const SizedBox(width: 20),
+                            const SizedBox(width: 20.0),
                             SizedBox(
-                              width: 140,
+                              width: 140.0,
                               child: Column(
+                                spacing: 16.0,
                                 children: [
                                   PhotoEditWidget(
                                     user: _user,
                                     userPhoto: _userAvatar,
                                     onPhotoChanged: (photo) => _userAvatar = photo,
                                   ),
-                                  const SizedBox(height: 16),
                                   SwitchFormField(
                                     'Deleted',
                                     value: _user.deleted,
@@ -216,12 +215,12 @@ class _UserEditWidgetState extends State<UserEditWidget> {
               ],
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 30.0),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: .end,
             children: [
               SizedBox(
-                width: 120,
+                width: 120.0,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
@@ -230,14 +229,14 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                   onPressed: _saveUser,
                   child: const Text(
                     'Save',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: .bold),
                   ),
                 ),
               ),
               Padding(
                 padding: defaultMediumPaddings,
                 child: SizedBox(
-                  width: 120,
+                  width: 120.0,
                   child: OutlinedButton(
                     child: const Text('Cancel'),
                     onPressed: () {

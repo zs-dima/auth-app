@@ -49,26 +49,26 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
       child: Center(
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
+            padding: .symmetric(
               horizontal: math.max(16, (constraints.maxWidth - 620) / 2),
             ),
             child: StateConsumer<AuthenticationController, AuthenticationState>(
               controller: _authenticationController,
               buildWhen: (previous, current) => previous != current,
               builder: (context, state, _) => Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: <Widget>[
                   const SizedBox(
-                    height: 50,
+                    height: 50.0,
                     child: AppText.headlineLarge(
                       'Sign-Up',
-                      height: 1,
+                      height: 1.0,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
+                      overflow: .ellipsis,
+                      textAlign: .center,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 32.0),
                   TextField(
                     focusNode: _usernameFocusNode,
                     enabled: state.isIdling,
@@ -77,7 +77,7 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
                     controller: _usernameController,
                     autocorrect: false,
                     autofillHints: const <String>[AutofillHints.username, AutofillHints.email],
-                    keyboardType: TextInputType.emailAddress,
+                    keyboardType: .emailAddress,
                     inputFormatters: _usernameFormatters,
                     decoration: InputDecoration(
                       labelText: 'Username',
@@ -89,7 +89,7 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
                       prefixIcon: const Icon(Icons.person),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8.0),
                   TextField(
                     focusNode: _passwordFocusNode,
                     enabled: state.isIdling,
@@ -100,7 +100,7 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
                     obscureText: _obscurePassword,
                     maxLength: Config.passwordMaxLength,
                     autofillHints: const <String>[AutofillHints.password],
-                    keyboardType: TextInputType.visiblePassword,
+                    keyboardType: .visiblePassword,
                     onSubmitted: (_) => signUp(context),
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -111,22 +111,20 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
                       errorMaxLines: 1,
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: .min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.casino),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints.tightFor(
-                              width: 48,
-                              height: 48,
+                              width: 48.0,
+                              height: 48.0,
                             ),
                             tooltip: 'Generate password',
                             onPressed: state.isIdling
                                 ? () {
                                     if (_obscurePassword) {
-                                      setState(
-                                        () => _obscurePassword = false,
-                                      );
+                                      setState(() => _obscurePassword = false);
                                     }
                                     generatePassword();
                                   }
@@ -140,9 +138,9 @@ class _SignUpScreenState extends State<SignUpScreen> with _UsernamePasswordFormS
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 32.0),
                   SizedBox(
-                    height: 48,
+                    height: 48.0,
                     child: _SignUpScreen$Buttons(
                       cancel: () => Navigator.pop(context),
                       signUp: null,
@@ -162,16 +160,16 @@ class _SignUpScreen$Buttons extends StatelessWidget {
   const _SignUpScreen$Buttons({
     required this.signUp,
     required this.cancel,
-    super.key, // ignore: unused_element
   });
 
-  final void Function()? signUp;
-  final void Function()? cancel;
+  final VoidCallback? signUp;
+  final VoidCallback? cancel;
 
   @override
   Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.max,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: .max,
+    crossAxisAlignment: .stretch,
+    spacing: 16.0,
     children: <Widget>[
       Expanded(
         flex: 2,
@@ -181,11 +179,10 @@ class _SignUpScreen$Buttons extends StatelessWidget {
           label: const Text(
             'Sign-Up',
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
           ),
         ),
       ),
-      const SizedBox(width: 16),
       Expanded(
         flex: 1,
         child: FilledButton.tonalIcon(
@@ -194,7 +191,7 @@ class _SignUpScreen$Buttons extends StatelessWidget {
           label: const Text(
             'Cancel',
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
           ),
         ),
       ),
@@ -205,7 +202,7 @@ class _SignUpScreen$Buttons extends StatelessWidget {
 class _UsernameTextFormatter extends TextInputFormatter {
   const _UsernameTextFormatter();
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) => TextEditingValue(
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) => .new(
     text: newValue.text.toLowerCase(),
     selection: newValue.selection,
   );

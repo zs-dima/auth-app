@@ -12,17 +12,16 @@ IKeyboardObserver $getKeyboardObserver() =>
 @sealed
 class _KeyboardObserver$VM with _IsKeyPressed$IO, ChangeNotifier implements IKeyboardObserver {
   @override
-  bool get isControlPressed =>
-      isKeyPressed(LogicalKeyboardKey.controlLeft) || isKeyPressed(LogicalKeyboardKey.controlRight);
+  bool get isControlPressed => isKeyPressed(.controlLeft) || isKeyPressed(.controlRight);
 
   @override
-  bool get isShiftPressed => isKeyPressed(LogicalKeyboardKey.shiftLeft) || isKeyPressed(LogicalKeyboardKey.shiftRight);
+  bool get isShiftPressed => isKeyPressed(.shiftLeft) || isKeyPressed(.shiftRight);
 
   @override
-  bool get isAltPressed => isKeyPressed(LogicalKeyboardKey.altLeft) || isKeyPressed(LogicalKeyboardKey.altRight);
+  bool get isAltPressed => isKeyPressed(.altLeft) || isKeyPressed(.altRight);
 
   @override
-  bool get isMetaPressed => isKeyPressed(LogicalKeyboardKey.metaLeft) || isKeyPressed(LogicalKeyboardKey.metaRight);
+  bool get isMetaPressed => isKeyPressed(.metaLeft) || isKeyPressed(.metaRight);
 }
 
 mixin _IsKeyPressed$IO {

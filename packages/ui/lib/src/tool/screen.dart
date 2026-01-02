@@ -49,11 +49,6 @@ extension ScreenUtilX on BuildContext {
   /// desktop | >= 1024 dp   | 12 column
   ScreenSize get screenSize => ScreenUtil.screenSizeOf(this);
 
-  /// Portrait or Landscape
-  // TODO Remove
-  @Deprecated('Use MediaQuery.sizeOf(context) or LayoutBuilder for adaptive layout cases')
-  Orientation get orientation => ScreenUtil.orientationOf(this);
-
   /// Evaluate the result of the first matching callback.
   ///
   /// phone   | <= 600 dp    | 4 column
@@ -101,7 +96,7 @@ abstract final class ScreenUtil {
   static Orientation get orientation {
     final view = ui.PlatformDispatcher.instance.implicitView;
     final size = view?.physicalSize;
-    return size == null || size.height > size.width ? Orientation.portrait : Orientation.landscape;
+    return size == null || size.height > size.width ? .portrait : .landscape;
   }
 
   static ScreenSize from(Size size) => _screenSizeFromSize(size);
@@ -302,7 +297,7 @@ final class ScreenSize$Desktop extends ScreenSize {
 final class ScreenSize$WideScreen extends ScreenSize {
   /// {@macro screen_util}
   @literal
-  const ScreenSize$WideScreen() : super._('WideScreen', 1600, double.infinity);
+  const ScreenSize$WideScreen() : super._('WideScreen', 1600, .infinity);
 
   @override
   bool get isPhone => false;

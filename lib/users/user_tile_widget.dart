@@ -19,7 +19,7 @@ class UserTileWidget extends StatelessWidget {
 
     final userTextStyle = user.deleted
         ? TextStyle(
-            decoration: TextDecoration.lineThrough,
+            decoration: .lineThrough,
             color: DefaultTextStyle.of(context).style.color?.withValues(alpha: 0.5),
           )
         : null;
@@ -39,7 +39,7 @@ class UserTileWidget extends StatelessWidget {
             ? Text(
                 user.email,
                 style: userTextStyle,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 maxLines: 1,
               )
             : null,
@@ -47,7 +47,7 @@ class UserTileWidget extends StatelessWidget {
             ? Text(
                 user.name,
                 style: userTextStyle,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 maxLines: 1,
               )
             : Table(
@@ -62,20 +62,20 @@ class UserTileWidget extends StatelessWidget {
                       Text(
                         user.name,
                         style: userTextStyle,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         user.email,
                         style: userTextStyle,
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
+                        textAlign: .start,
+                        overflow: .ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         user.role.name,
-                        textAlign: TextAlign.end,
-                        overflow: TextOverflow.ellipsis,
+                        textAlign: .end,
+                        overflow: .ellipsis,
                         maxLines: 1,
                       ),
                     ],

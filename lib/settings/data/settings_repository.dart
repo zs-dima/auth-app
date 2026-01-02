@@ -54,18 +54,12 @@ class SettingsRepository implements ISettingsRepository {
   final Codec<ThemeMode, String> codec;
 
   @override
-  ThemeMode? get themeMode =>
-      _preferences.themeMode.value ==
-          null //
-      ? null
-      : codec.decode(_preferences.themeMode.value!);
+  ThemeMode? get themeMode => //
+      _preferences.themeMode.value == null ? null : codec.decode(_preferences.themeMode.value!);
 
   @override
-  Color? get themeColor =>
-      _preferences.themeColor.value ==
-          null //
-      ? null
-      : Color(_preferences.themeColor.value!);
+  Color? get themeColor => //
+      _preferences.themeColor.value == null ? null : .new(_preferences.themeColor.value!);
 
   @override
   Locale? get locale {

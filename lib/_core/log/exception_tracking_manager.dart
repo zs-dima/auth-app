@@ -54,7 +54,7 @@ abstract base class ExceptionTrackingManager implements IExceptionTrackingManage
     });
   }
 
-  static bool _isWarningOrError(LogMessage log) => log.level.compareTo(LogLevel.warning) >= 0;
+  static bool _isWarningOrError(LogMessage log) => log.level.compareTo(.warning) >= 0;
 
   /// Returns `true` if the error should be reported.
   @pragma('vm:prefer-inline', 'dart2js:tryInline')

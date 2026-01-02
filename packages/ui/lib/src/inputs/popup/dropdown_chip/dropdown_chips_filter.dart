@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DropdownChipsFilter<T> extends StatefulWidget {
@@ -40,7 +39,7 @@ class DropdownChipsFilter<T> extends StatefulWidget {
   final Widget Function(BuildContext context, T data) chipBuilder;
 
   final bool intrinsicWidth;
-  final bool? requestFocusOnTap;
+  final bool requestFocusOnTap;
   final bool enabled;
 
   final OverlayPortalController overlayController;
@@ -135,13 +134,12 @@ class DropdownChipsFilterState<T> extends State<DropdownChipsFilter<T>> {
     _previousSelection = controller.selection;
   }
 
-  bool _canRequestFocus() =>
-      widget.focusNode?.canRequestFocus ??
-      widget.requestFocusOnTap ??
-      switch (Theme.of(context).platform) {
-        TargetPlatform.iOS || TargetPlatform.android || TargetPlatform.fuchsia => false,
-        TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.windows => true,
-      };
+  bool _canRequestFocus() => widget.focusNode?.canRequestFocus ?? widget.requestFocusOnTap;
+  //  ??
+  // switch (Theme.of(context).platform) {
+  //   .iOS || .android || .fuchsia => false,
+  //   .macOS || .linux || .windows => true,
+  // };
 
   void _handleEscapeKeyInvoke() {
     if (widget.overlayController.isShowing) {
@@ -217,8 +215,8 @@ class DropdownChipsFilterState<T> extends State<DropdownChipsFilter<T>> {
     final textField = TextFormField(
       minLines: 1,
       maxLines: 7,
-      textInputAction: TextInputAction.done,
-      textAlignVertical: TextAlignVertical.center,
+      textInputAction: .done,
+      textAlignVertical: .center,
       focusNode: widget.focusNode,
       canRequestFocus: _canRequestFocus(),
       enableInteractiveSelection: _canRequestFocus(),
@@ -268,7 +266,7 @@ class DropdownChipsFilterState<T> extends State<DropdownChipsFilter<T>> {
 
     return widget.intrinsicWidth
         ? ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 250),
+            constraints: const BoxConstraints(minWidth: 250.0),
             child: IntrinsicWidth(child: shortcutsWidget),
           )
         : shortcutsWidget;
@@ -324,9 +322,9 @@ class DropdownChipsFilterEditingController<T> extends TextEditingController {
 
 // Navigation shortcuts to move the selected menu items up or down.
 final Map<ShortcutActivator, Intent> _kMenuTraversalShortcuts = <ShortcutActivator, Intent>{
-  LogicalKeySet(LogicalKeyboardKey.arrowUp): const _ArrowUpIntent(),
-  LogicalKeySet(LogicalKeyboardKey.arrowDown): const _ArrowDownIntent(),
-  LogicalKeySet(LogicalKeyboardKey.escape): const _EscapeIntent(),
+  LogicalKeySet(.arrowUp): const _ArrowUpIntent(),
+  LogicalKeySet(.arrowDown): const _ArrowDownIntent(),
+  LogicalKeySet(.escape): const _EscapeIntent(),
   // LogicalKeySet(LogicalKeyboardKey.backspace): const _BackspaceIntent(),
 };
 

@@ -20,7 +20,7 @@ extension GrpcUuidX on rpc.UUID {
 }
 
 extension DurationGrpcX on rpc.Duration {
-  Duration toDuration() => Duration(seconds: seconds.toInt());
+  Duration toDuration() => .new(seconds: seconds.toInt());
 }
 
 extension DurationGrpc1X on Duration {
@@ -49,7 +49,7 @@ extension GrpcBytesX on Uint8List? {
 }
 
 extension BytesValueX on rpc.BytesValue {
-  Uint8List? toBytes() => hasValue() ? Uint8List.fromList(value) : null;
+  Uint8List? toBytes() => hasValue() ? .fromList(value) : null;
 }
 
 extension Int32ValueX on rpc.Int32Value {

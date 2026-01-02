@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-referencing-discarded-variables
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -159,7 +161,7 @@ abstract base class Logger {
   /// Handy method to log [FlutterError]
   void logFlutterError(FlutterErrorDetails details) {
     final exception = details.exception;
-    final stackTrace = details.stack ?? StackTrace.current;
+    final stackTrace = details.stack ?? .current;
     e('FLUTTER ERROR:\r\n $details', error: exception, stackTrace: stackTrace);
   }
 
@@ -253,7 +255,7 @@ final class AppLogger$L extends Logger {
         message: message,
         error: error,
         stackTrace: stackTrace,
-        level: LogLevel.error,
+        level: .error,
         timestamp: DateTime.now(),
         hint: hint,
         data: data,
@@ -275,7 +277,7 @@ final class AppLogger$L extends Logger {
         message: message,
         error: error,
         stackTrace: stackTrace,
-        level: LogLevel.warning,
+        level: .warning,
         timestamp: DateTime.now(),
         hint: hint,
         data: data,
@@ -293,7 +295,7 @@ final class AppLogger$L extends Logger {
     _logController.add(
       LogMessage(
         message: message,
-        level: LogLevel.info,
+        level: .info,
         timestamp: DateTime.now(),
         hint: hint,
         data: data,

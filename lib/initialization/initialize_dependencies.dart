@@ -113,7 +113,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     await dependencies.database.transaction(() async {
       final log =
           await (dependencies.database.select<LogTbl, LogTblData>(dependencies.database.logTbl)
-                ..orderBy([(tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc)])
+                ..orderBy([(tbl) => OrderingTerm(expression: tbl.id, mode: .desc)])
                 ..limit(1, offset: 1000))
               .getSingleOrNull();
       if (log != null) {
@@ -154,8 +154,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   dependencies.localeRepository = localeRepository;
   // },
   'gRPC Client factory': (dependencies) {
-    final apiBaseUrl = dependencies.environment.authService;
-
     GrpcAuthenticationClient grpsFactory([Iterable<ClientInterceptor>? middlewares]) {
       final list = <ClientInterceptor>[
         // Add your interceptors here

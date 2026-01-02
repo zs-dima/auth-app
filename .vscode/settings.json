@@ -96,7 +96,7 @@
     }
   },
   "cSpell.words": [
-    ""
+    "loadfragment"
   ],
   "cSpell.ignorePaths": [
     "lib/_core/localization/localization.dart"

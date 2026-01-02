@@ -7,7 +7,7 @@ class LabelField extends StatelessWidget {
     this.title,
     required this.label,
     this.enabled = true,
-    this.suffixIcon, // = const Icon(Icons.arrow_drop_down, size: 14), // Icons.arrow_drop_down
+    this.suffixIcon, // = const Icon(Icons.arrow_drop_down, size: 14.0), // Icons.arrow_drop_down
     this.prefixIcon,
     this.helperText,
     this.helperMaxLines,
@@ -33,7 +33,7 @@ class LabelField extends StatelessWidget {
       labelText: title,
       enabled: enabled,
       helperText: helperText,
-      contentPadding: const EdgeInsets.only(left: 12, top: 14, right: 12, bottom: 12),
+      contentPadding: const .only(left: 12.0, top: 14.0, right: 12.0, bottom: 12.0),
       errorText: errorText,
       helperMaxLines: helperMaxLines,
       // errorMaxLines: 0,

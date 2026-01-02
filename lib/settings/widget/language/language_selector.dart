@@ -8,14 +8,14 @@ class LanguagesSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 100,
+    height: 100.0,
     child: ListView.builder(
-      scrollDirection: Axis.horizontal,
+      scrollDirection: .horizontal,
       itemCount: _languages.length,
       itemBuilder: (context, index) {
         final language = _languages.elementAt(index);
 
-        return Padding(padding: const EdgeInsets.all(8), child: LanguageCard(language));
+        return Padding(padding: const .all(8.0), child: LanguageCard(language));
       },
     ),
   );

@@ -15,15 +15,15 @@ class SwitchFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
+    spacing: 5.0,
     children: [
       CupertinoSwitch(
         value: value,
         onChanged: onChanged,
       ),
-      const SizedBox(width: 5),
       AppText.bodyLarge(
         caption,
-        overflow: TextOverflow.ellipsis,
+        overflow: .ellipsis,
         maxLines: 1,
       ),
     ],

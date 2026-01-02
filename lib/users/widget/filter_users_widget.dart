@@ -35,7 +35,7 @@ class _FilterUsersWidgetState extends State<FilterUsersWidget> {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 5.0),
+    padding: const .only(top: 5.0),
     child: TextField(
       focusNode: _searchPartFocus,
       controller: _searchPartController,
