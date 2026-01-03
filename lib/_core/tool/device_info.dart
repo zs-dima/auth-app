@@ -5,6 +5,7 @@ import 'package:platform_info/platform_info.dart';
 
 class DeviceInfo implements IDeviceInfo {
   const DeviceInfo({
+    required this.appVersion,
     required this.installationId,
     required this.deviceId,
     required this.deviceName,
@@ -13,6 +14,8 @@ class DeviceInfo implements IDeviceInfo {
     required this.deviceOsVersion,
   });
 
+  @override
+  final String appVersion;
   @override
   final String installationId;
   @override
@@ -23,16 +26,16 @@ class DeviceInfo implements IDeviceInfo {
   final String deviceId;
   @override
   final String deviceOs;
-
   @override
   final String deviceOsVersion;
 
-  static Future<DeviceInfo> instance(String installationId) async {
+  static Future<DeviceInfo> instance(String appVersion, String installationId) async {
     final platform = Platform.instance;
     final deviceOs = platform.operatingSystem.toString();
 
     if (platform.js) {
       return DeviceInfo(
+        appVersion: appVersion,
         installationId: installationId,
         deviceId: installationId,
         deviceName: 'Unknown device',
@@ -48,6 +51,7 @@ class DeviceInfo implements IDeviceInfo {
       case OperatingSystem$iOS():
         final iosInfo = await deviceInfo.iosInfo;
         return DeviceInfo(
+          appVersion: appVersion,
           installationId: installationId,
           deviceId: iosInfo.identifierForVendor ?? installationId,
           deviceName: iosInfo.name,
@@ -61,6 +65,7 @@ class DeviceInfo implements IDeviceInfo {
         final androidId = await androidIdPlugin.getId();
         final androidInfo = await deviceInfo.androidInfo;
         return DeviceInfo(
+          appVersion: appVersion,
           installationId: installationId,
           deviceId: androidId ?? installationId,
           deviceName: androidInfo.host,
@@ -71,6 +76,7 @@ class DeviceInfo implements IDeviceInfo {
 
       default:
         return DeviceInfo(
+          appVersion: appVersion,
           installationId: installationId,
           deviceId: installationId,
           deviceName: 'Unknown device',

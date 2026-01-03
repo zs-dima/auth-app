@@ -1,13 +1,3 @@
-enum OsEnum {
-  fuchsia,
-  linux,
-  macOS,
-  windows,
-  iOS,
-  android,
-  unknown,
-}
-
 abstract interface class IDeviceInfo {
   String get installationId;
   String get deviceName;
@@ -15,4 +5,5 @@ abstract interface class IDeviceInfo {
   String get deviceId;
   String get deviceOs;
   String get deviceOsVersion;
+  String get appVersion;
 }

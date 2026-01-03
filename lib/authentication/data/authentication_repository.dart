@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_app/_core/api/http/mutex.dart';
+import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/_core/tool/device_info.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_model/auth_model.dart';
@@ -33,6 +34,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
     required final IAuthenticationApi api,
     required IAuthenticationHandler authHandler,
     required final ISettingsRepository settings,
+    required this.metadata,
   }) : _api = api,
        _settings = settings {
     _userChangesSubscription =
@@ -48,11 +50,14 @@ class AuthenticationRepository implements IAuthenticationRepository {
   final IAuthenticationApi _api;
 
   final ISettingsRepository _settings;
+
   StreamSubscription? _authSubscription;
 
   StreamSubscription? _userChangesSubscription;
 
   final _userController = StreamController<AuthUser>.broadcast();
+
+  final AppMetadata metadata;
   @override
   Stream<AuthUser> get userChanges => _userController.stream;
   @override
@@ -71,7 +76,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
   @override
   Future<AuthUser> signIn(ISignInData signInData) async {
-    final deviceInfo = await DeviceInfo.instance(_settings.installationId);
+    final deviceInfo = await DeviceInfo.instance(metadata.appVersion, _settings.installationId);
 
     final authUser = await _api.signIn(signInData, deviceInfo);
 
@@ -88,7 +93,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
     try {
       if (_user case final AuthenticatedUser authenticatedUser) {
         final token = authenticatedUser.credentials?.accessToken.token;
-        if (token.isNullOrEmpty) _api.signOut(token!).ignore();
+        if (!token.isNullOrEmpty) _api.signOut(token!).ignore();
       }
     } finally {
       _userController.add(_user = const AuthUser.unauthenticated());

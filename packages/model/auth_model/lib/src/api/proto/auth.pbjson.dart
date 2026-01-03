@@ -63,7 +63,7 @@ const SignInRequest$json = {
     {'1': 'email', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'email'},
     {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
     {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
-    {'1': 'device_info', '3': 4, '4': 1, '5': 11, '6': '.auth.DeviceInfo', '8': {}, '10': 'deviceInfo'},
+    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
   ],
 };
 
@@ -71,8 +71,8 @@ const SignInRequest$json = {
 final $typed_data.Uint8List signInRequestDescriptor =
     $convert.base64Decode('Cg1TaWduSW5SZXF1ZXN0Eh0KBWVtYWlsGAEgASgJQgf6QgRyAmABUgVlbWFpbBIjCghwYXNzd2'
         '9yZBgCIAEoCUIH+kIEcgIQBVIIcGFzc3dvcmQSPQoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMgou'
-        'Y29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSOwoLZGV2aWNlX2luZm8YBCABKA'
-        'syEC5hdXRoLkRldmljZUluZm9CCPpCBYoBAhABUgpkZXZpY2VJbmZv');
+        'Y29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSOwoLY2xpZW50X2luZm8YBCABKA'
+        'syEC5hdXRoLkNsaWVudEluZm9CCPpCBYoBAhABUgpjbGllbnRJbmZv');
 
 @$core.Deprecated('Use loadUsersInfoRequestDescriptor instead')
 const LoadUsersInfoRequest$json = {
@@ -88,35 +88,25 @@ final $typed_data.Uint8List loadUsersInfoRequestDescriptor =
     $convert.base64Decode('ChRMb2FkVXNlcnNJbmZvUmVxdWVzdBIjCgd1c2VyX2lkGAEgASgLMgouY29yZS5VVUlEUgZ1c2'
         'VySWQSJQoIdXNlcl9pZHMYAiADKAsyCi5jb3JlLlVVSURSB3VzZXJJZHM=');
 
-@$core.Deprecated('Use deviceInfoDescriptor instead')
-const DeviceInfo$json = {
-  '1': 'DeviceInfo',
+@$core.Deprecated('Use clientInfoDescriptor instead')
+const ClientInfo$json = {
+  '1': 'ClientInfo',
   '2': [
-    {'1': 'id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'id'},
-    {'1': 'model', '3': 2, '4': 1, '5': 9, '10': 'model'},
-    {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'os_info', '3': 4, '4': 1, '5': 11, '6': '.auth.OsInfo', '10': 'osInfo'},
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
+    {'1': 'device_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceName'},
+    {'1': 'device_type', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'deviceType'},
+    {'1': 'client_version', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'clientVersion'},
+    {'1': 'metadata', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'metadata'},
   ],
 };
 
-/// Descriptor for `DeviceInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List deviceInfoDescriptor =
-    $convert.base64Decode('CgpEZXZpY2VJbmZvEiQKAmlkGAEgASgLMgouY29yZS5VVUlEQgj6QgWKAQIQAVICaWQSFAoFbW'
-        '9kZWwYAiABKAlSBW1vZGVsEhIKBG5hbWUYAyABKAlSBG5hbWUSJQoHb3NfaW5mbxgEIAEoCzIM'
-        'LmF1dGguT3NJbmZvUgZvc0luZm8=');
-
-@$core.Deprecated('Use osInfoDescriptor instead')
-const OsInfo$json = {
-  '1': 'OsInfo',
-  '2': [
-    {'1': 'os', '3': 1, '4': 1, '5': 9, '10': 'os'},
-    {'1': 'version', '3': 2, '4': 1, '5': 9, '10': 'version'},
-  ],
-};
-
-/// Descriptor for `OsInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List osInfoDescriptor =
-    $convert.base64Decode('CgZPc0luZm8SDgoCb3MYASABKAlSAm9zEhgKB3ZlcnNpb24YAiABKAlSB3ZlcnNpb24=');
+/// Descriptor for `ClientInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List clientInfoDescriptor =
+    $convert.base64Decode('CgpDbGllbnRJbmZvEiUKCWRldmljZV9pZBgBIAEoCUII+kIFigECEAFSCGRldmljZUlkEikKC2'
+        'RldmljZV9uYW1lGAIgASgJQgj6QgVyAxj/AVIKZGV2aWNlTmFtZRIoCgtkZXZpY2VfdHlwZRgD'
+        'IAEoCUIH+kIEcgIYMlIKZGV2aWNlVHlwZRIuCg5jbGllbnRfdmVyc2lvbhgEIAEoCUIH+kIEcg'
+        'IYZFINY2xpZW50VmVyc2lvbhIzCghtZXRhZGF0YRgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5T'
+        'dHJ1Y3RSCG1ldGFkYXRh');
 
 @$core.Deprecated('Use refreshTokenRequestDescriptor instead')
 const RefreshTokenRequest$json = {
@@ -199,6 +189,77 @@ final $typed_data.Uint8List userDescriptor =
     $convert.base64Decode('CgRVc2VyEhoKAmlkGAEgASgLMgouY29yZS5VVUlEUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEh'
         'QKBWVtYWlsGAMgASgJUgVlbWFpbBIiCgRyb2xlGAQgASgOMg4uYXV0aC5Vc2VyUm9sZVIEcm9s'
         'ZRIYCgdkZWxldGVkGAUgASgIUgdkZWxldGVk');
+
+@$core.Deprecated('Use sessionInfoDescriptor instead')
+const SessionInfo$json = {
+  '1': 'SessionInfo',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '10': 'deviceId'},
+    {'1': 'device_name', '3': 2, '4': 1, '5': 9, '10': 'deviceName'},
+    {'1': 'device_type', '3': 3, '4': 1, '5': 9, '10': 'deviceType'},
+    {'1': 'client_version', '3': 4, '4': 1, '5': 9, '10': 'clientVersion'},
+    {'1': 'ip_address', '3': 5, '4': 1, '5': 9, '10': 'ipAddress'},
+    {'1': 'ip_country', '3': 6, '4': 1, '5': 9, '10': 'ipCountry'},
+    {'1': 'created_at', '3': 7, '4': 1, '5': 3, '10': 'createdAt'},
+    {'1': 'last_seen_at', '3': 8, '4': 1, '5': 3, '10': 'lastSeenAt'},
+    {'1': 'expires_at', '3': 9, '4': 1, '5': 3, '10': 'expiresAt'},
+    {'1': 'is_current', '3': 10, '4': 1, '5': 8, '10': 'isCurrent'},
+    {'1': 'ip_created_by', '3': 11, '4': 1, '5': 9, '10': 'ipCreatedBy'},
+    {'1': 'activity_count', '3': 12, '4': 1, '5': 5, '10': 'activityCount'},
+    {'1': 'metadata', '3': 13, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'metadata'},
+  ],
+};
+
+/// Descriptor for `SessionInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sessionInfoDescriptor =
+    $convert.base64Decode('CgtTZXNzaW9uSW5mbxIbCglkZXZpY2VfaWQYASABKAlSCGRldmljZUlkEh8KC2RldmljZV9uYW'
+        '1lGAIgASgJUgpkZXZpY2VOYW1lEh8KC2RldmljZV90eXBlGAMgASgJUgpkZXZpY2VUeXBlEiUK'
+        'DmNsaWVudF92ZXJzaW9uGAQgASgJUg1jbGllbnRWZXJzaW9uEh0KCmlwX2FkZHJlc3MYBSABKA'
+        'lSCWlwQWRkcmVzcxIdCgppcF9jb3VudHJ5GAYgASgJUglpcENvdW50cnkSHQoKY3JlYXRlZF9h'
+        'dBgHIAEoA1IJY3JlYXRlZEF0EiAKDGxhc3Rfc2Vlbl9hdBgIIAEoA1IKbGFzdFNlZW5BdBIdCg'
+        'pleHBpcmVzX2F0GAkgASgDUglleHBpcmVzQXQSHQoKaXNfY3VycmVudBgKIAEoCFIJaXNDdXJy'
+        'ZW50EiIKDWlwX2NyZWF0ZWRfYnkYCyABKAlSC2lwQ3JlYXRlZEJ5EiUKDmFjdGl2aXR5X2NvdW'
+        '50GAwgASgFUg1hY3Rpdml0eUNvdW50EjMKCG1ldGFkYXRhGA0gASgLMhcuZ29vZ2xlLnByb3Rv'
+        'YnVmLlN0cnVjdFIIbWV0YWRhdGE=');
+
+@$core.Deprecated('Use listSessionsReplyDescriptor instead')
+const ListSessionsReply$json = {
+  '1': 'ListSessionsReply',
+  '2': [
+    {'1': 'sessions', '3': 1, '4': 3, '5': 11, '6': '.auth.SessionInfo', '10': 'sessions'},
+  ],
+};
+
+/// Descriptor for `ListSessionsReply`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listSessionsReplyDescriptor =
+    $convert.base64Decode('ChFMaXN0U2Vzc2lvbnNSZXBseRItCghzZXNzaW9ucxgBIAMoCzIRLmF1dGguU2Vzc2lvbkluZm'
+        '9SCHNlc3Npb25z');
+
+@$core.Deprecated('Use revokeSessionRequestDescriptor instead')
+const RevokeSessionRequest$json = {
+  '1': 'RevokeSessionRequest',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
+  ],
+};
+
+/// Descriptor for `RevokeSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List revokeSessionRequestDescriptor =
+    $convert.base64Decode('ChRSZXZva2VTZXNzaW9uUmVxdWVzdBInCglkZXZpY2VfaWQYASABKAlCCvpCB3IFEAEY/wFSCG'
+        'RldmljZUlk');
+
+@$core.Deprecated('Use revokeSessionsReplyDescriptor instead')
+const RevokeSessionsReply$json = {
+  '1': 'RevokeSessionsReply',
+  '2': [
+    {'1': 'revoked_count', '3': 1, '4': 1, '5': 5, '10': 'revokedCount'},
+  ],
+};
+
+/// Descriptor for `RevokeSessionsReply`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List revokeSessionsReplyDescriptor =
+    $convert.base64Decode('ChNSZXZva2VTZXNzaW9uc1JlcGx5EiMKDXJldm9rZWRfY291bnQYASABKAVSDHJldm9rZWRDb3'
+        'VudA==');
 
 @$core.Deprecated('Use getAvatarUploadUrlRequestDescriptor instead')
 const GetAvatarUploadUrlRequest$json = {

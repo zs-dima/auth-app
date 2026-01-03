@@ -253,6 +253,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         },
         unauthenticatedPaths: const <String>{
           '/auth.AuthService/SignIn',
+          '/auth.AuthService/SignOut',
           '/auth.AuthService/RefreshTokens',
           '/auth.AuthService/ResetPassword',
         },
@@ -283,6 +284,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       api: dependencies.authClient,
       authHandler: authenticationHandler,
       settings: settings,
+      metadata: dependencies.metadata, // TODO: extract app version from requests metadata
     );
   },
 

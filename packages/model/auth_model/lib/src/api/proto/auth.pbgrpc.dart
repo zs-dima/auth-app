@@ -129,6 +129,31 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$deleteUserAvatar, request, options: options);
   }
 
+  /// Session management
+  /// List all active sessions for the current user
+  $grpc.ResponseFuture<$0.ListSessionsReply> listSessions(
+    $1.Empty request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$listSessions, request, options: options);
+  }
+
+  /// Revoke a specific session
+  $grpc.ResponseFuture<$2.ResultReply> revokeSession(
+    $0.RevokeSessionRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$revokeSession, request, options: options);
+  }
+
+  /// Revoke all sessions except current
+  $grpc.ResponseFuture<$0.RevokeSessionsReply> revokeOtherSessions(
+    $1.Empty request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$revokeOtherSessions, request, options: options);
+  }
+
   // method descriptors
 
   static final _$signIn = $grpc.ClientMethod<$0.SignInRequest, $0.AuthInfo>(
@@ -169,6 +194,16 @@ class AuthServiceClient extends $grpc.Client {
       $2.ResultReply.fromBuffer);
   static final _$deleteUserAvatar = $grpc.ClientMethod<$0.UserId, $2.ResultReply>(
       '/auth.AuthService/DeleteUserAvatar', ($0.UserId value) => value.writeToBuffer(), $2.ResultReply.fromBuffer);
+  static final _$listSessions = $grpc.ClientMethod<$1.Empty, $0.ListSessionsReply>(
+      '/auth.AuthService/ListSessions', ($1.Empty value) => value.writeToBuffer(), $0.ListSessionsReply.fromBuffer);
+  static final _$revokeSession = $grpc.ClientMethod<$0.RevokeSessionRequest, $2.ResultReply>(
+      '/auth.AuthService/RevokeSession',
+      ($0.RevokeSessionRequest value) => value.writeToBuffer(),
+      $2.ResultReply.fromBuffer);
+  static final _$revokeOtherSessions = $grpc.ClientMethod<$1.Empty, $0.RevokeSessionsReply>(
+      '/auth.AuthService/RevokeOtherSessions',
+      ($1.Empty value) => value.writeToBuffer(),
+      $0.RevokeSessionsReply.fromBuffer);
 }
 
 @$pb.GrpcServiceName('auth.AuthService')
@@ -252,6 +287,27 @@ abstract class AuthServiceBase extends $grpc.Service {
         ($2.ResultReply value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.UserId, $2.ResultReply>('DeleteUserAvatar', deleteUserAvatar_Pre, false, false,
         ($core.List<$core.int> value) => $0.UserId.fromBuffer(value), ($2.ResultReply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$1.Empty, $0.ListSessionsReply>(
+        'ListSessions',
+        listSessions_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $1.Empty.fromBuffer(value),
+        ($0.ListSessionsReply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.RevokeSessionRequest, $2.ResultReply>(
+        'RevokeSession',
+        revokeSession_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.RevokeSessionRequest.fromBuffer(value),
+        ($2.ResultReply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$1.Empty, $0.RevokeSessionsReply>(
+        'RevokeOtherSessions',
+        revokeOtherSessions_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $1.Empty.fromBuffer(value),
+        ($0.RevokeSessionsReply value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.AuthInfo> signIn_Pre($grpc.ServiceCall $call, $async.Future<$0.SignInRequest> $request) async {
@@ -340,4 +396,25 @@ abstract class AuthServiceBase extends $grpc.Service {
   }
 
   $async.Future<$2.ResultReply> deleteUserAvatar($grpc.ServiceCall call, $0.UserId request);
+
+  $async.Future<$0.ListSessionsReply> listSessions_Pre(
+      $grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
+    return listSessions($call, await $request);
+  }
+
+  $async.Future<$0.ListSessionsReply> listSessions($grpc.ServiceCall call, $1.Empty request);
+
+  $async.Future<$2.ResultReply> revokeSession_Pre(
+      $grpc.ServiceCall $call, $async.Future<$0.RevokeSessionRequest> $request) async {
+    return revokeSession($call, await $request);
+  }
+
+  $async.Future<$2.ResultReply> revokeSession($grpc.ServiceCall call, $0.RevokeSessionRequest request);
+
+  $async.Future<$0.RevokeSessionsReply> revokeOtherSessions_Pre(
+      $grpc.ServiceCall $call, $async.Future<$1.Empty> $request) async {
+    return revokeOtherSessions($call, await $request);
+  }
+
+  $async.Future<$0.RevokeSessionsReply> revokeOtherSessions($grpc.ServiceCall call, $1.Empty request);
 }

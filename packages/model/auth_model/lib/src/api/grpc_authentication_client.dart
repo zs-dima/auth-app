@@ -6,6 +6,7 @@ import 'package:auth_model/src/api/i_users_api.dart';
 import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/api/proto/core.pb.dart' as core;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
+import 'package:grpc/grpc.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
@@ -44,20 +45,20 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<AuthenticatedUser> signIn(ISignInData signInData, IDeviceInfo device) async {
-    final osInfo = rpc.OsInfo()
-      ..os = device.deviceOs
-      ..version = device.deviceOsVersion;
-
-    final deviceInfo = rpc.DeviceInfo()
-      ..id = device.deviceId.toUUID()
-      ..osInfo = osInfo
-      ..name = device.deviceName
-      ..model = device.deviceModel;
+    final clientInfo = rpc.ClientInfo()
+      ..deviceId = device.deviceId
+      ..deviceName = device.deviceName
+      ..deviceType = '${device.deviceModel} on ${device.deviceOs}'
+      ..metadata = (core.Struct()
+        ..fields['os'] = core.Value(stringValue: device.deviceOs)
+        ..fields['os_version'] = core.Value(stringValue: device.deviceOsVersion)
+        ..fields['device_model'] = core.Value(stringValue: device.deviceModel))
+      ..clientVersion = device.appVersion;
 
     final request = rpc.SignInRequest()
       ..email = signInData.login
       ..password = signInData.password
-      ..deviceInfo = deviceInfo
+      ..clientInfo = clientInfo
       ..installationId = device.installationId.toUUID();
 
     final result = await client.signIn(request);
@@ -78,7 +79,14 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> signOut(String token) async {
     try {
-      final result = await client.signOut(rpc.Empty());
+      final result = await client.signOut(
+        rpc.Empty(),
+        options: CallOptions(
+          metadata: <String, String>{
+            'authorization': 'Bearer $token',
+          },
+        ),
+      );
       return result.result;
     } on Exception {
       return false;
