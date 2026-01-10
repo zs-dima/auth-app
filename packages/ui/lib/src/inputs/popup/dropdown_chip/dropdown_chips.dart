@@ -124,7 +124,12 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
     _updateSuggestionsMap();
 
     // Listen to the subject's stream with a 300ms debounce
-    _debounceSubscription = _textChangeSubject.debounceTime(const Duration(milliseconds: 300)).listen(_onSearchChanged);
+    _debounceSubscription = _textChangeSubject
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen(
+          _onSearchChanged,
+          cancelOnError: false,
+        );
 
     _chipsController = DropdownChipController<T>(
       allSuggestions: widget

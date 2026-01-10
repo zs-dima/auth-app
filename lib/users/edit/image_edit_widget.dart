@@ -5,8 +5,8 @@ import 'package:auth_app/users/controller/upload_image_controller.dart';
 import 'package:control/control.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:ui/ui.dart' hide ImageInfo;
 
 typedef ImageCallback = void Function(String url, Uint8List? image);
 
@@ -42,7 +42,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
 
   late bool _dragOver = false;
 
-  static const List<DataFormat> _imageFormats = [
+  static const List<FileFormat> _imageFormats = [
     Formats.jpeg,
     Formats.png,
     Formats.gif,
@@ -60,12 +60,8 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
     super.initState();
 
     _imageController =
-        widget.controller ??
-        UploadImageController(
-          messageController: context.dependencies.messageController,
-          url: '',
-        );
-    _urlController = TextEditingController(text: _imageController.state.url);
+        widget.controller ?? UploadImageController(messageController: context.dependencies.messageController);
+    _urlController = TextEditingController(text: _imageController.state.imageInfo.url);
   }
 
   Future<void> _uploadImage() async {
@@ -73,7 +69,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
       dialogTitle: 'Select an image',
       type: kIsWeb ? .custom : .image,
       allowMultiple: false, // allow multiple files to be selected
-      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp'],
+      allowedExtensions: [..._imageFormats.map((e) => e.providerFormat.fileExtFromMimeType)],
       withData: true, // bytes for web/mobile preview
       lockParentWindow: false,
       readSequential: false,
@@ -82,24 +78,26 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
 
     if (image == null || image.count == 0) return;
 
-    if (mounted) _setImage(image.files.firstOrNull?.bytes);
+    if (!mounted) return;
+    final file = image.files.firstOrNull;
+    if (file == null) return;
+
+    final mimeType = file.extension!.fileExtToMimeType;
+    _setImage(file.bytes, mimeType);
   }
 
-  void _setImage(Uint8List? image) {
-    _imageController.setImage(image);
+  void _setImage(Uint8List? image, String mimeType) {
+    _imageController.setImage(image, mimeType);
     _urlController.text = '';
-    // widget.onImageChanged?.call(_url, _image);
   }
 
   void _urlImage(String url) {
     _imageController.setUrl(url);
-    // widget.onImageChanged?.call(_url, _image);
   }
 
   void _deleteImage() {
     _imageController.clean();
     _urlController.text = '';
-    // widget.onImageChanged?.call(_url, _image);
   }
 
   @override
@@ -139,16 +137,17 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
             format,
             (file) async {
               final image = await file.readAll();
-              _setImage(image);
+              final mimeType = format.providerFormat;
+              _setImage(image, mimeType);
             },
             onError: (error) => debugPrint('Error reading value $error'),
           );
         },
         child: StateConsumer<UploadImageController, UploadImageState>(
           controller: _imageController,
-          builder: (_, state, __) => switch (state.image) {
+          builder: (_, state, __) => switch (state.imageInfo.image) {
             // _ when !_imageState.loaded => const Center(child: CircularProgressIndicator()),
-            _ when state.image == null && state.url.isEmpty => Card(
+            _ when state.imageInfo.image == null && state.imageInfo.url.isEmpty => Card(
               clipBehavior: .antiAlias,
               shape: RoundedRectangleBorder(
                 borderRadius: const .all(.circular(8)),
@@ -190,7 +189,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
             ),
             _ => Stack(
               children: [
-                if (state.image != null)
+                if (state.imageInfo.image != null)
                   Positioned.fill(
                     child: ClipRRect(
                       clipBehavior: .antiAlias,
@@ -198,13 +197,13 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
                         .circular(8),
                       ),
                       child: Image.memory(
-                        state.image!,
+                        state.imageInfo.image!,
                         fit: .contain,
                         semanticLabel: 'Image',
                       ),
                     ),
                   ),
-                if (state.image == null && state.url.isNotEmpty)
+                if (state.imageInfo.image == null && state.imageInfo.url.isNotEmpty)
                   Positioned.fill(
                     child: ClipRRect(
                       clipBehavior: .antiAlias,
@@ -212,7 +211,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
                         .circular(8),
                       ),
                       child: Image.network(
-                        state.url,
+                        state.imageInfo.url,
                         fit: .contain,
                         semanticLabel: 'Image',
                       ),

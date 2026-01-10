@@ -91,9 +91,12 @@ class DropdownChipsFilterState<T> extends State<DropdownChipsFilter<T>> {
             .stream
             .distinct()
             .debounceTime(const Duration(milliseconds: 200))
-            .listen((query) {
-              widget.onTextChanged?.call(query);
-            });
+            .listen(
+              (query) {
+                widget.onTextChanged?.call(query);
+              },
+              cancelOnError: false,
+            );
 
     controller = DropdownChipsFilterEditingController<T>(widget.values, widget.chipBuilder);
     controller.addListener(_textListener);

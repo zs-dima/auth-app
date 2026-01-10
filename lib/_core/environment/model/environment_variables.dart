@@ -19,6 +19,10 @@ abstract final class EnvironmentVariables {
   /// Whether to use in-memory database.
   static const inMemoryDatabase = 'DB_IN_MEMORY';
 
+  // --- STORAGE --- //
+  /// S3 storage URL including bucket name.
+  static const s3Url = 'S3_URL';
+
   // --- API --- //
 
   static const authAddress = 'APP_AUTH_ADDRESS';

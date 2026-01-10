@@ -11,8 +11,8 @@ part 'user_controller.freezed.dart';
 @freezed
 class UserState with _$UserState {
   const factory UserState.idle() = _idleState;
-  const factory UserState.created(User user) = UserCreateState;
-  const factory UserState.updated(User user) = UserUpdateState;
+  const factory UserState.created(User user) = UserCreatedState;
+  const factory UserState.updated(User user) = UserUpdatedState;
 }
 
 final class UserController extends StateController<UserState>

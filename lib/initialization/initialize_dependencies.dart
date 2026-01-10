@@ -24,7 +24,7 @@ import 'package:auth_app/settings/data/dao/app_secure_preferences_dao.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
-import 'package:auth_app/users/controller/avatar_cache.dart';
+import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
@@ -293,7 +293,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         repository: dependencies.authenticationRepository,
         messageController: dependencies.messageController,
       ),
-  'Prepare avatars cache': (dependencies) => dependencies.avatarCache = AvatarCache(),
   'Prepare users repository': (dependencies) {
     dependencies
       ..usersRepository = UsersRepository(
@@ -301,6 +300,11 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         getUserId: dependencies.authenticationRepository.getUserId,
       )
       ..usersController = UsersController(
+        repository: dependencies.usersRepository,
+        messageController: dependencies.messageController,
+      )
+      ..avatarController = AvatarController(
+        s3Url: dependencies.environment.s3Url,
         repository: dependencies.usersRepository,
         messageController: dependencies.messageController,
       );
@@ -350,6 +354,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
               cancelOnError: false,
             );
   },
+
   'Restore credentials': (dependencies) => dependencies.authenticationController.restore(),
 
   // 'Prepare authentication controller': (dependencies) =>
@@ -384,7 +389,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //             .toList(),
   //       )
   //       .then<void>(LogBuffer.instance.addAll);
-  //   l.bufferTime(const Duration(seconds: 1)).where((logs) => logs.isNotEmpty).listen(LogBuffer.instance.addAll);
+  //   l.bufferTime(const Duration(seconds: 1)).where((logs) => logs.isNotEmpty).listen(LogBuffer.instance.addAll, cancelOnError: false,);
   //   l
   //       .map<LogTblCompanion>(
   //         (log) => LogTblCompanion.insert(

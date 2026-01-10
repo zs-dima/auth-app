@@ -6,7 +6,6 @@ import 'package:auth_model/src/api/i_users_api.dart';
 import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/api/proto/core.pb.dart' as core;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
-import 'package:grpc/grpc.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
@@ -17,6 +16,7 @@ import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:core_model/core_model.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart' as rpc;
 
 /// gRPC client for authentication service.

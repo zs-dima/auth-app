@@ -23,6 +23,7 @@ export 'src/shaders/shimmer.dart';
 export 'src/tool/build_context.dart';
 export 'src/tool/color.dart';
 export 'src/tool/dialog.dart';
+export 'src/tool/file_mime_type.dart';
 export 'src/tool/input_formatter.dart';
 export 'src/tool/screen.dart';
 export 'src/tool/validators.dart';

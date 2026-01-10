@@ -61,6 +61,7 @@ class EnvironmentLoader {
         whisperService: whisperService,
         sentryDsn: sentryDsn,
         aiKey: aiKey,
+        s3Url: dockerEnv.s3Url ?? const String.fromEnvironment(EnvironmentVariables.s3Url),
         dropDatabase: dropDatabase,
         databaseName: databaseName,
         inMemoryDatabase: inMemoryDatabase,

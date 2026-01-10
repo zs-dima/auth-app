@@ -23,15 +23,17 @@ class SettingsDialog extends StatelessWidget {
           borderRadius: const .vertical(top: .circular(8.0)),
           color: colorScheme.primary,
         ),
-        child: Padding(
-          padding: theme.paddings.tiny,
-          child: AppText.bodyLarge(
-            'Theme settings',
-            color: colorScheme.onPrimary,
-            fontWeight: .bold,
-            overflow: .ellipsis,
-            textAlign: .center,
-            maxLines: 1,
+        child: Scaffold(
+          body: Padding(
+            padding: theme.paddings.tiny,
+            child: AppText.bodyLarge(
+              'Theme settings',
+              color: colorScheme.onPrimary,
+              fontWeight: .bold,
+              overflow: .ellipsis,
+              textAlign: .center,
+              maxLines: 1,
+            ),
           ),
         ),
       ),

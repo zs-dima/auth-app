@@ -47,11 +47,14 @@ abstract base class ExceptionTrackingManager implements IExceptionTrackingManage
   @mustBeOverridden
   @override
   Future<void> enableReporting() async {
-    _subscription ??= _reportLogs.listen((log) async {
-      if (_shouldReport(log.error)) {
-        await _report(log);
-      }
-    });
+    _subscription ??= _reportLogs.listen(
+      (log) async {
+        if (_shouldReport(log.error)) {
+          await _report(log);
+        }
+      },
+      cancelOnError: false,
+    );
   }
 
   static bool _isWarningOrError(LogMessage log) => log.level.compareTo(.warning) >= 0;

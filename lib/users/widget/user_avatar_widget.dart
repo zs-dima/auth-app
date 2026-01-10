@@ -1,5 +1,7 @@
 import 'package:auth_app/_core/core.dart';
+import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:control/control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -32,16 +34,14 @@ class UserAvatarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = _getInitials(user.name);
 
-    final avatarCache = context.dependencies.avatarCache;
+    final avatarController = context.dependencies.avatarController;
 
-    return ListenableBuilder(
-      listenable: avatarCache,
-      builder: (context, _) {
-        final avatarUrl = avatarCache.getUrl(user.id);
-        final avatarVersion = avatarCache.getVersion(user.id);
-
+    return StateConsumer<AvatarController, AvatarState>(
+      controller: avatarController,
+      builder: (_, state, __) {
+        final avatarUrl = avatarController.getUrl(user.id);
         return _AvatarCircle(
-          key: ValueKey('${user.id}_$avatarVersion'),
+          key: ValueKey(avatarUrl),
           avatarUrl: avatarUrl,
           initials: initials,
           size: size,
@@ -96,8 +96,8 @@ class _AvatarCircleState extends State<_AvatarCircle> {
         foregroundImage: showImage ? NetworkImage(widget.avatarUrl!) : null,
         onForegroundImageError: showImage
             ? (_, __) => SchedulerBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _imageLoadFailed = true);
-                })
+                if (mounted) setState(() => _imageLoadFailed = true);
+              })
             : null,
         child: Text(
           widget.initials,

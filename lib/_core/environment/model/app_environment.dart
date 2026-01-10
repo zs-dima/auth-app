@@ -11,6 +11,7 @@ abstract class IAppEnvironment {
   bool get dropDatabase;
   String get databaseName;
   bool get inMemoryDatabase;
+  String get s3Url;
 }
 
 class AppEnvironment implements IAppEnvironment {
@@ -25,6 +26,7 @@ class AppEnvironment implements IAppEnvironment {
     required this.dropDatabase,
     required this.databaseName,
     required this.inMemoryDatabase,
+    required this.s3Url,
   });
 
   const AppEnvironment.development({
@@ -37,6 +39,7 @@ class AppEnvironment implements IAppEnvironment {
     required this.dropDatabase,
     required this.databaseName,
     required this.inMemoryDatabase,
+    required this.s3Url,
   }) : type = EnvironmentFlavor.development;
 
   const AppEnvironment.staging({
@@ -49,6 +52,7 @@ class AppEnvironment implements IAppEnvironment {
     required this.dropDatabase,
     required this.databaseName,
     required this.inMemoryDatabase,
+    required this.s3Url,
   }) : type = EnvironmentFlavor.staging;
 
   const AppEnvironment.production({
@@ -61,6 +65,7 @@ class AppEnvironment implements IAppEnvironment {
     required this.dropDatabase,
     required this.databaseName,
     required this.inMemoryDatabase,
+    required this.s3Url,
   }) : type = EnvironmentFlavor.production;
 
   @override
@@ -83,4 +88,6 @@ class AppEnvironment implements IAppEnvironment {
   final String databaseName;
   @override
   final bool inMemoryDatabase;
+  @override
+  final String s3Url;
 }

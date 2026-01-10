@@ -10,12 +10,9 @@ class ScaffoldPadding extends EdgeInsets {
   const ScaffoldPadding._(final double value) : super.symmetric(horizontal: value);
 
   /// {@macro scaffold_padding}
-  factory ScaffoldPadding.of(BuildContext context) => ScaffoldPadding._(
-        math.max(
-          (MediaQuery.sizeOf(context).width - Config.maxScreenLayoutWidth) / 2,
-          16,
-        ),
-      );
+  factory ScaffoldPadding.of(BuildContext context, {double? maxWidth, double? minPadding}) => ScaffoldPadding._(
+    math.max((MediaQuery.sizeOf(context).width - (maxWidth ?? Config.maxScreenLayoutWidth)) / 2, minPadding ?? 16.0),
+  );
 
   /// {@macro scaffold_padding}
   static Widget widget(BuildContext context, [Widget? child]) =>

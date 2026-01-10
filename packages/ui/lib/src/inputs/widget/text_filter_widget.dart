@@ -51,7 +51,10 @@ class _TextFilterWidgetState extends State<TextFilterWidget> {
     // Listen to the subject's stream with a 300ms debounce
     _debounceSubscription = _textChangeSubject
         .debounceTime(const Duration(milliseconds: 300))
-        .listen((value) => widget.onChanged?.call(value));
+        .listen(
+          (value) => widget.onChanged?.call(value),
+          cancelOnError: false,
+        );
   }
 
   @override
