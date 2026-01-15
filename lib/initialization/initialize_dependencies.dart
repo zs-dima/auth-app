@@ -252,10 +252,16 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           dependencies.authenticationController.signOut();
         },
         unauthenticatedPaths: const <String>{
-          '/auth.AuthService/SignIn',
+          // gRPC public methods (authentication)
+          '/auth.AuthService/Authenticate',
+          '/auth.AuthService/SignUp',
           '/auth.AuthService/SignOut',
+          '/auth.AuthService/RecoveryStart',
+          '/auth.AuthService/RecoveryConfirm',
           '/auth.AuthService/RefreshTokens',
-          '/auth.AuthService/ResetPassword',
+          // gRPC public methods (OAuth)
+          '/auth.AuthService/GetOAuthUrl',
+          '/auth.AuthService/ExchangeOAuthCode',
         },
       ),
     ]);

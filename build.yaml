@@ -10,9 +10,9 @@ targets:
         options:
           checked: true
           field_rename: snake
-      pubspec_generator:
-        options:
-          output: lib/_core/generated/constant/pubspec.yaml.g.dart
+      # pubspec_generator:
+      #   options:
+      #     output: lib/_core/generated/constant/pubspec.yaml.g.dart
       drift_dev:
         generate_for:
           include:

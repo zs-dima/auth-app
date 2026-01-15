@@ -14,19 +14,164 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class UserRole extends $pb.ProtobufEnum {
-  static const UserRole ADMINISTRATOR = UserRole._(0, _omitEnumNames ? '' : 'ADMINISTRATOR');
-  static const UserRole USER = UserRole._(1, _omitEnumNames ? '' : 'USER');
+/// Type of identifier for authentication
+/// Maps to DB: users.email (email domain), users.phone (phone_e164 domain)
+class IdentifierType extends $pb.ProtobufEnum {
+  static const IdentifierType IDENTIFIER_TYPE_UNSPECIFIED =
+      IdentifierType._(0, _omitEnumNames ? '' : 'IDENTIFIER_TYPE_UNSPECIFIED');
+  static const IdentifierType IDENTIFIER_TYPE_EMAIL =
+      IdentifierType._(1, _omitEnumNames ? '' : 'IDENTIFIER_TYPE_EMAIL');
+  static const IdentifierType IDENTIFIER_TYPE_PHONE =
+      IdentifierType._(2, _omitEnumNames ? '' : 'IDENTIFIER_TYPE_PHONE');
 
-  static const $core.List<UserRole> values = <UserRole>[
-    ADMINISTRATOR,
-    USER,
+  static const $core.List<IdentifierType> values = <IdentifierType>[
+    IDENTIFIER_TYPE_UNSPECIFIED,
+    IDENTIFIER_TYPE_EMAIL,
+    IDENTIFIER_TYPE_PHONE,
   ];
 
-  static final $core.List<UserRole?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static final $core.List<IdentifierType?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static IdentifierType? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const IdentifierType._(super.value, super.name);
+}
+
+/// OAuth providers - matches DB enum: oauth_provider
+class OAuthProvider extends $pb.ProtobufEnum {
+  static const OAuthProvider OAUTH_PROVIDER_UNSPECIFIED =
+      OAuthProvider._(0, _omitEnumNames ? '' : 'OAUTH_PROVIDER_UNSPECIFIED');
+  static const OAuthProvider OAUTH_PROVIDER_GOOGLE = OAuthProvider._(1, _omitEnumNames ? '' : 'OAUTH_PROVIDER_GOOGLE');
+  static const OAuthProvider OAUTH_PROVIDER_GITHUB = OAuthProvider._(2, _omitEnumNames ? '' : 'OAUTH_PROVIDER_GITHUB');
+  static const OAuthProvider OAUTH_PROVIDER_MICROSOFT =
+      OAuthProvider._(3, _omitEnumNames ? '' : 'OAUTH_PROVIDER_MICROSOFT');
+  static const OAuthProvider OAUTH_PROVIDER_APPLE = OAuthProvider._(4, _omitEnumNames ? '' : 'OAUTH_PROVIDER_APPLE');
+  static const OAuthProvider OAUTH_PROVIDER_FACEBOOK =
+      OAuthProvider._(5, _omitEnumNames ? '' : 'OAUTH_PROVIDER_FACEBOOK');
+
+  static const $core.List<OAuthProvider> values = <OAuthProvider>[
+    OAUTH_PROVIDER_UNSPECIFIED,
+    OAUTH_PROVIDER_GOOGLE,
+    OAUTH_PROVIDER_GITHUB,
+    OAUTH_PROVIDER_MICROSOFT,
+    OAUTH_PROVIDER_APPLE,
+    OAUTH_PROVIDER_FACEBOOK,
+  ];
+
+  static final $core.List<OAuthProvider?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static OAuthProvider? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OAuthProvider._(super.value, super.name);
+}
+
+/// User account status - matches DB enum: user_status
+class UserStatus extends $pb.ProtobufEnum {
+  static const UserStatus USER_STATUS_UNSPECIFIED = UserStatus._(0, _omitEnumNames ? '' : 'USER_STATUS_UNSPECIFIED');
+  static const UserStatus USER_STATUS_PENDING = UserStatus._(1, _omitEnumNames ? '' : 'USER_STATUS_PENDING');
+  static const UserStatus USER_STATUS_ACTIVE = UserStatus._(2, _omitEnumNames ? '' : 'USER_STATUS_ACTIVE');
+  static const UserStatus USER_STATUS_SUSPENDED = UserStatus._(3, _omitEnumNames ? '' : 'USER_STATUS_SUSPENDED');
+  static const UserStatus USER_STATUS_DELETED = UserStatus._(4, _omitEnumNames ? '' : 'USER_STATUS_DELETED');
+
+  static const $core.List<UserStatus> values = <UserStatus>[
+    USER_STATUS_UNSPECIFIED,
+    USER_STATUS_PENDING,
+    USER_STATUS_ACTIVE,
+    USER_STATUS_SUSPENDED,
+    USER_STATUS_DELETED,
+  ];
+
+  static final $core.List<UserStatus?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static UserStatus? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const UserStatus._(super.value, super.name);
+}
+
+/// User role - maps to DB roles.id (admin, user, guest)
+class UserRole extends $pb.ProtobufEnum {
+  static const UserRole USER_ROLE_UNSPECIFIED = UserRole._(0, _omitEnumNames ? '' : 'USER_ROLE_UNSPECIFIED');
+  static const UserRole USER_ROLE_ADMIN = UserRole._(1, _omitEnumNames ? '' : 'USER_ROLE_ADMIN');
+  static const UserRole USER_ROLE_USER = UserRole._(2, _omitEnumNames ? '' : 'USER_ROLE_USER');
+  static const UserRole USER_ROLE_GUEST = UserRole._(3, _omitEnumNames ? '' : 'USER_ROLE_GUEST');
+
+  static const $core.List<UserRole> values = <UserRole>[
+    USER_ROLE_UNSPECIFIED,
+    USER_ROLE_ADMIN,
+    USER_ROLE_USER,
+    USER_ROLE_GUEST,
+  ];
+
+  static final $core.List<UserRole?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 3);
   static UserRole? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const UserRole._(super.value, super.name);
+}
+
+/// Authentication result status
+class AuthStatus extends $pb.ProtobufEnum {
+  static const AuthStatus AUTH_STATUS_UNSPECIFIED = AuthStatus._(0, _omitEnumNames ? '' : 'AUTH_STATUS_UNSPECIFIED');
+  static const AuthStatus AUTH_STATUS_SUCCESS = AuthStatus._(1, _omitEnumNames ? '' : 'AUTH_STATUS_SUCCESS');
+  static const AuthStatus AUTH_STATUS_MFA_REQUIRED = AuthStatus._(2, _omitEnumNames ? '' : 'AUTH_STATUS_MFA_REQUIRED');
+  static const AuthStatus AUTH_STATUS_FAILED = AuthStatus._(3, _omitEnumNames ? '' : 'AUTH_STATUS_FAILED');
+  static const AuthStatus AUTH_STATUS_LOCKED = AuthStatus._(4, _omitEnumNames ? '' : 'AUTH_STATUS_LOCKED');
+  static const AuthStatus AUTH_STATUS_SUSPENDED = AuthStatus._(5, _omitEnumNames ? '' : 'AUTH_STATUS_SUSPENDED');
+  static const AuthStatus AUTH_STATUS_PENDING = AuthStatus._(6, _omitEnumNames ? '' : 'AUTH_STATUS_PENDING');
+
+  static const $core.List<AuthStatus> values = <AuthStatus>[
+    AUTH_STATUS_UNSPECIFIED,
+    AUTH_STATUS_SUCCESS,
+    AUTH_STATUS_MFA_REQUIRED,
+    AUTH_STATUS_FAILED,
+    AUTH_STATUS_LOCKED,
+    AUTH_STATUS_SUSPENDED,
+    AUTH_STATUS_PENDING,
+  ];
+
+  static final $core.List<AuthStatus?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 6);
+  static AuthStatus? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const AuthStatus._(super.value, super.name);
+}
+
+/// Verification type for email/phone
+class VerificationType extends $pb.ProtobufEnum {
+  static const VerificationType VERIFICATION_TYPE_UNSPECIFIED =
+      VerificationType._(0, _omitEnumNames ? '' : 'VERIFICATION_TYPE_UNSPECIFIED');
+  static const VerificationType VERIFICATION_TYPE_EMAIL =
+      VerificationType._(1, _omitEnumNames ? '' : 'VERIFICATION_TYPE_EMAIL');
+  static const VerificationType VERIFICATION_TYPE_PHONE =
+      VerificationType._(2, _omitEnumNames ? '' : 'VERIFICATION_TYPE_PHONE');
+
+  static const $core.List<VerificationType> values = <VerificationType>[
+    VERIFICATION_TYPE_UNSPECIFIED,
+    VERIFICATION_TYPE_EMAIL,
+    VERIFICATION_TYPE_PHONE,
+  ];
+
+  static final $core.List<VerificationType?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static VerificationType? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const VerificationType._(super.value, super.name);
+}
+
+/// MFA method types - extensible for future methods
+class MfaMethod extends $pb.ProtobufEnum {
+  static const MfaMethod MFA_METHOD_UNSPECIFIED = MfaMethod._(0, _omitEnumNames ? '' : 'MFA_METHOD_UNSPECIFIED');
+  static const MfaMethod MFA_METHOD_TOTP = MfaMethod._(1, _omitEnumNames ? '' : 'MFA_METHOD_TOTP');
+  static const MfaMethod MFA_METHOD_SMS = MfaMethod._(2, _omitEnumNames ? '' : 'MFA_METHOD_SMS');
+  static const MfaMethod MFA_METHOD_EMAIL = MfaMethod._(3, _omitEnumNames ? '' : 'MFA_METHOD_EMAIL');
+  static const MfaMethod MFA_METHOD_RECOVERY_CODE = MfaMethod._(4, _omitEnumNames ? '' : 'MFA_METHOD_RECOVERY_CODE');
+
+  static const $core.List<MfaMethod> values = <MfaMethod>[
+    MFA_METHOD_UNSPECIFIED,
+    MFA_METHOD_TOTP,
+    MFA_METHOD_SMS,
+    MFA_METHOD_EMAIL,
+    MFA_METHOD_RECOVERY_CODE,
+  ];
+
+  static final $core.List<MfaMethod?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static MfaMethod? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MfaMethod._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

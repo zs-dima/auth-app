@@ -3,7 +3,7 @@ import 'package:auth_app/_core/widget/form/form_placeholder.dart';
 import 'package:auth_app/_core/widget/scaffold_padding.dart';
 import 'package:auth_app/_core/widget/text_placeholder.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
-import 'package:auth_app/authentication/widget/log_out_button.dart';
+import 'package:auth_app/authentication/widget/layout/log_out_button.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:octopus/octopus.dart';
 import 'package:ui/ui.dart';
@@ -133,7 +133,7 @@ class ProfileScreen extends StatelessWidget {
                         height: 1.0,
                       ),
                     ),
-                    onTap: () => context.octopus.push(Routes.settingsDialog),
+                    onTap: () => context.octopus.push(Routes.settings),
                   ),
                 ),
                 const SizedBox(height: 24.0),

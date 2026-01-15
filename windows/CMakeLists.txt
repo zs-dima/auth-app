@@ -1,5 +1,20 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
+
+# Fix for CMake 4.1+ policy CMP194 warning (VS 18+)
+if(POLICY CMP0194)
+  cmake_policy(SET CMP0194 NEW)
+endif()
+
+# Fix for LNK1104: cannot open file 'kernel32.lib'
+# if(MSVC)
+#   set(WIN_SDK_LIB_PATH "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0")
+#   link_directories(
+#     "${WIN_SDK_LIB_PATH}/um/x64"
+#     "${WIN_SDK_LIB_PATH}/ucrt/x64"
+#   )
+# endif()
+
 project(auth_app LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change

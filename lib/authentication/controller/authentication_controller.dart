@@ -45,7 +45,8 @@ final class AuthenticationController extends StateController<AuthenticationState
   );
 
   /// Sign in with the given [data].
-  void signIn(SignInData data) => handle(
+  /// On MFA required, throws [AuthenticationException] with [AuthResultMfaRequired].
+  void signIn(SignInData data, {void Function(MfaChallenge challenge)? onMfaRequired}) => handle(
     () async {
       setProgressStarted();
       if (state.user.isAuthenticated) {
@@ -63,43 +64,115 @@ final class AuthenticationController extends StateController<AuthenticationState
       setState(AuthenticationState.idle(user: user, message: 'Successfully logged in.'));
     },
     error: (error, _) async {
-      setError(kDebugMode ? 'Sign In Error, please check your credentials and try again./n$error' : 'Sign In Error');
-      // setError('Sign In Error, please check your credentials and try again.');
-      setState(
-        AuthenticationState.idle(
-          user: state.user,
-          // ErrorUtil.formatMessage(error)
-          error: kDebugMode ? 'Sign In Error: $error' : 'Sign In Error',
-        ),
-      );
+      // Handle MFA required - not an error, but a flow continuation
+      if (error case AuthenticationException(result: AuthResultMfaRequired(:final mfaChallenge))) {
+        setProgressDone();
+        onMfaRequired?.call(mfaChallenge);
+        return;
+      }
+
+      // Handle specific auth errors with user-friendly messages
+      final errorMessage = switch (error) {
+        AuthenticationException(:final message) => message,
+        _ => kDebugMode ? 'Sign In Error: $error' : 'Sign In Error',
+      };
+
+      setError(errorMessage);
+      setState(AuthenticationState.idle(user: state.user, error: errorMessage));
     },
     done: () async => setProgressDone(),
     name: 'signIn',
   );
 
-  /// Sign out.
-  void signOut() {
-    handle(
-      () async {
-        //if (state.user.isNotAuthenticated) return; // Already signed out.
-        setState(AuthenticationState.processing(user: state.user, message: 'Logging out...'));
+  /// Complete MFA verification.
+  void verifyMfa({
+    required String challengeToken,
+    required MfaMethod method,
+    required String code,
+  }) => handle(
+    () async {
+      setProgressStarted();
+      setState(AuthenticationState.processing(user: state.user, message: 'Verifying...'));
 
-        await _repository.signOut();
+      final user = await _repository.verifyMfa(
+        challengeToken: challengeToken,
+        method: method,
+        code: code,
+      );
+      setState(AuthenticationState.idle(user: user, message: 'Successfully logged in.'));
+    },
+    error: (error, _) async {
+      final errorMessage = switch (error) {
+        AuthenticationException(:final message) => message,
+        _ => kDebugMode ? 'Verification Error: $error' : 'Verification failed',
+      };
 
-        setState(const AuthenticationState.idle(user: AuthUser.unauthenticated()));
-      },
-      error: (error, _) async {
+      setError(errorMessage);
+      setState(AuthenticationState.idle(user: state.user, error: errorMessage));
+    },
+    done: () async => setProgressDone(),
+    name: 'verifyMfa',
+  );
+
+  /// Register a new account.
+  /// On success, user is automatically logged in.
+  /// On pending verification, throws [AuthenticationException] with [AuthResultPending].
+  void signUp(SignUpData data, {VoidCallback? onSuccess, VoidCallback? onPendingVerification}) => handle(
+    () async {
+      setProgressStarted();
+      setState(AuthenticationState.processing(user: state.user, message: 'Creating account...'));
+
+      final user = await _repository.signUp(data);
+      onSuccess?.call();
+      setState(AuthenticationState.idle(user: user, message: 'Account created successfully.'));
+    },
+    error: (error, _) async {
+      // Handle pending verification - account created but needs email/phone confirmation
+      if (error case AuthenticationException(result: AuthResultPending(:final message))) {
+        setProgressDone();
+        onPendingVerification?.call();
         setState(
           AuthenticationState.idle(
-            user: const AuthUser.unauthenticated(),
-            // ErrorUtil.formatMessage(error)
-            error: kDebugMode ? 'Log Out Error: $error' : 'Log Out Error',
+            user: state.user,
+            message: message ?? 'Account created. Please check your email to verify.',
           ),
         );
-      },
-      name: 'signOut',
-    );
-  }
+        return;
+      }
+
+      final errorMessage = switch (error) {
+        AuthenticationException(:final message) => message,
+        _ => kDebugMode ? 'Sign Up Error: $error' : 'Failed to create account',
+      };
+
+      setError(errorMessage);
+      setState(AuthenticationState.idle(user: state.user, error: errorMessage));
+    },
+    done: () async => setProgressDone(),
+    name: 'signUp',
+  );
+
+  /// Sign out.
+  void signOut() => handle(
+    () async {
+      //if (state.user.isNotAuthenticated) return; // Already signed out.
+      setState(AuthenticationState.processing(user: state.user, message: 'Logging out...'));
+
+      await _repository.signOut();
+
+      setState(const AuthenticationState.idle(user: AuthUser.unauthenticated()));
+    },
+    error: (error, _) async {
+      setState(
+        AuthenticationState.idle(
+          user: const AuthUser.unauthenticated(),
+          // ErrorUtil.formatMessage(error)
+          error: kDebugMode ? 'Log Out Error: $error' : 'Log Out Error',
+        ),
+      );
+    },
+    name: 'signOut',
+  );
 
   /// Update UserInfo
   // void updateUserInfo(IUserInfo user) => handle(
@@ -118,6 +191,51 @@ final class AuthenticationController extends StateController<AuthenticationState
   //   },
   //   done: () async => setState(AuthenticationState.idle(user: _repository.user)),
   // );
+
+  /// Reset password for the given [email].
+  void recoveryStart(String email, {VoidCallback? onSuccess}) => handle(
+    () async {
+      setState(AuthenticationState.processing(user: state.user, message: 'Sending reset email...'));
+      final success = await _repository.recoveryStart(email);
+      if (success) {
+        onSuccess?.call();
+        setState(AuthenticationState.idle(user: state.user, message: 'Password reset email sent.'));
+      } else {
+        setState(AuthenticationState.idle(user: state.user, error: 'Failed to send reset email.'));
+      }
+    },
+    error: (error, _) async {
+      setState(
+        AuthenticationState.idle(
+          user: state.user,
+          error: kDebugMode ? 'Reset Password Error: $error' : 'Failed to send reset email.',
+        ),
+      );
+    },
+    name: 'resetPassword',
+  );
+
+  void recoveryConfirm({required String token, required String newPassword, VoidCallback? onSuccess}) => handle(
+    () async {
+      setState(AuthenticationState.processing(user: state.user, message: 'Sending reset email...'));
+      final success = await _repository.recoveryConfirm(token: token, newPassword: newPassword);
+      if (success) {
+        onSuccess?.call();
+        setState(AuthenticationState.idle(user: state.user, message: 'Password reset email sent.'));
+      } else {
+        setState(AuthenticationState.idle(user: state.user, error: 'Failed to send reset email.'));
+      }
+    },
+    error: (error, _) async {
+      setState(
+        AuthenticationState.idle(
+          user: state.user,
+          error: kDebugMode ? 'Reset Password Error: $error' : 'Failed to send reset email.',
+        ),
+      );
+    },
+    name: 'resetPassword',
+  );
 
   @override
   void dispose() {

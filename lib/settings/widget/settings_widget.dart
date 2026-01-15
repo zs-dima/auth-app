@@ -89,43 +89,55 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
           ),
-          Row(
-            children: [
-              Padding(
-                padding: const .all(8.0),
-                child: AppText.titleMedium(
-                  'version ${context.dependencies.metadata.appVersion}',
-                ),
-              ),
-              const Spacer(),
-              OutlinedButton(
-                onPressed: () {
-                  HapticFeedback.mediumImpact().ignore();
-                  SettingsScope.of(context).resetSettings();
-                },
-                child: const AppText.titleMedium('Reset to default'),
-              ),
 
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Align(
-                  alignment: Alignment.bottomRight,
-                  child: Padding(
-                    padding: ThemePaddings.defaultMedium.medium,
-                    child: SizedBox(
-                      width: 120.0,
-                      child: OutlinedButton(
-                        child: const Text('Cancel'),
-                        onPressed: () {
-                          HapticFeedback.mediumImpact().ignore();
-                          Navigator.of(context).pop();
-                        },
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: ThemePaddings.defaultMedium.medium,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const .all(8.0),
+                      child: AppText.titleMedium(
+                        'version ${context.dependencies.metadata.appVersion}',
                       ),
                     ),
-                  ),
+                    const Spacer(),
+                    OutlinedButton(
+                      onPressed: () {
+                        HapticFeedback.mediumImpact().ignore();
+                        SettingsScope.of(context).resetSettings();
+                      },
+                      child: const AppText.titleMedium('Reset to default'),
+                    ),
+                    const SizedBox(width: 16.0),
+
+                    OutlinedButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        HapticFeedback.mediumImpact().ignore();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 16.0),
+                    FilledButton(
+                      // style: FilledButton.styleFrom(
+                      //   shape: const RoundedRectangleBorder(borderRadius: .all(.circular(10))),
+                      // ),
+                      onPressed: () {
+                        HapticFeedback.mediumImpact().ignore();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text(
+                        'Save', // Localization.of(context).save,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
           // SliverToBoxAdapter(
           //   child: Center(

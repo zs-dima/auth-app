@@ -8,6 +8,28 @@ import 'package:auth_model/auth_model.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:rxdart/rxdart.dart';
 
+/// Authentication exception with status information.
+class AuthenticationException implements Exception {
+  const AuthenticationException(this.result);
+
+  final AuthResult result;
+
+  String get message => _getMessage();
+
+  @override
+  String toString() => 'AuthenticationException: $message';
+
+  String _getMessage() => switch (result) {
+    AuthResultFailed(message: final msg) => msg ?? 'Authentication failed',
+    AuthResultLocked(message: final msg, :final lockoutInfo) =>
+      msg ?? 'Account locked. Try again in ${lockoutInfo.retryAfterSeconds} seconds.',
+    AuthResultSuspended(message: final msg) => msg ?? 'Account suspended',
+    AuthResultPending(message: final msg) => msg ?? 'Account pending verification',
+    AuthResultMfaRequired() => 'MFA verification required',
+    _ => 'Authentication failed',
+  };
+}
+
 abstract interface class IAuthenticationRepository {
   Stream<AuthUser> get userChanges;
   AuthUser get user;
@@ -15,13 +37,29 @@ abstract interface class IAuthenticationRepository {
 
   Future<AuthUser> restore();
   Future<AccessCredentials?> getAccessCredentials();
-  // Future<AccessCredentials?> refreshTokens();
 
+  /// Authenticate with credentials.
+  /// Returns [AuthUser] on success.
+  /// Throws [AuthenticationException] with [AuthResultMfaRequired] if MFA is needed.
   Future<AuthUser> signIn(ISignInData signInData);
+
+  /// Complete MFA verification.
+  Future<AuthUser> verifyMfa({
+    required String challengeToken,
+    required MfaMethod method,
+    required String code,
+  });
+
+  /// Register a new account.
+  /// Returns [AuthUser] on success (auto-login) or throws [AuthenticationException].
+  Future<AuthUser> signUp(SignUpData data);
+
   Future<void> signOut();
 
-  Future<bool> resetPassword(String email);
-  Future<bool> setPassword(UserId userId, String email, String password);
+  Future<bool> recoveryStart(String identifier, {IdentifierType identifierType});
+  Future<bool> recoveryConfirm({required String token, required String newPassword});
+  Future<bool> changePassword({required String currentPassword, required String newPassword});
+  Future<bool> setPassword({required UserId userId, required String password});
 
   Future<void> terminate();
 }
@@ -77,15 +115,31 @@ class AuthenticationRepository implements IAuthenticationRepository {
   @override
   Future<AuthUser> signIn(ISignInData signInData) async {
     final deviceInfo = await DeviceInfo.instance(metadata.appVersion, _settings.installationId);
+    final result = await _api.authenticate(signInData, deviceInfo);
+    return _handleAuthResult(result);
+  }
 
-    final authUser = await _api.signIn(signInData, deviceInfo);
+  @override
+  Future<AuthUser> verifyMfa({
+    required String challengeToken,
+    required MfaMethod method,
+    required String code,
+  }) async {
+    final deviceInfo = await DeviceInfo.instance(metadata.appVersion, _settings.installationId);
+    final result = await _api.verifyMfa(
+      challengeToken: challengeToken,
+      method: method,
+      code: code,
+      deviceInfo: deviceInfo,
+    );
+    return _handleAuthResult(result);
+  }
 
-    _userController.add(_user = authUser);
-
-    _settings.setUserId(authUser.userId).ignore();
-    _settings.setCredentials(authUser.credentials).ignore();
-
-    return _user;
+  @override
+  Future<AuthUser> signUp(SignUpData data) async {
+    final deviceInfo = await DeviceInfo.instance(metadata.appVersion, _settings.installationId);
+    final result = await _api.signUp(data, deviceInfo);
+    return _handleAuthResult(result);
   }
 
   @override
@@ -104,10 +158,20 @@ class AuthenticationRepository implements IAuthenticationRepository {
   });
 
   @override
-  Future<bool> resetPassword(String email) => _api.resetPassword(email);
+  Future<bool> recoveryStart(String identifier, {IdentifierType identifierType = .email}) =>
+      _api.recoveryStart(identifier: identifier, identifierType: identifierType);
 
   @override
-  Future<bool> setPassword(UserId userId, String email, String password) => _api.setPassword(userId, email, password);
+  Future<bool> recoveryConfirm({required String token, required String newPassword}) =>
+      _api.recoveryConfirm(token: token, newPassword: newPassword);
+
+  @override
+  Future<bool> changePassword({required String currentPassword, required String newPassword}) =>
+      _api.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+
+  @override
+  Future<bool> setPassword({required UserId userId, required String password}) =>
+      _api.setPassword(userId: userId, password: password);
 
   @override
   Future<AuthUser> restore() async {
@@ -131,6 +195,25 @@ class AuthenticationRepository implements IAuthenticationRepository {
     await _authSubscription?.cancel();
     await _userChangesSubscription?.cancel();
     await _userController.close();
+  }
+
+  /// Handles authentication result, returning user on success or throwing on failure/MFA.
+  AuthUser _handleAuthResult(AuthResult result) {
+    switch (result) {
+      case AuthResultSuccess(:final userId, :final credentials):
+        final authUser = AuthUser.authenticated(credentials: credentials, userId: userId);
+        _userController.add(_user = authUser);
+        _settings.setUserId(userId).ignore();
+        _settings.setCredentials(credentials).ignore();
+        return authUser;
+
+      case AuthResultMfaRequired():
+      case AuthResultFailed():
+      case AuthResultLocked():
+      case AuthResultSuspended():
+      case AuthResultPending():
+        throw AuthenticationException(result);
+    }
   }
 
   // @override

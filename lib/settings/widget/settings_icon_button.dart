@@ -18,8 +18,8 @@ class SettingsIconButton extends StatelessWidget {
     onPressed: () {
       Octopus.maybeOf(context)?.setState(
         (state) => state
-          ..removeByName(Routes.settingsDialog.name)
-          ..add(Routes.settingsDialog.node()),
+          ..removeByName(Routes.settings.name)
+          ..add(Routes.settings.node()),
       );
       HapticFeedback.mediumImpact().ignore();
     },

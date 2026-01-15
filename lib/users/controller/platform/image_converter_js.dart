@@ -44,5 +44,5 @@ Future<(Uint8List?, String)> toWebPBytes(
 
   final out = await canvas.convertToBlob(web.ImageEncodeOptions(type: mime, quality: quality)).toDart;
   final buf = await out.arrayBuffer().toDart;
-  return (Uint8List.view(buf.toDart), out.type); // Return actual blob mime type
+  return (Uint8List.view(buf.toDart), out.type);
 }

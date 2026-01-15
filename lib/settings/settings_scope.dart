@@ -119,7 +119,7 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
   @override
   void resetSettings() {
     _settingsController
-      ..updateTheme(AppTheme(mode: .light, seed: null, size: ScreenUtil.screenSize))
+      ..updateTheme(AppTheme(mode: .system, seed: null, size: ScreenUtil.screenSize))
       ..updateLocale(Localization.computeDefaultLocale)
       ..updateTextScale(1.0);
   }

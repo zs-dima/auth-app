@@ -36,7 +36,7 @@ class MockAuthenticationApi implements IAuthenticationApi {
       );
 
   @override
-  Future<bool> resetPassword(String email) => Future<bool>.delayed(
+  Future<bool> authRecoveryStart(String email) => Future<bool>.delayed(
         const Duration(seconds: 1),
         () => true,
       );

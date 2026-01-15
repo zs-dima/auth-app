@@ -186,7 +186,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                     onChanged: (role) {},
                                     items:
                                         [
-                                              UserRole.administrator,
+                                              UserRole.admin,
                                               UserRole.user,
                                             ]
                                             .map(

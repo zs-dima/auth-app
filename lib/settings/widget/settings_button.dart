@@ -16,7 +16,7 @@ class SettingsButton extends StatelessWidget {
     icon: const Icon(Icons.settings),
     tooltip: Localization.of(context).settings,
     onPressed: () {
-      context.octopus.push(Routes.settingsDialog);
+      context.octopus.push(Routes.settings);
       HapticFeedback.mediumImpact().ignore();
     },
   );

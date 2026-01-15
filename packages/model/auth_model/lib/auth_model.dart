@@ -13,6 +13,7 @@ export 'src/client/credentials_callbacks.dart';
 // Models - Credentials
 export 'src/model/credentials/access_credentials.dart';
 export 'src/model/credentials/access_token.dart';
+export 'src/model/credentials/auth_result.dart';
 export 'src/model/credentials/jwt_token.dart';
 export 'src/model/credentials/refresh_token.dart';
 export 'src/model/credentials/sign_in_data.dart';

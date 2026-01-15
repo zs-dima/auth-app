@@ -81,7 +81,7 @@ class _UsersWidgetState extends State<UsersWidget> {
                 }
 
                 final userRoles = [
-                  if (allUsers.any((u) => u.role == .administrator)) UserRole.administrator,
+                  if (allUsers.any((u) => u.role == .admin)) UserRole.admin,
                   if (allUsers.any((u) => u.role == .user)) UserRole.user,
                 ];
                 return RefreshIndicator(

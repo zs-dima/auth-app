@@ -34,7 +34,7 @@ platforms:
 #    path: screenshot_1.png
 
 environment:
-  sdk: ^3.10.1
+  sdk: ^3.10.7
 
 workspace:
   - packages/model/core_model
@@ -98,7 +98,7 @@ dependencies:
   # Logging & Analytics
   l: ^5.0.1
   stack_trace: ^1.12.1
-  sentry_flutter: ^9.9.1
+  sentry_flutter: ^9.9.2
   # matomo_tracker: ^6.0.0
   # posthog_flutter: ^5.0.0
 
@@ -150,6 +150,18 @@ dependencies:
   # pdf: ^3.11.3
   # printing: ^5.14.2
   # flutter_md: ^0.0.4
+  # fast_image:
+  #   git:
+  #     url: https://github.com/zs-dima/fast_image.git # https://github.com/hawkkiller/fast_image.git
+  #     ref: main
+  #     path: packages/fast_image
+  fast_image:
+    path: A:\source\_\fast_image\packages\fast_image
+
+  # imagekit_ffi:
+  #   git:
+  #     url: https://github.com/zs-dima/imagekit_ffi.git
+  #     ref: main
 
   # Billing
   # in_app_purchase: ^3.2.3
@@ -201,11 +213,10 @@ dev_dependencies:
   # Code generation
   build_runner: ^2.10.4
   drift_dev: ^2.30.0
-  pubspec_generator: ^5.0.0
   flutter_gen_runner: ^5.12.0
-  freezed: ^3.2.3
-  json_serializable: ^6.11.2
-  # dart run flutter_launcher_icons -f flutter_launcher_icons.yaml
+  freezed: ^3.2.4
+  json_serializable: ^6.11.3
+  # dart run flutter_launcher_icons -f flutter_launcher_icons.yamlZ
   flutter_launcher_icons: ^0.14.4
   # dart run flutter_native_splash:create --path=flutter_native_splash.yaml
   flutter_native_splash: ^2.4.7
@@ -261,4 +272,3 @@ flutter_gen:
 #  colors:
 #    inputs:
 #      - assets/color/colors.xml
-

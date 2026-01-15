@@ -33,7 +33,9 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
           routes: <String>{
             Routes.signin.name,
             Routes.signup.name,
-            Routes.forgotPassword.name,
+            Routes.authRecoveryStart.name,
+            Routes.authRecoveryConfirm.name,
+            Routes.emailVerified.name,
             // Routes.appUpdateAvailable.name,
           },
           // Default route for non authenticated user.
