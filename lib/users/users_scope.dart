@@ -89,7 +89,7 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     if (!mounted) return;
     final currentUser = context.dependencies.authenticationController.state.user;
     if (currentUser is AuthenticatedUser) {
-      controller.loadUsers(currentUser.userId);
+      controller.listUsers(currentUser.userId);
     } else {
       await controller.reset();
     }
@@ -134,7 +134,7 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     _currentUserId = currentUserId;
 
     // TODO cleanup app data
-    if (currentUserId != UserIdX.empty) controller.loadUsers(currentUserId);
+    if (currentUserId != UserIdX.empty) controller.listUsers(currentUserId);
   }
 
   @override

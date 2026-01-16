@@ -26,7 +26,7 @@ final class AuthenticatedUserController extends StateController<AuthenticatedUse
 
   final UsersController _usersController;
 
-  void loadUser(AuthUser user) => handle(
+  void getUser(AuthUser user) => handle(
     () async {
       switch (user) {
         case final AuthenticatedUser authUser:
@@ -48,6 +48,6 @@ final class AuthenticatedUserController extends StateController<AuthenticatedUse
       setError('Error on loading current user', error, stackTrace);
       Error.throwWithStackTrace(error, stackTrace);
     },
-    name: 'loadUser',
+    name: 'getUser',
   );
 }

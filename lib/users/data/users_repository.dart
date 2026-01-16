@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:auth_model/auth_model.dart';
 
 abstract interface class IUsersRepository {
-  Stream<User> loadUsers({ListUsersFilter? filter});
-  Stream<IUserInfo> loadUsersInfo({ListUsersFilter? filter});
+  Stream<User> listUsers({ListUsersFilter? filter});
+  Stream<IUserInfo> listUsersInfo({ListUsersFilter? filter});
 
   Future<User?> createUser(CreateUserData data);
   Future<User?> updateUser(UpdateUserData data);
@@ -30,14 +30,14 @@ class UsersRepository implements IUsersRepository {
   final UserIdCallback _getUserId;
 
   @override
-  Stream<User> loadUsers({ListUsersFilter? filter}) async* {
+  Stream<User> listUsers({ListUsersFilter? filter}) async* {
     final currentUserId = await _getUserId();
     if (currentUserId == null) return;
     yield* _api.listUsers(currentUserId, filter: filter).cast<User>();
   }
 
   @override
-  Stream<IUserInfo> loadUsersInfo({ListUsersFilter? filter}) async* {
+  Stream<IUserInfo> listUsersInfo({ListUsersFilter? filter}) async* {
     final currentUserId = await _getUserId();
     if (currentUserId == null) return;
 

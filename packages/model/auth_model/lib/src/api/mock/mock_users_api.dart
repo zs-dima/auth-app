@@ -25,7 +25,7 @@ class MockUsersApi implements IUsersApi {
       );
 
   @override
-  Stream<User> loadUsersInfo(
+  Stream<User> listUsersInfo(
     UserId currentUserId, {
     int page = 1,
     int perPage = 100,
@@ -39,7 +39,7 @@ class MockUsersApi implements IUsersApi {
       );
 
   @override
-  Stream<User> loadUsers(
+  Stream<User> listUsers(
     UserId currentUserId, {
     int page = 1,
     int perPage = 100,

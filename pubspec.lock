@@ -316,9 +316,11 @@ packages:
   fast_image:
     dependency: "direct main"
     description:
-      path: "A:\\source\\_\\fast_image\\packages\\fast_image"
-      relative: false
-    source: path
+      path: "packages/fast_image"
+      ref: main
+      resolved-ref: "23646cf0e9c62234156e2c2968dc8f5e1468d415"
+      url: "https://github.com/zs-dima/fast_image.git"
+    source: git
     version: "0.0.1"
   ffi:
     dependency: transitive

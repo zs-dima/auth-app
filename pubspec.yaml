@@ -150,13 +150,13 @@ dependencies:
   # pdf: ^3.11.3
   # printing: ^5.14.2
   # flutter_md: ^0.0.4
-  # fast_image:
-  #   git:
-  #     url: https://github.com/zs-dima/fast_image.git # https://github.com/hawkkiller/fast_image.git
-  #     ref: main
-  #     path: packages/fast_image
   fast_image:
-    path: A:\source\_\fast_image\packages\fast_image
+    git:
+      url: https://github.com/zs-dima/fast_image.git # https://github.com/hawkkiller/fast_image.git
+      ref: main
+      path: packages/fast_image
+  # fast_image:
+  #   path: A:\source\_\fast_image\packages\fast_image
 
   # imagekit_ffi:
   #   git:

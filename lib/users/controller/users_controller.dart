@@ -52,7 +52,7 @@ final class UsersController extends StateController<UsersState>
 
     // Only fetch from API if user is not found after loading
     return _repository
-        .loadUsersInfo(
+        .listUsersInfo(
           filter: ListUsersFilter(
             userIds: [userId],
           ),
@@ -60,7 +60,7 @@ final class UsersController extends StateController<UsersState>
         .first;
   }
 
-  void loadUsers(UserId currentUserId) => handle(
+  void listUsers(UserId currentUserId) => handle(
     () async {
       if (currentUserId.isEmpty) {
         setState(UsersState.loaded(currentUserId, UnmodifiableListView<User>([])));
@@ -70,7 +70,7 @@ final class UsersController extends StateController<UsersState>
       setState(UsersState.loading(currentUserId, state.users));
       setProgressStarted();
 
-      final users = await _repository.loadUsers().toList();
+      final users = await _repository.listUsers().toList();
       users.sort();
       _users = users;
       final result = _filter(users, _query);

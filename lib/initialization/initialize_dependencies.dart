@@ -353,7 +353,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         .authenticationRepository
         .userChanges //
         .listen(
-          authenticatedUserController.loadUser,
+          authenticatedUserController.getUser,
           // if (user case final AuthenticatedUser i) dependencies.avatarController.loadAvatar(i.userId, reload: false);
           cancelOnError: false,
         );

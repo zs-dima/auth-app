@@ -87,7 +87,7 @@ class _UsersWidgetState extends State<UsersWidget> {
                 return RefreshIndicator(
                   onRefresh: () async {
                     if (_currentUserId == null) return;
-                    _usersController?.loadUsers(_currentUserId!);
+                    _usersController?.listUsers(_currentUserId!);
                   },
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
