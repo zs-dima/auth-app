@@ -59,7 +59,6 @@ abstract interface class IAuthenticationRepository {
   Future<bool> recoveryStart(String identifier, {IdentifierType identifierType});
   Future<bool> recoveryConfirm({required String token, required String newPassword});
   Future<bool> changePassword({required String currentPassword, required String newPassword});
-  Future<bool> setPassword({required UserId userId, required String password});
 
   Future<void> terminate();
 }
@@ -168,10 +167,6 @@ class AuthenticationRepository implements IAuthenticationRepository {
   @override
   Future<bool> changePassword({required String currentPassword, required String newPassword}) =>
       _api.changePassword(currentPassword: currentPassword, newPassword: newPassword);
-
-  @override
-  Future<bool> setPassword({required UserId userId, required String password}) =>
-      _api.setPassword(userId: userId, password: password);
 
   @override
   Future<AuthUser> restore() async {

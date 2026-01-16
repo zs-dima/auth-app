@@ -87,9 +87,30 @@ class _UserEditWidgetState extends State<UserEditWidget> {
       // }
 
       if (widget.createNewUser) {
-        await widget.usersController.createUser(_user, _password!);
+        await widget.usersController.createUser(
+          CreateUserData(
+            name: _user.name,
+            email: _user.email,
+            phone: _user.phone,
+            password: _password,
+            role: _user.role,
+            locale: _user.locale,
+            timezone: _user.timezone,
+          ),
+        );
       } else {
-        await widget.usersController.updateUser(_user);
+        await widget.usersController.updateUser(
+          UpdateUserData(
+            userId: _user.id,
+            name: _user.name,
+            email: _user.email,
+            phone: _user.phone,
+            role: _user.role,
+            status: _user.status,
+            locale: _user.locale,
+            timezone: _user.timezone,
+          ),
+        );
       }
       if (mounted) Navigator.of(context).pop();
     }
@@ -125,8 +146,10 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                   children: [
                     SwitchFormField(
                       'Deleted',
-                      value: _user.deleted,
-                      onChanged: (value) => setState(() => _user = _user.copyWith(deleted: value)),
+                      value: _user.status == .deleted,
+                      onChanged: (value) => setState(
+                        () => _user = _user.copyWith(status: value ? .deleted : .active),
+                      ),
                     ),
                     const Spacer(),
                     ImageEditWidget(
@@ -237,8 +260,12 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                     ),
                                     SwitchFormField(
                                       'Deleted',
-                                      value: _user.deleted,
-                                      onChanged: (value) => setState(() => _user = _user.copyWith(deleted: value)),
+                                      value: _user.status == .deleted,
+                                      onChanged: (value) => setState(
+                                        () => _user = _user.copyWith(
+                                          status: value ? .deleted : .active,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),

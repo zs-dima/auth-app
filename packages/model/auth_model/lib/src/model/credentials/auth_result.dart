@@ -242,7 +242,10 @@ final class SessionInfo {
     this.clientVersion,
     this.ipAddress,
     this.ipCountry,
+    this.ipCreatedBy,
     this.expiresAt,
+    this.activityCount,
+    this.metadata,
   });
 
   /// Unique device identifier.
@@ -263,6 +266,9 @@ final class SessionInfo {
   /// ISO 3166-1 alpha-2 country code.
   final String? ipCountry;
 
+  /// IP address that created the session.
+  final String? ipCreatedBy;
+
   /// Session creation timestamp (Unix millis).
   final int createdAt;
 
@@ -274,6 +280,12 @@ final class SessionInfo {
 
   /// True if this is the current session.
   final bool isCurrent;
+
+  /// Number of activities in this session.
+  final int? activityCount;
+
+  /// Additional session metadata.
+  final Map<String, String>? metadata;
 }
 
 // =============================================================================

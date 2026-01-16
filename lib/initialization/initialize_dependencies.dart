@@ -154,70 +154,70 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   dependencies.localeRepository = localeRepository;
   // },
   'gRPC Client factory': (dependencies) {
-    GrpcAuthenticationClient grpsFactory([Iterable<ClientInterceptor>? middlewares]) {
-      final list = <ClientInterceptor>[
-        // Add your interceptors here
-        // e.g. LoggerInterceptor(), RetryInterceptor(), etc.
-        // TODO: Deduplicate requests interceptor
-        // TODO: Cache interceptor
+    List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
+      // Add your interceptors here
+      // e.g. LoggerInterceptor(), RetryInterceptor(), etc.
+      // TODO: Deduplicate requests interceptor
+      // TODO: Cache interceptor
 
-        // Metadata middleware
-        GrpcMetadataMiddleware(
-          metadata: {
-            ...dependencies.metadata.toHeaders(),
-            'X-Environment': dependencies.environment.type.name,
-          },
-        ),
+      // Metadata middleware
+      GrpcMetadataMiddleware(
+        metadata: {
+          ...dependencies.metadata.toHeaders(),
+          'X-Environment': dependencies.environment.type.name,
+        },
+      ),
 
-        // Retry middleware
-        // GrpcRetryMiddleware(
-        //   retries: 3,
-        //   retryEvaluator: (error, attempt) =>
-        //       attempt <= 3 &&
-        //       switch (error) {
-        //         ApiClientException$Authentication() => false, // Do not retry on authentication errors
-        //         TimeoutException() || ApiClientException$Timeout() => true, // Retry on timeout exceptions
-        //         ApiClientException$Client(:final code) => !const <String>{
-        //           'canceled',
-        //           'aborted',
-        //           'cancel',
-        //           'cancelled',
-        //           'abort',
-        //           'unexpected_error',
-        //           'unknown error',
-        //         }.contains(code), // Do not retry on cancellation or abort errors
-        //         ApiClientException$Network(:final statusCode) => const <int>{
-        //           400, // Bad Request
-        //           //401, // Unauthorized
-        //           //403, // Forbidden
-        //           408, // Request Timeout
-        //           409, // Conflict
-        //           422, // Unprocessable Entity
-        //           //429, // Too Many Requests
-        //           500, // Internal Server Error
-        //           502, // Bad Gateway
-        //           503, // Service Unavailable
-        //           504, // Gateway Timeout
-        //         }.contains(statusCode), // Retry on specific network errors
-        //         _ => true, // Retry on other errors
-        //       },
-        //   retryDelays: const <Duration>[
-        //     Duration(seconds: 1), // wait 1 sec before first retry
-        //     Duration(seconds: 2), // wait 2 sec before second retry
-        //     Duration(seconds: 3), // wait 3 sec before third retry
-        //   ],
-        // ),
+      // Retry middleware
+      // GrpcRetryMiddleware(
+      //   retries: 3,
+      //   retryEvaluator: (error, attempt) =>
+      //       attempt <= 3 &&
+      //       switch (error) {
+      //         ApiClientException$Authentication() => false, // Do not retry on authentication errors
+      //         TimeoutException() || ApiClientException$Timeout() => true, // Retry on timeout exceptions
+      //         ApiClientException$Client(:final code) => !const <String>{
+      //           'canceled',
+      //           'aborted',
+      //           'cancel',
+      //           'cancelled',
+      //           'abort',
+      //           'unexpected_error',
+      //           'unknown error',
+      //         }.contains(code), // Do not retry on cancellation or abort errors
+      //         ApiClientException$Network(:final statusCode) => const <int>{
+      //           400, // Bad Request
+      //           //401, // Unauthorized
+      //           //403, // Forbidden
+      //           408, // Request Timeout
+      //           409, // Conflict
+      //           422, // Unprocessable Entity
+      //           //429, // Too Many Requests
+      //           500, // Internal Server Error
+      //           502, // Bad Gateway
+      //           503, // Service Unavailable
+      //           504, // Gateway Timeout
+      //         }.contains(statusCode), // Retry on specific network errors
+      //         _ => true, // Retry on other errors
+      //       },
+      //   retryDelays: const <Duration>[
+      //     Duration(seconds: 1), // wait 1 sec before first retry
+      //     Duration(seconds: 2), // wait 2 sec before second retry
+      //     Duration(seconds: 3), // wait 3 sec before third retry
+      //   ],
+      // ),
 
-        // Logger middleware
-        const GrpcLoggerMiddleware(),
+      // Logger middleware
+      const GrpcLoggerMiddleware(),
 
-        // Sentry middleware
-        const GrpcSentryMiddleware(),
+      // Sentry middleware
+      const GrpcSentryMiddleware(),
 
-        // Any other middlewares you need
-        ...?middlewares,
-      ];
+      // Any other middlewares you need
+      ...?middlewares,
+    ];
 
+    GrpcAuthenticationClient grpsAuthFactory([Iterable<ClientInterceptor>? middlewares]) {
       // Create the gRPC channel
       final environment = dependencies.environment;
       final authChannel = GrpcClientChannel(environment.authService);
@@ -226,45 +226,65 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       return GrpcAuthenticationClient(
         GrpcClientOptions(
           authChannel,
-          interceptors: list,
+          interceptors: interceptorsFactory(middlewares),
           timeout: const Duration(seconds: 30),
         ),
       );
     }
 
-    dependencies.grpsAuthFactory = grpsFactory;
+    GrpcUsersClient grpcUsersFactory([Iterable<ClientInterceptor>? middlewares]) {
+      // Create the gRPC channel
+      final environment = dependencies.environment;
+      final usersChannel = GrpcClientChannel(environment.appService);
+
+      // Create users client with middleware support
+      return GrpcUsersClient(
+        GrpcClientOptions(
+          usersChannel,
+          interceptors: interceptorsFactory(middlewares),
+          timeout: const Duration(seconds: 30),
+        ),
+      );
+    }
+
+    dependencies
+      ..interceptorsFactory = interceptorsFactory
+      ..grpsAuthFactory = grpsAuthFactory
+      ..grpcUsersFactory = grpcUsersFactory;
   },
 
   // General gRPC client initialization
   'General gRPC Client': (dependencies) {
-    dependencies.authClient = dependencies.grpsAuthFactory([
-      GrpcAuthenticationMiddleware(
-        getToken: () async {
-          try {
-            return await dependencies.credentialsManager.getAccessCredentials();
-          } on Object catch (e, _) {
-            logger.w('Error getting token: $e');
-            return null;
-          }
-        },
-        onAuthError: () {
-          logger.w('Received "Not authenticated" gRPC response, logging out... ');
-          dependencies.authenticationController.signOut();
-        },
-        unauthenticatedPaths: const <String>{
-          // gRPC public methods (authentication)
-          '/auth.AuthService/Authenticate',
-          '/auth.AuthService/SignUp',
-          '/auth.AuthService/SignOut',
-          '/auth.AuthService/RecoveryStart',
-          '/auth.AuthService/RecoveryConfirm',
-          '/auth.AuthService/RefreshTokens',
-          // gRPC public methods (OAuth)
-          '/auth.AuthService/GetOAuthUrl',
-          '/auth.AuthService/ExchangeOAuthCode',
-        },
-      ),
-    ]);
+    final authenticationMiddleware = GrpcAuthenticationMiddleware(
+      getToken: () async {
+        try {
+          return await dependencies.credentialsManager.getAccessCredentials();
+        } on Object catch (e, _) {
+          logger.w('Error getting token: $e');
+          return null;
+        }
+      },
+      onAuthError: () {
+        logger.w('Received "Not authenticated" gRPC response, logging out... ');
+        dependencies.authenticationController.signOut();
+      },
+      unauthenticatedPaths: const <String>{
+        // gRPC public methods (authentication)
+        '/auth.AuthService/Authenticate',
+        '/auth.AuthService/SignUp',
+        '/auth.AuthService/SignOut',
+        '/auth.AuthService/RecoveryStart',
+        '/auth.AuthService/RecoveryConfirm',
+        '/auth.AuthService/RefreshTokens',
+        // gRPC public methods (OAuth)
+        '/auth.AuthService/GetOAuthUrl',
+        '/auth.AuthService/ExchangeOAuthCode',
+      },
+    );
+
+    dependencies
+      ..authClient = dependencies.grpsAuthFactory([authenticationMiddleware])
+      ..usersClient = dependencies.grpcUsersFactory([authenticationMiddleware]);
   },
 
   ///
@@ -302,7 +322,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Prepare users repository': (dependencies) {
     dependencies
       ..usersRepository = UsersRepository(
-        apiClient: dependencies.authClient,
+        apiClient: dependencies.usersClient,
         getUserId: dependencies.authenticationRepository.getUserId,
       )
       ..usersController = UsersController(

@@ -45,11 +45,20 @@ class Dependencies {
   /// Settings repository
   late final ISettingsRepository settings;
 
+  /// Interceptors factory
+  late final List<ClientInterceptor> Function([Iterable<ClientInterceptor>? middlewares]) interceptorsFactory;
+
   /// gRPC Authentication factory
   late final GrpcAuthenticationClient Function([Iterable<ClientInterceptor>? middlewares]) grpsAuthFactory;
 
+  /// gRPC Users factory
+  late final GrpcUsersClient Function([Iterable<ClientInterceptor>? middlewares]) grpcUsersFactory;
+
   /// gRPC Authentication client
   late final GrpcAuthenticationClient authClient;
+
+  /// gRPC Users client
+  late final GrpcUsersClient usersClient;
 
   /// Authentication handler
   late final IAuthenticationHandler authenticationHandler;

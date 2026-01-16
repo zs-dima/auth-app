@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:auth_model/auth_model.dart';
 
 abstract interface class IUsersRepository {
-  Stream<User> loadUsers();
-  Stream<IUserInfo> loadUsersInfo({List<UserId>? userIds});
+  Stream<User> loadUsers({ListUsersFilter? filter});
+  Stream<IUserInfo> loadUsersInfo({ListUsersFilter? filter});
 
-  Future<bool> createUser(User user, String password);
-  Future<bool> updateUser(User user);
+  Future<User?> createUser(CreateUserData data);
+  Future<User?> updateUser(UpdateUserData data);
 
   /// Get a presigned URL for uploading avatar directly to S3.
   Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize);
@@ -30,24 +30,25 @@ class UsersRepository implements IUsersRepository {
   final UserIdCallback _getUserId;
 
   @override
-  Stream<User> loadUsers() async* {
+  Stream<User> loadUsers({ListUsersFilter? filter}) async* {
     final currentUserId = await _getUserId();
     if (currentUserId == null) return;
-    yield* _api.loadUsers(currentUserId).cast<User>();
+    yield* _api.listUsers(currentUserId, filter: filter).cast<User>();
   }
 
   @override
-  Stream<IUserInfo> loadUsersInfo({List<UserId>? userIds}) async* {
+  Stream<IUserInfo> loadUsersInfo({ListUsersFilter? filter}) async* {
     final currentUserId = await _getUserId();
     if (currentUserId == null) return;
 
-    yield* _api.loadUsersInfo(currentUserId, userIds: userIds);
+    yield* _api.listUsersInfo(currentUserId, filter: filter);
   }
 
   @override
-  Future<bool> createUser(User user, String password) => _api.createUser(user, password);
+  Future<User?> createUser(CreateUserData data) => _api.createUser(data);
+
   @override
-  Future<bool> updateUser(User user) => _api.updateUser(user);
+  Future<User?> updateUser(UpdateUserData data) => _api.updateUser(data);
 
   @override
   Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) =>

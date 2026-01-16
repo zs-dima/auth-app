@@ -1,26 +1,18 @@
 import 'dart:async';
 
-import 'package:auth_model/src/api/grpc_authentication_converter.dart';
 import 'package:auth_model/src/api/i_authentication_api.dart';
-import 'package:auth_model/src/api/i_users_api.dart';
 import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
-import 'package:auth_model/src/api/proto/core.pb.dart' as core;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
-import 'package:auth_model/src/model/user/avatar_upload_url.dart';
-import 'package:auth_model/src/model/user/i_user_info.dart';
-import 'package:auth_model/src/model/user/user.dart';
-import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:core_model/core_model.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
-import 'package:grpc_model/grpc_model.dart' as rpc;
+import 'package:grpc_model/grpc_model.dart' as grpc;
 
 /// gRPC client for authentication service.
-class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> implements IAuthenticationApi, IUsersApi {
+class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> implements IAuthenticationApi {
   GrpcAuthenticationClient(super.options) : super(factory: rpc.AuthServiceClient.new);
 
   // ===========================================================================
@@ -78,7 +70,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   Future<void> signOut(String token) async {
     try {
       await client.signOut(
-        rpc.Empty(),
+        rpc.SignOutRequest(),
         options: CallOptions(metadata: {'authorization': 'Bearer $token'}),
       );
     } on Exception {
@@ -89,7 +81,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<AccessCredentials> refreshTokens(String accessToken, RefreshToken refreshToken) async {
     final result = await client.refreshTokens(
-      rpc.RefreshTokenRequest()..refreshToken = refreshToken,
+      rpc.RefreshTokensRequest()..refreshToken = refreshToken,
     );
     return AccessCredentials(
       accessToken: AccessToken.fromJwtToken(result.accessToken),
@@ -99,8 +91,8 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<bool> validateCredentials() async {
-    final result = await client.validateCredentials(rpc.Empty());
-    return result.result;
+    final result = await client.validateCredentials(rpc.ValidateCredentialsRequest());
+    return result.valid;
   }
 
   // ===========================================================================
@@ -113,12 +105,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     IdentifierType identifierType = .email,
   }) async {
     try {
-      final result = await client.recoveryStart(
+      await client.recoveryStart(
         rpc.RecoveryStartRequest()
           ..identifier = identifier
           ..identifierType = _mapIdentifierTypeToProto(identifierType),
       );
-      return result.result;
+      return true;
     } on Exception {
       return true; // OWASP: always return success to prevent enumeration
     }
@@ -127,12 +119,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> recoveryConfirm({required String token, required String newPassword}) async {
     try {
-      final result = await client.recoveryConfirm(
+      await client.recoveryConfirm(
         rpc.RecoveryConfirmRequest()
           ..token = token
           ..newPassword = newPassword,
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -141,26 +133,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> changePassword({required String currentPassword, required String newPassword}) async {
     try {
-      final result = await client.changePassword(
+      await client.changePassword(
         rpc.ChangePasswordRequest()
           ..currentPassword = currentPassword
           ..newPassword = newPassword,
       );
-      return result.result;
-    } on Exception {
-      return false;
-    }
-  }
-
-  @override
-  Future<bool> setPassword({required UserId userId, required String password}) async {
-    try {
-      final result = await client.setPassword(
-        rpc.SetPasswordRequest()
-          ..userId = userId.toUUID()
-          ..password = password,
-      );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -173,10 +151,10 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> requestVerification(VerificationType type) async {
     try {
-      final result = await client.requestVerification(
-        rpc.RequestVerificationRequest()..verificationType = _mapVerificationTypeToProto(type),
+      await client.requestVerification(
+        rpc.RequestVerificationRequest()..type = _mapVerificationTypeToProto(type),
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -185,12 +163,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> confirmVerification({required String token, required VerificationType type}) async {
     try {
-      final result = await client.confirmVerification(
+      await client.confirmVerification(
         rpc.ConfirmVerificationRequest()
           ..token = token
-          ..verificationType = _mapVerificationTypeToProto(type),
+          ..type = _mapVerificationTypeToProto(type),
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -233,12 +211,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> linkOAuthProvider({required String code, required String state}) async {
     try {
-      final result = await client.linkOAuthProvider(
+      await client.linkOAuthProvider(
         rpc.LinkOAuthProviderRequest()
           ..code = code
           ..state = state,
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -247,10 +225,10 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
   @override
   Future<bool> unlinkOAuthProvider(OAuthProvider provider) async {
     try {
-      final result = await client.unlinkOAuthProvider(
+      await client.unlinkOAuthProvider(
         rpc.UnlinkOAuthProviderRequest()..provider = _mapOAuthProviderToProto(provider),
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -258,7 +236,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<List<LinkedProvider>> listLinkedProviders() async {
-    final result = await client.listLinkedProviders(rpc.Empty());
+    final result = await client.listLinkedProviders(rpc.ListLinkedProvidersRequest());
     return result.providers.map(_mapLinkedProvider).toList();
   }
 
@@ -268,7 +246,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<MfaStatus> getMfaStatus() async {
-    final result = await client.getMfaStatus(rpc.Empty());
+    final result = await client.getMfaStatus(rpc.GetMfaStatusRequest());
     return MfaStatus(
       enabled: result.enabled,
       recoveryCodesRemaining: result.recoveryCodesRemaining,
@@ -284,7 +262,7 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     final result = await client.setupMfa(request);
     return MfaSetup(
       setupToken: result.setupToken,
-      expiresAt: result.expiresAt.toInt(),
+      expiresAt: result.expiresAt.toDateTime().millisecondsSinceEpoch,
       secret: result.secret.isNotEmpty ? result.secret : null,
       provisioningUri: result.provisioningUri.isNotEmpty ? result.provisioningUri : null,
       maskedDestination: result.maskedDestination.isNotEmpty ? result.maskedDestination : null,
@@ -298,22 +276,28 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
         ..setupToken = setupToken
         ..code = code,
     );
-    return MfaSetupResult(
-      success: result.success,
-      recoveryCodes: result.recoveryCodes.isNotEmpty ? result.recoveryCodes : null,
-      errorMessage: result.errorMessage.isNotEmpty ? result.errorMessage : null,
-    );
+    return switch (result.whichResult()) {
+      rpc.ConfirmMfaSetupResponse_Result.success => MfaSetupResult(
+        success: true,
+        recoveryCodes: result.success.recoveryCodes.isNotEmpty ? result.success.recoveryCodes.toList() : null,
+      ),
+      rpc.ConfirmMfaSetupResponse_Result.error => MfaSetupResult(
+        success: false,
+        errorMessage: result.error.message.isNotEmpty ? result.error.message : null,
+      ),
+      _ => const MfaSetupResult(success: false),
+    };
   }
 
   @override
   Future<bool> disableMfa({required MfaMethod method, required String password}) async {
     try {
-      final result = await client.disableMfa(
+      await client.disableMfa(
         rpc.DisableMfaRequest()
           ..method = _mapMfaMethodToProto(method)
           ..password = password,
       );
-      return result.result;
+      return true;
     } on Exception {
       return false;
     }
@@ -325,15 +309,15 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<List<SessionInfo>> listSessions() async {
-    final result = await client.listSessions(rpc.Empty());
+    final result = await client.listSessions(rpc.ListSessionsRequest());
     return result.sessions.map(_mapSessionInfo).toList();
   }
 
   @override
   Future<bool> revokeSession(String deviceId) async {
     try {
-      final result = await client.revokeSession(rpc.RevokeSessionRequest()..deviceId = deviceId);
-      return result.result;
+      await client.revokeSession(rpc.RevokeSessionRequest()..deviceId = deviceId);
+      return true;
     } on Exception {
       return false;
     }
@@ -341,90 +325,8 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
 
   @override
   Future<int> revokeOtherSessions() async {
-    final result = await client.revokeOtherSessions(rpc.Empty());
+    final result = await client.revokeOtherSessions(rpc.RevokeOtherSessionsRequest());
     return result.revokedCount;
-  }
-
-  // ===========================================================================
-  // USER MANAGEMENT
-  // ===========================================================================
-
-  @override
-  Stream<IUserInfo> loadUsersInfo(UserId currentUserId, {List<UserId>? userIds}) async* {
-    final users = client.loadUsersInfo(
-      rpc.LoadUsersInfoRequest()
-        ..userId = currentUserId.toUUID()
-        ..userIds.addAll(userIds?.map((e) => e.toUUID()) ?? []),
-    );
-    yield* users.where((i) => !i.deleted).map((i) => i.toUserInfo());
-  }
-
-  @override
-  Stream<User> loadUsers(UserId currentUserId) async* {
-    final users = client.loadUsers(rpc.UserId(id: currentUserId.toUUID()));
-    yield* users.map((i) => i.toUser());
-  }
-
-  @override
-  Future<bool> createUser(User user, String password) async {
-    final rpcUser = user.toUser();
-    final result = await client.createUser(
-      rpc.CreateUserRequest()
-        ..id = rpcUser.id
-        ..name = rpcUser.name
-        ..email = rpcUser.email
-        ..role = rpcUser.role
-        ..deleted = rpcUser.deleted
-        ..password = password,
-    );
-    return result.result;
-  }
-
-  @override
-  Future<bool> updateUser(User user) async {
-    final rpcUser = user.toUser();
-    final result = await client.updateUser(
-      rpc.UpdateUserRequest()
-        ..id = rpcUser.id
-        ..name = rpcUser.name
-        ..email = rpcUser.email
-        ..role = rpcUser.role
-        ..deleted = rpcUser.deleted,
-    );
-    return result.result;
-  }
-
-  @override
-  Future<AvatarUploadUrl> getAvatarUploadUrl(UserId userId, String contentType, int contentSize) async {
-    final result = await client.getAvatarUploadUrl(
-      rpc.GetAvatarUploadUrlRequest()
-        ..userId = userId.toUUID()
-        ..contentType = contentType
-        ..contentSize = Int64(contentSize),
-    );
-    return AvatarUploadUrl(uploadUrl: result.uploadUrl, expiresIn: result.expiresIn.toInt());
-  }
-
-  @override
-  Future<bool> confirmAvatarUpload(UserId userId) async {
-    try {
-      final result = await client.confirmAvatarUpload(
-        rpc.ConfirmAvatarUploadRequest()..userId = userId.toUUID(),
-      );
-      return result.result;
-    } on Exception {
-      return false;
-    }
-  }
-
-  @override
-  Future<bool> deleteUserAvatar(UserId userId) async {
-    try {
-      final result = await client.deleteUserAvatar(rpc.UserId(id: userId.toUUID()));
-      return result.result;
-    } on Exception {
-      return false;
-    }
   }
 
   // ===========================================================================
@@ -436,27 +338,28 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     ..deviceName = device.deviceName
     ..deviceType = '${device.deviceModel} on ${device.deviceOs}'
     ..clientVersion = device.appVersion
-    ..metadata = (core.Struct()
-      ..fields['os'] = core.Value(stringValue: device.deviceOs)
-      ..fields['os_version'] = core.Value(stringValue: device.deviceOsVersion)
-      ..fields['device_model'] = core.Value(stringValue: device.deviceModel));
+    ..metadata.addEntries([
+      MapEntry('os', device.deviceOs),
+      MapEntry('os_version', device.deviceOsVersion),
+      MapEntry('device_model', device.deviceModel),
+    ]);
 
   // ---------------------------------------------------------------------------
   // AuthResult mapping
   // ---------------------------------------------------------------------------
 
-  AuthResult _mapAuthResult(rpc.AuthResult result) => switch (result.status) {
+  AuthResult _mapAuthResult(rpc.AuthResponse result) => switch (result.status) {
     rpc.AuthStatus.AUTH_STATUS_SUCCESS => AuthResultSuccess(
-      userId: result.authInfo.userId.toId(),
+      userId: result.user.userId.toId(),
       credentials: AccessCredentials(
-        accessToken: AccessToken.fromJwtToken(result.authInfo.accessToken),
-        refreshToken: result.authInfo.refreshToken,
+        accessToken: AccessToken.fromJwtToken(result.tokens.accessToken),
+        refreshToken: result.tokens.refreshToken,
       ),
     ),
     rpc.AuthStatus.AUTH_STATUS_MFA_REQUIRED => AuthResultMfaRequired(
       mfaChallenge: MfaChallenge(
         challengeToken: result.mfaChallenge.challengeToken,
-        expiresAt: result.mfaChallenge.expiresAt.toInt(),
+        expiresAt: result.mfaChallenge.expiresAt.toDateTime().millisecondsSinceEpoch,
         availableMethods: result.mfaChallenge.availableMethods
             .map((m) => MfaMethodInfo(method: _mapMfaMethod(m.method), hint: m.hint, isDefault: m.isDefault))
             .toList(),
@@ -465,10 +368,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     rpc.AuthStatus.AUTH_STATUS_LOCKED => AuthResultLocked(
       message: result.message.isNotEmpty ? result.message : null,
       lockoutInfo: LockoutInfo(
-        retryAfterSeconds: result.lockoutInfo.retryAfterSeconds,
+        retryAfterSeconds: result.lockoutInfo.retryAfter.seconds.toInt(),
         failedAttempts: result.lockoutInfo.failedAttempts,
         maxAttempts: result.lockoutInfo.maxAttempts,
-        lockedUntil: result.lockoutInfo.hasLockedUntil() ? result.lockoutInfo.lockedUntil.toInt() : null,
+        lockedUntil: result.lockoutInfo.hasLockedUntil()
+            ? result.lockoutInfo.lockedUntil.toDateTime().millisecondsSinceEpoch
+            : null,
       ),
     ),
     rpc.AuthStatus.AUTH_STATUS_SUSPENDED => AuthResultSuspended(
@@ -530,14 +435,14 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     provider: _mapOAuthProvider(p.provider),
     providerUserId: p.providerUserId,
     email: p.email.isNotEmpty ? p.email : null,
-    linkedAt: p.linkedAt.toInt(),
+    linkedAt: p.linkedAt.toDateTime().millisecondsSinceEpoch,
   );
 
   MfaMethodStatus _mapMfaMethodStatus(rpc.MfaMethodStatus s) => .new(
     method: _mapMfaMethod(s.method),
     enabled: s.enabled,
     hint: s.hint.isNotEmpty ? s.hint : null,
-    configuredAt: s.configuredAt.toInt(),
+    configuredAt: s.configuredAt.toDateTime().millisecondsSinceEpoch,
   );
 
   SessionInfo _mapSessionInfo(rpc.SessionInfo s) => .new(
@@ -547,9 +452,12 @@ class GrpcAuthenticationClient extends rpc.GrpcClient<rpc.AuthServiceClient> imp
     clientVersion: s.clientVersion.isNotEmpty ? s.clientVersion : null,
     ipAddress: s.ipAddress.isNotEmpty ? s.ipAddress : null,
     ipCountry: s.ipCountry.isNotEmpty ? s.ipCountry : null,
-    createdAt: s.createdAt.toInt(),
-    lastSeenAt: s.lastSeenAt.toInt(),
-    expiresAt: s.hasExpiresAt() ? s.expiresAt.toInt() : null,
+    ipCreatedBy: s.ipCreatedBy.isNotEmpty ? s.ipCreatedBy : null,
+    createdAt: s.createdAt.toDateTime().millisecondsSinceEpoch,
+    lastSeenAt: s.lastSeenAt.toDateTime().millisecondsSinceEpoch,
+    expiresAt: s.hasExpiresAt() ? s.expiresAt.toDateTime().millisecondsSinceEpoch : null,
     isCurrent: s.isCurrent,
+    activityCount: s.activityCount > 0 ? s.activityCount : null,
+    metadata: s.metadata.isNotEmpty ? Map.fromEntries(s.metadata.entries) : null,
   );
 }

@@ -27,16 +27,17 @@ final class UserController extends StateController<UserState>
 
   final IUsersRepository _repository;
 
-  void createUser(User user, String password) => handle(
+  void createUser(CreateUserData data) => handle(
     () async {
       setProgressStarted();
 
-      final result = await _repository.createUser(user, password);
-      result //
-          ? setMessage('User successfully saved', Colors.green[700])
-          : setError('Error on saving user');
+      final result = await _repository.createUser(data);
+      result ==
+              null //
+          ? setError('Error on saving user')
+          : setMessage('User successfully saved', Colors.green[700]);
 
-      setState(UserState.created(user));
+      if (result != null) setState(UserState.created(result));
     },
     error: (error, stackTrace) async {
       setError('Error on saving user', error, stackTrace);
@@ -48,16 +49,17 @@ final class UserController extends StateController<UserState>
     },
   );
 
-  void updateUser(User user) => handle(
+  void updateUser(UpdateUserData data) => handle(
     () async {
       setProgressStarted();
 
-      final result = await _repository.updateUser(user);
-      result //
-          ? setMessage('User successfully saved', Colors.green[700])
-          : setError('Error on saving user');
+      final result = await _repository.updateUser(data);
+      result ==
+              null //
+          ? setError('Error on saving user')
+          : setMessage('User successfully saved', Colors.green[700]);
 
-      setState(UserState.updated(user));
+      if (result != null) setState(UserState.updated(result));
     },
     error: (error, stackTrace) async {
       setError('Error on saving user', error, stackTrace);

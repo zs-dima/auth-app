@@ -15,7 +15,7 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Type of identifier for authentication
-/// Maps to DB: users.email (email domain), users.phone (phone_e164 domain)
+/// Maps to DB: `users.email` (email domain), `users.phone` (`phone_e164` domain)
 class IdentifierType extends $pb.ProtobufEnum {
   static const IdentifierType IDENTIFIER_TYPE_UNSPECIFIED =
       IdentifierType._(0, _omitEnumNames ? '' : 'IDENTIFIER_TYPE_UNSPECIFIED');
@@ -61,48 +61,6 @@ class OAuthProvider extends $pb.ProtobufEnum {
   static OAuthProvider? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const OAuthProvider._(super.value, super.name);
-}
-
-/// User account status - matches DB enum: user_status
-class UserStatus extends $pb.ProtobufEnum {
-  static const UserStatus USER_STATUS_UNSPECIFIED = UserStatus._(0, _omitEnumNames ? '' : 'USER_STATUS_UNSPECIFIED');
-  static const UserStatus USER_STATUS_PENDING = UserStatus._(1, _omitEnumNames ? '' : 'USER_STATUS_PENDING');
-  static const UserStatus USER_STATUS_ACTIVE = UserStatus._(2, _omitEnumNames ? '' : 'USER_STATUS_ACTIVE');
-  static const UserStatus USER_STATUS_SUSPENDED = UserStatus._(3, _omitEnumNames ? '' : 'USER_STATUS_SUSPENDED');
-  static const UserStatus USER_STATUS_DELETED = UserStatus._(4, _omitEnumNames ? '' : 'USER_STATUS_DELETED');
-
-  static const $core.List<UserStatus> values = <UserStatus>[
-    USER_STATUS_UNSPECIFIED,
-    USER_STATUS_PENDING,
-    USER_STATUS_ACTIVE,
-    USER_STATUS_SUSPENDED,
-    USER_STATUS_DELETED,
-  ];
-
-  static final $core.List<UserStatus?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 4);
-  static UserStatus? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const UserStatus._(super.value, super.name);
-}
-
-/// User role - maps to DB roles.id (admin, user, guest)
-class UserRole extends $pb.ProtobufEnum {
-  static const UserRole USER_ROLE_UNSPECIFIED = UserRole._(0, _omitEnumNames ? '' : 'USER_ROLE_UNSPECIFIED');
-  static const UserRole USER_ROLE_ADMIN = UserRole._(1, _omitEnumNames ? '' : 'USER_ROLE_ADMIN');
-  static const UserRole USER_ROLE_USER = UserRole._(2, _omitEnumNames ? '' : 'USER_ROLE_USER');
-  static const UserRole USER_ROLE_GUEST = UserRole._(3, _omitEnumNames ? '' : 'USER_ROLE_GUEST');
-
-  static const $core.List<UserRole> values = <UserRole>[
-    USER_ROLE_UNSPECIFIED,
-    USER_ROLE_ADMIN,
-    USER_ROLE_USER,
-    USER_ROLE_GUEST,
-  ];
-
-  static final $core.List<UserRole?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 3);
-  static UserRole? valueOf($core.int value) => value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const UserRole._(super.value, super.name);
 }
 
 /// Authentication result status

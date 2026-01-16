@@ -2,6 +2,7 @@ library auth_model;
 
 // API
 export 'src/api/grpc_authentication_client.dart';
+export 'src/api/grpc_users_client.dart';
 export 'src/api/i_authentication_api.dart';
 export 'src/api/i_users_api.dart';
 export 'src/api/middlewares/authentication_middleware.dart';

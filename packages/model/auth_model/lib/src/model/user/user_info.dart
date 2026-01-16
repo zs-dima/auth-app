@@ -1,5 +1,6 @@
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
+import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -15,6 +16,7 @@ sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo>
     name: '',
     email: '',
     role: .user,
+    status: .active,
   );
 
   const factory UserInfo({
@@ -22,6 +24,11 @@ sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo>
     required String name,
     required String email,
     required UserRole role,
+    required UserStatus status,
+    String? phone,
+    String? avatarUrl,
+    String? locale,
+    String? timezone,
   }) = _UserInfo;
 
   const UserInfo._();

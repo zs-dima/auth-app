@@ -51,7 +51,13 @@ final class UsersController extends StateController<UsersState>
     if (user != null) return user;
 
     // Only fetch from API if user is not found after loading
-    return _repository.loadUsersInfo(userIds: [userId]).first;
+    return _repository
+        .loadUsersInfo(
+          filter: ListUsersFilter(
+            userIds: [userId],
+          ),
+        )
+        .first;
   }
 
   void loadUsers(UserId currentUserId) => handle(

@@ -18,6 +18,9 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart' as 
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
+export 'core.pbenum.dart';
+
+/// UUID with format validation
 class UUID extends $pb.GeneratedMessage {
   factory UUID({
     $core.String? value,
@@ -65,57 +68,59 @@ class UUID extends $pb.GeneratedMessage {
   void clearValue() => $_clearField(1);
 }
 
-class ResultReply extends $pb.GeneratedMessage {
-  factory ResultReply({
-    $core.bool? result,
+class OperationResult extends $pb.GeneratedMessage {
+  factory OperationResult({
+    $core.bool? success,
   }) {
-    final result$ = create();
-    if (result != null) result$.result = result;
-    return result$;
+    final result = create();
+    if (success != null) result.success = success;
+    return result;
   }
 
-  ResultReply._();
+  OperationResult._();
 
-  factory ResultReply.fromBuffer($core.List<$core.int> data,
+  factory OperationResult.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ResultReply.fromJson($core.String json, [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+  factory OperationResult.fromJson($core.String json, [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ResultReply',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationResult',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'result')
+    ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResultReply clone() => deepCopy();
+  OperationResult clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResultReply copyWith(void Function(ResultReply) updates) =>
-      super.copyWith((message) => updates(message as ResultReply)) as ResultReply;
+  OperationResult copyWith(void Function(OperationResult) updates) =>
+      super.copyWith((message) => updates(message as OperationResult)) as OperationResult;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ResultReply create() => ResultReply._();
+  static OperationResult create() => OperationResult._();
   @$core.override
-  ResultReply createEmptyInstance() => create();
+  OperationResult createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ResultReply getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ResultReply>(create);
-  static ResultReply? _defaultInstance;
+  static OperationResult getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationResult>(create);
+  static OperationResult? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.bool get result => $_getBF(0);
+  $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set result($core.bool value) => $_setBool(0, value);
+  set success($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasResult() => $_has(0);
+  $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
-  void clearResult() => $_clearField(1);
+  void clearSuccess() => $_clearField(1);
 }
 
 /// Name "DecimalValue" prevents conflict with C# Decimal type
-/// Adapted from https://github.com/googleapis/googleapis/blob/master/google/type/money.proto
+/// Adapted from
+/// https://github.com/googleapis/googleapis/blob/master/google/type/money.proto
 class DecimalValue extends $pb.GeneratedMessage {
   factory DecimalValue({
     $fixnum.Int64? units,

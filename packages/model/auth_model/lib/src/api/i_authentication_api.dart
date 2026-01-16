@@ -4,7 +4,6 @@ import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
-import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:core_model/core_model.dart';
 
 /// Authentication API interface.
@@ -71,9 +70,6 @@ abstract interface class IAuthenticationApi {
   /// Change password (requires current password - OWASP requirement).
   /// Use [recoveryStart]/[recoveryConfirm] if user forgot password.
   Future<bool> changePassword({required String currentPassword, required String newPassword});
-
-  /// Set password (admin only - bypasses current password requirement).
-  Future<bool> setPassword({required UserId userId, required String password});
 
   // ===========================================================================
   // VERIFICATION

@@ -15,28 +15,65 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+@$core.Deprecated('Use userRoleDescriptor instead')
+const UserRole$json = {
+  '1': 'UserRole',
+  '2': [
+    {'1': 'USER_ROLE_UNSPECIFIED', '2': 0},
+    {'1': 'USER_ROLE_ADMIN', '2': 1},
+    {'1': 'USER_ROLE_USER', '2': 2},
+    {'1': 'USER_ROLE_GUEST', '2': 3},
+  ],
+};
+
+/// Descriptor for `UserRole`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List userRoleDescriptor =
+    $convert.base64Decode('CghVc2VyUm9sZRIZChVVU0VSX1JPTEVfVU5TUEVDSUZJRUQQABITCg9VU0VSX1JPTEVfQURNSU'
+        '4QARISCg5VU0VSX1JPTEVfVVNFUhACEhMKD1VTRVJfUk9MRV9HVUVTVBAD');
+
+@$core.Deprecated('Use userStatusDescriptor instead')
+const UserStatus$json = {
+  '1': 'UserStatus',
+  '2': [
+    {'1': 'USER_STATUS_UNSPECIFIED', '2': 0},
+    {'1': 'USER_STATUS_PENDING', '2': 1},
+    {'1': 'USER_STATUS_ACTIVE', '2': 2},
+    {'1': 'USER_STATUS_SUSPENDED', '2': 3},
+    {'1': 'USER_STATUS_DELETED', '2': 4},
+  ],
+};
+
+/// Descriptor for `UserStatus`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List userStatusDescriptor =
+    $convert.base64Decode('CgpVc2VyU3RhdHVzEhsKF1VTRVJfU1RBVFVTX1VOU1BFQ0lGSUVEEAASFwoTVVNFUl9TVEFUVV'
+        'NfUEVORElORxABEhYKElVTRVJfU1RBVFVTX0FDVElWRRACEhkKFVVTRVJfU1RBVFVTX1NVU1BF'
+        'TkRFRBADEhcKE1VTRVJfU1RBVFVTX0RFTEVURUQQBA==');
+
 @$core.Deprecated('Use uUIDDescriptor instead')
 const UUID$json = {
   '1': 'UUID',
   '2': [
-    {'1': 'value', '3': 1, '4': 1, '5': 9, '10': 'value'},
+    {'1': 'value', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'value'},
   ],
 };
 
 /// Descriptor for `UUID`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List uUIDDescriptor = $convert.base64Decode('CgRVVUlEEhQKBXZhbHVlGAEgASgJUgV2YWx1ZQ==');
+final $typed_data.Uint8List uUIDDescriptor =
+    $convert.base64Decode('CgRVVUlEEm0KBXZhbHVlGAEgASgJQlf6QlRyUjJNXlswLTlhLWZBLUZdezh9LVswLTlhLWZBLU'
+        'ZdezR9LVswLTlhLWZBLUZdezR9LVswLTlhLWZBLUZdezR9LVswLTlhLWZBLUZdezEyfSTQAQFS'
+        'BXZhbHVl');
 
-@$core.Deprecated('Use resultReplyDescriptor instead')
-const ResultReply$json = {
-  '1': 'ResultReply',
+@$core.Deprecated('Use operationResultDescriptor instead')
+const OperationResult$json = {
+  '1': 'OperationResult',
   '2': [
-    {'1': 'result', '3': 1, '4': 1, '5': 8, '10': 'result'},
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
   ],
 };
 
-/// Descriptor for `ResultReply`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List resultReplyDescriptor =
-    $convert.base64Decode('CgtSZXN1bHRSZXBseRIWCgZyZXN1bHQYASABKAhSBnJlc3VsdA==');
+/// Descriptor for `OperationResult`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List operationResultDescriptor =
+    $convert.base64Decode('Cg9PcGVyYXRpb25SZXN1bHQSGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
 
 @$core.Deprecated('Use decimalValueDescriptor instead')
 const DecimalValue$json = {

@@ -25,8 +25,8 @@ abstract interface class IUsersController {
   UsersController get controller;
   List<User> get users;
   User? byId(UserId id);
-  Future<void> createUser(User user, String password);
-  Future<void> updateUser(User user);
+  Future<void> createUser(CreateUserData data);
+  Future<void> updateUser(UpdateUserData data);
 
   /// Upload avatar using presigned S3 URL workflow.
   Future<void> uploadAvatar(User user, ImageInfo image);
@@ -101,14 +101,13 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   );
 
   @override
-  Future<void> createUser(User user, String password) async {
-    _userController.createUser(user, password);
+  Future<void> createUser(CreateUserData data) async {
+    _userController.createUser(data);
   }
 
   @override
-  Future<void> updateUser(User user) async {
-    if (user == controller.state.users.firstWhereOrNull((u) => u.id == user.id)) return;
-    _userController.updateUser(user);
+  Future<void> updateUser(UpdateUserData data) async {
+    _userController.updateUser(data);
   }
 
   @override
