@@ -1,8 +1,9 @@
 import 'package:auth_app/_core/router/authentication_guard.dart';
+import 'package:auth_app/_core/router/email_verified_guard.dart';
 import 'package:auth_app/_core/router/home_guard.dart';
 import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
-import 'package:flutter/widgets.dart' show State, StatefulWidget, ValueNotifier;
+import 'package:flutter/widgets.dart' show State, StatefulWidget, ValueNotifier, WidgetsBinding;
 import 'package:octopus/octopus.dart';
 
 typedef RouterErrorDef = ({Object error, StackTrace stackTrace});
@@ -20,11 +21,15 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
       <RouterErrorDef>[],
     );
 
-    // Create router.
+    // Create router with initial state from browser URL for deep linking.
+    final initialLocation = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
     router = Octopus(
       routes: Routes.values,
       defaultRoute: Routes.home,
+      initialState: OctopusState.fromLocation(initialLocation),
       guards: <IOctopusGuard>[
+        // Intercept email-verified route: show message, redirect to signin.
+        EmailVerifiedGuard(messageController: dependencies.messageController),
         // Check authentication.
         AuthenticationGuard(
           // Get current user from authentication controller.

@@ -17,11 +17,11 @@ class AuthRecoveryConfirmScreen extends StatefulWidget {
   const AuthRecoveryConfirmScreen({
     super.key,
     required this.token,
-    required this.lang,
+    this.lang,
   });
 
   final String token;
-  final String lang;
+  final String? lang;
 
   @override
   State<AuthRecoveryConfirmScreen> createState() => _AuthRecoveryConfirmScreenState();
@@ -30,16 +30,7 @@ class AuthRecoveryConfirmScreen extends StatefulWidget {
 class _AuthRecoveryConfirmScreenState extends State<AuthRecoveryConfirmScreen> with _PasswordFormStateMixin {
   final _passwordFocusNode = FocusNode();
   late final _formChangedNotifier = Listenable.merge([_passwordController]);
-
   bool _obscurePassword = true;
-  String? _token;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _token = Uri.decodeFull(widget.token);
-  }
 
   @override
   void dispose() {
@@ -168,24 +159,18 @@ mixin _PasswordFormStateMixin on State<AuthRecoveryConfirmScreen> {
   String? _passwordError;
 
   /// Resets the password using the provided token and new password.
-  Future<void> resetPassword(BuildContext context) async {
+  void resetPassword(BuildContext context) {
     FocusScope.of(context).unfocus();
 
-    final password = _passwordController.text;
     _authenticationController.recoveryConfirm(
-      token: widget.token,
-      newPassword: password,
+      token: Uri.decodeFull(widget.token),
+      newPassword: _passwordController.text,
       onSuccess: () {
-        if (context.mounted) {
-          context.showInfo(
-            'Password has been reset successfully. Please sign in with your new password.',
-          );
-        }
+        if (!context.mounted) return;
+        context.showInfo('Password has been reset successfully. Please sign in with your new password.');
+        context.octopus.setState((_) => OctopusState.single(Routes.signin.node()));
       },
     );
-
-    await Future<void>.delayed(Durations.long3);
-    if (context.mounted) await context.octopus.push(Routes.signin);
   }
 
   @override
