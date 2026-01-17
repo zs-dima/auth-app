@@ -348,42 +348,56 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   // AuthResult mapping
   // ---------------------------------------------------------------------------
 
-  AuthResult _mapAuthResult(rpc.AuthResponse result) => switch (result.status) {
-    rpc.AuthStatus.AUTH_STATUS_SUCCESS => AuthResultSuccess(
-      userId: result.user.userId.toId(),
-      credentials: AccessCredentials(
-        accessToken: AccessToken.fromJwtToken(result.tokens.accessToken),
-        refreshToken: result.tokens.refreshToken,
+  AuthResult _mapAuthResult(rpc.AuthResponse result) {
+    // Debug logging for troubleshooting authentication issues
+    assert(() {
+      // ignore: avoid_print
+      print('[AUTH] Response status: ${result.status.name}, message: "${result.message}"');
+      return true;
+    }());
+
+    return switch (result.status) {
+      rpc.AuthStatus.AUTH_STATUS_SUCCESS => AuthResultSuccess(
+        userId: result.user.userId.toId(),
+        credentials: AccessCredentials(
+          accessToken: AccessToken.fromJwtToken(result.tokens.accessToken),
+          refreshToken: result.tokens.refreshToken,
+        ),
       ),
-    ),
-    rpc.AuthStatus.AUTH_STATUS_MFA_REQUIRED => AuthResultMfaRequired(
-      mfaChallenge: MfaChallenge(
-        challengeToken: result.mfaChallenge.challengeToken,
-        expiresAt: result.mfaChallenge.expiresAt.toDateTime().millisecondsSinceEpoch,
-        availableMethods: result.mfaChallenge.availableMethods
-            .map((m) => MfaMethodInfo(method: _mapMfaMethod(m.method), hint: m.hint, isDefault: m.isDefault))
-            .toList(),
+      rpc.AuthStatus.AUTH_STATUS_MFA_REQUIRED => AuthResultMfaRequired(
+        mfaChallenge: MfaChallenge(
+          challengeToken: result.mfaChallenge.challengeToken,
+          expiresAt: result.mfaChallenge.expiresAt.toDateTime().millisecondsSinceEpoch,
+          availableMethods: result.mfaChallenge.availableMethods
+              .map((m) => MfaMethodInfo(method: _mapMfaMethod(m.method), hint: m.hint, isDefault: m.isDefault))
+              .toList(),
+        ),
       ),
-    ),
-    rpc.AuthStatus.AUTH_STATUS_LOCKED => AuthResultLocked(
-      message: result.message.isNotEmpty ? result.message : null,
-      lockoutInfo: LockoutInfo(
-        retryAfterSeconds: result.lockoutInfo.retryAfter.seconds.toInt(),
-        failedAttempts: result.lockoutInfo.failedAttempts,
-        maxAttempts: result.lockoutInfo.maxAttempts,
-        lockedUntil: result.lockoutInfo.hasLockedUntil()
-            ? result.lockoutInfo.lockedUntil.toDateTime().millisecondsSinceEpoch
-            : null,
+      rpc.AuthStatus.AUTH_STATUS_LOCKED => AuthResultLocked(
+        message: result.message.isNotEmpty ? result.message : null,
+        lockoutInfo: LockoutInfo(
+          retryAfterSeconds: result.lockoutInfo.retryAfter.seconds.toInt(),
+          failedAttempts: result.lockoutInfo.failedAttempts,
+          maxAttempts: result.lockoutInfo.maxAttempts,
+          lockedUntil: result.lockoutInfo.hasLockedUntil()
+              ? result.lockoutInfo.lockedUntil.toDateTime().millisecondsSinceEpoch
+              : null,
+        ),
       ),
-    ),
-    rpc.AuthStatus.AUTH_STATUS_SUSPENDED => AuthResultSuspended(
-      message: result.message.isNotEmpty ? result.message : null,
-    ),
-    rpc.AuthStatus.AUTH_STATUS_PENDING => AuthResultPending(
-      message: result.message.isNotEmpty ? result.message : null,
-    ),
-    _ => AuthResultFailed(message: result.message.isNotEmpty ? result.message : null),
-  };
+      rpc.AuthStatus.AUTH_STATUS_SUSPENDED => AuthResultSuspended(
+        message: result.message.isNotEmpty ? result.message : null,
+      ),
+      rpc.AuthStatus.AUTH_STATUS_PENDING => AuthResultPending(
+        message: result.message.isNotEmpty ? result.message : null,
+      ),
+      rpc.AuthStatus.AUTH_STATUS_FAILED => AuthResultFailed(
+        message: result.message.isNotEmpty ? result.message : null,
+      ),
+      _ => AuthResultFailed(
+        message: result.message.isNotEmpty ? result.message : 'Unknown auth status: ${result.status}',
+      ),
+    };
+  }
 
   // ---------------------------------------------------------------------------
   // Enum mappings
