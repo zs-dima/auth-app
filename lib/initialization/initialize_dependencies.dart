@@ -76,7 +76,11 @@ Future<Dependencies> $initializeDependencies({void Function(int progress, String
 final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Creating app metadata': (dependencies) => dependencies.metadata = AppMetadata.platform(),
   'Observer state management': (_) => Controller.observer = ControllerObserver.instance(logger),
-  'Initializing analytics': (_) {},
+  'Initializing analytics': (_) {
+    // await Firebase.initializeApp(
+    //   options: DefaultFirebaseOptions.currentPlatform,
+    // );
+  },
   'Log app open': (_) {},
   'Get remote config': (_) {},
   'Restore settings': (_) {},

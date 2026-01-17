@@ -1,0 +1,135 @@
+name: Deploy to Firebase
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        type: choice # type: environment
+        required: true
+        default: staging
+        options:
+          - production
+          - staging
+          - development
+  # Auto trigger on version tags (e.g., v1.2.3 or v1.2.3-beta.1)
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+" # e.g., v1.2.3 (release)
+      - "v[0-9]+.[0-9]+.[0-9]+-[A-Za-z]+.[0-9]+" # e.g., v1.2.3-beta.1 (pre-release)
+
+permissions:
+  contents: read # Allows fetching repository contents (for checkout)
+  actions: read # Minimal permissions for GitHub Actions
+  checks: write # Allow posting check results (if needed for status)
+
+env:
+  FLUTTER_CHANNEL: "stable" # master / dev / beta / stable (default)
+  FLUTTER_VERSION: "3.38.0" # 3.38.0 / '' (default)
+  SENTRY_PROJECT: "auth-app"
+
+jobs:
+  build_and_deploy_web:
+    name: Build & Deploy Flutter Web
+    runs-on: ubuntu-latest
+    # needs: [lint, test] TODO
+    container:
+      image: plugfox/flutter:stable-web
+    if: github.actor != 'dependabot[bot]' && (github.ref_name == 'main' || startsWith(github.ref, 'refs/tags'))
+    timeout-minutes: 30
+    env:
+      # Persist PUB_CACHE path. GitLab can use: ${{ github.workspace }}/.pub-cache
+      PUB_CACHE: /var/cache/pub
+      # Environment
+      ENV: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && 'production' ||
+        startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-') && 'staging' ||
+        github.event.inputs.environment }}
+
+    steps:
+      - name: ✨ Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full git history for Sentry release identification
+
+      - name: 🔐 Validate environment configuration
+        run: |
+          flutter --version
+          if [ ! -f "config/${{ env.ENV }}.env" ]; then
+            echo "❌ Environment file config/${{ env.ENV }}.env not found!"
+            exit 1
+          fi
+          echo "✅ ${{ env.ENV }} environment"
+
+      - name: 📦 Cache Flutter Pub packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/pub # GitLab: .pub-cache
+          key: flutter-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            flutter-pub-
+
+      - name: 📦 Cache build_runner outputs
+        uses: actions/cache@v4
+        with:
+          path: .dart_tool/build
+          key: dart-tool-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('**/asset_graph.json') }}
+          restore-keys: |
+            dart-tool-${{ hashFiles('pubspec.lock') }}-
+            dart-tool-
+
+      - name: 🔒 Configure Git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: 🐳 Build Flutter Web
+        run: bash deploy/build_flutter_web.sh
+        env:
+          APP_ENVIRONMENT: ${{ env.ENV }}
+          S3_URL: ${{ secrets.S3_URL }}
+          # OAI_KEY: ${{ secrets.OAI_KEY }}
+          # WHISPER_ADDRESS: ${{ secrets.WHISPER_ADDRESS }}
+          # SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          # SENTRY_PROJECT: ${{ env.SENTRY_PROJECT }}
+          # SENTRY_ENVIRONMENT: ${{ env.ENV }}
+          # SENTRY_RELEASE: ${{ github.sha }}
+
+      - name: 📦 Upload build artifacts
+        if: success() && env.ENV == 'production'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-${{ env.ENV }}-${{ github.sha }}
+          path: build/web/
+          retention-days: 7
+
+      - name: 🟢 Install Node.js 20.x # for Firebase CLI
+        uses: actions/setup-node@v4 # bundles npm & npx
+        with:
+          node-version: 20
+
+      - name: ☁ Deploy to Firebase
+        if: success()
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        id: firebase_deploy
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZS_AUTH_APP }}"
+          channelId: ${{ env.ENV == 'production' && 'live' || env.ENV }}
+          projectId: zs-auth-app
+          expires: ${{ env.ENV == 'production' && '' || '30d' }}
+
+      - name: 🚀 Deployment Summary
+        if: always()
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENV }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.firebase_deploy.outputs.details_url || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Expires:** ${{ steps.firebase_deploy.outputs.expire_time || 'Never' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch/Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📢 Send deployment notification
+        if: success() && env.ENV == 'production'
+        run: |
+          echo "Production deployment completed successfully!"
+          # Slack/Discord/Email notification here if needed

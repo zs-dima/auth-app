@@ -3,20 +3,20 @@
     "platforms": {
       "android": {
         "default": {
-          "projectId": "auth-app",
-          "appId": "1:123:android:123",
+          "projectId": "zs-auth-app",
+          "appId": "1:18736676875:android:29ce1b60c5a33d3d87870e",
           "fileOutput": "android/app/google-services.json"
         }
       },
       "dart": {
         "lib/firebase_options.dart": {
-          "projectId": "auth-app",
+          "projectId": "zs-auth-app",
           "configurations": {
-            "android": "1:123:android:123",
-            "ios": "1:123:ios:123",
-            "macos": "1:123:ios:123",
-            "web": "1:123:web:123",
-            "windows": "1:123:web:123"
+            "android": "1:18736676875:android:29ce1b60c5a33d3d87870e",
+            "ios": "1:18736676875:ios:5edcdd1ea9a7393787870e",
+            "macos": "1:18736676875:ios:5edcdd1ea9a7393787870e",
+            "web": "1:18736676875:web:81e99c4b04da97fe87870e",
+            "windows": "1:18736676875:web:9f70ad50fdc41c5887870e"
           }
         }
       }

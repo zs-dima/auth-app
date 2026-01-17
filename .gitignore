@@ -12,7 +12,7 @@
 .swiftpm/
 .gradle/
 migrate_working_dir/
-config/
+config/keys.env
 
 # IntelliJ related
 *.iml
