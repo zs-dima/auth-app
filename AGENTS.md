@@ -1,0 +1,5 @@
+- Use modern libraries: Leverage up-to-date, well-supported tools whenever needed to avoid reinventing the wheel.
+- Keep code simple, clear, and reliable: Write code that is easy to understand and maintain; every line should serve a clear purpose and add value.
+- Leverage Flutter 3.38 built-in capabilities: Prefer built-in framework features over custom solutions to maximize efficiency and maintainability.
+- Avoid copying practices from other languages without a good reason; stick to Flutter and Dart way, style and what Flutter and Dart do best.
+- Follow the best Flutter 3.38 practices.

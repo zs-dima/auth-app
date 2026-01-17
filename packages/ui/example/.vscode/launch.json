@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      // "openDevTools": "network",
+      "args": [
+        "--wasm",
+        // "--web-port=8008"
+      ],
+      "env": {}
+    }
+  ]
+}

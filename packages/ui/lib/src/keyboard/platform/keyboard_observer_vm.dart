@@ -1,0 +1,30 @@
+import 'dart:io' as io;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:meta/meta.dart';
+import 'package:ui/src/keyboard/platform/keyboard_observer_interface.dart';
+import 'package:ui/src/keyboard/platform/keyboard_observer_windows.dart';
+
+IKeyboardObserver $getKeyboardObserver() =>
+    io.Platform.isWindows ? $getKeyboardObserver$Windows() : _KeyboardObserver$VM();
+
+@sealed
+class _KeyboardObserver$VM with _IsKeyPressed$IO, ChangeNotifier implements IKeyboardObserver {
+  @override
+  bool get isControlPressed => isKeyPressed(.controlLeft) || isKeyPressed(.controlRight);
+
+  @override
+  bool get isShiftPressed => isKeyPressed(.shiftLeft) || isKeyPressed(.shiftRight);
+
+  @override
+  bool get isAltPressed => isKeyPressed(.altLeft) || isKeyPressed(.altRight);
+
+  @override
+  bool get isMetaPressed => isKeyPressed(.metaLeft) || isKeyPressed(.metaRight);
+}
+
+mixin _IsKeyPressed$IO {
+  /// Returns true if the given [KeyboardKey] is pressed.
+  bool isKeyPressed(LogicalKeyboardKey key) => HardwareKeyboard.instance.logicalKeysPressed.contains(key);
+}

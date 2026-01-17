@@ -1,0 +1,23 @@
+export 'package:protobuf/well_known_types/google/protobuf/any.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/any.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/api.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/api.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/duration.pb.dart' show Duration;
+export 'package:protobuf/well_known_types/google/protobuf/duration.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart' show Empty;
+export 'package:protobuf/well_known_types/google/protobuf/empty.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/field_mask.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/source_context.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/source_context.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/struct.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/struct.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/timestamp.pbjson.dart';
+export 'package:protobuf/well_known_types/google/protobuf/type.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/wrappers.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/wrappers.pbjson.dart';
+
+export 'proto/core.pb.dart';
+export 'proto/core.pbenum.dart';
+export 'proto/core.pbjson.dart';

@@ -1,16 +1,16 @@
 icons_launcher:
-  image_path: asset/icon/app/icon_xxxhdpi.png
+  image_path: assets/icons/app/icon_xxxhdpi.png
   platforms:
     android:
       enable: true
-      adaptive_background_image: asset/icon/app/icon_background.png
-      adaptive_foreground_image: asset/icon/app/icon_foreground.png
+      adaptive_background_image: assets/icons/app/icon_background.png
+      adaptive_foreground_image: assets/icons/app/icon_foreground.png
     ios:
       enable: true
-      image_path: asset/icon/app/icon_ios.png
+      image_path: assets/icons/app/icon_ios.png
     web:
       enable: true
-      favicon_path: asset/icon/app/icon_xxxhdpi.png
+      favicon_path: assets/icons/app/icon_xxxhdpi.png
     macos:
       enable: true
     windows:

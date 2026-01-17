@@ -1,0 +1,30 @@
+name: core_tool
+resolution: workspace
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  # Packages
+  json_converter:
+    path: ../../tool/converter/json_converter
+
+  # SDK
+  meta: any
+  collection: any
+  characters: any
+  uuid: any
+
+  # Internationalization
+  intl: any
+
+  # Code generation
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  lints_tool:
+    path: ../../tool/lints_tool

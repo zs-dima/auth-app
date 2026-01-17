@@ -30,6 +30,9 @@ jobs:
           fi
           )" >> $GITHUB_ENV
 
+      - name: Variables
+        run: echo "TAG=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+
       - name: ✨ Get latest code
         uses: actions/checkout@v3
 

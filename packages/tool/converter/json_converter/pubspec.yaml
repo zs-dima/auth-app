@@ -1,0 +1,24 @@
+name: json_converter
+resolution: workspace
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  # SDK extensions
+  collection: any
+  meta: any
+
+  # Internationalization
+  intl: any
+
+  # Code generation
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  lints_tool:
+    path: ../../../tool/lints_tool

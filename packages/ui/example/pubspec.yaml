@@ -1,0 +1,35 @@
+name: example
+description: "UI Kit"
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+# workspace:
+#   - packages/ui
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Packages
+  ui:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  lints_tool:
+    path: ../../tool/lints_tool
+
+  # flutter_lints: ^5.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  uses-material-design: true

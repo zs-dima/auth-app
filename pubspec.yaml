@@ -1,6 +1,10 @@
 name: auth_app
-description: Authentification demo app
-version: 1.0.1+1
+description: Authentication demo app
+
+publish_to: "none"
+
+version: 1.0.1
+
 homepage: https://github.com/zs-dima/auth-app
 repository: https://github.com/zs-dima/auth-app
 issue_tracker: https://github.com/zs-dima/auth-app/issues
@@ -12,7 +16,7 @@ funding:
 
 topics:
   - auth
-  - authentification
+  - authentication
   - grpc
   - cross-platform
   - flutter
@@ -25,91 +29,175 @@ platforms:
   web:
   windows:
 
-publish_to: "none"
+#screenshots:
+#  - description: 'Screenshot 1'
+#    path: screenshot_1.png
 
 environment:
-  sdk: ">=3.1.2"
-  flutter: ">=3.13.5"
+  sdk: ^3.10.7
+
+workspace:
+  - packages/model/core_model
+  - packages/model/grpc_model
+  - packages/model/auth_model
+  - packages/tool/core_tool
+  - packages/tool/lints_tool
+  - packages/tool/converter/json_converter
+  # - packages/rest_client
+  - packages/ui
 
 dependencies:
   # Flutter SDK
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
   # Localization
   flutter_localizations:
     sdk: flutter
-  intl: ^0.18.1
 
   # Packages
   core_model:
-    path: package/model/core_model
+    path: packages/model/core_model
   grpc_model:
-    path: package/model/grpc_model
+    path: packages/model/grpc_model
   auth_model:
-    path: package/model/auth_model
+    path: packages/model/auth_model
   core_tool:
-    path: package/tool/core_tool
-  ui_tool:
-    path: package/tool/ui_tool
+    path: packages/tool/core_tool
+  json_converter:
+    path: packages/tool/converter/json_converter
+  # rest_client:
+  #   path: packages/rest_client
+  ui:
+    path: packages/ui
 
-  # SDK extensions
-  async: ^2.9.0
-  collection: any
+  # Flutter SDK
+  path: any
   meta: any
-  uuid: any
-  crypto: ^3.0.3
-  convert: ^3.1.1
+  async: any
+  collection: any
+  # characters: any
+  # convert: any
+  crypto: any
+  uuid: any # TODO: Remove
+  web: ^1.1.1
 
-  # Logging
-  l: ^4.1.0-pre.1
-  sentry_flutter: ^7.12.0
-  stack_trace: ^1.11.0
+  # Internationalization
+  intl: any
+  # timezone: ^0.10.0
 
-  # System
-  path: ^1.8.3
-  path_provider: ^2.1.1
-  platform_info: ^4.0.2
-  package_info_plus: ^4.2.0
-  device_info_plus: ^9.1.0
-  android_id: ^0.3.6
+  # State management
+  control: ^0.2.0
+
+  # Routing
+  octopus: ^0.0.9
+  url_launcher: ^6.3.2
+
+  # Logging & Analytics
+  l: ^5.0.1
+  stack_trace: ^1.12.1
+  sentry_flutter: ^9.9.2
+  # matomo_tracker: ^6.0.0
+  # posthog_flutter: ^5.0.0
+
+  # Tool
+  path_provider: ^2.1.5
+  platform_info: ^5.0.0
+  package_info_plus: ^9.0.0
+  device_info_plus: ^12.3.0
+  android_id: ^0.5.1
+  #multiline: ^3.0.0
+  # money2: ^5.4.6
+  # mockito: ^5.5.1
+  # clock: ^1.1.1
 
   # Stream
-  stream_transform: ^2.1.0
-  rxdart: ^0.27.7
-
-  # BLoC
-  bloc: ^8.1.2
-  bloc_concurrency: ^0.2.2
-  flutter_bloc: ^8.1.3
+  stream_transform: ^2.1.1
+  rxdart: ^0.28.0
 
   # Persistence
-  # drift: ^2.11.0
-  # sqlite3_flutter_libs: ^0.5.15
-  shared_preferences: ^2.2.2
-  flutter_secure_storage: ^9.0.0
-  archive: ^3.4.6
+  drift: ^2.30.0
+  drift_db_viewer: ^2.1.0
+  sqlite3_flutter_libs: ^0.5.41
+  shared_preferences: ^2.5.4
+  flutter_secure_storage: ^10.0.0
+  archive: ^4.0.7
+  # indexed_db: ^1.0.1
 
   # Platform
-  win32: ^5.0.9
-  window_manager: ^0.3.7
+  win32: ^5.15.0
+  window_manager: ^0.5.1
 
   # UI
-  cupertino_icons: ^1.0.6
-  flutter_native_splash: ^2.3.5
-  file_picker: ^6.0.0
-  flutter_blurhash: ^0.7.0
+  # cupertino_icons: ^1.0.8
+  # google_fonts: ^6.1.0
+  # font_awesome_flutter: ^10.6.0
+  file_picker: ^10.3.8
+  cross_file: ^0.3.5
+  # flutter_blurhash: ^0.9.1
+  flutter_svg: ^2.2.3
+  vector_graphics: ^1.1.19
+  fl_chart: ^1.1.1
+  # flutter_date_pickers: ^0.4.3
+  # repaint: ^0.0.1
+  video_player: ^2.10.1
+  # get_thumbnail_video: ^0.7.3
+  super_drag_and_drop: ^0.9.1 # TODO: Remove
+  # flutter_app_icons: ^0.1.1
+  # flutter_email_sender: ^7.0.0
+  # pdf: ^3.11.3
+  # printing: ^5.14.2
+  # flutter_md: ^0.0.4
+  fast_image:
+    git:
+      url: https://github.com/zs-dima/fast_image.git # https://github.com/hawkkiller/fast_image.git
+      ref: main
+      path: packages/fast_image
+  # fast_image:
+  #   path: A:\source\_\fast_image\packages\fast_image
+
+  # imagekit_ffi:
+  #   git:
+  #     url: https://github.com/zs-dima/imagekit_ffi.git
+  #     ref: main
+
+  # Billing
+  # in_app_purchase: ^3.2.3
+
+  # Map
+  # flutter_map: ^8.2.2
+  # flutter_map_marker_popup: ^8.1.0
+  # flutter_map_marker_cluster: ^8.2.2
+  # flutter_map_cancellable_tile_provider: ^3.1.1
+  # latlong2: ^0.9.1
+  # <>
+  # google_maps_flutter: ^2.12.3
+  # # googleapis: ^14.0.0
+  # # googleapis_auth: ^2.0.0
+  # geocode: ^1.0.3 # geocoding: ^3.0.0
 
   # Code generation
-  freezed_annotation: ^2.4.1
-  json_annotation: ^4.8.1
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.9.0
 
   # API
-  dio: ^5.3.3
-  dio_http2_adapter: ^2.3.1+1
-  protobuf: ^3.1.0
-  grpc: ^3.2.4
+  ws: ^1.1.0-dev.1
+  # grpc
+  protobuf: ^6.0.0
+  grpc: ^5.1.0
   retry: ^3.1.2
+  # http
+  http: ^1.6.0
+  # cronet_http: ^1.3.4
+  # cupertino_http: ^2.2.0
+  # intercepted_client: ^0.0.1
+  # html: ^0.15.6
+  # graphql_codegen: ^1.2.2
+
+  # AI
+  # dart_openai: ^5.1.0
 
 dev_dependencies:
   # Unit & Widget tests for Flutter
@@ -119,36 +207,50 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
-  #mockito: ^5.4.2
+  # Linting
+  flutter_lints: ^6.0.0
 
   # Code generation
-  # drift_dev: ^2.11.1
-  build_runner: ^2.4.6
-  # flutter_launcher_icons: ^0.13.1
+  build_runner: ^2.10.4
+  drift_dev: ^2.30.0
+  flutter_gen_runner: ^5.12.0
+  freezed: ^3.2.4
+  json_serializable: ^6.11.3
+  # dart run flutter_launcher_icons -f flutter_launcher_icons.yamlZ
+  flutter_launcher_icons: ^0.14.4
+  # dart run flutter_native_splash:create --path=flutter_native_splash.yaml
+  flutter_native_splash: ^2.4.7
+  # melos: ^7.3.0 # dart pub global activate melos
   # build_verify: ^3.1.0
-  # pubspec_generator: ^4.0.0
-  flutter_gen_runner: ^5.3.2
-  freezed: ^2.4.5
-  json_serializable: ^6.7.1
-  melos: ^3.2.0 # dart pub global activate melos
-  intl_utils: ^2.8.5
+  # pigeon: ^25.3.1
+  # intl_utils: ^2.8.13
+  #mockito: ^5.4.2
+
+  sentry_dart_plugin: ^3.2.0
 
   # Lints
   lints_tool:
-    path: package/tool/lints_tool
+    path: packages/tool/lints_tool
 
-# TODO flutter pub get
-# https://github.com/dart-lang/build/issues/2835
+dependency_overrides:
+  web: ^1.1.1 # ws
+  device_info_plus: ^12.2.0 # super_drag_and_drop
+
 flutter:
-  generate: false
+  generate: true
   uses-material-design: true
+
   assets:
-    - asset/
-    - asset/image/
-    - asset/image/app/
-    - asset/icon/
-    - asset/icon/app/
+    - assets/
+    - assets/images/
+    - assets/images/app/
+    - assets/icons/
+    - assets/icons/app/
+
   # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
   #   - family: SocialIcons
   #     fonts:
   #       - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf
@@ -157,16 +259,16 @@ flutter_intl: # dart run intl_utils:generate
   enabled: true
   class_name: GeneratedLocalization
   main_locale: en
-  arb_dir: lib/core/localization/translation
-  output_dir: lib/core/gen/localization
+  arb_dir: lib/_core/localization/translation
+  output_dir: lib/_core/generated/localization
   use_deferred_loading: false
 
 flutter_gen:
-  output: lib/core/gen/resources
+  output: lib/_core/generated/resources
   line_length: 120
   integrations:
     flutter_svg: true
-    flare_flutter: true
+# flare_flutter: true
 #  colors:
 #    inputs:
 #      - assets/color/colors.xml

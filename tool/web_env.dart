@@ -3,8 +3,11 @@ import 'dart:io';
 
 void main(List<String> arguments) async {
   const webRoot = '/usr/share/nginx/html';
-  const envJsonPath = '$webRoot/assets/asset/environment.json';
+  const envJsonPath = '$webRoot/assets/assets/environment.json';
+  const versionJsonPath = '$webRoot/version.json';
+
   final envJson = <String, Object>{};
+  var appEnvironment = 'staging';
 
   // Parse arguments into envJson
   for (final argument in arguments) {
@@ -17,6 +20,16 @@ void main(List<String> arguments) async {
 
     final arg = split.first.trim().toUpperCase();
     final value = split.last.trim();
+
+    if (arg == 'APP_VERSION' && value.isEmpty) {
+      final versionJsonFile = File(versionJsonPath);
+      final versionJson = jsonDecode(await versionJsonFile.readAsString()) as Map<String, Object?>;
+      // ignore: avoid_dynamic_calls, avoid-accessing-collections-by-constant-index
+      envJson[arg] = '${versionJson['version']}b${versionJson['build_number']}${appEnvironment[0]}'.trim();
+      continue;
+    } else if (arg == 'APP_ENVIRONMENT') {
+      appEnvironment = value;
+    }
 
     // Ensure argument key and value are not empty
     if (arg.isEmpty || value.isEmpty) {
@@ -32,9 +45,9 @@ void main(List<String> arguments) async {
 
 /// Converts a string to a JSON value
 Object _toJsonValue(String value) => switch (value) {
-      _ when int.tryParse(value) != null => int.parse(value),
-      _ when double.tryParse(value) != null => double.parse(value),
-      _ when value.toLowerCase() == 'true' => true,
-      _ when value.toLowerCase() == 'false' => false,
-      _ => value,
-    };
+  _ when int.tryParse(value) != null => int.parse(value),
+  _ when double.tryParse(value) != null => double.parse(value),
+  _ when value.toLowerCase() == 'true' => true,
+  _ when value.toLowerCase() == 'false' => false,
+  _ => value,
+};

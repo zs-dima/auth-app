@@ -1,0 +1,4 @@
+documentation: https://docs.flutter.dev/tools/devtools/extensions#configure-extension-enablement-states
+extensions:
+  - drift: false
+  - shared_preferences: true

@@ -11,4 +11,4 @@ PRODUCT_NAME = auth_app
 PRODUCT_BUNDLE_IDENTIFIER = app.dmitrii.authApp
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2023 app.dmitrii. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 app.dmitrii. All rights reserved.

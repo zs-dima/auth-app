@@ -1,0 +1,13 @@
+name: lints_tool
+resolution: workspace
+description: A bunch of strict rules for Dart and Flutter projects.
+
+publish_to: "none"
+version: 1.0.1
+
+repository: https://github.com/zs-dima/lints_tool
+
+environment:
+  sdk: ^3.10.7
+# dependencies:
+#   dart_code_metrics_presets: ^2.11.0
