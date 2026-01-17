@@ -33,6 +33,14 @@
     },
     "rewrites": [
       {
+        "source": "/verify-email{,/**}",
+        "run": {
+          "serviceId": "auth-app-api",
+          "region": "europe-west1",
+          "pinTag": false
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
