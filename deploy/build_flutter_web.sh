@@ -172,6 +172,42 @@ if [ -f "l10n.yaml" ] || grep -q "flutter_intl:" pubspec.yaml || grep -q "intl:"
     active_jobs=$((active_jobs + 1))
 fi
 
+# Run pubspec_generator to generate pubspec constants
+wait_for_job_slot
+job_count=$((job_count + 1))
+pubspec_gen_job_id=$job_count
+log_info "Scheduling pubspec_generator..."
+
+(  # Pubspec generator job
+    output_file="$JOBS_DIR/job_${pubspec_gen_job_id}.out"
+    exec > "$output_file" 2>&1
+    echo "Starting pubspec_generator at $(date)"
+    start_time=$(date +%s)
+    # Activate pubspec_generator globally
+    dart pub global activate pubspec_generator || {
+        echo "ERROR: Failed to activate pubspec_generator"
+        exit 1
+    }
+    # Generate pubspec constants
+    dart pub global run pubspec_generator:generate -o lib/_core/generated/constant/pubspec.yaml.g.dart || {
+        echo "ERROR: pubspec_generator:generate failed"
+        exit 1
+    }
+    # Verify that the expected output exists
+    if [ ! -f "lib/_core/generated/constant/pubspec.yaml.g.dart" ]; then
+        echo "ERROR: Expected pubspec.yaml.g.dart file not generated"
+        exit 1
+    fi
+
+    end_time=$(date +%s)
+    echo $(( end_time - start_time )) > "$JOBS_DIR/job_${pubspec_gen_job_id}.duration"
+    echo "Completed successfully at $(date)"
+    exit 0
+) &  # Run pubspec_generator in background
+job_pids[$pubspec_gen_job_id]=$!
+job_packages[$pubspec_gen_job_id]="pubspec_generator"
+active_jobs=$((active_jobs + 1))
+
 # Find and schedule code generation for each package in the monorepo that uses build_runner
 if [ -d "package" ] || [ -d "packages" ]; then
     # Look for directories under "package(s)" that contain a pubspec with build_runner as a dependency
