@@ -31,7 +31,22 @@
     "frameworksBackend": {
       "region": "europe-west1"
     },
+    /* ───────────── Self-hosted backend for email verification ─────────── */
+    "redirects": [
+      {
+        "source": "/verify-email",
+        "destination": "https://auth-demo-api.dmitrii.app/verify-email",
+        "type": 307
+      },
+      /* ───────────── /verify-email/something ─────────── */
+      {
+        "source": "/verify-email/:path*",
+        "destination": "https://auth-demo-api.dmitrii.app/verify-email/:path*",
+        "type": 307
+      }
+    ],
     "rewrites": [
+      /* ─────────────  Cloud Run backend for email verification
       {
         "source": "/verify-email{,/**}",
         "run": {
@@ -39,7 +54,7 @@
           "region": "europe-west1",
           "pinTag": false
         }
-      },
+      },*/
       {
         "source": "**",
         "destination": "/index.html"
