@@ -161,17 +161,19 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   }
 
   @override
-  Future<bool> confirmVerification({required String token, required VerificationType type}) async {
-    try {
-      await client.confirmVerification(
-        rpc.ConfirmVerificationRequest()
-          ..token = token
-          ..type = _mapVerificationTypeToProto(type),
-      );
-      return true;
-    } on Exception {
-      return false;
-    }
+  Future<AuthResult> confirmVerification({
+    required String token,
+    required VerificationType type,
+    required IDeviceInfo deviceInfo,
+  }) async {
+    final request = rpc.ConfirmVerificationRequest()
+      ..token = token
+      ..type = _mapVerificationTypeToProto(type)
+      ..installationId = deviceInfo.installationId.toUUID()
+      ..clientInfo = _buildClientInfo(deviceInfo);
+
+    final result = await client.confirmVerification(request);
+    return _mapAuthResult(result);
   }
 
   // ===========================================================================

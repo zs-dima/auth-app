@@ -166,6 +166,7 @@ class AuthServiceClient extends $grpc.Client {
 
   /// Change password (requires current password - OWASP requirement)
   /// Use RecoveryStart/Confirm if user forgot password or has no password
+  /// For admin password reset without verification, use UserService.SetPassword
   $grpc.ResponseFuture<$1.Empty> changePassword(
     $0.ChangePasswordRequest request, {
     $grpc.CallOptions? options,
@@ -173,7 +174,7 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$changePassword, request, options: options);
   }
 
-  /// Request verification code for email or phone
+  /// Request verification code for email or phone (resend)
   $grpc.ResponseFuture<$1.Empty> requestVerification(
     $0.RequestVerificationRequest request, {
     $grpc.CallOptions? options,
@@ -181,8 +182,8 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$requestVerification, request, options: options);
   }
 
-  /// Confirm verification with code
-  $grpc.ResponseFuture<$1.Empty> confirmVerification(
+  /// Confirm verification with token - returns auth tokens for seamless login
+  $grpc.ResponseFuture<$0.AuthResponse> confirmVerification(
     $0.ConfirmVerificationRequest request, {
     $grpc.CallOptions? options,
   }) {
@@ -301,10 +302,10 @@ class AuthServiceClient extends $grpc.Client {
       '/auth.AuthService/RequestVerification',
       ($0.RequestVerificationRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
-  static final _$confirmVerification = $grpc.ClientMethod<$0.ConfirmVerificationRequest, $1.Empty>(
+  static final _$confirmVerification = $grpc.ClientMethod<$0.ConfirmVerificationRequest, $0.AuthResponse>(
       '/auth.AuthService/ConfirmVerification',
       ($0.ConfirmVerificationRequest value) => value.writeToBuffer(),
-      $1.Empty.fromBuffer);
+      $0.AuthResponse.fromBuffer);
   static final _$getMfaStatus = $grpc.ClientMethod<$0.GetMfaStatusRequest, $0.GetMfaStatusResponse>(
       '/auth.AuthService/GetMfaStatus',
       ($0.GetMfaStatusRequest value) => value.writeToBuffer(),
@@ -439,13 +440,13 @@ abstract class AuthServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.RequestVerificationRequest.fromBuffer(value),
         ($1.Empty value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.ConfirmVerificationRequest, $1.Empty>(
+    $addMethod($grpc.ServiceMethod<$0.ConfirmVerificationRequest, $0.AuthResponse>(
         'ConfirmVerification',
         confirmVerification_Pre,
         false,
         false,
         ($core.List<$core.int> value) => $0.ConfirmVerificationRequest.fromBuffer(value),
-        ($1.Empty value) => value.writeToBuffer()));
+        ($0.AuthResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.GetMfaStatusRequest, $0.GetMfaStatusResponse>(
         'GetMfaStatus',
         getMfaStatus_Pre,
@@ -602,12 +603,12 @@ abstract class AuthServiceBase extends $grpc.Service {
 
   $async.Future<$1.Empty> requestVerification($grpc.ServiceCall call, $0.RequestVerificationRequest request);
 
-  $async.Future<$1.Empty> confirmVerification_Pre(
+  $async.Future<$0.AuthResponse> confirmVerification_Pre(
       $grpc.ServiceCall $call, $async.Future<$0.ConfirmVerificationRequest> $request) async {
     return confirmVerification($call, await $request);
   }
 
-  $async.Future<$1.Empty> confirmVerification($grpc.ServiceCall call, $0.ConfirmVerificationRequest request);
+  $async.Future<$0.AuthResponse> confirmVerification($grpc.ServiceCall call, $0.ConfirmVerificationRequest request);
 
   $async.Future<$0.GetMfaStatusResponse> getMfaStatus_Pre(
       $grpc.ServiceCall $call, $async.Future<$0.GetMfaStatusRequest> $request) async {

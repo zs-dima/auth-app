@@ -60,6 +60,13 @@ abstract interface class IAuthenticationRepository {
   Future<bool> recoveryConfirm({required String token, required String newPassword});
   Future<bool> changePassword({required String currentPassword, required String newPassword});
 
+  /// Confirm email/phone verification with token.
+  /// Returns [AuthUser] on success for seamless auto-login.
+  Future<AuthUser> confirmVerification({required String token, required VerificationType type});
+
+  /// Request verification email/SMS resend.
+  Future<bool> requestVerification(VerificationType type);
+
   Future<void> terminate();
 }
 
@@ -167,6 +174,16 @@ class AuthenticationRepository implements IAuthenticationRepository {
   @override
   Future<bool> changePassword({required String currentPassword, required String newPassword}) =>
       _api.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+
+  @override
+  Future<AuthUser> confirmVerification({required String token, required VerificationType type}) async {
+    final deviceInfo = await DeviceInfo.instance(metadata.appVersion, _settings.installationId);
+    final result = await _api.confirmVerification(token: token, type: type, deviceInfo: deviceInfo);
+    return _handleAuthResult(result);
+  }
+
+  @override
+  Future<bool> requestVerification(VerificationType type) => _api.requestVerification(type);
 
   @override
   Future<AuthUser> restore() async {

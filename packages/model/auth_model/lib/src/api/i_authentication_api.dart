@@ -79,7 +79,13 @@ abstract interface class IAuthenticationApi {
   Future<bool> requestVerification(VerificationType type);
 
   /// Confirm verification with code.
-  Future<bool> confirmVerification({required String token, required VerificationType type});
+  ///
+  /// Returns [AuthResult] for seamless login after verification.
+  Future<AuthResult> confirmVerification({
+    required String token,
+    required VerificationType type,
+    required IDeviceInfo deviceInfo,
+  });
 
   // ===========================================================================
   // OAUTH

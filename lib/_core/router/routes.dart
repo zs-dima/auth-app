@@ -63,6 +63,7 @@ abstract final class RouteNode {
   static const String continueUrl = 'continue';
   static const String token = 'token';
   static const String status = 'status';
+  static const String success = 'success';
   static const String code = 'code';
   static const String lang = 'lang';
   static const String user = 'user';

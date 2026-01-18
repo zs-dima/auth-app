@@ -28,8 +28,11 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
       defaultRoute: Routes.home,
       initialState: OctopusState.fromLocation(initialLocation),
       guards: <IOctopusGuard>[
-        // Intercept email-verified route: show message, redirect to signin.
-        EmailVerifiedGuard(messageController: dependencies.messageController),
+        // Intercept email-verified route: call confirmVerification API.
+        EmailVerifiedGuard(
+          messageController: dependencies.messageController,
+          authenticationController: dependencies.authenticationController,
+        ),
         // Check authentication.
         AuthenticationGuard(
           // Get current user from authentication controller.

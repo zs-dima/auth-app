@@ -192,6 +192,60 @@ final class AuthenticationController extends StateController<AuthenticationState
   //   done: () async => setState(AuthenticationState.idle(user: _repository.user)),
   // );
 
+  /// Confirm email/phone verification with token.
+  /// On success, user is automatically logged in.
+  void confirmVerification({
+    required String token,
+    required VerificationType type,
+    VoidCallback? onSuccess,
+  }) => handle(
+    () async {
+      setProgressStarted();
+      setState(AuthenticationState.processing(user: state.user, message: 'Verifying...'));
+
+      final user = await _repository.confirmVerification(token: token, type: type);
+      onSuccess?.call();
+      setState(AuthenticationState.idle(user: user, message: 'Email verified successfully.'));
+    },
+    error: (error, _) async {
+      final errorMessage = switch (error) {
+        AuthenticationException(:final message) => message,
+        _ => kDebugMode ? 'Verification Error: $error' : 'Verification failed',
+      };
+
+      setError(errorMessage);
+      setState(AuthenticationState.idle(user: state.user, error: errorMessage));
+    },
+    done: () async => setProgressDone(),
+    name: 'confirmVerification',
+  );
+
+  /// Request verification email/SMS resend.
+  void requestVerification(VerificationType type, {VoidCallback? onSuccess}) => handle(
+    () async {
+      setProgressStarted();
+      setState(AuthenticationState.processing(user: state.user, message: 'Sending verification...'));
+
+      final success = await _repository.requestVerification(type);
+      if (success) {
+        onSuccess?.call();
+        setState(AuthenticationState.idle(user: state.user, message: 'Verification email sent.'));
+      } else {
+        setState(AuthenticationState.idle(user: state.user, error: 'Failed to send verification email.'));
+      }
+    },
+    error: (error, _) async {
+      setState(
+        AuthenticationState.idle(
+          user: state.user,
+          error: kDebugMode ? 'Verification Error: $error' : 'Failed to send verification email.',
+        ),
+      );
+    },
+    done: () async => setProgressDone(),
+    name: 'requestVerification',
+  );
+
   /// Reset password for the given [email].
   void recoveryStart(String email, {VoidCallback? onSuccess}) => handle(
     () async {

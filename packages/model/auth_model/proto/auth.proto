@@ -95,18 +95,22 @@ service AuthService {
 
   // Change password (requires current password - OWASP requirement)
   // Use RecoveryStart/Confirm if user forgot password or has no password
+  // For admin password reset without verification, use UserService.SetPassword
   rpc ChangePassword(ChangePasswordRequest) returns (google.protobuf.Empty);
 
   // =========================================================================
   // Email/Phone Verification
   // =========================================================================
   // Uses DB: users.email_verified, users.phone_verified
+  //
+  // Flow: SignUp (pending) → email/SMS sent → ConfirmVerification → tokens issued
+  // RequestVerification: resend if token expired or for verified user changing email/phone
 
-  // Request verification code for email or phone
+  // Request verification code for email or phone (resend)
   rpc RequestVerification(RequestVerificationRequest) returns (google.protobuf.Empty);
 
-  // Confirm verification with code
-  rpc ConfirmVerification(ConfirmVerificationRequest) returns (google.protobuf.Empty);
+  // Confirm verification with token - returns auth tokens for seamless login
+  rpc ConfirmVerification(ConfirmVerificationRequest) returns (AuthResponse);
 
   // =========================================================================
   // MFA Management
@@ -147,44 +151,44 @@ service AuthService {
 // Maps to DB: `users.email` (email domain), `users.phone` (`phone_e164` domain)
 enum IdentifierType {
   IDENTIFIER_TYPE_UNSPECIFIED = 0; // Auto-detect based on format (@ = email, + = phone)
-  IDENTIFIER_TYPE_EMAIL       = 1; // Email address
-  IDENTIFIER_TYPE_PHONE       = 2; // Phone number in E.164 format (+1234567890)
+  IDENTIFIER_TYPE_EMAIL = 1; // Email address
+  IDENTIFIER_TYPE_PHONE = 2; // Phone number in E.164 format (+1234567890)
 }
 
 // OAuth providers - matches DB enum: oauth_provider
 enum OAuthProvider {
   OAUTH_PROVIDER_UNSPECIFIED = 0;
-  OAUTH_PROVIDER_GOOGLE      = 1;
-  OAUTH_PROVIDER_GITHUB      = 2;
-  OAUTH_PROVIDER_MICROSOFT   = 3;
-  OAUTH_PROVIDER_APPLE       = 4;
-  OAUTH_PROVIDER_FACEBOOK    = 5;
+  OAUTH_PROVIDER_GOOGLE = 1;
+  OAUTH_PROVIDER_GITHUB = 2;
+  OAUTH_PROVIDER_MICROSOFT = 3;
+  OAUTH_PROVIDER_APPLE = 4;
+  OAUTH_PROVIDER_FACEBOOK = 5;
 }
 
 // Authentication result status
 enum AuthStatus {
-  AUTH_STATUS_UNSPECIFIED  = 0;
-  AUTH_STATUS_SUCCESS      = 1; // Fully authenticated, tokens provided
+  AUTH_STATUS_UNSPECIFIED = 0;
+  AUTH_STATUS_SUCCESS = 1; // Fully authenticated, tokens provided
   AUTH_STATUS_MFA_REQUIRED = 2; // First factor passed, MFA verification needed
-  AUTH_STATUS_FAILED       = 3; // Invalid credentials (generic - OWASP)
-  AUTH_STATUS_LOCKED       = 4; // Account temporarily locked (see lockout_info)
-  AUTH_STATUS_SUSPENDED    = 5; // Account suspended by admin
-  AUTH_STATUS_PENDING      = 6; // Account pending verification
+  AUTH_STATUS_FAILED = 3; // Invalid credentials (generic - OWASP)
+  AUTH_STATUS_LOCKED = 4; // Account temporarily locked (see lockout_info)
+  AUTH_STATUS_SUSPENDED = 5; // Account suspended by admin
+  AUTH_STATUS_PENDING = 6; // Account pending verification
 }
 
 // Verification type for email/phone
 enum VerificationType {
   VERIFICATION_TYPE_UNSPECIFIED = 0;
-  VERIFICATION_TYPE_EMAIL       = 1;
-  VERIFICATION_TYPE_PHONE       = 2;
+  VERIFICATION_TYPE_EMAIL = 1;
+  VERIFICATION_TYPE_PHONE = 2;
 }
 
 // MFA method types - extensible for future methods
 enum MfaMethod {
-  MFA_METHOD_UNSPECIFIED   = 0;
-  MFA_METHOD_TOTP          = 1; // Time-based OTP (RFC 6238) - authenticator apps
-  MFA_METHOD_SMS           = 2; // SMS OTP (less secure, but widely used)
-  MFA_METHOD_EMAIL         = 3; // Email OTP
+  MFA_METHOD_UNSPECIFIED = 0;
+  MFA_METHOD_TOTP = 1; // Time-based OTP (RFC 6238) - authenticator apps
+  MFA_METHOD_SMS = 2; // SMS OTP (less secure, but widely used)
+  MFA_METHOD_EMAIL = 3; // Email OTP
   MFA_METHOD_RECOVERY_CODE = 4; // One-time recovery codes
   // Future: MFA_METHOD_PASSKEY = 5; // WebAuthn/FIDO2
 }
@@ -194,9 +198,9 @@ enum MfaMethod {
 // =============================================================================
 
 message TokenPair {
-  string                    access_token  = 1;
-  string                    refresh_token = 2;
-  google.protobuf.Timestamp expires_at    = 3;
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
 }
 
 // Client information sent with authentication requests
@@ -219,18 +223,18 @@ message ClientInfo {
 
 // Info returned on successful auth
 message UserSnapshot {
-  core.UUID              user_id          = 1;
-  string                 display_name     = 2;
-  string                 email            = 3;
-  string                 phone            = 4; // User's phone (E.164 format)
-  core.UserRole          role             = 5;
-  core.UserStatus        status           = 6; // Account status
-  bool                   email_verified   = 7; // Email verification status
-  bool                   phone_verified   = 8; // Phone verification status
-  bool                   mfa_enabled      = 9; // Whether MFA is enabled for this account
+  core.UUID user_id = 1;
+  string display_name = 2;
+  string email = 3;
+  string phone = 4; // User's phone (E.164 format)
+  core.UserRole role = 5;
+  core.UserStatus status = 6; // Account status
+  bool email_verified = 7; // Email verification status
+  bool phone_verified = 8; // Phone verification status
+  bool mfa_enabled = 9; // Whether MFA is enabled for this account
   repeated OAuthProvider linked_providers = 10; // Linked OAuth providers
-  string                 avatar_url       = 11; // User's avatar URL
-  bool                   has_password     = 12; // Whether user has a password set
+  string avatar_url = 11; // User's avatar URL
+  bool has_password = 12; // Whether user has a password set
 }
 
 // Account lockout information
@@ -365,8 +369,8 @@ message RefreshTokensRequest {
 message ValidateCredentialsRequest {}
 
 message ValidateCredentialsResponse {
-  bool         valid = 1;
-  UserSnapshot user  = 2;
+  bool valid = 1;
+  UserSnapshot user = 2;
 }
 
 message SignOutRequest {}
@@ -436,10 +440,10 @@ message ListLinkedProvidersResponse {
 }
 
 message LinkedProvider {
-  OAuthProvider             provider         = 1;
-  string                    provider_user_id = 2; // Provider's user ID
-  string                    email            = 3; // Email from provider (if available)
-  google.protobuf.Timestamp linked_at        = 4;
+  OAuthProvider provider = 1;
+  string provider_user_id = 2; // Provider's user ID
+  string email = 3; // Email from provider (if available)
+  google.protobuf.Timestamp linked_at = 4;
 }
 
 // =============================================================================
@@ -492,6 +496,12 @@ message ConfirmVerificationRequest {
 
   // Type of verification
   VerificationType type = 2 [ (validate.rules).enum = {not_in : [ 0 ]} ];
+
+  // Installation ID for session creation
+  core.UUID installation_id = 3 [ (validate.rules).message.required = true ];
+
+  // Client info for session (enables auto-login after verification)
+  ClientInfo client_info = 4 [ (validate.rules).message.required = true ];
 }
 
 // =============================================================================
@@ -513,8 +523,8 @@ message GetMfaStatusResponse {
 
 // Status of a configured MFA method
 message MfaMethodStatus {
-  MfaMethod method  = 1;
-  bool      enabled = 2;
+  MfaMethod method = 1;
+  bool enabled = 2;
 
   // Masked hint for this method
   string hint = 3;
@@ -563,7 +573,7 @@ message ConfirmMfaSetupRequest {
 message ConfirmMfaSetupResponse {
   oneof result {
     MfaSetupSuccess success = 1;
-    MfaSetupError   error   = 2;
+    MfaSetupError error = 2;
   }
 }
 
@@ -572,7 +582,7 @@ message MfaSetupSuccess { repeated string recovery_codes = 1; }
 
 message MfaSetupError {
   string message = 1; // Error message if failed
-  string code    = 2;
+  string code = 2;
 }
 
 // Disable MFA request

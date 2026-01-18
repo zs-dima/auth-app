@@ -75,3 +75,6 @@ pubspec_overrides.yaml
 
 # FVM Version Cache
 .fvm/
+
+# Firebase
+.firebase

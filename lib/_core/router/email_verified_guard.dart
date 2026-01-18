@@ -2,14 +2,20 @@ import 'dart:async';
 
 import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/_core/router/routes.dart';
+import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:octopus/octopus.dart';
 
 /// Guard that intercepts email-verified route:
-/// extracts status/code, queues message, removes route.
+/// - gRPC flow: extracts token, calls confirmVerification API for auto-login
+/// - REST fallback: handles success/status parameter, shows message (manual login required)
 class EmailVerifiedGuard extends OctopusGuard {
-  EmailVerifiedGuard({required this.messageController});
+  EmailVerifiedGuard({
+    required this.messageController,
+    required this.authenticationController,
+  });
 
   final AppMessageController messageController;
+  final AuthenticationController authenticationController;
 
   @override
   FutureOr<OctopusState> call(
@@ -20,20 +26,35 @@ class EmailVerifiedGuard extends OctopusGuard {
     final node = state.findByName(Routes.emailVerified.name);
     if (node == null) return state;
 
-    final status = state.arguments.remove(RouteNode.status) ?? node.arguments[RouteNode.status];
+    final token = state.arguments.remove(RouteNode.token) ?? node.arguments[RouteNode.token];
     state.arguments.remove(RouteNode.code);
 
-    if (status == 'success') {
-      messageController.showAppMessage('Your email has been successfully verified.');
+    if (token != null && token.isNotEmpty) {
+      // gRPC flow: Call confirmVerification for auto-login
+      authenticationController.confirmVerification(
+        token: token,
+        type: .email,
+        onSuccess: () {
+          messageController.showAppMessage('Your email has been successfully verified.');
+        },
+      );
     } else {
-      final code = node.arguments[RouteNode.code];
-      final msg = switch (code) {
-        'invalid_token' ||
-        'expired_token' => 'This verification link is no longer valid. Please request a new verification email.',
-        'internal_error' => 'An error occurred. Please try again later.',
-        _ => 'Email verification failed.',
-      };
-      messageController.showAppError(msg);
+      // REST fallback: Handle success/status parameter (manual login required)
+      final success = state.arguments.remove(RouteNode.success) ?? node.arguments[RouteNode.success];
+      final status = state.arguments.remove(RouteNode.status) ?? node.arguments[RouteNode.status];
+
+      if (success == 'true' || status == 'success') {
+        messageController.showAppMessage('Your email has been verified. Please sign in.');
+      } else {
+        final code = node.arguments[RouteNode.code];
+        final msg = switch (code) {
+          'invalid_token' ||
+          'expired_token' => 'This verification link is no longer valid. Please request a new verification email.',
+          'internal_error' => 'An error occurred. Please try again later.',
+          _ => 'Email verification failed.',
+        };
+        messageController.showAppError(msg);
+      }
     }
 
     // Remove email-verified route. AuthenticationGuard will redirect.

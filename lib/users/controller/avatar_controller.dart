@@ -5,6 +5,7 @@ import 'package:auth_app/users/controller/upload_image_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
+import 'package:core_tool/core_tool.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 
@@ -104,6 +105,6 @@ final class AvatarController extends StateController<AvatarState>
     if (userId.isEmpty) return '';
 
     final version = _versions[userId] ?? DateTime.now().millisecondsSinceEpoch;
-    return '$_s3Url/users/$userId/avatar.webp?v=$version';
+    return '${_s3Url.trimEnd2('/')}/users/$userId/avatar.webp?v=$version';
   }
 }

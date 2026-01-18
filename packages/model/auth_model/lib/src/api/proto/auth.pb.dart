@@ -2068,10 +2068,14 @@ class ConfirmVerificationRequest extends $pb.GeneratedMessage {
   factory ConfirmVerificationRequest({
     $core.String? token,
     VerificationType? type,
+    $3.UUID? installationId,
+    ClientInfo? clientInfo,
   }) {
     final result = create();
     if (token != null) result.token = token;
     if (type != null) result.type = type;
+    if (installationId != null) result.installationId = installationId;
+    if (clientInfo != null) result.clientInfo = clientInfo;
     return result;
   }
 
@@ -2088,6 +2092,8 @@ class ConfirmVerificationRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'token')
     ..aE<VerificationType>(2, _omitFieldNames ? '' : 'type', enumValues: VerificationType.values)
+    ..aOM<$3.UUID>(3, _omitFieldNames ? '' : 'installationId', subBuilder: $3.UUID.create)
+    ..aOM<ClientInfo>(4, _omitFieldNames ? '' : 'clientInfo', subBuilder: ClientInfo.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2127,6 +2133,30 @@ class ConfirmVerificationRequest extends $pb.GeneratedMessage {
   $core.bool hasType() => $_has(1);
   @$pb.TagNumber(2)
   void clearType() => $_clearField(2);
+
+  /// Installation ID for session creation
+  @$pb.TagNumber(3)
+  $3.UUID get installationId => $_getN(2);
+  @$pb.TagNumber(3)
+  set installationId($3.UUID value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasInstallationId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearInstallationId() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $3.UUID ensureInstallationId() => $_ensure(2);
+
+  /// Client info for session (enables auto-login after verification)
+  @$pb.TagNumber(4)
+  ClientInfo get clientInfo => $_getN(3);
+  @$pb.TagNumber(4)
+  set clientInfo(ClientInfo value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasClientInfo() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearClientInfo() => $_clearField(4);
+  @$pb.TagNumber(4)
+  ClientInfo ensureClientInfo() => $_ensure(3);
 }
 
 /// =============================================================================

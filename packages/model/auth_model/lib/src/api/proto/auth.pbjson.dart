@@ -543,6 +543,8 @@ const ConfirmVerificationRequest$json = {
   '2': [
     {'1': 'token', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'token'},
     {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.auth.VerificationType', '8': {}, '10': 'type'},
+    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
   ],
 };
 
@@ -550,7 +552,9 @@ const ConfirmVerificationRequest$json = {
 final $typed_data.Uint8List confirmVerificationRequestDescriptor =
     $convert.base64Decode('ChpDb25maXJtVmVyaWZpY2F0aW9uUmVxdWVzdBIdCgV0b2tlbhgBIAEoCUIH+kIEcgIQAVIFdG'
         '9rZW4SNAoEdHlwZRgCIAEoDjIWLmF1dGguVmVyaWZpY2F0aW9uVHlwZUII+kIFggECIABSBHR5'
-        'cGU=');
+        'cGUSPQoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMgouY29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdG'
+        'FsbGF0aW9uSWQSOwoLY2xpZW50X2luZm8YBCABKAsyEC5hdXRoLkNsaWVudEluZm9CCPpCBYoB'
+        'AhABUgpjbGllbnRJbmZv');
 
 @$core.Deprecated('Use getMfaStatusRequestDescriptor instead')
 const GetMfaStatusRequest$json = {
