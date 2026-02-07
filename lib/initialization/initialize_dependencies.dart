@@ -274,15 +274,15 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       },
       unauthenticatedPaths: const <String>{
         // gRPC public methods (authentication)
-        '/auth.AuthService/Authenticate',
-        '/auth.AuthService/SignUp',
-        '/auth.AuthService/SignOut',
-        '/auth.AuthService/RecoveryStart',
-        '/auth.AuthService/RecoveryConfirm',
-        '/auth.AuthService/RefreshTokens',
+        '/auth.v1.AuthService/Authenticate',
+        '/auth.v1.AuthService/SignUp',
+        '/auth.v1.AuthService/SignOut',
+        '/auth.v1.AuthService/RecoveryStart',
+        '/auth.v1.AuthService/RecoveryConfirm',
+        '/auth.v1.AuthService/RefreshTokens',
         // gRPC public methods (OAuth)
-        '/auth.AuthService/GetOAuthUrl',
-        '/auth.AuthService/ExchangeOAuthCode',
+        '/auth.v1.AuthService/GetOAuthUrl',
+        '/auth.v1.AuthService/ExchangeOAuthCode',
       },
     );
 

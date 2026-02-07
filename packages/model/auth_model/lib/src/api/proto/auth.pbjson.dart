@@ -128,7 +128,7 @@ const ClientInfo$json = {
     {'1': 'device_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceName'},
     {'1': 'device_type', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'deviceType'},
     {'1': 'client_version', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'clientVersion'},
-    {'1': 'metadata', '3': 5, '4': 3, '5': 11, '6': '.auth.ClientInfo.MetadataEntry', '10': 'metadata'},
+    {'1': 'metadata', '3': 5, '4': 3, '5': 11, '6': '.auth.v1.ClientInfo.MetadataEntry', '10': 'metadata'},
   ],
   '3': [ClientInfo_MetadataEntry$json],
 };
@@ -148,24 +148,24 @@ final $typed_data.Uint8List clientInfoDescriptor =
     $convert.base64Decode('CgpDbGllbnRJbmZvEicKCWRldmljZV9pZBgBIAEoCUIK+kIHcgUQARj/AVIIZGV2aWNlSWQSKQ'
         'oLZGV2aWNlX25hbWUYAiABKAlCCPpCBXIDGP8BUgpkZXZpY2VOYW1lEigKC2RldmljZV90eXBl'
         'GAMgASgJQgf6QgRyAhgyUgpkZXZpY2VUeXBlEi4KDmNsaWVudF92ZXJzaW9uGAQgASgJQgf6Qg'
-        'RyAhhkUg1jbGllbnRWZXJzaW9uEjoKCG1ldGFkYXRhGAUgAygLMh4uYXV0aC5DbGllbnRJbmZv'
-        'Lk1ldGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUg'
-        'NrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
+        'RyAhhkUg1jbGllbnRWZXJzaW9uEj0KCG1ldGFkYXRhGAUgAygLMiEuYXV0aC52MS5DbGllbnRJ'
+        'bmZvLk1ldGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgAS'
+        'gJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
 
 @$core.Deprecated('Use userSnapshotDescriptor instead')
 const UserSnapshot$json = {
   '1': 'UserSnapshot',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.UUID', '10': 'userId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 11, '6': '.core.v1.UUID', '10': 'userId'},
     {'1': 'display_name', '3': 2, '4': 1, '5': 9, '10': 'displayName'},
     {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
     {'1': 'phone', '3': 4, '4': 1, '5': 9, '10': 'phone'},
-    {'1': 'role', '3': 5, '4': 1, '5': 14, '6': '.core.UserRole', '10': 'role'},
-    {'1': 'status', '3': 6, '4': 1, '5': 14, '6': '.core.UserStatus', '10': 'status'},
+    {'1': 'role', '3': 5, '4': 1, '5': 14, '6': '.core.v1.UserRole', '10': 'role'},
+    {'1': 'status', '3': 6, '4': 1, '5': 14, '6': '.core.v1.UserStatus', '10': 'status'},
     {'1': 'email_verified', '3': 7, '4': 1, '5': 8, '10': 'emailVerified'},
     {'1': 'phone_verified', '3': 8, '4': 1, '5': 8, '10': 'phoneVerified'},
     {'1': 'mfa_enabled', '3': 9, '4': 1, '5': 8, '10': 'mfaEnabled'},
-    {'1': 'linked_providers', '3': 10, '4': 3, '5': 14, '6': '.auth.OAuthProvider', '10': 'linkedProviders'},
+    {'1': 'linked_providers', '3': 10, '4': 3, '5': 14, '6': '.auth.v1.OAuthProvider', '10': 'linkedProviders'},
     {'1': 'avatar_url', '3': 11, '4': 1, '5': 9, '10': 'avatarUrl'},
     {'1': 'has_password', '3': 12, '4': 1, '5': 8, '10': 'hasPassword'},
   ],
@@ -173,15 +173,15 @@ const UserSnapshot$json = {
 
 /// Descriptor for `UserSnapshot`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List userSnapshotDescriptor =
-    $convert.base64Decode('CgxVc2VyU25hcHNob3QSIwoHdXNlcl9pZBgBIAEoCzIKLmNvcmUuVVVJRFIGdXNlcklkEiEKDG'
-        'Rpc3BsYXlfbmFtZRgCIAEoCVILZGlzcGxheU5hbWUSFAoFZW1haWwYAyABKAlSBWVtYWlsEhQK'
-        'BXBob25lGAQgASgJUgVwaG9uZRIiCgRyb2xlGAUgASgOMg4uY29yZS5Vc2VyUm9sZVIEcm9sZR'
-        'IoCgZzdGF0dXMYBiABKA4yEC5jb3JlLlVzZXJTdGF0dXNSBnN0YXR1cxIlCg5lbWFpbF92ZXJp'
-        'ZmllZBgHIAEoCFINZW1haWxWZXJpZmllZBIlCg5waG9uZV92ZXJpZmllZBgIIAEoCFINcGhvbm'
-        'VWZXJpZmllZBIfCgttZmFfZW5hYmxlZBgJIAEoCFIKbWZhRW5hYmxlZBI+ChBsaW5rZWRfcHJv'
-        'dmlkZXJzGAogAygOMhMuYXV0aC5PQXV0aFByb3ZpZGVyUg9saW5rZWRQcm92aWRlcnMSHQoKYX'
-        'ZhdGFyX3VybBgLIAEoCVIJYXZhdGFyVXJsEiEKDGhhc19wYXNzd29yZBgMIAEoCFILaGFzUGFz'
-        'c3dvcmQ=');
+    $convert.base64Decode('CgxVc2VyU25hcHNob3QSJgoHdXNlcl9pZBgBIAEoCzINLmNvcmUudjEuVVVJRFIGdXNlcklkEi'
+        'EKDGRpc3BsYXlfbmFtZRgCIAEoCVILZGlzcGxheU5hbWUSFAoFZW1haWwYAyABKAlSBWVtYWls'
+        'EhQKBXBob25lGAQgASgJUgVwaG9uZRIlCgRyb2xlGAUgASgOMhEuY29yZS52MS5Vc2VyUm9sZV'
+        'IEcm9sZRIrCgZzdGF0dXMYBiABKA4yEy5jb3JlLnYxLlVzZXJTdGF0dXNSBnN0YXR1cxIlCg5l'
+        'bWFpbF92ZXJpZmllZBgHIAEoCFINZW1haWxWZXJpZmllZBIlCg5waG9uZV92ZXJpZmllZBgIIA'
+        'EoCFINcGhvbmVWZXJpZmllZBIfCgttZmFfZW5hYmxlZBgJIAEoCFIKbWZhRW5hYmxlZBJBChBs'
+        'aW5rZWRfcHJvdmlkZXJzGAogAygOMhYuYXV0aC52MS5PQXV0aFByb3ZpZGVyUg9saW5rZWRQcm'
+        '92aWRlcnMSHQoKYXZhdGFyX3VybBgLIAEoCVIJYXZhdGFyVXJsEiEKDGhhc19wYXNzd29yZBgM'
+        'IAEoCFILaGFzUGFzc3dvcmQ=');
 
 @$core.Deprecated('Use lockoutInfoDescriptor instead')
 const LockoutInfo$json = {
@@ -206,7 +206,7 @@ const MfaChallenge$json = {
   '1': 'MfaChallenge',
   '2': [
     {'1': 'challenge_token', '3': 1, '4': 1, '5': 9, '10': 'challengeToken'},
-    {'1': 'available_methods', '3': 2, '4': 3, '5': 11, '6': '.auth.MfaMethodInfo', '10': 'availableMethods'},
+    {'1': 'available_methods', '3': 2, '4': 3, '5': 11, '6': '.auth.v1.MfaMethodInfo', '10': 'availableMethods'},
     {'1': 'expires_at', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'expiresAt'},
   ],
 };
@@ -214,15 +214,15 @@ const MfaChallenge$json = {
 /// Descriptor for `MfaChallenge`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mfaChallengeDescriptor =
     $convert.base64Decode('CgxNZmFDaGFsbGVuZ2USJwoPY2hhbGxlbmdlX3Rva2VuGAEgASgJUg5jaGFsbGVuZ2VUb2tlbh'
-        'JAChFhdmFpbGFibGVfbWV0aG9kcxgCIAMoCzITLmF1dGguTWZhTWV0aG9kSW5mb1IQYXZhaWxh'
-        'YmxlTWV0aG9kcxI5CgpleHBpcmVzX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdG'
-        'FtcFIJZXhwaXJlc0F0');
+        'JDChFhdmFpbGFibGVfbWV0aG9kcxgCIAMoCzIWLmF1dGgudjEuTWZhTWV0aG9kSW5mb1IQYXZh'
+        'aWxhYmxlTWV0aG9kcxI5CgpleHBpcmVzX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbW'
+        'VzdGFtcFIJZXhwaXJlc0F0');
 
 @$core.Deprecated('Use mfaMethodInfoDescriptor instead')
 const MfaMethodInfo$json = {
   '1': 'MfaMethodInfo',
   '2': [
-    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.MfaMethod', '10': 'method'},
+    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.MfaMethod', '10': 'method'},
     {'1': 'hint', '3': 2, '4': 1, '5': 9, '10': 'hint'},
     {'1': 'is_default', '3': 3, '4': 1, '5': 8, '10': 'isDefault'},
   ],
@@ -230,94 +230,97 @@ const MfaMethodInfo$json = {
 
 /// Descriptor for `MfaMethodInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mfaMethodInfoDescriptor =
-    $convert.base64Decode('Cg1NZmFNZXRob2RJbmZvEicKBm1ldGhvZBgBIAEoDjIPLmF1dGguTWZhTWV0aG9kUgZtZXRob2'
-        'QSEgoEaGludBgCIAEoCVIEaGludBIdCgppc19kZWZhdWx0GAMgASgIUglpc0RlZmF1bHQ=');
+    $convert.base64Decode('Cg1NZmFNZXRob2RJbmZvEioKBm1ldGhvZBgBIAEoDjISLmF1dGgudjEuTWZhTWV0aG9kUgZtZX'
+        'Rob2QSEgoEaGludBgCIAEoCVIEaGludBIdCgppc19kZWZhdWx0GAMgASgIUglpc0RlZmF1bHQ=');
 
 @$core.Deprecated('Use authenticateRequestDescriptor instead')
 const AuthenticateRequest$json = {
   '1': 'AuthenticateRequest',
   '2': [
     {'1': 'identifier', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'identifier'},
-    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.IdentifierType', '10': 'identifierType'},
+    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.v1.IdentifierType', '10': 'identifierType'},
     {'1': 'password', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'password'},
-    {'1': 'installation_id', '3': 4, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
-    {'1': 'client_info', '3': 5, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
+    {'1': 'installation_id', '3': 4, '4': 1, '5': 11, '6': '.core.v1.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'client_info', '3': 5, '4': 1, '5': 11, '6': '.auth.v1.ClientInfo', '8': {}, '10': 'clientInfo'},
   ],
 };
 
 /// Descriptor for `AuthenticateRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List authenticateRequestDescriptor =
     $convert.base64Decode('ChNBdXRoZW50aWNhdGVSZXF1ZXN0EioKCmlkZW50aWZpZXIYASABKAlCCvpCB3IFEAEY/gFSCm'
-        'lkZW50aWZpZXISPQoPaWRlbnRpZmllcl90eXBlGAIgASgOMhQuYXV0aC5JZGVudGlmaWVyVHlw'
-        'ZVIOaWRlbnRpZmllclR5cGUSJgoIcGFzc3dvcmQYAyABKAlCCvpCB3IFEAEYgAFSCHBhc3N3b3'
-        'JkEj0KD2luc3RhbGxhdGlvbl9pZBgEIAEoCzIKLmNvcmUuVVVJREII+kIFigECEAFSDmluc3Rh'
-        'bGxhdGlvbklkEjsKC2NsaWVudF9pbmZvGAUgASgLMhAuYXV0aC5DbGllbnRJbmZvQgj6QgWKAQ'
-        'IQAVIKY2xpZW50SW5mbw==');
+        'lkZW50aWZpZXISQAoPaWRlbnRpZmllcl90eXBlGAIgASgOMhcuYXV0aC52MS5JZGVudGlmaWVy'
+        'VHlwZVIOaWRlbnRpZmllclR5cGUSJgoIcGFzc3dvcmQYAyABKAlCCvpCB3IFEAEYgAFSCHBhc3'
+        'N3b3JkEkAKD2luc3RhbGxhdGlvbl9pZBgEIAEoCzINLmNvcmUudjEuVVVJREII+kIFigECEAFS'
+        'Dmluc3RhbGxhdGlvbklkEj4KC2NsaWVudF9pbmZvGAUgASgLMhMuYXV0aC52MS5DbGllbnRJbm'
+        'ZvQgj6QgWKAQIQAVIKY2xpZW50SW5mbw==');
 
 @$core.Deprecated('Use authResponseDescriptor instead')
 const AuthResponse$json = {
   '1': 'AuthResponse',
   '2': [
-    {'1': 'status', '3': 1, '4': 1, '5': 14, '6': '.auth.AuthStatus', '10': 'status'},
-    {'1': 'tokens', '3': 2, '4': 1, '5': 11, '6': '.auth.TokenPair', '10': 'tokens'},
-    {'1': 'user', '3': 3, '4': 1, '5': 11, '6': '.auth.UserSnapshot', '10': 'user'},
-    {'1': 'mfa_challenge', '3': 4, '4': 1, '5': 11, '6': '.auth.MfaChallenge', '10': 'mfaChallenge'},
-    {'1': 'lockout_info', '3': 5, '4': 1, '5': 11, '6': '.auth.LockoutInfo', '10': 'lockoutInfo'},
+    {'1': 'status', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.AuthStatus', '10': 'status'},
+    {'1': 'tokens', '3': 2, '4': 1, '5': 11, '6': '.auth.v1.TokenPair', '10': 'tokens'},
+    {'1': 'user', '3': 3, '4': 1, '5': 11, '6': '.auth.v1.UserSnapshot', '10': 'user'},
+    {'1': 'mfa_challenge', '3': 4, '4': 1, '5': 11, '6': '.auth.v1.MfaChallenge', '10': 'mfaChallenge'},
+    {'1': 'lockout_info', '3': 5, '4': 1, '5': 11, '6': '.auth.v1.LockoutInfo', '10': 'lockoutInfo'},
     {'1': 'message', '3': 6, '4': 1, '5': 9, '10': 'message'},
   ],
 };
 
 /// Descriptor for `AuthResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List authResponseDescriptor =
-    $convert.base64Decode('CgxBdXRoUmVzcG9uc2USKAoGc3RhdHVzGAEgASgOMhAuYXV0aC5BdXRoU3RhdHVzUgZzdGF0dX'
-        'MSJwoGdG9rZW5zGAIgASgLMg8uYXV0aC5Ub2tlblBhaXJSBnRva2VucxImCgR1c2VyGAMgASgL'
-        'MhIuYXV0aC5Vc2VyU25hcHNob3RSBHVzZXISNwoNbWZhX2NoYWxsZW5nZRgEIAEoCzISLmF1dG'
-        'guTWZhQ2hhbGxlbmdlUgxtZmFDaGFsbGVuZ2USNAoMbG9ja291dF9pbmZvGAUgASgLMhEuYXV0'
-        'aC5Mb2Nrb3V0SW5mb1ILbG9ja291dEluZm8SGAoHbWVzc2FnZRgGIAEoCVIHbWVzc2FnZQ==');
+    $convert.base64Decode('CgxBdXRoUmVzcG9uc2USKwoGc3RhdHVzGAEgASgOMhMuYXV0aC52MS5BdXRoU3RhdHVzUgZzdG'
+        'F0dXMSKgoGdG9rZW5zGAIgASgLMhIuYXV0aC52MS5Ub2tlblBhaXJSBnRva2VucxIpCgR1c2Vy'
+        'GAMgASgLMhUuYXV0aC52MS5Vc2VyU25hcHNob3RSBHVzZXISOgoNbWZhX2NoYWxsZW5nZRgEIA'
+        'EoCzIVLmF1dGgudjEuTWZhQ2hhbGxlbmdlUgxtZmFDaGFsbGVuZ2USNwoMbG9ja291dF9pbmZv'
+        'GAUgASgLMhQuYXV0aC52MS5Mb2Nrb3V0SW5mb1ILbG9ja291dEluZm8SGAoHbWVzc2FnZRgGIA'
+        'EoCVIHbWVzc2FnZQ==');
 
 @$core.Deprecated('Use signUpRequestDescriptor instead')
 const SignUpRequest$json = {
   '1': 'SignUpRequest',
   '2': [
     {'1': 'identifier', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'identifier'},
-    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.IdentifierType', '10': 'identifierType'},
+    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.v1.IdentifierType', '10': 'identifierType'},
     {'1': 'password', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'password'},
     {'1': 'display_name', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'displayName'},
-    {'1': 'installation_id', '3': 5, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
-    {'1': 'client_info', '3': 6, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
+    {'1': 'installation_id', '3': 5, '4': 1, '5': 11, '6': '.core.v1.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'client_info', '3': 6, '4': 1, '5': 11, '6': '.auth.v1.ClientInfo', '8': {}, '10': 'clientInfo'},
     {'1': 'locale', '3': 7, '4': 1, '5': 9, '8': {}, '10': 'locale'},
     {'1': 'timezone', '3': 8, '4': 1, '5': 9, '8': {}, '10': 'timezone'},
+    {'1': 'idempotency_key', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'idempotencyKey'},
   ],
 };
 
 /// Descriptor for `SignUpRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List signUpRequestDescriptor =
     $convert.base64Decode('Cg1TaWduVXBSZXF1ZXN0EioKCmlkZW50aWZpZXIYASABKAlCCvpCB3IFEAEY/gFSCmlkZW50aW'
-        'ZpZXISPQoPaWRlbnRpZmllcl90eXBlGAIgASgOMhQuYXV0aC5JZGVudGlmaWVyVHlwZVIOaWRl'
-        'bnRpZmllclR5cGUSJgoIcGFzc3dvcmQYAyABKAlCCvpCB3IFEAgYgAFSCHBhc3N3b3JkEi0KDG'
-        'Rpc3BsYXlfbmFtZRgEIAEoCUIK+kIHcgUQARj/AVILZGlzcGxheU5hbWUSPQoPaW5zdGFsbGF0'
-        'aW9uX2lkGAUgASgLMgouY29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSOwoLY2'
-        'xpZW50X2luZm8YBiABKAsyEC5hdXRoLkNsaWVudEluZm9CCPpCBYoBAhABUgpjbGllbnRJbmZv'
-        'Eh8KBmxvY2FsZRgHIAEoCUIH+kIEcgIYI1IGbG9jYWxlEiMKCHRpbWV6b25lGAggASgJQgf6Qg'
-        'RyAhhAUgh0aW1lem9uZQ==');
+        'ZpZXISQAoPaWRlbnRpZmllcl90eXBlGAIgASgOMhcuYXV0aC52MS5JZGVudGlmaWVyVHlwZVIO'
+        'aWRlbnRpZmllclR5cGUSJgoIcGFzc3dvcmQYAyABKAlCCvpCB3IFEAgYgAFSCHBhc3N3b3JkEi'
+        '0KDGRpc3BsYXlfbmFtZRgEIAEoCUIK+kIHcgUQARj/AVILZGlzcGxheU5hbWUSQAoPaW5zdGFs'
+        'bGF0aW9uX2lkGAUgASgLMg0uY29yZS52MS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSW'
+        'QSPgoLY2xpZW50X2luZm8YBiABKAsyEy5hdXRoLnYxLkNsaWVudEluZm9CCPpCBYoBAhABUgpj'
+        'bGllbnRJbmZvEh8KBmxvY2FsZRgHIAEoCUIH+kIEcgIYI1IGbG9jYWxlEiMKCHRpbWV6b25lGA'
+        'ggASgJQgf6QgRyAhhAUgh0aW1lem9uZRIwCg9pZGVtcG90ZW5jeV9rZXkYCSABKAlCB/pCBHIC'
+        'GEBSDmlkZW1wb3RlbmN5S2V5');
 
 @$core.Deprecated('Use verifyMfaRequestDescriptor instead')
 const VerifyMfaRequest$json = {
   '1': 'VerifyMfaRequest',
   '2': [
     {'1': 'challenge_token', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'challengeToken'},
-    {'1': 'method', '3': 2, '4': 1, '5': 14, '6': '.auth.MfaMethod', '8': {}, '10': 'method'},
+    {'1': 'method', '3': 2, '4': 1, '5': 14, '6': '.auth.v1.MfaMethod', '8': {}, '10': 'method'},
     {'1': 'code', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'code'},
-    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.ClientInfo', '10': 'clientInfo'},
+    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.v1.ClientInfo', '10': 'clientInfo'},
   ],
 };
 
 /// Descriptor for `VerifyMfaRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List verifyMfaRequestDescriptor =
     $convert.base64Decode('ChBWZXJpZnlNZmFSZXF1ZXN0EjAKD2NoYWxsZW5nZV90b2tlbhgBIAEoCUIH+kIEcgIQAVIOY2'
-        'hhbGxlbmdlVG9rZW4SMQoGbWV0aG9kGAIgASgOMg8uYXV0aC5NZmFNZXRob2RCCPpCBYIBAiAA'
-        'UgZtZXRob2QSHQoEY29kZRgDIAEoCUIJ+kIGcgQQBhggUgRjb2RlEjEKC2NsaWVudF9pbmZvGA'
-        'QgASgLMhAuYXV0aC5DbGllbnRJbmZvUgpjbGllbnRJbmZv');
+        'hhbGxlbmdlVG9rZW4SNAoGbWV0aG9kGAIgASgOMhIuYXV0aC52MS5NZmFNZXRob2RCCPpCBYIB'
+        'AiAAUgZtZXRob2QSHQoEY29kZRgDIAEoCUIJ+kIGcgQQBhggUgRjb2RlEjQKC2NsaWVudF9pbm'
+        'ZvGAQgASgLMhMuYXV0aC52MS5DbGllbnRJbmZvUgpjbGllbnRJbmZv');
 
 @$core.Deprecated('Use refreshTokensRequestDescriptor instead')
 const RefreshTokensRequest$json = {
@@ -346,14 +349,14 @@ const ValidateCredentialsResponse$json = {
   '1': 'ValidateCredentialsResponse',
   '2': [
     {'1': 'valid', '3': 1, '4': 1, '5': 8, '10': 'valid'},
-    {'1': 'user', '3': 2, '4': 1, '5': 11, '6': '.auth.UserSnapshot', '10': 'user'},
+    {'1': 'user', '3': 2, '4': 1, '5': 11, '6': '.auth.v1.UserSnapshot', '10': 'user'},
   ],
 };
 
 /// Descriptor for `ValidateCredentialsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List validateCredentialsResponseDescriptor =
-    $convert.base64Decode('ChtWYWxpZGF0ZUNyZWRlbnRpYWxzUmVzcG9uc2USFAoFdmFsaWQYASABKAhSBXZhbGlkEiYKBH'
-        'VzZXIYAiABKAsyEi5hdXRoLlVzZXJTbmFwc2hvdFIEdXNlcg==');
+    $convert.base64Decode('ChtWYWxpZGF0ZUNyZWRlbnRpYWxzUmVzcG9uc2USFAoFdmFsaWQYASABKAhSBXZhbGlkEikKBH'
+        'VzZXIYAiABKAsyFS5hdXRoLnYxLlVzZXJTbmFwc2hvdFIEdXNlcg==');
 
 @$core.Deprecated('Use signOutRequestDescriptor instead')
 const SignOutRequest$json = {
@@ -367,7 +370,7 @@ final $typed_data.Uint8List signOutRequestDescriptor = $convert.base64Decode('Cg
 const GetOAuthUrlRequest$json = {
   '1': 'GetOAuthUrlRequest',
   '2': [
-    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.OAuthProvider', '8': {}, '10': 'provider'},
+    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.OAuthProvider', '8': {}, '10': 'provider'},
     {'1': 'redirect_uri', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'redirectUri'},
     {'1': 'scopes', '3': 3, '4': 3, '5': 9, '10': 'scopes'},
     {'1': 'state_data', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'stateData'},
@@ -376,10 +379,10 @@ const GetOAuthUrlRequest$json = {
 
 /// Descriptor for `GetOAuthUrlRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getOAuthUrlRequestDescriptor =
-    $convert.base64Decode('ChJHZXRPQXV0aFVybFJlcXVlc3QSOQoIcHJvdmlkZXIYASABKA4yEy5hdXRoLk9BdXRoUHJvdm'
-        'lkZXJCCPpCBYIBAiAAUghwcm92aWRlchIrCgxyZWRpcmVjdF91cmkYAiABKAlCCPpCBXIDGIAQ'
-        'UgtyZWRpcmVjdFVyaRIWCgZzY29wZXMYAyADKAlSBnNjb3BlcxInCgpzdGF0ZV9kYXRhGAQgAS'
-        'gJQgj6QgVyAxiACFIJc3RhdGVEYXRh');
+    $convert.base64Decode('ChJHZXRPQXV0aFVybFJlcXVlc3QSPAoIcHJvdmlkZXIYASABKA4yFi5hdXRoLnYxLk9BdXRoUH'
+        'JvdmlkZXJCCPpCBYIBAiAAUghwcm92aWRlchIrCgxyZWRpcmVjdF91cmkYAiABKAlCCPpCBXID'
+        'GIAQUgtyZWRpcmVjdFVyaRIWCgZzY29wZXMYAyADKAlSBnNjb3BlcxInCgpzdGF0ZV9kYXRhGA'
+        'QgASgJQgj6QgVyAxiACFIJc3RhdGVEYXRh');
 
 @$core.Deprecated('Use getOAuthUrlResponseDescriptor instead')
 const GetOAuthUrlResponse$json = {
@@ -401,17 +404,17 @@ const ExchangeOAuthCodeRequest$json = {
   '2': [
     {'1': 'code', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'code'},
     {'1': 'state', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'state'},
-    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
-    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
+    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.v1.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.v1.ClientInfo', '8': {}, '10': 'clientInfo'},
   ],
 };
 
 /// Descriptor for `ExchangeOAuthCodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List exchangeOAuthCodeRequestDescriptor =
     $convert.base64Decode('ChhFeGNoYW5nZU9BdXRoQ29kZVJlcXVlc3QSGwoEY29kZRgBIAEoCUIH+kIEcgIQAVIEY29kZR'
-        'IdCgVzdGF0ZRgCIAEoCUIH+kIEcgIQAVIFc3RhdGUSPQoPaW5zdGFsbGF0aW9uX2lkGAMgASgL'
-        'MgouY29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSOwoLY2xpZW50X2luZm8YBC'
-        'ABKAsyEC5hdXRoLkNsaWVudEluZm9CCPpCBYoBAhABUgpjbGllbnRJbmZv');
+        'IdCgVzdGF0ZRgCIAEoCUIH+kIEcgIQAVIFc3RhdGUSQAoPaW5zdGFsbGF0aW9uX2lkGAMgASgL'
+        'Mg0uY29yZS52MS5VVUlEQgj6QgWKAQIQAVIOaW5zdGFsbGF0aW9uSWQSPgoLY2xpZW50X2luZm'
+        '8YBCABKAsyEy5hdXRoLnYxLkNsaWVudEluZm9CCPpCBYoBAhABUgpjbGllbnRJbmZv');
 
 @$core.Deprecated('Use linkOAuthProviderRequestDescriptor instead')
 const LinkOAuthProviderRequest$json = {
@@ -431,14 +434,14 @@ final $typed_data.Uint8List linkOAuthProviderRequestDescriptor =
 const UnlinkOAuthProviderRequest$json = {
   '1': 'UnlinkOAuthProviderRequest',
   '2': [
-    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.OAuthProvider', '8': {}, '10': 'provider'},
+    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.OAuthProvider', '8': {}, '10': 'provider'},
   ],
 };
 
 /// Descriptor for `UnlinkOAuthProviderRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List unlinkOAuthProviderRequestDescriptor =
-    $convert.base64Decode('ChpVbmxpbmtPQXV0aFByb3ZpZGVyUmVxdWVzdBI5Cghwcm92aWRlchgBIAEoDjITLmF1dGguT0'
-        'F1dGhQcm92aWRlckII+kIFggECIABSCHByb3ZpZGVy');
+    $convert.base64Decode('ChpVbmxpbmtPQXV0aFByb3ZpZGVyUmVxdWVzdBI8Cghwcm92aWRlchgBIAEoDjIWLmF1dGgudj'
+        'EuT0F1dGhQcm92aWRlckII+kIFggECIABSCHByb3ZpZGVy');
 
 @$core.Deprecated('Use listLinkedProvidersRequestDescriptor instead')
 const ListLinkedProvidersRequest$json = {
@@ -453,20 +456,20 @@ final $typed_data.Uint8List listLinkedProvidersRequestDescriptor =
 const ListLinkedProvidersResponse$json = {
   '1': 'ListLinkedProvidersResponse',
   '2': [
-    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.auth.LinkedProvider', '10': 'providers'},
+    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.auth.v1.LinkedProvider', '10': 'providers'},
   ],
 };
 
 /// Descriptor for `ListLinkedProvidersResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listLinkedProvidersResponseDescriptor =
-    $convert.base64Decode('ChtMaXN0TGlua2VkUHJvdmlkZXJzUmVzcG9uc2USMgoJcHJvdmlkZXJzGAEgAygLMhQuYXV0aC'
-        '5MaW5rZWRQcm92aWRlclIJcHJvdmlkZXJz');
+    $convert.base64Decode('ChtMaXN0TGlua2VkUHJvdmlkZXJzUmVzcG9uc2USNQoJcHJvdmlkZXJzGAEgAygLMhcuYXV0aC'
+        '52MS5MaW5rZWRQcm92aWRlclIJcHJvdmlkZXJz');
 
 @$core.Deprecated('Use linkedProviderDescriptor instead')
 const LinkedProvider$json = {
   '1': 'LinkedProvider',
   '2': [
-    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.OAuthProvider', '10': 'provider'},
+    {'1': 'provider', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.OAuthProvider', '10': 'provider'},
     {'1': 'provider_user_id', '3': 2, '4': 1, '5': 9, '10': 'providerUserId'},
     {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
     {'1': 'linked_at', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'linkedAt'},
@@ -475,25 +478,27 @@ const LinkedProvider$json = {
 
 /// Descriptor for `LinkedProvider`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List linkedProviderDescriptor =
-    $convert.base64Decode('Cg5MaW5rZWRQcm92aWRlchIvCghwcm92aWRlchgBIAEoDjITLmF1dGguT0F1dGhQcm92aWRlcl'
-        'IIcHJvdmlkZXISKAoQcHJvdmlkZXJfdXNlcl9pZBgCIAEoCVIOcHJvdmlkZXJVc2VySWQSFAoF'
-        'ZW1haWwYAyABKAlSBWVtYWlsEjcKCWxpbmtlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi'
-        '5UaW1lc3RhbXBSCGxpbmtlZEF0');
+    $convert.base64Decode('Cg5MaW5rZWRQcm92aWRlchIyCghwcm92aWRlchgBIAEoDjIWLmF1dGgudjEuT0F1dGhQcm92aW'
+        'RlclIIcHJvdmlkZXISKAoQcHJvdmlkZXJfdXNlcl9pZBgCIAEoCVIOcHJvdmlkZXJVc2VySWQS'
+        'FAoFZW1haWwYAyABKAlSBWVtYWlsEjcKCWxpbmtlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2'
+        'J1Zi5UaW1lc3RhbXBSCGxpbmtlZEF0');
 
 @$core.Deprecated('Use recoveryStartRequestDescriptor instead')
 const RecoveryStartRequest$json = {
   '1': 'RecoveryStartRequest',
   '2': [
     {'1': 'identifier', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'identifier'},
-    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.IdentifierType', '10': 'identifierType'},
+    {'1': 'identifier_type', '3': 2, '4': 1, '5': 14, '6': '.auth.v1.IdentifierType', '10': 'identifierType'},
+    {'1': 'idempotency_key', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'idempotencyKey'},
   ],
 };
 
 /// Descriptor for `RecoveryStartRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List recoveryStartRequestDescriptor =
     $convert.base64Decode('ChRSZWNvdmVyeVN0YXJ0UmVxdWVzdBIqCgppZGVudGlmaWVyGAEgASgJQgr6QgdyBRABGP4BUg'
-        'ppZGVudGlmaWVyEj0KD2lkZW50aWZpZXJfdHlwZRgCIAEoDjIULmF1dGguSWRlbnRpZmllclR5'
-        'cGVSDmlkZW50aWZpZXJUeXBl');
+        'ppZGVudGlmaWVyEkAKD2lkZW50aWZpZXJfdHlwZRgCIAEoDjIXLmF1dGgudjEuSWRlbnRpZmll'
+        'clR5cGVSDmlkZW50aWZpZXJUeXBlEjAKD2lkZW1wb3RlbmN5X2tleRgDIAEoCUIH+kIEcgIYQF'
+        'IOaWRlbXBvdGVuY3lLZXk=');
 
 @$core.Deprecated('Use recoveryConfirmRequestDescriptor instead')
 const RecoveryConfirmRequest$json = {
@@ -528,33 +533,33 @@ final $typed_data.Uint8List changePasswordRequestDescriptor =
 const RequestVerificationRequest$json = {
   '1': 'RequestVerificationRequest',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.auth.VerificationType', '8': {}, '10': 'type'},
+    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.VerificationType', '8': {}, '10': 'type'},
   ],
 };
 
 /// Descriptor for `RequestVerificationRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List requestVerificationRequestDescriptor =
-    $convert.base64Decode('ChpSZXF1ZXN0VmVyaWZpY2F0aW9uUmVxdWVzdBI0CgR0eXBlGAEgASgOMhYuYXV0aC5WZXJpZm'
-        'ljYXRpb25UeXBlQgj6QgWCAQIgAFIEdHlwZQ==');
+    $convert.base64Decode('ChpSZXF1ZXN0VmVyaWZpY2F0aW9uUmVxdWVzdBI3CgR0eXBlGAEgASgOMhkuYXV0aC52MS5WZX'
+        'JpZmljYXRpb25UeXBlQgj6QgWCAQIgAFIEdHlwZQ==');
 
 @$core.Deprecated('Use confirmVerificationRequestDescriptor instead')
 const ConfirmVerificationRequest$json = {
   '1': 'ConfirmVerificationRequest',
   '2': [
     {'1': 'token', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'token'},
-    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.auth.VerificationType', '8': {}, '10': 'type'},
-    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.UUID', '8': {}, '10': 'installationId'},
-    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.ClientInfo', '8': {}, '10': 'clientInfo'},
+    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.auth.v1.VerificationType', '8': {}, '10': 'type'},
+    {'1': 'installation_id', '3': 3, '4': 1, '5': 11, '6': '.core.v1.UUID', '8': {}, '10': 'installationId'},
+    {'1': 'client_info', '3': 4, '4': 1, '5': 11, '6': '.auth.v1.ClientInfo', '8': {}, '10': 'clientInfo'},
   ],
 };
 
 /// Descriptor for `ConfirmVerificationRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List confirmVerificationRequestDescriptor =
     $convert.base64Decode('ChpDb25maXJtVmVyaWZpY2F0aW9uUmVxdWVzdBIdCgV0b2tlbhgBIAEoCUIH+kIEcgIQAVIFdG'
-        '9rZW4SNAoEdHlwZRgCIAEoDjIWLmF1dGguVmVyaWZpY2F0aW9uVHlwZUII+kIFggECIABSBHR5'
-        'cGUSPQoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMgouY29yZS5VVUlEQgj6QgWKAQIQAVIOaW5zdG'
-        'FsbGF0aW9uSWQSOwoLY2xpZW50X2luZm8YBCABKAsyEC5hdXRoLkNsaWVudEluZm9CCPpCBYoB'
-        'AhABUgpjbGllbnRJbmZv');
+        '9rZW4SNwoEdHlwZRgCIAEoDjIZLmF1dGgudjEuVmVyaWZpY2F0aW9uVHlwZUII+kIFggECIABS'
+        'BHR5cGUSQAoPaW5zdGFsbGF0aW9uX2lkGAMgASgLMg0uY29yZS52MS5VVUlEQgj6QgWKAQIQAV'
+        'IOaW5zdGFsbGF0aW9uSWQSPgoLY2xpZW50X2luZm8YBCABKAsyEy5hdXRoLnYxLkNsaWVudElu'
+        'Zm9CCPpCBYoBAhABUgpjbGllbnRJbmZv');
 
 @$core.Deprecated('Use getMfaStatusRequestDescriptor instead')
 const GetMfaStatusRequest$json = {
@@ -569,22 +574,22 @@ const GetMfaStatusResponse$json = {
   '1': 'GetMfaStatusResponse',
   '2': [
     {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
-    {'1': 'methods', '3': 2, '4': 3, '5': 11, '6': '.auth.MfaMethodStatus', '10': 'methods'},
+    {'1': 'methods', '3': 2, '4': 3, '5': 11, '6': '.auth.v1.MfaMethodStatus', '10': 'methods'},
     {'1': 'recovery_codes_remaining', '3': 3, '4': 1, '5': 5, '10': 'recoveryCodesRemaining'},
   ],
 };
 
 /// Descriptor for `GetMfaStatusResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getMfaStatusResponseDescriptor =
-    $convert.base64Decode('ChRHZXRNZmFTdGF0dXNSZXNwb25zZRIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEi8KB21ldG'
-        'hvZHMYAiADKAsyFS5hdXRoLk1mYU1ldGhvZFN0YXR1c1IHbWV0aG9kcxI4ChhyZWNvdmVyeV9j'
-        'b2Rlc19yZW1haW5pbmcYAyABKAVSFnJlY292ZXJ5Q29kZXNSZW1haW5pbmc=');
+    $convert.base64Decode('ChRHZXRNZmFTdGF0dXNSZXNwb25zZRIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEjIKB21ldG'
+        'hvZHMYAiADKAsyGC5hdXRoLnYxLk1mYU1ldGhvZFN0YXR1c1IHbWV0aG9kcxI4ChhyZWNvdmVy'
+        'eV9jb2Rlc19yZW1haW5pbmcYAyABKAVSFnJlY292ZXJ5Q29kZXNSZW1haW5pbmc=');
 
 @$core.Deprecated('Use mfaMethodStatusDescriptor instead')
 const MfaMethodStatus$json = {
   '1': 'MfaMethodStatus',
   '2': [
-    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.MfaMethod', '10': 'method'},
+    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.MfaMethod', '10': 'method'},
     {'1': 'enabled', '3': 2, '4': 1, '5': 8, '10': 'enabled'},
     {'1': 'hint', '3': 3, '4': 1, '5': 9, '10': 'hint'},
     {'1': 'configured_at', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'configuredAt'},
@@ -593,24 +598,25 @@ const MfaMethodStatus$json = {
 
 /// Descriptor for `MfaMethodStatus`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mfaMethodStatusDescriptor =
-    $convert.base64Decode('Cg9NZmFNZXRob2RTdGF0dXMSJwoGbWV0aG9kGAEgASgOMg8uYXV0aC5NZmFNZXRob2RSBm1ldG'
-        'hvZBIYCgdlbmFibGVkGAIgASgIUgdlbmFibGVkEhIKBGhpbnQYAyABKAlSBGhpbnQSPwoNY29u'
-        'ZmlndXJlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBSDGNvbmZpZ3VyZW'
-        'RBdA==');
+    $convert.base64Decode('Cg9NZmFNZXRob2RTdGF0dXMSKgoGbWV0aG9kGAEgASgOMhIuYXV0aC52MS5NZmFNZXRob2RSBm'
+        '1ldGhvZBIYCgdlbmFibGVkGAIgASgIUgdlbmFibGVkEhIKBGhpbnQYAyABKAlSBGhpbnQSPwoN'
+        'Y29uZmlndXJlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBSDGNvbmZpZ3'
+        'VyZWRBdA==');
 
 @$core.Deprecated('Use setupMfaRequestDescriptor instead')
 const SetupMfaRequest$json = {
   '1': 'SetupMfaRequest',
   '2': [
-    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.MfaMethod', '8': {}, '10': 'method'},
+    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.MfaMethod', '8': {}, '10': 'method'},
     {'1': 'identifier', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'identifier'},
   ],
 };
 
 /// Descriptor for `SetupMfaRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List setupMfaRequestDescriptor =
-    $convert.base64Decode('Cg9TZXR1cE1mYVJlcXVlc3QSMQoGbWV0aG9kGAEgASgOMg8uYXV0aC5NZmFNZXRob2RCCPpCBY'
-        'IBAiAAUgZtZXRob2QSKAoKaWRlbnRpZmllchgCIAEoCUII+kIFcgMY/gFSCmlkZW50aWZpZXI=');
+    $convert.base64Decode('Cg9TZXR1cE1mYVJlcXVlc3QSNAoGbWV0aG9kGAEgASgOMhIuYXV0aC52MS5NZmFNZXRob2RCCP'
+        'pCBYIBAiAAUgZtZXRob2QSKAoKaWRlbnRpZmllchgCIAEoCUII+kIFcgMY/gFSCmlkZW50aWZp'
+        'ZXI=');
 
 @$core.Deprecated('Use setupMfaResponseDescriptor instead')
 const SetupMfaResponse$json = {
@@ -650,8 +656,8 @@ final $typed_data.Uint8List confirmMfaSetupRequestDescriptor =
 const ConfirmMfaSetupResponse$json = {
   '1': 'ConfirmMfaSetupResponse',
   '2': [
-    {'1': 'success', '3': 1, '4': 1, '5': 11, '6': '.auth.MfaSetupSuccess', '9': 0, '10': 'success'},
-    {'1': 'error', '3': 2, '4': 1, '5': 11, '6': '.auth.MfaSetupError', '9': 0, '10': 'error'},
+    {'1': 'success', '3': 1, '4': 1, '5': 11, '6': '.auth.v1.MfaSetupSuccess', '9': 0, '10': 'success'},
+    {'1': 'error', '3': 2, '4': 1, '5': 11, '6': '.auth.v1.MfaSetupError', '9': 0, '10': 'error'},
   ],
   '8': [
     {'1': 'result'},
@@ -660,9 +666,9 @@ const ConfirmMfaSetupResponse$json = {
 
 /// Descriptor for `ConfirmMfaSetupResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List confirmMfaSetupResponseDescriptor =
-    $convert.base64Decode('ChdDb25maXJtTWZhU2V0dXBSZXNwb25zZRIxCgdzdWNjZXNzGAEgASgLMhUuYXV0aC5NZmFTZX'
-        'R1cFN1Y2Nlc3NIAFIHc3VjY2VzcxIrCgVlcnJvchgCIAEoCzITLmF1dGguTWZhU2V0dXBFcnJv'
-        'ckgAUgVlcnJvckIICgZyZXN1bHQ=');
+    $convert.base64Decode('ChdDb25maXJtTWZhU2V0dXBSZXNwb25zZRI0CgdzdWNjZXNzGAEgASgLMhguYXV0aC52MS5NZm'
+        'FTZXR1cFN1Y2Nlc3NIAFIHc3VjY2VzcxIuCgVlcnJvchgCIAEoCzIWLmF1dGgudjEuTWZhU2V0'
+        'dXBFcnJvckgAUgVlcnJvckIICgZyZXN1bHQ=');
 
 @$core.Deprecated('Use mfaSetupSuccessDescriptor instead')
 const MfaSetupSuccess$json = {
@@ -695,15 +701,15 @@ final $typed_data.Uint8List mfaSetupErrorDescriptor =
 const DisableMfaRequest$json = {
   '1': 'DisableMfaRequest',
   '2': [
-    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.MfaMethod', '10': 'method'},
+    {'1': 'method', '3': 1, '4': 1, '5': 14, '6': '.auth.v1.MfaMethod', '10': 'method'},
     {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
   ],
 };
 
 /// Descriptor for `DisableMfaRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List disableMfaRequestDescriptor =
-    $convert.base64Decode('ChFEaXNhYmxlTWZhUmVxdWVzdBInCgZtZXRob2QYASABKA4yDy5hdXRoLk1mYU1ldGhvZFIGbW'
-        'V0aG9kEiMKCHBhc3N3b3JkGAIgASgJQgf6QgRyAhABUghwYXNzd29yZA==');
+    $convert.base64Decode('ChFEaXNhYmxlTWZhUmVxdWVzdBIqCgZtZXRob2QYASABKA4yEi5hdXRoLnYxLk1mYU1ldGhvZF'
+        'IGbWV0aG9kEiMKCHBhc3N3b3JkGAIgASgJQgf6QgRyAhABUghwYXNzd29yZA==');
 
 @$core.Deprecated('Use listSessionsRequestDescriptor instead')
 const ListSessionsRequest$json = {
@@ -722,14 +728,14 @@ final $typed_data.Uint8List listSessionsRequestDescriptor =
 const ListSessionsResponse$json = {
   '1': 'ListSessionsResponse',
   '2': [
-    {'1': 'sessions', '3': 1, '4': 3, '5': 11, '6': '.auth.SessionInfo', '10': 'sessions'},
+    {'1': 'sessions', '3': 1, '4': 3, '5': 11, '6': '.auth.v1.SessionInfo', '10': 'sessions'},
   ],
 };
 
 /// Descriptor for `ListSessionsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listSessionsResponseDescriptor =
-    $convert.base64Decode('ChRMaXN0U2Vzc2lvbnNSZXNwb25zZRItCghzZXNzaW9ucxgBIAMoCzIRLmF1dGguU2Vzc2lvbk'
-        'luZm9SCHNlc3Npb25z');
+    $convert.base64Decode('ChRMaXN0U2Vzc2lvbnNSZXNwb25zZRIwCghzZXNzaW9ucxgBIAMoCzIULmF1dGgudjEuU2Vzc2'
+        'lvbkluZm9SCHNlc3Npb25z');
 
 @$core.Deprecated('Use sessionInfoDescriptor instead')
 const SessionInfo$json = {
@@ -747,7 +753,7 @@ const SessionInfo$json = {
     {'1': 'is_current', '3': 10, '4': 1, '5': 8, '10': 'isCurrent'},
     {'1': 'ip_created_by', '3': 11, '4': 1, '5': 9, '10': 'ipCreatedBy'},
     {'1': 'activity_count', '3': 12, '4': 1, '5': 5, '10': 'activityCount'},
-    {'1': 'metadata', '3': 13, '4': 3, '5': 11, '6': '.auth.SessionInfo.MetadataEntry', '10': 'metadata'},
+    {'1': 'metadata', '3': 13, '4': 3, '5': 11, '6': '.auth.v1.SessionInfo.MetadataEntry', '10': 'metadata'},
   ],
   '3': [SessionInfo_MetadataEntry$json],
 };
@@ -772,10 +778,10 @@ final $typed_data.Uint8List sessionInfoDescriptor =
         'NlZW5fYXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wUgpsYXN0U2VlbkF0EjkK'
         'CmV4cGlyZXNfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wUglleHBpcmVzQX'
         'QSHQoKaXNfY3VycmVudBgKIAEoCFIJaXNDdXJyZW50EiIKDWlwX2NyZWF0ZWRfYnkYCyABKAlS'
-        'C2lwQ3JlYXRlZEJ5EiUKDmFjdGl2aXR5X2NvdW50GAwgASgFUg1hY3Rpdml0eUNvdW50EjsKCG'
-        '1ldGFkYXRhGA0gAygLMh8uYXV0aC5TZXNzaW9uSW5mby5NZXRhZGF0YUVudHJ5UghtZXRhZGF0'
-        'YRo7Cg1NZXRhZGF0YUVudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YW'
-        'x1ZToCOAE=');
+        'C2lwQ3JlYXRlZEJ5EiUKDmFjdGl2aXR5X2NvdW50GAwgASgFUg1hY3Rpdml0eUNvdW50Ej4KCG'
+        '1ldGFkYXRhGA0gAygLMiIuYXV0aC52MS5TZXNzaW9uSW5mby5NZXRhZGF0YUVudHJ5UghtZXRh'
+        'ZGF0YRo7Cg1NZXRhZGF0YUVudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUg'
+        'V2YWx1ZToCOAE=');
 
 @$core.Deprecated('Use revokeSessionRequestDescriptor instead')
 const RevokeSessionRequest$json = {

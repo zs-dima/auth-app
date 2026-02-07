@@ -38,7 +38,7 @@ class UUID extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UUID',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false;
 
@@ -86,7 +86,7 @@ class OperationResult extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationResult',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
 
@@ -141,7 +141,7 @@ class DecimalValue extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DecimalValue',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'units')
     ..aI(2, _omitFieldNames ? '' : 'nanos')
     ..hasRequiredFields = false;
@@ -209,7 +209,7 @@ class DateRange extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DateRange',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..aOM<$0.Timestamp>(1, _omitFieldNames ? '' : 'fromDate', subBuilder: $0.Timestamp.create)
     ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'toDate', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false;
@@ -272,7 +272,7 @@ class FileBytes extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FileBytes',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
@@ -325,7 +325,7 @@ class FileData extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FileData',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'core'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'core.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'fileName')
     ..aOS(2, _omitFieldNames ? '' : 'fileHash')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)

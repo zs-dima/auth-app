@@ -22,7 +22,7 @@ import 'users.pb.dart' as $0;
 export 'users.pb.dart';
 
 /// User Service - User CRUD, avatars, admin functions
-@$pb.GrpcServiceName('users.UserService')
+@$pb.GrpcServiceName('users.v1.UserService')
 class UserServiceClient extends $grpc.Client {
   /// The hostname for this service.
   static const $core.String defaultHost = '';
@@ -34,7 +34,16 @@ class UserServiceClient extends $grpc.Client {
 
   UserServiceClient(super.channel, {super.options, super.interceptors});
 
-  /// Load user info (streaming)
+  /// Load user info (server-streaming).
+  ///
+  /// Transport behavior:
+  /// - gRPC / gRPC-Web: native server-streaming (built-in reconnection via
+  /// gRPC-Web layer)
+  /// - REST: Server-Sent Events (text/event-stream) via Axum SSE handler.
+  ///   Supports EventSource auto-reconnection and Last-Event-ID resume.
+  ///
+  /// OpenAPI: annotated with `x-streaming: sse` and `x-content-type:
+  /// text/event-stream` by the post-processing step (`make openapi`).
   $grpc.ResponseStream<$0.UserInfo> listUsersInfo(
     $0.ListUsersRequest request, {
     $grpc.CallOptions? options,
@@ -42,7 +51,16 @@ class UserServiceClient extends $grpc.Client {
     return $createStreamingCall(_$listUsersInfo, $async.Stream.fromIterable([request]), options: options);
   }
 
-  /// Load users (streaming)
+  /// Load users (server-streaming).
+  ///
+  /// Transport behavior:
+  /// - gRPC / gRPC-Web: native server-streaming (built-in reconnection via
+  /// gRPC-Web layer)
+  /// - REST: Server-Sent Events (text/event-stream) via Axum SSE handler.
+  ///   Supports EventSource auto-reconnection and Last-Event-ID resume.
+  ///
+  /// OpenAPI: annotated with `x-streaming: sse` and `x-content-type:
+  /// text/event-stream` by the post-processing step (`make openapi`).
   $grpc.ResponseStream<$0.User> listUsers(
     $0.ListUsersRequest request, {
     $grpc.CallOptions? options,
@@ -67,6 +85,7 @@ class UserServiceClient extends $grpc.Client {
   }
 
   /// Set password (admin only - bypasses current password requirement)
+  /// For user self-service password change, use AuthService.ChangePassword
   $grpc.ResponseFuture<$1.Empty> setPassword(
     $0.SetPasswordRequest request, {
     $grpc.CallOptions? options,
@@ -101,30 +120,34 @@ class UserServiceClient extends $grpc.Client {
   // method descriptors
 
   static final _$listUsersInfo = $grpc.ClientMethod<$0.ListUsersRequest, $0.UserInfo>(
-      '/users.UserService/ListUsersInfo', ($0.ListUsersRequest value) => value.writeToBuffer(), $0.UserInfo.fromBuffer);
+      '/users.v1.UserService/ListUsersInfo',
+      ($0.ListUsersRequest value) => value.writeToBuffer(),
+      $0.UserInfo.fromBuffer);
   static final _$listUsers = $grpc.ClientMethod<$0.ListUsersRequest, $0.User>(
-      '/users.UserService/ListUsers', ($0.ListUsersRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v1.UserService/ListUsers', ($0.ListUsersRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$createUser = $grpc.ClientMethod<$0.CreateUserRequest, $0.User>(
-      '/users.UserService/CreateUser', ($0.CreateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v1.UserService/CreateUser', ($0.CreateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$updateUser = $grpc.ClientMethod<$0.UpdateUserRequest, $0.User>(
-      '/users.UserService/UpdateUser', ($0.UpdateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v1.UserService/UpdateUser', ($0.UpdateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$setPassword = $grpc.ClientMethod<$0.SetPasswordRequest, $1.Empty>(
-      '/users.UserService/SetPassword', ($0.SetPasswordRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
+      '/users.v1.UserService/SetPassword', ($0.SetPasswordRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
   static final _$getAvatarUploadUrl = $grpc.ClientMethod<$0.GetAvatarUploadUrlRequest, $0.GetAvatarUploadUrlResponse>(
-      '/users.UserService/GetAvatarUploadUrl',
+      '/users.v1.UserService/GetAvatarUploadUrl',
       ($0.GetAvatarUploadUrlRequest value) => value.writeToBuffer(),
       $0.GetAvatarUploadUrlResponse.fromBuffer);
   static final _$confirmAvatarUpload = $grpc.ClientMethod<$0.ConfirmAvatarUploadRequest, $1.Empty>(
-      '/users.UserService/ConfirmAvatarUpload',
+      '/users.v1.UserService/ConfirmAvatarUpload',
       ($0.ConfirmAvatarUploadRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$deleteAvatar = $grpc.ClientMethod<$0.DeleteAvatarRequest, $1.Empty>(
-      '/users.UserService/DeleteAvatar', ($0.DeleteAvatarRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
+      '/users.v1.UserService/DeleteAvatar',
+      ($0.DeleteAvatarRequest value) => value.writeToBuffer(),
+      $1.Empty.fromBuffer);
 }
 
-@$pb.GrpcServiceName('users.UserService')
+@$pb.GrpcServiceName('users.v1.UserService')
 abstract class UserServiceBase extends $grpc.Service {
-  $core.String get $name => 'users.UserService';
+  $core.String get $name => 'users.v1.UserService';
 
   UserServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.ListUsersRequest, $0.UserInfo>(

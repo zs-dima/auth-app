@@ -45,7 +45,7 @@ class TokenPair extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TokenPair',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'accessToken')
     ..aOS(2, _omitFieldNames ? '' : 'refreshToken')
     ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'expiresAt', subBuilder: $2.Timestamp.create)
@@ -125,7 +125,7 @@ class ClientInfo extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ClientInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'deviceId')
     ..aOS(2, _omitFieldNames ? '' : 'deviceName')
     ..aOS(3, _omitFieldNames ? '' : 'deviceType')
@@ -134,7 +134,7 @@ class ClientInfo extends $pb.GeneratedMessage {
         entryClassName: 'ClientInfo.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('auth'))
+        packageName: const $pb.PackageName('auth.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -240,7 +240,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UserSnapshot',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOM<$3.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $3.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'displayName')
     ..aOS(3, _omitFieldNames ? '' : 'email')
@@ -405,7 +405,7 @@ class LockoutInfo extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LockoutInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOM<$4.Duration>(1, _omitFieldNames ? '' : 'retryAfter', subBuilder: $4.Duration.create)
     ..aI(2, _omitFieldNames ? '' : 'failedAttempts')
     ..aI(3, _omitFieldNames ? '' : 'maxAttempts')
@@ -497,7 +497,7 @@ class MfaChallenge extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MfaChallenge',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'challengeToken')
     ..pPM<MfaMethodInfo>(2, _omitFieldNames ? '' : 'availableMethods', subBuilder: MfaMethodInfo.create)
     ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'expiresAt', subBuilder: $2.Timestamp.create)
@@ -570,7 +570,7 @@ class MfaMethodInfo extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MfaMethodInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<MfaMethod>(1, _omitFieldNames ? '' : 'method', enumValues: MfaMethod.values)
     ..aOS(2, _omitFieldNames ? '' : 'hint')
     ..aOB(3, _omitFieldNames ? '' : 'isDefault')
@@ -651,7 +651,7 @@ class AuthenticateRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AuthenticateRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'identifier')
     ..aE<IdentifierType>(2, _omitFieldNames ? '' : 'identifierType', enumValues: IdentifierType.values)
     ..aOS(3, _omitFieldNames ? '' : 'password')
@@ -762,7 +762,7 @@ class AuthResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AuthResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<AuthStatus>(1, _omitFieldNames ? '' : 'status', enumValues: AuthStatus.values)
     ..aOM<TokenPair>(2, _omitFieldNames ? '' : 'tokens', subBuilder: TokenPair.create)
     ..aOM<UserSnapshot>(3, _omitFieldNames ? '' : 'user', subBuilder: UserSnapshot.create)
@@ -866,6 +866,7 @@ class SignUpRequest extends $pb.GeneratedMessage {
     ClientInfo? clientInfo,
     $core.String? locale,
     $core.String? timezone,
+    $core.String? idempotencyKey,
   }) {
     final result = create();
     if (identifier != null) result.identifier = identifier;
@@ -876,6 +877,7 @@ class SignUpRequest extends $pb.GeneratedMessage {
     if (clientInfo != null) result.clientInfo = clientInfo;
     if (locale != null) result.locale = locale;
     if (timezone != null) result.timezone = timezone;
+    if (idempotencyKey != null) result.idempotencyKey = idempotencyKey;
     return result;
   }
 
@@ -888,7 +890,7 @@ class SignUpRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignUpRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'identifier')
     ..aE<IdentifierType>(2, _omitFieldNames ? '' : 'identifierType', enumValues: IdentifierType.values)
     ..aOS(3, _omitFieldNames ? '' : 'password')
@@ -897,6 +899,7 @@ class SignUpRequest extends $pb.GeneratedMessage {
     ..aOM<ClientInfo>(6, _omitFieldNames ? '' : 'clientInfo', subBuilder: ClientInfo.create)
     ..aOS(7, _omitFieldNames ? '' : 'locale')
     ..aOS(8, _omitFieldNames ? '' : 'timezone')
+    ..aOS(9, _omitFieldNames ? '' : 'idempotencyKey')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -999,6 +1002,19 @@ class SignUpRequest extends $pb.GeneratedMessage {
   $core.bool hasTimezone() => $_has(7);
   @$pb.TagNumber(8)
   void clearTimezone() => $_clearField(8);
+
+  /// Client-generated idempotency key (UUID v4 recommended).
+  /// Guarantees at-most-once execution for retries on network failures.
+  /// Server ignores the request body if a matching key was already processed
+  /// and returns the original response.
+  @$pb.TagNumber(9)
+  $core.String get idempotencyKey => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set idempotencyKey($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIdempotencyKey() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIdempotencyKey() => $_clearField(9);
 }
 
 /// Verify MFA code to complete authentication
@@ -1027,7 +1043,7 @@ class VerifyMfaRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'VerifyMfaRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'challengeToken')
     ..aE<MfaMethod>(2, _omitFieldNames ? '' : 'method', enumValues: MfaMethod.values)
     ..aOS(3, _omitFieldNames ? '' : 'code')
@@ -1114,7 +1130,7 @@ class RefreshTokensRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshTokensRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'refreshToken')
     ..hasRequiredFields = false;
 
@@ -1159,7 +1175,7 @@ class ValidateCredentialsRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ValidateCredentialsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1202,7 +1218,7 @@ class ValidateCredentialsResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ValidateCredentialsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'valid')
     ..aOM<UserSnapshot>(2, _omitFieldNames ? '' : 'user', subBuilder: UserSnapshot.create)
     ..hasRequiredFields = false;
@@ -1258,7 +1274,7 @@ class SignOutRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignOutRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1305,7 +1321,7 @@ class GetOAuthUrlRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetOAuthUrlRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<OAuthProvider>(1, _omitFieldNames ? '' : 'provider', enumValues: OAuthProvider.values)
     ..aOS(2, _omitFieldNames ? '' : 'redirectUri')
     ..pPS(3, _omitFieldNames ? '' : 'scopes')
@@ -1387,7 +1403,7 @@ class GetOAuthUrlResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetOAuthUrlResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'authorizationUrl')
     ..aOS(2, _omitFieldNames ? '' : 'state')
     ..hasRequiredFields = false;
@@ -1457,7 +1473,7 @@ class ExchangeOAuthCodeRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ExchangeOAuthCodeRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'code')
     ..aOS(2, _omitFieldNames ? '' : 'state')
     ..aOM<$3.UUID>(3, _omitFieldNames ? '' : 'installationId', subBuilder: $3.UUID.create)
@@ -1549,7 +1565,7 @@ class LinkOAuthProviderRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LinkOAuthProviderRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'code')
     ..aOS(2, _omitFieldNames ? '' : 'state')
     ..hasRequiredFields = false;
@@ -1613,7 +1629,7 @@ class UnlinkOAuthProviderRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UnlinkOAuthProviderRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<OAuthProvider>(1, _omitFieldNames ? '' : 'provider', enumValues: OAuthProvider.values)
     ..hasRequiredFields = false;
 
@@ -1658,7 +1674,7 @@ class ListLinkedProvidersRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListLinkedProvidersRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1700,7 +1716,7 @@ class ListLinkedProvidersResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListLinkedProvidersResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..pPM<LinkedProvider>(1, _omitFieldNames ? '' : 'providers', subBuilder: LinkedProvider.create)
     ..hasRequiredFields = false;
 
@@ -1750,7 +1766,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LinkedProvider',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<OAuthProvider>(1, _omitFieldNames ? '' : 'provider', enumValues: OAuthProvider.values)
     ..aOS(2, _omitFieldNames ? '' : 'providerUserId')
     ..aOS(3, _omitFieldNames ? '' : 'email')
@@ -1819,10 +1835,12 @@ class RecoveryStartRequest extends $pb.GeneratedMessage {
   factory RecoveryStartRequest({
     $core.String? identifier,
     IdentifierType? identifierType,
+    $core.String? idempotencyKey,
   }) {
     final result = create();
     if (identifier != null) result.identifier = identifier;
     if (identifierType != null) result.identifierType = identifierType;
+    if (idempotencyKey != null) result.idempotencyKey = idempotencyKey;
     return result;
   }
 
@@ -1836,9 +1854,10 @@ class RecoveryStartRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RecoveryStartRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'identifier')
     ..aE<IdentifierType>(2, _omitFieldNames ? '' : 'identifierType', enumValues: IdentifierType.values)
+    ..aOS(3, _omitFieldNames ? '' : 'idempotencyKey')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1878,6 +1897,17 @@ class RecoveryStartRequest extends $pb.GeneratedMessage {
   $core.bool hasIdentifierType() => $_has(1);
   @$pb.TagNumber(2)
   void clearIdentifierType() => $_clearField(2);
+
+  /// Client-generated idempotency key (UUID v4 recommended).
+  /// Prevents duplicate recovery emails on network retries.
+  @$pb.TagNumber(3)
+  $core.String get idempotencyKey => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set idempotencyKey($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasIdempotencyKey() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearIdempotencyKey() => $_clearField(3);
 }
 
 /// Confirm recovery and set new password
@@ -1902,7 +1932,7 @@ class RecoveryConfirmRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RecoveryConfirmRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'token')
     ..aOS(2, _omitFieldNames ? '' : 'newPassword')
     ..hasRequiredFields = false;
@@ -1968,7 +1998,7 @@ class ChangePasswordRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ChangePasswordRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'currentPassword')
     ..aOS(2, _omitFieldNames ? '' : 'newPassword')
     ..hasRequiredFields = false;
@@ -2031,7 +2061,7 @@ class RequestVerificationRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RequestVerificationRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<VerificationType>(1, _omitFieldNames ? '' : 'type', enumValues: VerificationType.values)
     ..hasRequiredFields = false;
 
@@ -2089,7 +2119,7 @@ class ConfirmVerificationRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfirmVerificationRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'token')
     ..aE<VerificationType>(2, _omitFieldNames ? '' : 'type', enumValues: VerificationType.values)
     ..aOM<$3.UUID>(3, _omitFieldNames ? '' : 'installationId', subBuilder: $3.UUID.create)
@@ -2175,7 +2205,7 @@ class GetMfaStatusRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetMfaStatusRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2221,7 +2251,7 @@ class GetMfaStatusResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetMfaStatusResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..pPM<MfaMethodStatus>(2, _omitFieldNames ? '' : 'methods', subBuilder: MfaMethodStatus.create)
     ..aI(3, _omitFieldNames ? '' : 'recoveryCodesRemaining')
@@ -2295,7 +2325,7 @@ class MfaMethodStatus extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MfaMethodStatus',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<MfaMethod>(1, _omitFieldNames ? '' : 'method', enumValues: MfaMethod.values)
     ..aOB(2, _omitFieldNames ? '' : 'enabled')
     ..aOS(3, _omitFieldNames ? '' : 'hint')
@@ -2382,7 +2412,7 @@ class SetupMfaRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SetupMfaRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<MfaMethod>(1, _omitFieldNames ? '' : 'method', enumValues: MfaMethod.values)
     ..aOS(2, _omitFieldNames ? '' : 'identifier')
     ..hasRequiredFields = false;
@@ -2454,7 +2484,7 @@ class SetupMfaResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SetupMfaResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'secret')
     ..aOS(2, _omitFieldNames ? '' : 'provisioningUri')
     ..aOS(3, _omitFieldNames ? '' : 'maskedDestination')
@@ -2555,7 +2585,7 @@ class ConfirmMfaSetupRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfirmMfaSetupRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'setupToken')
     ..aOS(2, _omitFieldNames ? '' : 'code')
     ..hasRequiredFields = false;
@@ -2628,7 +2658,7 @@ class ConfirmMfaSetupResponse extends $pb.GeneratedMessage {
     0: ConfirmMfaSetupResponse_Result.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfirmMfaSetupResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOM<MfaSetupSuccess>(1, _omitFieldNames ? '' : 'success', subBuilder: MfaSetupSuccess.create)
     ..aOM<MfaSetupError>(2, _omitFieldNames ? '' : 'error', subBuilder: MfaSetupError.create)
@@ -2701,7 +2731,7 @@ class MfaSetupSuccess extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MfaSetupSuccess',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..pPS(1, _omitFieldNames ? '' : 'recoveryCodes')
     ..hasRequiredFields = false;
 
@@ -2747,7 +2777,7 @@ class MfaSetupError extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MfaSetupError',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'message')
     ..aOS(2, _omitFieldNames ? '' : 'code')
     ..hasRequiredFields = false;
@@ -2810,7 +2840,7 @@ class DisableMfaRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DisableMfaRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aE<MfaMethod>(1, _omitFieldNames ? '' : 'method', enumValues: MfaMethod.values)
     ..aOS(2, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
@@ -2843,7 +2873,8 @@ class DisableMfaRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearMethod() => $_clearField(1);
 
-  /// Current password for verification (OWASP: verify identity for sensitive ops)
+  /// Current password for verification (OWASP: verify identity for sensitive
+  /// ops)
   @$pb.TagNumber(2)
   $core.String get password => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -2874,7 +2905,7 @@ class ListSessionsRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListSessionsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'refreshToken')
     ..hasRequiredFields = false;
 
@@ -2927,7 +2958,7 @@ class ListSessionsResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListSessionsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..pPM<SessionInfo>(1, _omitFieldNames ? '' : 'sessions', subBuilder: SessionInfo.create)
     ..hasRequiredFields = false;
 
@@ -2996,7 +3027,7 @@ class SessionInfo extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SessionInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'deviceId')
     ..aOS(2, _omitFieldNames ? '' : 'deviceName')
     ..aOS(3, _omitFieldNames ? '' : 'deviceType')
@@ -3013,7 +3044,7 @@ class SessionInfo extends $pb.GeneratedMessage {
         entryClassName: 'SessionInfo.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('auth'))
+        packageName: const $pb.PackageName('auth.v1'))
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3184,7 +3215,7 @@ class RevokeSessionRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RevokeSessionRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'deviceId')
     ..hasRequiredFields = false;
 
@@ -3229,7 +3260,7 @@ class RevokeOtherSessionsRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RevokeOtherSessionsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3271,7 +3302,7 @@ class RevokeSessionsResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RevokeSessionsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v1'), createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'revokedCount')
     ..hasRequiredFields = false;
 

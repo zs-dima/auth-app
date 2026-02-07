@@ -199,7 +199,7 @@ class _UsernameTextFormatter extends TextInputFormatter {
 mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
   late AuthenticationController _authenticationController;
   bool _authControllerInitialized = false;
-  final _emailController = TextEditingController(text: 'test@gmail.com');
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _emailError;
   String? _passwordError;
