@@ -47,7 +47,7 @@
   "dart.additionalAnalyzerFileExtensions": [
     "drift"
   ],
-  "dart.flutterSdkPath": ".fvm/versions/stable",
+  "dart.flutterSdkPath": ".fvm/versions/3.38.9",
   "dart.addSdkToTerminalPath": true,
   "[html]": {
     "editor.formatOnSave": false

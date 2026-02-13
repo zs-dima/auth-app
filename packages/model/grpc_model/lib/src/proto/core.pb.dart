@@ -58,6 +58,7 @@ class UUID extends $pb.GeneratedMessage {
   static UUID getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UUID>(create);
   static UUID? _defaultInstance;
 
+  /// Resource UUID
   @$pb.TagNumber(1)
   $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -108,6 +109,7 @@ class OperationResult extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationResult>(create);
   static OperationResult? _defaultInstance;
 
+  /// Whether the operation completed successfully
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)

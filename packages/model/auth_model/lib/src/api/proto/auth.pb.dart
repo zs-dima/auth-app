@@ -68,6 +68,7 @@ class TokenPair extends $pb.GeneratedMessage {
   static TokenPair getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TokenPair>(create);
   static TokenPair? _defaultInstance;
 
+  /// Short-lived JWT for authenticating API requests
   @$pb.TagNumber(1)
   $core.String get accessToken => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -77,6 +78,7 @@ class TokenPair extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearAccessToken() => $_clearField(1);
 
+  /// Long-lived opaque token used to obtain a new token pair
   @$pb.TagNumber(2)
   $core.String get refreshToken => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -86,6 +88,7 @@ class TokenPair extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearRefreshToken() => $_clearField(2);
 
+  /// Access token expiration timestamp
   @$pb.TagNumber(3)
   $2.Timestamp get expiresAt => $_getN(2);
   @$pb.TagNumber(3)
@@ -275,6 +278,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   static UserSnapshot getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UserSnapshot>(create);
   static UserSnapshot? _defaultInstance;
 
+  /// User's unique identifier
   @$pb.TagNumber(1)
   $3.UUID get userId => $_getN(0);
   @$pb.TagNumber(1)
@@ -286,6 +290,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $3.UUID ensureUserId() => $_ensure(0);
 
+  /// Display name
   @$pb.TagNumber(2)
   $core.String get displayName => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -295,6 +300,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearDisplayName() => $_clearField(2);
 
+  /// Email address
   @$pb.TagNumber(3)
   $core.String get email => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -304,6 +310,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearEmail() => $_clearField(3);
 
+  /// Phone number (E.164 format)
   @$pb.TagNumber(4)
   $core.String get phone => $_getSZ(3);
   @$pb.TagNumber(4)
@@ -313,6 +320,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearPhone() => $_clearField(4);
 
+  /// Authorization role
   @$pb.TagNumber(5)
   $3.UserRole get role => $_getN(4);
   @$pb.TagNumber(5)
@@ -322,6 +330,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearRole() => $_clearField(5);
 
+  /// Account status
   @$pb.TagNumber(6)
   $3.UserStatus get status => $_getN(5);
   @$pb.TagNumber(6)
@@ -331,6 +340,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearStatus() => $_clearField(6);
 
+  /// Whether the email address has been verified
   @$pb.TagNumber(7)
   $core.bool get emailVerified => $_getBF(6);
   @$pb.TagNumber(7)
@@ -340,6 +350,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearEmailVerified() => $_clearField(7);
 
+  /// Whether the phone number has been verified
   @$pb.TagNumber(8)
   $core.bool get phoneVerified => $_getBF(7);
   @$pb.TagNumber(8)
@@ -349,6 +360,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   void clearPhoneVerified() => $_clearField(8);
 
+  /// Whether MFA is enabled for this account
   @$pb.TagNumber(9)
   $core.bool get mfaEnabled => $_getBF(8);
   @$pb.TagNumber(9)
@@ -358,9 +370,11 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   void clearMfaEnabled() => $_clearField(9);
 
+  /// Linked OAuth providers
   @$pb.TagNumber(10)
   $pb.PbList<OAuthProvider> get linkedProviders => $_getList(9);
 
+  /// User's avatar URL
   @$pb.TagNumber(11)
   $core.String get avatarUrl => $_getSZ(10);
   @$pb.TagNumber(11)
@@ -370,6 +384,7 @@ class UserSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   void clearAvatarUrl() => $_clearField(11);
 
+  /// Whether the user has a password set (false for OAuth-only accounts)
   @$pb.TagNumber(12)
   $core.bool get hasPassword => $_getBF(11);
   @$pb.TagNumber(12)
@@ -593,6 +608,7 @@ class MfaMethodInfo extends $pb.GeneratedMessage {
   static MfaMethodInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MfaMethodInfo>(create);
   static MfaMethodInfo? _defaultInstance;
 
+  /// MFA method type
   @$pb.TagNumber(1)
   MfaMethod get method => $_getN(0);
   @$pb.TagNumber(1)
@@ -798,6 +814,7 @@ class AuthResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearStatus() => $_clearField(1);
 
+  /// Token pair issued on successful authentication
   @$pb.TagNumber(2)
   TokenPair get tokens => $_getN(1);
   @$pb.TagNumber(2)
@@ -809,6 +826,7 @@ class AuthResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   TokenPair ensureTokens() => $_ensure(1);
 
+  /// Authenticated user profile snapshot
   @$pb.TagNumber(3)
   UserSnapshot get user => $_getN(2);
   @$pb.TagNumber(3)
@@ -1152,6 +1170,7 @@ class RefreshTokensRequest extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RefreshTokensRequest>(create);
   static RefreshTokensRequest? _defaultInstance;
 
+  /// Refresh token to exchange for a new token pair
   @$pb.TagNumber(1)
   $core.String get refreshToken => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -1241,6 +1260,7 @@ class ValidateCredentialsResponse extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ValidateCredentialsResponse>(create);
   static ValidateCredentialsResponse? _defaultInstance;
 
+  /// Whether the current session credentials are valid
   @$pb.TagNumber(1)
   $core.bool get valid => $_getBF(0);
   @$pb.TagNumber(1)
@@ -1250,6 +1270,7 @@ class ValidateCredentialsResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearValid() => $_clearField(1);
 
+  /// Authenticated user info (populated when valid is true)
   @$pb.TagNumber(2)
   UserSnapshot get user => $_getN(1);
   @$pb.TagNumber(2)
@@ -1738,6 +1759,7 @@ class ListLinkedProvidersResponse extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListLinkedProvidersResponse>(create);
   static ListLinkedProvidersResponse? _defaultInstance;
 
+  /// List of linked OAuth providers for the current user
   @$pb.TagNumber(1)
   $pb.PbList<LinkedProvider> get providers => $_getList(0);
 }
@@ -1790,6 +1812,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
   static LinkedProvider getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LinkedProvider>(create);
   static LinkedProvider? _defaultInstance;
 
+  /// OAuth provider type
   @$pb.TagNumber(1)
   OAuthProvider get provider => $_getN(0);
   @$pb.TagNumber(1)
@@ -1799,6 +1822,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearProvider() => $_clearField(1);
 
+  /// Provider's external user ID
   @$pb.TagNumber(2)
   $core.String get providerUserId => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -1808,6 +1832,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearProviderUserId() => $_clearField(2);
 
+  /// Email from provider (if available)
   @$pb.TagNumber(3)
   $core.String get email => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -1817,6 +1842,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearEmail() => $_clearField(3);
 
+  /// Timestamp when the provider was linked
   @$pb.TagNumber(4)
   $2.Timestamp get linkedAt => $_getN(3);
   @$pb.TagNumber(4)
@@ -2350,6 +2376,7 @@ class MfaMethodStatus extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MfaMethodStatus>(create);
   static MfaMethodStatus? _defaultInstance;
 
+  /// MFA method type
   @$pb.TagNumber(1)
   MfaMethod get method => $_getN(0);
   @$pb.TagNumber(1)
@@ -2359,6 +2386,7 @@ class MfaMethodStatus extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearMethod() => $_clearField(1);
 
+  /// Whether this method is currently active
   @$pb.TagNumber(2)
   $core.bool get enabled => $_getBF(1);
   @$pb.TagNumber(2)
@@ -2689,6 +2717,7 @@ class ConfirmMfaSetupResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearResult() => $_clearField($_whichOneof(0));
 
+  /// Returned on successful MFA enrollment
   @$pb.TagNumber(1)
   MfaSetupSuccess get success => $_getN(0);
   @$pb.TagNumber(1)
@@ -2700,6 +2729,7 @@ class ConfirmMfaSetupResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   MfaSetupSuccess ensureSuccess() => $_ensure(0);
 
+  /// Returned when setup verification fails
   @$pb.TagNumber(2)
   MfaSetupError get error => $_getN(1);
   @$pb.TagNumber(2)
@@ -2753,6 +2783,7 @@ class MfaSetupSuccess extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MfaSetupSuccess>(create);
   static MfaSetupSuccess? _defaultInstance;
 
+  /// One-time recovery codes — save securely, each can be used exactly once
   @$pb.TagNumber(1)
   $pb.PbList<$core.String> get recoveryCodes => $_getList(0);
 }
@@ -2799,6 +2830,7 @@ class MfaSetupError extends $pb.GeneratedMessage {
   static MfaSetupError getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MfaSetupError>(create);
   static MfaSetupError? _defaultInstance;
 
+  /// Human-readable error message
   @$pb.TagNumber(1)
   $core.String get message => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -2808,6 +2840,7 @@ class MfaSetupError extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearMessage() => $_clearField(1);
 
+  /// Machine-readable error code
   @$pb.TagNumber(2)
   $core.String get code => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -2885,7 +2918,7 @@ class DisableMfaRequest extends $pb.GeneratedMessage {
   void clearPassword() => $_clearField(2);
 }
 
-/// Request to list sessions
+/// Request to list active sessions.
 class ListSessionsRequest extends $pb.GeneratedMessage {
   factory ListSessionsRequest({
     $core.String? refreshToken,
@@ -2927,7 +2960,7 @@ class ListSessionsRequest extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListSessionsRequest>(create);
   static ListSessionsRequest? _defaultInstance;
 
-  /// Current refresh token to identify which session is active
+  /// Active refresh token used to identify the current session
   @$pb.TagNumber(1)
   $core.String get refreshToken => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -2980,6 +3013,7 @@ class ListSessionsResponse extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListSessionsResponse>(create);
   static ListSessionsResponse? _defaultInstance;
 
+  /// Active sessions for the current user
   @$pb.TagNumber(1)
   $pb.PbList<SessionInfo> get sessions => $_getList(0);
 }

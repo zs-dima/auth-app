@@ -85,6 +85,7 @@ class UserInfo extends $pb.GeneratedMessage {
   static UserInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UserInfo>(create);
   static UserInfo? _defaultInstance;
 
+  /// User's unique identifier
   @$pb.TagNumber(1)
   $2.UUID get id => $_getN(0);
   @$pb.TagNumber(1)
@@ -96,6 +97,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $2.UUID ensureId() => $_ensure(0);
 
+  /// Display name
   @$pb.TagNumber(2)
   $core.String get name => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -105,6 +107,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearName() => $_clearField(2);
 
+  /// Email address
   @$pb.TagNumber(3)
   $core.String get email => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -114,6 +117,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearEmail() => $_clearField(3);
 
+  /// Phone number (E.164 format)
   @$pb.TagNumber(4)
   $core.String get phone => $_getSZ(3);
   @$pb.TagNumber(4)
@@ -123,6 +127,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearPhone() => $_clearField(4);
 
+  /// Authorization role
   @$pb.TagNumber(5)
   $2.UserRole get role => $_getN(4);
   @$pb.TagNumber(5)
@@ -132,6 +137,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearRole() => $_clearField(5);
 
+  /// Account status
   @$pb.TagNumber(6)
   $2.UserStatus get status => $_getN(5);
   @$pb.TagNumber(6)
@@ -141,6 +147,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearStatus() => $_clearField(6);
 
+  /// Avatar image URL
   @$pb.TagNumber(7)
   $core.String get avatarUrl => $_getSZ(6);
   @$pb.TagNumber(7)
@@ -150,6 +157,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearAvatarUrl() => $_clearField(7);
 
+  /// Locale (BCP 47, e.g., `en-US`)
   @$pb.TagNumber(8)
   $core.String get locale => $_getSZ(7);
   @$pb.TagNumber(8)
@@ -159,6 +167,7 @@ class UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   void clearLocale() => $_clearField(8);
 
+  /// Timezone (IANA, e.g., `America/New_York`)
   @$pb.TagNumber(9)
   $core.String get timezone => $_getSZ(8);
   @$pb.TagNumber(9)
@@ -248,6 +257,7 @@ class User extends $pb.GeneratedMessage {
   static User getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<User>(create);
   static User? _defaultInstance;
 
+  /// User's unique identifier
   @$pb.TagNumber(1)
   $2.UUID get id => $_getN(0);
   @$pb.TagNumber(1)
@@ -259,6 +269,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $2.UUID ensureId() => $_ensure(0);
 
+  /// Display name
   @$pb.TagNumber(2)
   $core.String get name => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -268,6 +279,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearName() => $_clearField(2);
 
+  /// Email address
   @$pb.TagNumber(3)
   $core.String get email => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -277,6 +289,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearEmail() => $_clearField(3);
 
+  /// Phone number (E.164 format)
   @$pb.TagNumber(4)
   $core.String get phone => $_getSZ(3);
   @$pb.TagNumber(4)
@@ -286,6 +299,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearPhone() => $_clearField(4);
 
+  /// Authorization role
   @$pb.TagNumber(5)
   $2.UserRole get role => $_getN(4);
   @$pb.TagNumber(5)
@@ -295,6 +309,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearRole() => $_clearField(5);
 
+  /// Account status
   @$pb.TagNumber(6)
   $2.UserStatus get status => $_getN(5);
   @$pb.TagNumber(6)
@@ -304,6 +319,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearStatus() => $_clearField(6);
 
+  /// Whether the email address has been verified
   @$pb.TagNumber(7)
   $core.bool get emailVerified => $_getBF(6);
   @$pb.TagNumber(7)
@@ -313,6 +329,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearEmailVerified() => $_clearField(7);
 
+  /// Whether the phone number has been verified
   @$pb.TagNumber(8)
   $core.bool get phoneVerified => $_getBF(7);
   @$pb.TagNumber(8)
@@ -322,6 +339,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   void clearPhoneVerified() => $_clearField(8);
 
+  /// Whether MFA is enabled for this account
   @$pb.TagNumber(9)
   $core.bool get mfaEnabled => $_getBF(8);
   @$pb.TagNumber(9)
@@ -331,6 +349,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   void clearMfaEnabled() => $_clearField(9);
 
+  /// Whether the user has a password set (false for OAuth-only accounts)
   @$pb.TagNumber(10)
   $core.bool get hasPassword => $_getBF(9);
   @$pb.TagNumber(10)
@@ -340,8 +359,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   void clearHasPassword() => $_clearField(10);
 
-  /// Linked OAuth providers
-  /// repeated OAuthProvider linked_providers = 11;
+  /// Avatar image URL
   @$pb.TagNumber(11)
   $core.String get avatarUrl => $_getSZ(10);
   @$pb.TagNumber(11)
@@ -351,6 +369,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   void clearAvatarUrl() => $_clearField(11);
 
+  /// Locale (BCP 47, e.g., `en-US`)
   @$pb.TagNumber(12)
   $core.String get locale => $_getSZ(11);
   @$pb.TagNumber(12)
@@ -360,6 +379,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(12)
   void clearLocale() => $_clearField(12);
 
+  /// Timezone (IANA, e.g., `America/New_York`)
   @$pb.TagNumber(13)
   $core.String get timezone => $_getSZ(12);
   @$pb.TagNumber(13)
@@ -369,6 +389,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   void clearTimezone() => $_clearField(13);
 
+  /// Account creation timestamp
   @$pb.TagNumber(14)
   $3.Timestamp get createdAt => $_getN(13);
   @$pb.TagNumber(14)
@@ -380,6 +401,7 @@ class User extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   $3.Timestamp ensureCreatedAt() => $_ensure(13);
 
+  /// Last profile update timestamp
   @$pb.TagNumber(15)
   $3.Timestamp get updatedAt => $_getN(14);
   @$pb.TagNumber(15)
@@ -473,12 +495,15 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $pb.PbList<$2.UUID> get userIds => $_getList(1);
 
+  /// Filter by account statuses
   @$pb.TagNumber(3)
   $pb.PbList<$2.UserStatus> get statuses => $_getList(2);
 
+  /// Filter by roles
   @$pb.TagNumber(4)
   $pb.PbList<$2.UserRole> get roles => $_getList(3);
 
+  /// Free-text search query (name, email, phone)
   @$pb.TagNumber(5)
   $core.String get query => $_getSZ(4);
   @$pb.TagNumber(5)
@@ -488,6 +513,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearQuery() => $_clearField(5);
 
+  /// Maximum number of results per page (0 = server default)
   @$pb.TagNumber(6)
   $core.int get pageSize => $_getIZ(5);
   @$pb.TagNumber(6)
@@ -497,6 +523,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearPageSize() => $_clearField(6);
 
+  /// Pagination cursor from a previous response
   @$pb.TagNumber(7)
   $core.String get pageToken => $_getSZ(6);
   @$pb.TagNumber(7)
@@ -702,6 +729,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UpdateUserRequest>(create);
   static UpdateUserRequest? _defaultInstance;
 
+  /// Target user ID
   @$pb.TagNumber(1)
   $2.UUID get userId => $_getN(0);
   @$pb.TagNumber(1)
@@ -713,6 +741,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $2.UUID ensureUserId() => $_ensure(0);
 
+  /// Fields to update (if empty, all provided fields are applied)
   @$pb.TagNumber(2)
   $4.FieldMask get updateMask => $_getN(1);
   @$pb.TagNumber(2)
@@ -724,6 +753,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $4.FieldMask ensureUpdateMask() => $_ensure(1);
 
+  /// Display name
   @$pb.TagNumber(3)
   $core.String get name => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -733,6 +763,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearName() => $_clearField(3);
 
+  /// Email address
   @$pb.TagNumber(4)
   $core.String get email => $_getSZ(3);
   @$pb.TagNumber(4)
@@ -742,6 +773,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearEmail() => $_clearField(4);
 
+  /// Phone number (E.164 format)
   @$pb.TagNumber(5)
   $core.String get phone => $_getSZ(4);
   @$pb.TagNumber(5)
@@ -751,6 +783,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearPhone() => $_clearField(5);
 
+  /// Authorization role (admin only)
   @$pb.TagNumber(6)
   $2.UserRole get role => $_getN(5);
   @$pb.TagNumber(6)
@@ -760,6 +793,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearRole() => $_clearField(6);
 
+  /// Account status (admin only)
   @$pb.TagNumber(7)
   $2.UserStatus get status => $_getN(6);
   @$pb.TagNumber(7)
@@ -769,6 +803,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearStatus() => $_clearField(7);
 
+  /// Locale (BCP 47)
   @$pb.TagNumber(8)
   $core.String get locale => $_getSZ(7);
   @$pb.TagNumber(8)
@@ -778,6 +813,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   void clearLocale() => $_clearField(8);
 
+  /// Timezone (IANA)
   @$pb.TagNumber(9)
   $core.String get timezone => $_getSZ(8);
   @$pb.TagNumber(9)
@@ -843,6 +879,7 @@ class SetPasswordRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $2.UUID ensureUserId() => $_ensure(0);
 
+  /// New password (NIST: min 8 chars, checked against breach databases)
   @$pb.TagNumber(2)
   $core.String get password => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -912,6 +949,7 @@ class GetAvatarUploadUrlRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $2.UUID ensureUserId() => $_ensure(0);
 
+  /// MIME type of the image to upload
   @$pb.TagNumber(2)
   $core.String get contentType => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -921,6 +959,7 @@ class GetAvatarUploadUrlRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearContentType() => $_clearField(2);
 
+  /// File size in bytes (1 byte to 10 MB)
   @$pb.TagNumber(3)
   $fixnum.Int64 get contentSize => $_getI64(2);
   @$pb.TagNumber(3)
