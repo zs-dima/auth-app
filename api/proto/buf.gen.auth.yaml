@@ -1,0 +1,7 @@
+# Code generation for auth/v1 + users/v1 → packages/model/auth_model/lib/src/api/proto
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/dart:v25.0.0
+    out: ../../packages/model/auth_model/lib/src/api/proto
+    opt:
+      - grpc

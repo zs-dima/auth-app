@@ -1,0 +1,26 @@
+version: v2
+modules:
+  - path: .
+deps:
+  - buf.build/envoyproxy/protoc-gen-validate
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - STANDARD
+  except:
+    # Allow shared response types (e.g., AuthResponse used by multiple RPCs).
+    # This is a deliberate design choice — AuthResponse is a union type with a
+    # status enum; creating per-RPC wrappers would add boilerplate without value.
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    # Allow response types not named after their RPC (e.g., AuthResponse instead
+    # of AuthenticateResponse). Same union-response pattern as above.
+    - RPC_RESPONSE_STANDARD_NAME
+    # Allow shared request types (e.g., ListUsersRequest used by both
+    # ListUsersInfo and ListUsers RPCs — same query, different projection).
+    - RPC_REQUEST_STANDARD_NAME
+    # OAuthProvider enum values use OAUTH_PROVIDER_ prefix, not O_AUTH_PROVIDER_.
+    # The UPPER_SNAKE conversion of "OAuth" is a known edge case.
+    - ENUM_VALUE_PREFIX
+breaking:
+  use:
+    - FILE

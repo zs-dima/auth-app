@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:auth_model/src/api/grpc_authentication_converter.dart';
 import 'package:auth_model/src/api/i_users_api.dart';
-import 'package:auth_model/src/api/proto/users.pbgrpc.dart' as rpc;
+import 'package:auth_model/src/api/proto/users/v1/users.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/model/user/avatar_upload_url.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';

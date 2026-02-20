@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package app.v1;
+
+// Placeholder for future app-level RPCs (health check, feature flags, etc.)
+service AppService {
+
+}

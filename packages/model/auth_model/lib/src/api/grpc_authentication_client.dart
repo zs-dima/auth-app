@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_model/src/api/i_authentication_api.dart';
-import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
+import 'package:auth_model/src/api/proto/auth/v1/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
@@ -310,8 +310,10 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   // ===========================================================================
 
   @override
-  Future<List<SessionInfo>> listSessions() async {
-    final result = await client.listSessions(rpc.ListSessionsRequest());
+  Future<List<SessionInfo>> listSessions(String refreshToken) async {
+    final result = await client.listSessions(
+      rpc.ListSessionsRequest()..refreshToken = refreshToken,
+    );
     return result.sessions.map(_mapSessionInfo).toList();
   }
 

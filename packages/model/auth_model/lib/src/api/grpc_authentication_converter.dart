@@ -1,5 +1,5 @@
-import 'package:auth_model/src/api/proto/auth.pbgrpc.dart' as rpc;
-import 'package:auth_model/src/api/proto/users.pb.dart' as users;
+import 'package:auth_model/src/api/proto/auth/v1/auth.pbgrpc.dart' as rpc;
+import 'package:auth_model/src/api/proto/users/v1/users.pb.dart' as users;
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
@@ -68,7 +68,7 @@ extension UserSnapshotX on rpc.UserSnapshot {
     email: email,
     phone: phone.isNotEmpty ? phone : null,
     role: role.toRole(),
-    status: .active, // UserSnapshot doesn't have status, assume active
+    status: status.toStatus(),
     avatarUrl: avatarUrl.isNotEmpty ? avatarUrl : null,
   );
 }

@@ -135,7 +135,8 @@ abstract interface class IAuthenticationApi {
   // ===========================================================================
 
   /// List all active sessions for current user.
-  Future<List<SessionInfo>> listSessions();
+  /// [refreshToken] identifies the current session (marked as `is_current`).
+  Future<List<SessionInfo>> listSessions(String refreshToken);
 
   /// Revoke a specific session by device_id.
   Future<bool> revokeSession(String deviceId);

@@ -18,6 +18,6 @@ export 'package:protobuf/well_known_types/google/protobuf/type.pb.dart';
 export 'package:protobuf/well_known_types/google/protobuf/wrappers.pb.dart';
 export 'package:protobuf/well_known_types/google/protobuf/wrappers.pbjson.dart';
 
-export 'proto/core.pb.dart';
-export 'proto/core.pbenum.dart';
-export 'proto/core.pbjson.dart';
+export 'proto/core/v1/core.pb.dart';
+export 'proto/core/v1/core.pbenum.dart';
+export 'proto/core/v1/core.pbjson.dart';

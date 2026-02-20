@@ -1,0 +1,12 @@
+# Code generation for core/v1 → packages/model/grpc_model/lib/src/proto
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: auth-service/proto
+plugins:
+  - remote: buf.build/protocolbuffers/dart:v25.0.0
+    out: ../../packages/model/grpc_model/lib/src/proto
+    opt:
+      - grpc
