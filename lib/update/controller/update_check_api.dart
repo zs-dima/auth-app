@@ -1,56 +1,24 @@
-// ignore_for_file: argument_type_not_assignable, avoid_web_libraries_in_flutter
-import 'dart:convert';
+import 'dart:async';
 
-// Conditional import for web only
-import 'package:auth_app/update/controller/platform/update_check.dart';
-import 'package:auth_app/update/model/version_model.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
+/// Contract for the update-check surface area consumed by
+/// `UpdateCheckController`. The shape is intentionally minimal: the
+/// controller only needs to know "is there a newer Service Worker
+/// waiting?" and "fire when one appears".
 abstract class UpdateCheckApi {
-  Future<VersionModel> getNewVersion();
+  /// `true` once a newer Service Worker has finished installing and is
+  /// waiting (either signalled via `Bootstrap.onUpdateAvailable` or
+  /// detected by the one-shot startup probe).
+  bool get hasPendingUpdate;
+
+  /// Fires whenever a newer Service Worker becomes available. The
+  /// controller listens to this so the banner appears in seconds rather
+  /// than waiting for any periodic check.
+  Stream<void> get onUpdateAvailable;
+
+  /// Apply a pending update — under sw 0.1.x this drives the
+  /// skipWaiting / controllerchange / reload handshake.
   Future<void> updateApplication();
-  Future<void> tryReloadApplication();
-}
 
-class UpdateCheckApiImpl implements UpdateCheckApi {
-  const UpdateCheckApiImpl();
-
-  @override
-  Future<VersionModel> getNewVersion() async {
-    final uri = Uri.parse('${Uri.base.origin}/version.json?v=${DateTime.now().millisecondsSinceEpoch}');
-    final response = await http.get(
-      uri,
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-    );
-
-    return VersionModel.fromJson(json.decode(response.body));
-  }
-
-  @override
-  Future<void> updateApplication() async {
-    final preferences = await SharedPreferences.getInstance();
-
-    // Set flag to reload second time website after application updated
-    await preferences.setBool('wait_update', true);
-
-    reloadWebApp();
-  }
-
-  @override
-  Future<void> tryReloadApplication() async {
-    final preferences = await SharedPreferences.getInstance();
-    final waitUpdate = preferences.getBool('wait_update') ?? false;
-    if (!waitUpdate) return;
-
-    // Remove flag to prevent infinite reload
-    await preferences.setBool('wait_update', false);
-
-    // Try to reload website second time after application updated,
-    // as first reload updates scripts only
-    reloadWebApp();
-  }
+  /// Release timers, listeners and stream resources. Idempotent.
+  void dispose();
 }

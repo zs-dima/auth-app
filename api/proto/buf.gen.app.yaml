@@ -2,6 +2,6 @@
 version: v2
 plugins:
   - remote: buf.build/protocolbuffers/dart:v25.0.0
-    out: ../../lib/_core/data/api/proto
+    out: lib/_core/data/api/proto
     opt:
       - grpc

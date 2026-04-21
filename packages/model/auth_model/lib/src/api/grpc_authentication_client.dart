@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_model/src/api/i_authentication_api.dart';
-import 'package:auth_model/src/api/proto/auth/v1/auth.pbgrpc.dart' as rpc;
+import 'package:auth_model/src/api/proto/auth/v2/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';

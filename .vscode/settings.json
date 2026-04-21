@@ -47,8 +47,7 @@
   "dart.additionalAnalyzerFileExtensions": [
     "drift"
   ],
-  "dart.flutterSdkPath": ".fvm/versions/3.38.9",
-  "dart.addSdkToTerminalPath": true,
+  // "dart.addSdkToTerminalPath": true,
   "[html]": {
     "editor.formatOnSave": false
   },
@@ -74,7 +73,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "pubspec.yaml": "pubspec.lock, spider.yaml, sdmarket.iml, lefthook.yml, mason.yaml, .flutter-plugins, .packages, .dart_tool, .flutter-plugins-dependencies, .metadata, .packages, pubspec.lock, build.yaml, analysis_options.yaml, all_lint_rules.yaml, icons_launcher.yaml, flutter_native_splash.yaml, l10n.yaml, flutter_launcher_icons.yaml, melos.yaml, pubspec_overrides.yaml, sentry.properties, devtools_options.yaml",
+    "pubspec.yaml": "pubspec.lock, spider.yaml, sdmarket.iml, lefthook.yml, mason.yaml, .flutter-plugins, .packages, .dart_tool, .flutter-plugins-dependencies, .metadata, .packages, pubspec.lock, build.yaml, analysis_options.yaml, all_lint_rules.yaml, icons_launcher.yaml, flutter_native_splash.yaml, l10n.yaml, flutter_launcher_icons.yaml, melos.yaml, pubspec_overrides.yaml, sentry.properties, devtools_options.yaml, sw.yaml",
     ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .mailmap, .sentryignore, .git-blame*, .*ignore",
     "readme.*": "authors, backers.md, changelog*, citation*, code_of_conduct.md, codeowners, contributing.md, contributors, copying, credits, governance.md, history.md, license*, maintainers, readme*, security.md, sponsors.md, agents.md",
     "*.dart": "i_$(capture).dart, $(capture).g.dart, $(capture).gr.dart, $(capture).freezed.dart, $(capture).config.dart, $(capture).chopper.dart, $(capture).drift, $(capture)_io.dart, $(capture)_web.dart, $(capture)_shared.dart, $(capture)_stub.dart",

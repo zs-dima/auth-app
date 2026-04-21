@@ -32,7 +32,6 @@ RUN dart run intl_utils:generate
 RUN flutter pub run build_runner build --delete-conflicting-outputs --release
 RUN flutter build web --release --no-source-maps \
     --dart-define=APP_ENVIRONMENT=$APP_ENVIRONMENT \
-    --pwa-strategy offline-first \
     --web-renderer canvaskit \
     --base-href /
 

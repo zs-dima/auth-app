@@ -29,7 +29,7 @@ Auth App provides a modern, responsive UI for authentication and user management
 
 ### Prerequisites
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.38+)
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.41+)
 - [Dart SDK](https://dart.dev/get-dart) (3.8+)
 - Running backend service (Rust or Go)
 

@@ -1,3 +1,3 @@
 export 'update_check_vm.dart'
     // ignore: uri_does_not_exist
-    if (dart.library.html) 'update_check_js.dart';
+    if (dart.library.js_interop) 'update_check_js.dart';

@@ -60,7 +60,7 @@ class AppMetadata {
       _ => '?',
     },
     deviceVersion: platform.version,
-    isWeb: const bool.fromEnvironment('dart.library.js_util'), // platform.js,
+    isWeb: kIsWeb, // platform.js,
     isRelease: const bool.fromEnvironment('dart.vm.product'), // platform.buildMode.release,
     locale: PlatformDispatcher.instance.locale.languageCode, // platform.locale,
     operatingSystem: defaultTargetPlatform.name, // platform.operatingSystem.name,

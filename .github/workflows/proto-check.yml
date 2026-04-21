@@ -1,0 +1,33 @@
+name: "Proto Check"
+
+on:
+  pull_request:
+    paths:
+      - "api/proto/**"
+  workflow_dispatch:
+
+jobs:
+  proto-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history needed for breaking-change detection against main
+          fetch-depth: 0
+
+      - name: Setup Buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lint
+        run: buf lint api/proto
+
+      - name: Format
+        run: buf format --diff --exit-code api/proto
+
+      - name: Breaking Changes
+        # Compare against the main branch
+        run: buf breaking api/proto --against ".git#branch=main,subdir=api/proto"

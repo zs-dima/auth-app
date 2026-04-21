@@ -32,8 +32,13 @@ l10n:
 build_runner:
 	@dart run build_runner build --delete-conflicting-outputs --release
 
+# Generate pubspec constant
+pubspec:
+	@dart pub global activate pubspec_generator
+	@dart pub global run pubspec_generator:generate --input pubspec.yaml --output lib/_core/constant/pubspec.yaml.g.dart
+
 # Generate code
-codegen: get fluttergen l10n build_runner format
+codegen: get fluttergen l10n pubspec build_runner format
 
 fix: format
 	@dart fix --apply lib

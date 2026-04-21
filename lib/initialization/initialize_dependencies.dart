@@ -22,7 +22,7 @@ import 'package:auth_app/initialization/app_migrator.dart';
 import 'package:auth_app/settings/data/dao/app_preferences_dao.dart';
 import 'package:auth_app/settings/data/dao/app_secure_preferences_dao.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
-import 'package:auth_app/update/controller/update_check_api.dart';
+import 'package:auth_app/update/controller/platform/update_check.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
 import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
@@ -274,15 +274,15 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       },
       unauthenticatedPaths: const <String>{
         // gRPC public methods (authentication)
-        '/auth.v1.AuthService/Authenticate',
-        '/auth.v1.AuthService/SignUp',
-        '/auth.v1.AuthService/SignOut',
-        '/auth.v1.AuthService/RecoveryStart',
-        '/auth.v1.AuthService/RecoveryConfirm',
-        '/auth.v1.AuthService/RefreshTokens',
+        '/auth.v2.AuthService/Authenticate',
+        '/auth.v2.AuthService/SignUp',
+        '/auth.v2.AuthService/SignOut',
+        '/auth.v2.AuthService/RecoveryStart',
+        '/auth.v2.AuthService/RecoveryConfirm',
+        '/auth.v2.AuthService/RefreshTokens',
         // gRPC public methods (OAuth)
-        '/auth.v1.AuthService/GetOAuthUrl',
-        '/auth.v1.AuthService/ExchangeOAuthCode',
+        '/auth.v2.AuthService/GetOAuthUrl',
+        '/auth.v2.AuthService/ExchangeOAuthCode',
       },
     );
 
@@ -294,7 +294,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   ///
   'Prepare notifications': (dependencies) => dependencies.messageController = AppMessageController(),
   'Prepare updates check': (dependencies) => dependencies.updateCheckController = UpdateCheckController(
-    updateCheckApi: const UpdateCheckApiImpl(),
+    updateCheckApi: UpdateCheckApiImpl(),
     metadata: dependencies.metadata,
     messageController: dependencies.messageController,
   ),

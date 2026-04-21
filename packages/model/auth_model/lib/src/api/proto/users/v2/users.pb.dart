@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from users/v1/users.proto.
+// Generated from users/v2/users.proto.
 
 // @dart = 3.3
 
@@ -18,7 +18,7 @@ import 'package:protobuf/well_known_types/google/protobuf/duration.pb.dart' as $
 import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart' as $4;
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart' as $3;
 
-import '../../core/v1/core.pb.dart' as $2;
+import '../../core/v2/core.pb.dart' as $2;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -56,7 +56,7 @@ class UserInfo extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UserInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'id', subBuilder: $2.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'email')
@@ -223,7 +223,7 @@ class User extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'User',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'id', subBuilder: $2.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'email')
@@ -445,7 +445,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListUsersRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..pPM<$2.UUID>(2, _omitFieldNames ? '' : 'userIds', subBuilder: $2.UUID.create)
     ..pc<$2.UserStatus>(3, _omitFieldNames ? '' : 'statuses', $pb.PbFieldType.KE,
@@ -565,7 +565,7 @@ class CreateUserRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CreateUserRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOS(2, _omitFieldNames ? '' : 'email')
     ..aOS(3, _omitFieldNames ? '' : 'phone')
@@ -699,7 +699,7 @@ class UpdateUserRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UpdateUserRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..aOM<$4.FieldMask>(2, _omitFieldNames ? '' : 'updateMask', subBuilder: $4.FieldMask.create)
     ..aOS(3, _omitFieldNames ? '' : 'name')
@@ -845,7 +845,7 @@ class SetPasswordRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SetPasswordRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
@@ -914,7 +914,7 @@ class GetAvatarUploadUrlRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetAvatarUploadUrlRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..aOS(2, _omitFieldNames ? '' : 'contentType')
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'contentSize', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
@@ -992,7 +992,7 @@ class GetAvatarUploadUrlResponse extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetAvatarUploadUrlResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'uploadUrl')
     ..aOM<$5.Duration>(2, _omitFieldNames ? '' : 'expiresIn', subBuilder: $5.Duration.create)
     ..hasRequiredFields = false;
@@ -1058,7 +1058,7 @@ class ConfirmAvatarUploadRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConfirmAvatarUploadRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..hasRequiredFields = false;
 
@@ -1111,7 +1111,7 @@ class DeleteAvatarRequest extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DeleteAvatarRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v1'), createEmptyInstance: create)
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'users.v2'), createEmptyInstance: create)
     ..aOM<$2.UUID>(1, _omitFieldNames ? '' : 'userId', subBuilder: $2.UUID.create)
     ..hasRequiredFields = false;
 

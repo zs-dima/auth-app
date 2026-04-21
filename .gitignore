@@ -55,6 +55,9 @@ app.*.map.json
 **/*.mocks.dart
 lib/**/gen/
 
+# Generated proto stubs (Rust — local validation only)
+api/gen/
+
 # Database
 **/*.db
 **/*.sqlite
@@ -73,8 +76,14 @@ logs/
 # Melos
 pubspec_overrides.yaml
 
-# FVM Version Cache
+# Flutter Version Manager
+mise.local.toml
+mise.local.lock
+mise.lock
+.vscode/mise-tools/
+.fvm/flutter_sdk
 .fvm/
+.fvmrc
 
 # Firebase
 .firebase

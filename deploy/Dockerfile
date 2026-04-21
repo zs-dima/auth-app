@@ -9,7 +9,7 @@ COPY ./tool/web_env.dart ./tool/
 RUN dart compile exe tool/web_env.dart -o tool/web-env
 
 
-FROM plugfox/flutter:3.38.5-web AS build_web
+FROM plugfox/flutter:3.41.7-web AS build_web
 WORKDIR /home
 COPY --chown=101:101 . .
 
@@ -22,9 +22,19 @@ RUN dart run intl_utils:generate
 RUN flutter pub run build_runner build --delete-conflicting-outputs --release
 RUN flutter build web --release --no-source-maps \
     --dart-define=APP_ENVIRONMENT=$APP_ENVIRONMENT \
-    --pwa-strategy offline-first \
     --web-renderer canvaskit \
     --base-href /
+
+# Swap dev index.html for the prod template before sw:generate.
+# (dev uses flutter_bootstrap.js, prod uses the sw bootstrap.js tag).
+RUN rm -f build/web/index.html && mv build/web/index.prod.html build/web/index.html
+
+# Generate service worker with the sw CLI (pinned in pubspec.yaml).
+# Config is loaded from sw.yaml at the repo root; only --version varies per build.
+# sw 0.1.2 inlines flutter.js into bootstrap.js and auto-deletes flutter.js,
+# flutter_bootstrap.js, flutter_service_worker.js, .last_build_id, and any
+# *.js.map / *.js.symbols / *.wasm.map files.
+RUN dart run sw:generate --version="${GIT_SHA}"
 
 
 FROM nginx:alpine as production

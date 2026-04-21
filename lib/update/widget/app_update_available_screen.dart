@@ -59,7 +59,7 @@ class _AppUpdateAvailableDialogState extends State<AppUpdateAvailableDialog> {
               borderRadius: .all(.circular(12.0)),
             ),
           ),
-          onPressed: () async {
+          onPressed: () {
             HapticFeedback.mediumImpact().ignore();
             // await context.octopus.pop();
             _updateCheckController.update();

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Authentication demo app.">
+  <meta name="theme-color" content="#f4fdf7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <meta flt-viewport="" name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="auth_app">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <title>Authentication demo app</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- +PostHog+ -->
+  <!--
+  <script async>
+    try {
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+      const POSTHOG_API_KEY = 'phc_***'; // TODO
+      if (POSTHOG_API_KEY && POSTHOG_API_KEY.startsWith('phc_')) {
+        posthog.init(POSTHOG_API_KEY, {
+          api_host:'https://***.com',    // TODO
+          defaults: '2025-05-24',
+        });
+      }
+    } catch (error) {
+      console.warn('PostHog analytics initialization failed:', error);
+      window.posthog = window.posthog || {
+        capture: function() {},
+        identify: function() {},
+        alias: function() {},
+        reset: function() {},
+        isFeatureEnabled: function() { return false; },
+        getFeatureFlag: function() { return undefined; },
+        init: function() {},
+        register: function() {},
+        unregister: function() {}
+      };
+    }
+  </script> 
+  -->
+  <!-- -PostHog- -->
+
+</head>
+<body>
+  <script>
+    // Extract incoming launch parameters (initial message, referrer, UTM params)
+    (function() {
+      var data = { message: null, referrer: null, params: {} };
+
+      // 1. Try window.name (primary channel)
+      if (window.name) {
+        try {
+          var parsed = JSON.parse(window.name);
+          if (parsed && typeof parsed === 'object' && ('message' in parsed || 'referrer' in parsed)) {
+            data.message = parsed.message || null;
+            data.referrer = parsed.referrer || null;
+            if (parsed.params && typeof parsed.params === 'object') {
+              data.params = parsed.params;
+            }
+            window.name = ''; // Clear after reading
+          }
+        } catch (e) {
+          // Not our data, ignore
+        }
+      }
+
+      // 2. Read query parameters (present in both primary and fallback)
+      var searchParams = new URLSearchParams(window.location.search);
+      if (!data.referrer) {
+        data.referrer = searchParams.get('referrer') || null;
+      }
+      // Extract custom params from URL (fallback path puts them in query)
+      searchParams.forEach(function(value, key) {
+        if (key !== 'auto_accept_policies' && key !== 'referrer') {
+          if (!data.params[key]) {
+            data.params[key] = value;
+          }
+        }
+      });
+
+      // 3. Read message from hash (fallback path only)
+      if (!data.message && window.location.hash.length > 1) {
+        try {
+          data.message = decodeURIComponent(window.location.hash.substring(1));
+        } catch (e) {
+          data.message = window.location.hash.substring(1);
+        }
+      }
+
+      // Expose to Dart (URL cleanup is handled on the Dart side)
+      window._appInitialParams = data;
+    })();
+  </script>
+
+  <script defer data-sw-bootstrap src="bootstrap.js"></script>
+</body>
+
+</html>

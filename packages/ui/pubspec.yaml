@@ -9,7 +9,7 @@ version: 0.0.1
 # homepage:
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.11.4
 
 dependencies:
   flutter:
@@ -28,11 +28,8 @@ dependencies:
   # Internationalization
   intl: any
 
-  # Platform
-  win32: ^5.14.0
-
   # State management
-  control: ^0.2.0
+  control: ^1.0.0-dev.1
 
   # Utility
   rxdart: ^0.28.0
@@ -61,7 +58,6 @@ flutter:
     - family: icons
       fonts:
         - asset: packages/ui/fonts/icons.ttf
-
     # - family: SocialIcons
     #   fonts:
     #     - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf

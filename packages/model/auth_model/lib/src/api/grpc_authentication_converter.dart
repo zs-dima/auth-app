@@ -1,11 +1,10 @@
-import 'package:auth_model/src/api/proto/auth/v1/auth.pbgrpc.dart' as rpc;
-import 'package:auth_model/src/api/proto/users/v1/users.pb.dart' as users;
+import 'package:auth_model/src/api/proto/auth/v2/auth.pbgrpc.dart' as rpc;
+import 'package:auth_model/src/api/proto/users/v2/users.pb.dart' as users;
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_info.dart';
 import 'package:grpc_model/grpc_model.dart' as core;
-import 'package:grpc_model/grpc_model.dart' hide UserRole, UserStatus;
 
 // =============================================================================
 // USER ROLE MAPPING

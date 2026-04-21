@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from users/v1/users.proto.
+// Generated from users/v2/users.proto.
 
 // @dart = 3.3
 
@@ -22,7 +22,7 @@ import 'users.pb.dart' as $0;
 export 'users.pb.dart';
 
 /// User Service - User CRUD, avatars, admin functions
-@$pb.GrpcServiceName('users.v1.UserService')
+@$pb.GrpcServiceName('users.v2.UserService')
 class UserServiceClient extends $grpc.Client {
   /// The hostname for this service.
   static const $core.String defaultHost = '';
@@ -120,34 +120,34 @@ class UserServiceClient extends $grpc.Client {
   // method descriptors
 
   static final _$listUsersInfo = $grpc.ClientMethod<$0.ListUsersRequest, $0.UserInfo>(
-      '/users.v1.UserService/ListUsersInfo',
+      '/users.v2.UserService/ListUsersInfo',
       ($0.ListUsersRequest value) => value.writeToBuffer(),
       $0.UserInfo.fromBuffer);
   static final _$listUsers = $grpc.ClientMethod<$0.ListUsersRequest, $0.User>(
-      '/users.v1.UserService/ListUsers', ($0.ListUsersRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v2.UserService/ListUsers', ($0.ListUsersRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$createUser = $grpc.ClientMethod<$0.CreateUserRequest, $0.User>(
-      '/users.v1.UserService/CreateUser', ($0.CreateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v2.UserService/CreateUser', ($0.CreateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$updateUser = $grpc.ClientMethod<$0.UpdateUserRequest, $0.User>(
-      '/users.v1.UserService/UpdateUser', ($0.UpdateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
+      '/users.v2.UserService/UpdateUser', ($0.UpdateUserRequest value) => value.writeToBuffer(), $0.User.fromBuffer);
   static final _$setPassword = $grpc.ClientMethod<$0.SetPasswordRequest, $1.Empty>(
-      '/users.v1.UserService/SetPassword', ($0.SetPasswordRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
+      '/users.v2.UserService/SetPassword', ($0.SetPasswordRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
   static final _$getAvatarUploadUrl = $grpc.ClientMethod<$0.GetAvatarUploadUrlRequest, $0.GetAvatarUploadUrlResponse>(
-      '/users.v1.UserService/GetAvatarUploadUrl',
+      '/users.v2.UserService/GetAvatarUploadUrl',
       ($0.GetAvatarUploadUrlRequest value) => value.writeToBuffer(),
       $0.GetAvatarUploadUrlResponse.fromBuffer);
   static final _$confirmAvatarUpload = $grpc.ClientMethod<$0.ConfirmAvatarUploadRequest, $1.Empty>(
-      '/users.v1.UserService/ConfirmAvatarUpload',
+      '/users.v2.UserService/ConfirmAvatarUpload',
       ($0.ConfirmAvatarUploadRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$deleteAvatar = $grpc.ClientMethod<$0.DeleteAvatarRequest, $1.Empty>(
-      '/users.v1.UserService/DeleteAvatar',
+      '/users.v2.UserService/DeleteAvatar',
       ($0.DeleteAvatarRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
 }
 
-@$pb.GrpcServiceName('users.v1.UserService')
+@$pb.GrpcServiceName('users.v2.UserService')
 abstract class UserServiceBase extends $grpc.Service {
-  $core.String get $name => 'users.v1.UserService';
+  $core.String get $name => 'users.v2.UserService';
 
   UserServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.ListUsersRequest, $0.UserInfo>(

@@ -1,15 +1,11 @@
-// ignore_for_file: argument_type_not_assignable, avoid_web_libraries_in_flutter
+// ignore_for_file: argument_type_not_assignable
 import 'dart:async';
 
 import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
 import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
-// Conditional import for web only
-import 'package:auth_app/update/controller/update_check_web_stub.dart'
-    if (dart.library.html) 'package:auth_app/update/controller/update_check_web_impl.dart';
 import 'package:control/control.dart';
-import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'update_check_controller.freezed.dart';
@@ -35,25 +31,26 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
   final UpdateCheckApi _updateCheckApi;
 
   StreamSubscription<void>? _updateSubscription;
-
-  Future<void> applyUpdate() async {
-    await _updateCheckApi.updateApplication();
-  }
-
-  Future<void> checkAndApplyPendingUpdate() async {
-    await _updateCheckApi.tryReloadApplication();
-  }
+  bool _isCurrentPendingUpdateDismissed = false;
 
   void ignoreUpdate() => handle(
-    () async => setState(UpdateCheckState.idle(state.version)),
+    () async {
+      _isCurrentPendingUpdateDismissed = _updateCheckApi.hasPendingUpdate || state is UpdateAvailableState;
+      setState(UpdateCheckState.idle(state.version));
+    },
     error: (error, stackTrace) async => setError('Error on ignore update ${state.version}', error, stackTrace),
     name: 'ignoreUpdate',
   );
 
+  /// Apply a pending update. Under sw 0.1.x this posts `skipWaiting` to
+  /// the waiting Service Worker via `window.Bootstrap.applyUpdate(true)`,
+  /// awaits the `controllerchange` handshake, and then reloads — so the
+  /// new SW controls the fresh page. Falls back to a plain reload when
+  /// the Bootstrap API is absent (dev) or the update path fails.
   void update() => handle(
     () async {
       setState(UpdateCheckState.idle(state.version));
-      reloadWebApp();
+      await _updateCheckApi.updateApplication();
     },
     error: (error, stackTrace) async => setError('Error on update ${state.version}', error, stackTrace),
     name: 'update',
@@ -61,32 +58,40 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
 
   void checkForUpdates() => handle(
     () async {
-      if (!kIsWeb) return; // TODO
-      final newVersion = await _updateCheckApi.getNewVersion();
-      final newAppVersion = newVersion.version;
-
-      if (newAppVersion == null || newAppVersion == state.version) return;
-
-      setState(UpdateCheckState.updateAvailable(newAppVersion));
+      if (!_updateCheckApi.hasPendingUpdate) return;
+      if (_isCurrentPendingUpdateDismissed) return;
+      if (state is UpdateAvailableState) return;
+      setState(UpdateCheckState.updateAvailable(state.version));
     },
-    error: (error, stackTrace) async => setError('Error on check for updates', error, stackTrace),
-    name: '_checkForUpdates',
+    error: (error, stackTrace) async => setError('Error on checking for updates', error, stackTrace),
+    name: 'checkForUpdates',
   );
 
   @override
   void dispose() {
     _updateSubscription?.cancel();
+    _updateCheckApi.dispose();
     super.dispose();
   }
 
   void _startUpdateCheckStream() {
-    // Perform an immediate check
-    // checkForUpdates();
-
-    // Create the periodic stream for ongoing checks
-    _updateSubscription = Stream<void>.periodic(const Duration(minutes: 39)).listen(
-      (_) => checkForUpdates(),
+    // Push path: the API drives a 15-min `registration.update()` poll
+    // and a `visibilitychange` trigger; both resolve to a
+    // `Bootstrap.onUpdateAvailable` event that lands here within ~1s,
+    // so the banner appears without waiting for any periodic Dart
+    // timer.
+    _updateSubscription = _updateCheckApi.onUpdateAvailable.listen(
+      (_) {
+        _isCurrentPendingUpdateDismissed = false;
+        checkForUpdates();
+      },
       cancelOnError: false,
     );
+
+    // Pull path bootstrap: re-check on construction in case the API's
+    // one-shot probe (`_probeWaitingRegistration`) flipped the flag
+    // before this controller existed. `app_message_scope` calls
+    // `checkForUpdates()` again on its own mount for the same reason.
+    checkForUpdates();
   }
 }

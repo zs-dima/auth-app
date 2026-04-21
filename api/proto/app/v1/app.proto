@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package app.v1;
 
-// Placeholder for future app-level RPCs (health check, feature flags, etc.)
-service AppService {
+option go_package = "auth-service/proto/app/v1;appv1";
 
-}
+// Placeholder for future app-level RPCs (health check, feature flags, etc.)
+service AppService {}

@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from core/v1/core.proto.
+// Generated from core/v2/core.proto.
 
 // @dart = 3.3
 
@@ -59,9 +59,7 @@ const UUID$json = {
 
 /// Descriptor for `UUID`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List uUIDDescriptor =
-    $convert.base64Decode('CgRVVUlEEm0KBXZhbHVlGAEgASgJQlf6QlRyUjJNXlswLTlhLWZBLUZdezh9LVswLTlhLWZBLU'
-        'ZdezR9LVswLTlhLWZBLUZdezR9LVswLTlhLWZBLUZdezR9LVswLTlhLWZBLUZdezEyfSTQAQFS'
-        'BXZhbHVl');
+    $convert.base64Decode('CgRVVUlEEiEKBXZhbHVlGAEgASgJQgu6SAjYAQFyA7ABAVIFdmFsdWU=');
 
 @$core.Deprecated('Use operationResultDescriptor instead')
 const OperationResult$json = {

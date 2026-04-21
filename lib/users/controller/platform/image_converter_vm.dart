@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/users/controller/upload_image_controller.dart';
-import 'package:fast_image/fast_image.dart';
+import 'package:pixer/pixer.dart';
 
 Future<(Uint8List?, String)> toWebPBytes(
   ImageInfo originalImage, {
@@ -20,10 +20,10 @@ Future<(Uint8List?, String)> toWebPBytes(
 
   final stopwatch = Stopwatch()..start();
 
-  final fastImage = FastImage.fromMemory(input);
-  FastImage? resizedImage;
+  final fastImage = Pixer.fromMemory(input);
+  Pixer? resizedImage;
   try {
-    resizedImage = cover ? fastImage.resizeToFit(width, height) : fastImage.resize(width, height);
+    resizedImage = cover ? fastImage.resize(width, height) : fastImage.resizeExact(width, height);
   } finally {
     fastImage.dispose();
   }

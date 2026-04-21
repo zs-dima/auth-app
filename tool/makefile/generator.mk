@@ -1,24 +1,25 @@
-.PHONY: gen-build gen-build-delete gen-clean gen-watch doc
+.PHONY: gen-pubspec gen-build gen-build-delete gen-clean gen-watch doc
 
-gen-build: get
+gen-pubspec:
+	@echo "* Generating pubspec.yaml.g.dart *"
+	@dart pub global activate pubspec_generator
+	@dart pub global run pubspec_generator:generate -i pubspec.yaml -o lib/_core/generated/constant/pubspec.yaml.g.dart
+
+gen-build: get gen-pubspec
 	@echo "* Running build runner *"
-	@fvm dart pub global activate pubspec_generator
-	@fvm dart run build_runner build
-	@fvm dart pub global run pubspec_generator:generate -o lib/_core/generated/constant/pubspec.yaml.g.dart
+	@dart run build_runner build
 
-gen-build-delete: get
+gen-build-delete: get gen-pubspec
 	@echo "* Running build runner with deletion of conflicting outputs *"
-	@fvm dart pub global activate pubspec_generator
-	@fvm dart run build_runner build --delete-conflicting-outputs
-	@fvm dart pub global run pubspec_generator:generate -o lib/_core/generated/constant/pubspec.yaml.g.dart
+	@dart run build_runner build --delete-conflicting-outputs
 
 gen-clean:
 	@echo "* Cleaning build runner *"
-	@fvm dart run build_runner clean
+	@dart run build_runner clean
 
 gen-watch:
 	@echo "* Running build runner in watch mode *"
-	@fvm dart run build_runner watch
+	@dart run build_runner watch
 
 doc:
-	@fvm dart doc
+	@dart doc

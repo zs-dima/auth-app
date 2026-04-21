@@ -65,7 +65,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
   }
 
   Future<void> _uploadImage() async {
-    final image = await FilePicker.platform.pickFiles(
+    final image = await FilePicker.pickFiles(
       dialogTitle: 'Select an image',
       type: kIsWeb ? .custom : .image,
       allowMultiple: false, // allow multiple files to be selected

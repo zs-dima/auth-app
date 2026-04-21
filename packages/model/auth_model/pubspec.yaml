@@ -7,7 +7,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.11.4
 
 dependencies:
   # Packages
@@ -31,7 +31,7 @@ dependencies:
 
   # Code generation
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.9.0
+  json_annotation: ^4.11.0
 
   # API
   grpc: ^5.1.0
@@ -40,9 +40,9 @@ dependencies:
 
 dev_dependencies:
   # Code generation
-  build_runner: ^2.10.4
-  freezed: ^3.2.3
-  json_serializable: ^6.11.2
+  build_runner: ^2.13.1
+  freezed: ^3.2.5
+  json_serializable: ^6.13.1
 
   # Lints
   lints_tool:

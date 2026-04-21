@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from auth/v1/auth.proto.
+// Generated from auth/v2/auth.proto.
 
 // @dart = 3.3
 
@@ -46,7 +46,7 @@ export 'auth.pb.dart';
 /// - Audit logging: Add audit metadata fields
 /// - Rate limiting hints: Return retry-after in responses
 /// =============================================================================
-@$pb.GrpcServiceName('auth.v1.AuthService')
+@$pb.GrpcServiceName('auth.v2.AuthService')
 class AuthServiceClient extends $grpc.Client {
   /// The hostname for this service.
   static const $core.String defaultHost = '';
@@ -253,94 +253,94 @@ class AuthServiceClient extends $grpc.Client {
   // method descriptors
 
   static final _$authenticate = $grpc.ClientMethod<$0.AuthenticateRequest, $0.AuthResponse>(
-      '/auth.v1.AuthService/Authenticate',
+      '/auth.v2.AuthService/Authenticate',
       ($0.AuthenticateRequest value) => value.writeToBuffer(),
       $0.AuthResponse.fromBuffer);
   static final _$refreshTokens = $grpc.ClientMethod<$0.RefreshTokensRequest, $0.TokenPair>(
-      '/auth.v1.AuthService/RefreshTokens',
+      '/auth.v2.AuthService/RefreshTokens',
       ($0.RefreshTokensRequest value) => value.writeToBuffer(),
       $0.TokenPair.fromBuffer);
   static final _$validateCredentials =
       $grpc.ClientMethod<$0.ValidateCredentialsRequest, $0.ValidateCredentialsResponse>(
-          '/auth.v1.AuthService/ValidateCredentials',
+          '/auth.v2.AuthService/ValidateCredentials',
           ($0.ValidateCredentialsRequest value) => value.writeToBuffer(),
           $0.ValidateCredentialsResponse.fromBuffer);
   static final _$signOut = $grpc.ClientMethod<$0.SignOutRequest, $1.Empty>(
-      '/auth.v1.AuthService/SignOut', ($0.SignOutRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
+      '/auth.v2.AuthService/SignOut', ($0.SignOutRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
   static final _$signUp = $grpc.ClientMethod<$0.SignUpRequest, $0.AuthResponse>(
-      '/auth.v1.AuthService/SignUp', ($0.SignUpRequest value) => value.writeToBuffer(), $0.AuthResponse.fromBuffer);
-  static final _$verifyMfa = $grpc.ClientMethod<$0.VerifyMfaRequest, $0.AuthResponse>('/auth.v1.AuthService/VerifyMfa',
+      '/auth.v2.AuthService/SignUp', ($0.SignUpRequest value) => value.writeToBuffer(), $0.AuthResponse.fromBuffer);
+  static final _$verifyMfa = $grpc.ClientMethod<$0.VerifyMfaRequest, $0.AuthResponse>('/auth.v2.AuthService/VerifyMfa',
       ($0.VerifyMfaRequest value) => value.writeToBuffer(), $0.AuthResponse.fromBuffer);
   static final _$getOAuthUrl = $grpc.ClientMethod<$0.GetOAuthUrlRequest, $0.GetOAuthUrlResponse>(
-      '/auth.v1.AuthService/GetOAuthUrl',
+      '/auth.v2.AuthService/GetOAuthUrl',
       ($0.GetOAuthUrlRequest value) => value.writeToBuffer(),
       $0.GetOAuthUrlResponse.fromBuffer);
   static final _$exchangeOAuthCode = $grpc.ClientMethod<$0.ExchangeOAuthCodeRequest, $0.AuthResponse>(
-      '/auth.v1.AuthService/ExchangeOAuthCode',
+      '/auth.v2.AuthService/ExchangeOAuthCode',
       ($0.ExchangeOAuthCodeRequest value) => value.writeToBuffer(),
       $0.AuthResponse.fromBuffer);
   static final _$linkOAuthProvider = $grpc.ClientMethod<$0.LinkOAuthProviderRequest, $1.Empty>(
-      '/auth.v1.AuthService/LinkOAuthProvider',
+      '/auth.v2.AuthService/LinkOAuthProvider',
       ($0.LinkOAuthProviderRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$unlinkOAuthProvider = $grpc.ClientMethod<$0.UnlinkOAuthProviderRequest, $1.Empty>(
-      '/auth.v1.AuthService/UnlinkOAuthProvider',
+      '/auth.v2.AuthService/UnlinkOAuthProvider',
       ($0.UnlinkOAuthProviderRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$listLinkedProviders =
       $grpc.ClientMethod<$0.ListLinkedProvidersRequest, $0.ListLinkedProvidersResponse>(
-          '/auth.v1.AuthService/ListLinkedProviders',
+          '/auth.v2.AuthService/ListLinkedProviders',
           ($0.ListLinkedProvidersRequest value) => value.writeToBuffer(),
           $0.ListLinkedProvidersResponse.fromBuffer);
   static final _$recoveryStart = $grpc.ClientMethod<$0.RecoveryStartRequest, $1.Empty>(
-      '/auth.v1.AuthService/RecoveryStart',
+      '/auth.v2.AuthService/RecoveryStart',
       ($0.RecoveryStartRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$recoveryConfirm = $grpc.ClientMethod<$0.RecoveryConfirmRequest, $1.Empty>(
-      '/auth.v1.AuthService/RecoveryConfirm',
+      '/auth.v2.AuthService/RecoveryConfirm',
       ($0.RecoveryConfirmRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$changePassword = $grpc.ClientMethod<$0.ChangePasswordRequest, $1.Empty>(
-      '/auth.v1.AuthService/ChangePassword',
+      '/auth.v2.AuthService/ChangePassword',
       ($0.ChangePasswordRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$requestVerification = $grpc.ClientMethod<$0.RequestVerificationRequest, $1.Empty>(
-      '/auth.v1.AuthService/RequestVerification',
+      '/auth.v2.AuthService/RequestVerification',
       ($0.RequestVerificationRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$confirmVerification = $grpc.ClientMethod<$0.ConfirmVerificationRequest, $0.AuthResponse>(
-      '/auth.v1.AuthService/ConfirmVerification',
+      '/auth.v2.AuthService/ConfirmVerification',
       ($0.ConfirmVerificationRequest value) => value.writeToBuffer(),
       $0.AuthResponse.fromBuffer);
   static final _$getMfaStatus = $grpc.ClientMethod<$0.GetMfaStatusRequest, $0.GetMfaStatusResponse>(
-      '/auth.v1.AuthService/GetMfaStatus',
+      '/auth.v2.AuthService/GetMfaStatus',
       ($0.GetMfaStatusRequest value) => value.writeToBuffer(),
       $0.GetMfaStatusResponse.fromBuffer);
-  static final _$setupMfa = $grpc.ClientMethod<$0.SetupMfaRequest, $0.SetupMfaResponse>('/auth.v1.AuthService/SetupMfa',
+  static final _$setupMfa = $grpc.ClientMethod<$0.SetupMfaRequest, $0.SetupMfaResponse>('/auth.v2.AuthService/SetupMfa',
       ($0.SetupMfaRequest value) => value.writeToBuffer(), $0.SetupMfaResponse.fromBuffer);
   static final _$confirmMfaSetup = $grpc.ClientMethod<$0.ConfirmMfaSetupRequest, $0.ConfirmMfaSetupResponse>(
-      '/auth.v1.AuthService/ConfirmMfaSetup',
+      '/auth.v2.AuthService/ConfirmMfaSetup',
       ($0.ConfirmMfaSetupRequest value) => value.writeToBuffer(),
       $0.ConfirmMfaSetupResponse.fromBuffer);
   static final _$disableMfa = $grpc.ClientMethod<$0.DisableMfaRequest, $1.Empty>(
-      '/auth.v1.AuthService/DisableMfa', ($0.DisableMfaRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
+      '/auth.v2.AuthService/DisableMfa', ($0.DisableMfaRequest value) => value.writeToBuffer(), $1.Empty.fromBuffer);
   static final _$listSessions = $grpc.ClientMethod<$0.ListSessionsRequest, $0.ListSessionsResponse>(
-      '/auth.v1.AuthService/ListSessions',
+      '/auth.v2.AuthService/ListSessions',
       ($0.ListSessionsRequest value) => value.writeToBuffer(),
       $0.ListSessionsResponse.fromBuffer);
   static final _$revokeSession = $grpc.ClientMethod<$0.RevokeSessionRequest, $1.Empty>(
-      '/auth.v1.AuthService/RevokeSession',
+      '/auth.v2.AuthService/RevokeSession',
       ($0.RevokeSessionRequest value) => value.writeToBuffer(),
       $1.Empty.fromBuffer);
   static final _$revokeOtherSessions = $grpc.ClientMethod<$0.RevokeOtherSessionsRequest, $0.RevokeSessionsResponse>(
-      '/auth.v1.AuthService/RevokeOtherSessions',
+      '/auth.v2.AuthService/RevokeOtherSessions',
       ($0.RevokeOtherSessionsRequest value) => value.writeToBuffer(),
       $0.RevokeSessionsResponse.fromBuffer);
 }
 
-@$pb.GrpcServiceName('auth.v1.AuthService')
+@$pb.GrpcServiceName('auth.v2.AuthService')
 abstract class AuthServiceBase extends $grpc.Service {
-  $core.String get $name => 'auth.v1.AuthService';
+  $core.String get $name => 'auth.v2.AuthService';
 
   AuthServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.AuthenticateRequest, $0.AuthResponse>(

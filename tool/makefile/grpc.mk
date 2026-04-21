@@ -1,29 +1,48 @@
-.PHONY: proto buf-lint buf-breaking buf-gen buf-gen-core buf-gen-auth buf-gen-app buf-clean
+.PHONY: proto buf-lint buf-breaking buf-format buf-format-check \
+       buf-gen buf-gen-core buf-gen-auth buf-gen-app buf-gen-rust buf-clean
 
 # ==============================================================================
-# Buf — protobuf toolchain (replaces protoc + protoc_plugin)
+# Buf — protobuf toolchain
 # https://buf.build
 #
 # Install:  scoop install buf  (Windows)
 #           brew install bufbuild/buf/buf  (macOS)
 #           npm install -g @bufbuild/buf   (via npm)
-# 
+#
 #           buf registry login
 # ==============================================================================
 
 BUF_PROTO_DIR := api/proto
+
+# ---------------------------------------------------------------------------
+# Lint / Format / Breaking
+# ---------------------------------------------------------------------------
 
 # Lint proto files (STANDARD rules)
 buf-lint:
 	@echo "Linting proto files"
 	buf lint $(BUF_PROTO_DIR)
 
+# Format proto files in-place
+buf-format:
+	@echo "Formatting proto files"
+	buf format -w $(BUF_PROTO_DIR)
+
+# Check formatting (CI — exits non-zero on diff)
+buf-format-check:
+	@echo "Checking proto formatting"
+	buf format --diff --exit-code $(BUF_PROTO_DIR)
+
 # Check for breaking changes against main branch
 buf-breaking:
 	@echo "Checking for breaking changes"
 	buf breaking $(BUF_PROTO_DIR) --against ".git#branch=main,subdir=$(BUF_PROTO_DIR)"
 
-# Remove generated proto files (proxy files at auth_model/core/v1/ are static source)
+# ---------------------------------------------------------------------------
+# Clean
+# ---------------------------------------------------------------------------
+
+# Remove generated proto files (proxy files at auth_model/core/v2/ are static source)
 buf-clean:
 	@echo "Cleaning generated proto files"
 	$(call RMDIR,packages/model/grpc_model/lib/src/proto)
@@ -32,29 +51,42 @@ buf-clean:
 	$(call RMDIR,lib/_core/data/api/proto)
 
 # ---------------------------------------------------------------------------
-# Code generation — three targets for three Dart output packages
+# Code generation — Dart (three targets for three Dart output packages)
 # ---------------------------------------------------------------------------
 
-# Generate core/v1 → packages/model/grpc_model/lib/src/proto
+# Generate core/v2 → packages/model/grpc_model/lib/src/proto
 buf-gen-core:
 	@echo "Generating core proto (grpc_model)"
-	cd $(BUF_PROTO_DIR) && buf generate . --path core/v1 --template buf.gen.core.yaml
+	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/core/v2 --template $(BUF_PROTO_DIR)/buf.gen.core.yaml
 	dart format -l 120 packages/model/grpc_model/lib/src/proto
 
-# Generate auth/v1 + users/v1 → packages/model/auth_model/lib/src/api/proto
-# Static proxy files at core/v1/ re-export types from grpc_model (not generated)
+# Generate auth/v2 + users/v2 → packages/model/auth_model/lib/src/api/proto
+# Static proxy files at core/v2/ re-export types from grpc_model (not generated)
 buf-gen-auth:
 	@echo "Generating auth + users proto (auth_model)"
-	cd $(BUF_PROTO_DIR) && buf generate . --path auth/v1 --path users/v1 --template buf.gen.auth.yaml
+	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/auth/v2 --path $(BUF_PROTO_DIR)/users/v2 --template $(BUF_PROTO_DIR)/buf.gen.auth.yaml
 	dart format -l 120 packages/model/auth_model/lib/src/api/proto
 
 # Generate app/v1 → lib/_core/data/api/proto
 buf-gen-app:
 	@echo "Generating app proto"
-	cd $(BUF_PROTO_DIR) && buf generate . --path app/v1 --template buf.gen.app.yaml
+	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/app/v1 --template $(BUF_PROTO_DIR)/buf.gen.app.yaml
 	dart format -l 120 lib/_core/data/api/proto
 
-# Generate all (clean first to remove stale files)
+# ---------------------------------------------------------------------------
+# Code generation — Rust (reference template for backend repos)
+# ---------------------------------------------------------------------------
+
+# Generate all protos → api/gen/rust (for local validation; not committed)
+buf-gen-rust:
+	@echo "Generating Rust proto stubs"
+	buf generate $(BUF_PROTO_DIR) --template $(BUF_PROTO_DIR)/buf.gen.rust.yaml
+
+# ---------------------------------------------------------------------------
+# Aggregate targets
+# ---------------------------------------------------------------------------
+
+# Generate all Dart (clean first to remove stale files)
 buf-gen: buf-clean buf-gen-core buf-gen-auth buf-gen-app
 	@echo "All proto generation complete"
 

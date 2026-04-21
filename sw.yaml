@@ -1,0 +1,32 @@
+# Service Worker Generator (https://pub.dev/packages/sw) configuration.
+#
+# Precedence: CLI args > sw.yaml > environment vars > built-in defaults.
+# CI passes `GIT_SHA`; the build resolves `SW_VERSION` in this order:
+# `GIT_SHA` (normalized to 8 chars) -> `git rev-parse --short=8 HEAD` ->
+# timestamp fallback. `sw:generate` only receives the final version string.
+#
+# Keep `logo`, `title`, `theme`, `color` in sync with `web/index.prod.html`'s
+# `data-config` attribute. The HTML attribute overrides these at runtime; this
+# file is the build-time fallback baked into `bootstrap.js`.
+
+input: build/web
+output: sw.js
+bootstrap-output: bootstrap.js
+prefix: auth
+
+# Resources eligible for the Service Worker manifest. Exclusions cover the
+# two SW entry points (`sw.js`, `bootstrap.js`), Firebase Cloud Messaging SW
+# (forward-compat: if the app ever adds FCM web, the messaging SW needs to
+# stay out of our cache manifest — it runs in a different scope), Flutter's
+# legacy service worker (auto-deleted by sw 0.1.2 but belt-and-braces),
+# source-map / symbol files, and the ~2 MB `assets/NOTICES` license dump.
+glob: "**.{html,js,wasm,json,mjs}; assets/**; canvaskit/**; icons/**"
+no-glob: "sw.js; bootstrap.js; firebase-messaging-sw.js; flutter_service_worker.js; **/*.map; assets/NOTICES"
+
+# Loading-widget defaults baked into `bootstrap.js` as `BuildConfig.uiDefaults`.
+# `web/index.prod.html` sets `data-config` on the bootstrap <script> and that
+# overrides these values per-deployment.
+logo: icons/Icon-192.png
+title: Auth app
+theme: dark
+color: "#25D366"

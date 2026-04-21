@@ -38,16 +38,38 @@ if [ ! -f "config/${APP_ENVIRONMENT}.env" ]; then
 fi
 
 # 0. Clean up example folders that interfere with workspace resolution
-log_step "0/5 Cleaning up example folders..."
+log_step "0/6 Cleaning up example folders..."
 find packages -type d -name "example" -exec rm -rf {} + 2>/dev/null || true
 log_info "Removed example folders from packages"
 
 # 1. Fetch Flutter dependencies for the main app
-log_step "1/5 Getting Flutter packages for main app..."
+log_step "1/6 Getting Flutter packages for main app..."
 flutter pub get || { log_error "Failed to get Flutter packages"; exit 1; }
 
-# 2. Run all code generation tasks in parallel (for monorepo packages and localization)
-log_step "2/5 Running code generation tasks in parallel..."
+# 1.5 Generate pubspec constant (CLI mode, no build_runner dependency)
+log_info "Generating pubspec.yaml.g.dart..."
+dart pub global activate pubspec_generator || { log_error "Failed to activate pubspec_generator"; exit 1; }
+dart pub global run pubspec_generator:generate \
+    --input pubspec.yaml \
+    --output lib/_core/generated/constant/pubspec.yaml.g.dart || { log_error "Failed to generate pubspec.yaml.g.dart"; exit 1; }
+log_info "pubspec.yaml.g.dart generated successfully"
+
+# 2. Generate OpenAPI client from the spec (must run before build_runner)
+log_step "2/6 Generating OpenAPI client..."
+if [ -f "api/openapi/v2/openapi.yaml" ]; then
+    if ! dart run openapi_generator:generate \
+        --input=api/openapi/v2/openapi.yaml \
+        --output=lib/_core/api; then
+        log_error "OpenAPI client generation failed"
+        exit 1
+    fi
+    log_info "OpenAPI client generated successfully"
+else
+    log_warning "OpenAPI spec not found, skipping generation"
+fi
+
+# 3. Run all code generation tasks in parallel (for monorepo packages and localization)
+log_step "3/6 Running code generation tasks in parallel..."
 
 # Create a temporary directory to collect job outputs
 JOBS_DIR=$(mktemp -d)
@@ -102,6 +124,7 @@ start_build_runner_job() {
             retry=$((retry + 1))
             if [ $retry -le $max_retries ]; then
                 echo "Retry $retry/$max_retries for $package_name"
+                dart run build_runner clean 2>/dev/null || true
                 sleep 2
             fi
         done
@@ -172,42 +195,6 @@ if [ -f "l10n.yaml" ] || grep -q "flutter_intl:" pubspec.yaml || grep -q "intl:"
     active_jobs=$((active_jobs + 1))
 fi
 
-# Run pubspec_generator to generate pubspec constants
-wait_for_job_slot
-job_count=$((job_count + 1))
-pubspec_gen_job_id=$job_count
-log_info "Scheduling pubspec_generator..."
-
-(  # Pubspec generator job
-    output_file="$JOBS_DIR/job_${pubspec_gen_job_id}.out"
-    exec > "$output_file" 2>&1
-    echo "Starting pubspec_generator at $(date)"
-    start_time=$(date +%s)
-    # Activate pubspec_generator globally
-    dart pub global activate pubspec_generator || {
-        echo "ERROR: Failed to activate pubspec_generator"
-        exit 1
-    }
-    # Generate pubspec constants
-    dart pub global run pubspec_generator:generate -o lib/_core/generated/constant/pubspec.yaml.g.dart || {
-        echo "ERROR: pubspec_generator:generate failed"
-        exit 1
-    }
-    # Verify that the expected output exists
-    if [ ! -f "lib/_core/generated/constant/pubspec.yaml.g.dart" ]; then
-        echo "ERROR: Expected pubspec.yaml.g.dart file not generated"
-        exit 1
-    fi
-
-    end_time=$(date +%s)
-    echo $(( end_time - start_time )) > "$JOBS_DIR/job_${pubspec_gen_job_id}.duration"
-    echo "Completed successfully at $(date)"
-    exit 0
-) &  # Run pubspec_generator in background
-job_pids[$pubspec_gen_job_id]=$!
-job_packages[$pubspec_gen_job_id]="pubspec_generator"
-active_jobs=$((active_jobs + 1))
-
 # Find and schedule code generation for each package in the monorepo that uses build_runner
 if [ -d "package" ] || [ -d "packages" ]; then
     # Look for directories under "package(s)" that contain a pubspec with build_runner as a dependency
@@ -250,7 +237,11 @@ if [ ${#job_packages[@]} -gt 0 ]; then
             failed_packages+=("$package_name")
             [ "$i" = "$localization_job_id" ] && localization_failed=true
             log_error "✗ $package_name codegen failed:"
-            [ -f "$JOBS_DIR/job_${i}.out" ] && tail -n 20 "$JOBS_DIR/job_${i}.out" | sed 's/^/  /' >&2
+            if [ -f "$JOBS_DIR/job_${i}.out" ]; then
+                grep -n -i 'SEVERE\|ERROR\|Could not generate\|Exception' "$JOBS_DIR/job_${i}.out" | head -n 20 | sed 's/^/  /' >&2
+                echo "  --- last 100 lines ---" >&2
+                tail -n 100 "$JOBS_DIR/job_${i}.out" | sed 's/^/  /' >&2
+            fi
             log_error "  (See full output in $JOBS_DIR/job_${i}.out)"
         fi
     done
@@ -258,7 +249,7 @@ if [ ${#job_packages[@]} -gt 0 ]; then
     if [ ${#failed_packages[@]} -gt 0 ]; then
         log_error "Code generation failed for ${#failed_packages[@]} package(s): ${failed_packages[*]}"
         if [ "$localization_failed" = true ]; then
-            log_error "Localization generation failed - this is critical for the build."
+            log_error "Localization generation failed – this is critical for the build."
         fi
         exit 1
     else
@@ -268,25 +259,35 @@ else
     log_info "No code generation tasks needed"
 fi
 
-# 3. Build the Flutter web app (release mode)
-log_step "3/5 Building Flutter web app..."
-# Construct extra --dart-define arguments for any provided secret keys
-BUILD_DEFINES=""
+# 3.5 Verify pubspec.yaml.g.dart survived code generation (build_runner -d may delete it)
+PUBSPEC_GEN="lib/_core/constant/pubspec.yaml.g.dart"
+if [ ! -f "$PUBSPEC_GEN" ]; then
+    log_warning "pubspec.yaml.g.dart was deleted by code generation, regenerating..."
+    dart pub global run pubspec_generator:generate \
+        --input pubspec.yaml \
+        --output "$PUBSPEC_GEN" || { log_error "Failed to regenerate pubspec.yaml.g.dart"; exit 1; }
+fi
+
+# 4. Build the Flutter web app (release mode)
+log_step "4/6 Building Flutter web app..."
+# Construct extra --dart-define arguments for any provided secret keys.
+# Use a bash array so values stay correctly quoted when passed through.
+BUILD_DEFINES=()
 if [[ -n "${S3_URL:-}" ]]; then
-    BUILD_DEFINES+=" --dart-define=S3_URL=${S3_URL}"
+    BUILD_DEFINES+=(--dart-define=S3_URL=${S3_URL})
     log_info "Added S3_URL to build defines"
 fi
 if [[ -n "${OAI_KEY:-}" ]]; then
-    BUILD_DEFINES+=" --dart-define=OAI_KEY=${OAI_KEY}"
+    BUILD_DEFINES+=(--dart-define=OAI_KEY=${OAI_KEY})
     log_info "Added OAI_KEY to build defines"
 fi
 if [[ -n "${WHISPER_ADDRESS:-}" ]]; then
-    BUILD_DEFINES+=" --dart-define=WHISPER_ADDRESS=${WHISPER_ADDRESS}"
+    BUILD_DEFINES+=(--dart-define=WHISPER_ADDRESS=${WHISPER_ADDRESS})
     log_info "Added WHISPER_ADDRESS to build defines"
 fi
 
-# Run the Flutter web build with environment-specific config
-if ! flutter build web --release --no-pub ${BUILD_DEFINES} \
+# Run the Flutter web build with environment-specific config.
+if ! flutter build web --release --no-pub "${BUILD_DEFINES[@]}" \
     --dart-define-from-file=config/${APP_ENVIRONMENT}.env \
     --source-maps --wasm --no-web-resources-cdn --tree-shake-icons --base-href /; then
     log_error "Flutter web build failed"
@@ -299,8 +300,71 @@ if [ ! -f "build/web/index.html" ]; then
     exit 1
 fi
 
-# 4. Upload source maps to Sentry (if credentials provided)
-log_step "4/5 Uploading source maps to Sentry..."
+# 4.25 Swap dev index.html for the prod template before sw:generate.
+# web/index.html is the `flutter run` dev template; web/index.prod.html holds the
+# <script data-sw-bootstrap ...> tag that sw:generate expects. Flutter copied both
+# into build/web/ verbatim, so we delete the dev copy and rename the prod copy
+# over it. See packages/sw README "Local Development".
+if [ ! -f "build/web/index.prod.html" ]; then
+    log_error "Prod template build/web/index.prod.html is missing; check web/index.prod.html exists"
+    exit 1
+fi
+rm -f build/web/index.html
+mv build/web/index.prod.html build/web/index.html
+log_info "Swapped dev index.html for prod template (index.prod.html)"
+
+# Post-swap sanity: the prod index.html MUST include the sw bootstrap tag,
+# otherwise sw:generate will succeed but the deployed site will load nothing.
+if ! grep -q 'data-sw-bootstrap' build/web/index.html; then
+    log_error "Post-swap verification failed: build/web/index.html lacks <script data-sw-bootstrap>"
+    exit 1
+fi
+
+# 4.5 Generate the production bootstrap/update pipeline with the sw CLI.
+# sw.yaml defines the input/output/glob rules; only the cache version varies
+# per build. `sw` owns the shipping `bootstrap.js` + `sw.js` pair
+log_step "4.5/6 Generating service worker..."
+
+# Resolve a deterministic, git-traceable cache version.
+# Prefer the CI-provided SHA, normalized to the same 8-char form used locally;
+# if git metadata is unavailable (for example in a source archive), fall back to
+# a timestamp so release builds still succeed.
+if [[ -n "${GIT_SHA:-}" ]]; then
+    SW_VERSION="${GIT_SHA:0:8}"
+else
+    SW_VERSION="$(git rev-parse --short=8 HEAD 2>/dev/null || date +%s)"
+fi
+log_info "Using sw cache version: ${SW_VERSION}"
+
+# Generate sw.js + bootstrap.js (reads sw.yaml; only --version varies per build).
+if ! dart run sw:generate --version="${SW_VERSION}"; then
+    log_error "Service worker generation failed"
+    exit 1
+fi
+
+# Verify the final shipping entrypoints exist.
+for f in index.html sw.js bootstrap.js; do
+    if [ ! -f "build/web/${f}" ]; then
+        log_error "Service worker generation verification failed: build/web/${f} not found"
+        exit 1
+    fi
+done
+
+# Verify the deprecated Flutter-generated service worker is not shipped.
+if [ -f "build/web/flutter_service_worker.js" ]; then
+    log_error "Release output verification failed: build/web/flutter_service_worker.js should not ship when sw is used"
+    exit 1
+fi
+
+# Verify sw cleanup ran (flutter.js should be gone — it's inlined into bootstrap.js).
+if [ -f "build/web/flutter.js" ]; then
+    log_error "Cleanup failed: build/web/flutter.js still present after sw generation"
+    exit 1
+fi
+log_info "✅ Service worker generated successfully (sw.js + bootstrap.js, flutter.js inlined)"
+
+# 5. Upload source maps to Sentry (if credentials provided)
+log_step "5/6 Uploading source maps to Sentry..."
 if [[ -n "${SENTRY_AUTH_TOKEN:-}" && -n "${SENTRY_ORG:-}" && -n "${SENTRY_PROJECT:-}" ]]; then
     if ! flutter pub run sentry_dart_plugin; then
         log_warning "Sentry source map upload failed, but continuing (non-critical)"
@@ -311,11 +375,17 @@ else
     log_warning "Sentry credentials not provided, skipping source map upload"
 fi
 
-# Remove source map files to avoid exposing them publicly
-find build/web -type f -name '*.map' -delete
+# Remove source map files in production to avoid exposing them publicly.
+# Keep them in staging/development for debugging WASM runtime errors.
+# if [ "$APP_ENVIRONMENT" = "production" ]; then
+#     find build/web -type f -name '*.map' -delete
+#     log_info "Source maps removed (production)"
+# else
+#     log_info "Source maps preserved (${APP_ENVIRONMENT}) for debugging"
+# fi
 
-# 5. Generate a build info file for traceability
-log_step "5/5 Generating build info..."
+# 6. Generate a build info file for traceability
+log_step "6/6 Generating build info..."
 BUILD_INFO_FILE="build/web/build-info.json"
 cat > "$BUILD_INFO_FILE" << EOF
 {
