@@ -80,10 +80,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .dart_tool/build
-          key: dart-tool-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('build.yaml') }}
+          key: dart-tool-v2-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('build.yaml') }}
           restore-keys: |
-            dart-tool-${{ hashFiles('pubspec.lock') }}-
-            dart-tool-
+            dart-tool-v2-${{ hashFiles('pubspec.lock') }}-
+            dart-tool-v2-
 
       - name: 🔒 Configure Git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
