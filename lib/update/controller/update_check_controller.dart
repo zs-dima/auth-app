@@ -14,6 +14,7 @@ part 'update_check_controller.freezed.dart';
 sealed class UpdateCheckState with _$UpdateCheckState {
   const factory UpdateCheckState.idle(String version) = _IdleState;
   const factory UpdateCheckState.updateAvailable(String version) = UpdateAvailableState;
+  const factory UpdateCheckState.applyingUpdate(String version) = ApplyingUpdateState;
 }
 
 final class UpdateCheckController extends StateController<UpdateCheckState>
@@ -49,8 +50,15 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
   /// the Bootstrap API is absent (dev) or the update path fails.
   void update() => handle(
     () async {
-      setState(UpdateCheckState.idle(state.version));
-      await _updateCheckApi.updateApplication();
+      if (state is ApplyingUpdateState) return;
+      final version = state.version;
+      setState(UpdateCheckState.applyingUpdate(version));
+      try {
+        await _updateCheckApi.updateApplication();
+      } on Object {
+        setState(UpdateCheckState.updateAvailable(version));
+        rethrow;
+      }
     },
     error: (error, stackTrace) async => setError('Error on update ${state.version}', error, stackTrace),
     name: 'update',
@@ -60,7 +68,7 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
     () async {
       if (!_updateCheckApi.hasPendingUpdate) return;
       if (_isCurrentPendingUpdateDismissed) return;
-      if (state is UpdateAvailableState) return;
+      if (state is UpdateAvailableState || state is ApplyingUpdateState) return;
       setState(UpdateCheckState.updateAvailable(state.version));
     },
     error: (error, stackTrace) async => setError('Error on checking for updates', error, stackTrace),

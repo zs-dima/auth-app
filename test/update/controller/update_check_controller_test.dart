@@ -59,6 +59,34 @@ void main() {
       await _settleController();
 
       expect(api.updateApplicationCalls, 1);
+      expect(controller.state, isA<ApplyingUpdateState>());
+    });
+
+    test('update enters applyingUpdate while the reload handoff is in progress', () async {
+      final api = _FakeUpdateCheckApi(hasPendingUpdate: true);
+      final controller = _buildController(api);
+      addTearDown(controller.dispose);
+
+      await _settleController();
+      controller.update();
+      await _settleController();
+
+      expect(controller.state, isA<ApplyingUpdateState>());
+    });
+
+    test('failed update restores updateAvailable', () async {
+      final api = _FakeUpdateCheckApi(
+        hasPendingUpdate: true,
+        updateError: StateError('no pending update'),
+      );
+      final controller = _buildController(api);
+      addTearDown(controller.dispose);
+
+      await _settleController();
+      controller.update();
+      await _settleController();
+
+      expect(controller.state, isA<UpdateAvailableState>());
     });
   });
 }
@@ -90,9 +118,10 @@ Future<void> _settleController() async {
 }
 
 final class _FakeUpdateCheckApi implements UpdateCheckApi {
-  _FakeUpdateCheckApi({this.hasPendingUpdate = false});
+  _FakeUpdateCheckApi({this.hasPendingUpdate = false, this.updateError});
 
   final StreamController<void> _updateAvailableController = StreamController<void>.broadcast();
+  final Object? updateError;
 
   @override
   bool hasPendingUpdate;
@@ -109,6 +138,7 @@ final class _FakeUpdateCheckApi implements UpdateCheckApi {
   @override
   Future<void> updateApplication() async {
     updateApplicationCalls++;
+    if (updateError != null) Error.throwWithStackTrace(updateError!, StackTrace.current);
   }
 
   @override

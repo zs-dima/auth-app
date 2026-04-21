@@ -17,6 +17,9 @@ abstract class UpdateCheckApi {
 
   /// Apply a pending update — under sw 0.1.x this drives the
   /// skipWaiting / controllerchange / reload handshake.
+  ///
+  /// Implementations must either start the reload/update handoff or throw;
+  /// silent no-op success leaves the UI stuck in an "updating" state.
   Future<void> updateApplication();
 
   /// Release timers, listeners and stream resources. Idempotent.

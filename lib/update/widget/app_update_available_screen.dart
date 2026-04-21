@@ -47,41 +47,56 @@ class _AppUpdateAvailableDialogState extends State<AppUpdateAvailableDialog> {
         const SizedBox(height: 28.0),
         StateConsumer<UpdateCheckController, UpdateCheckState>(
           controller: _updateCheckController,
-          builder: (_, updateState, __) => AppText.bodyLarge(
-            'A new version (v${updateState.version}) of the app is available.\nPlease update to continue for the best experience.',
-            textAlign: .center,
-          ),
+          builder: (_, updateState, __) {
+            final isApplying = updateState is ApplyingUpdateState;
+            return AppText.bodyLarge(
+              'A new version (v${updateState.version}) of the app is available.\n'
+              '${isApplying ? 'Applying the update and reloading the page.' : 'Please update to continue for the best experience.'}',
+              textAlign: .center,
+            );
+          },
         ),
         const SizedBox(height: 32.0),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            shape: const RoundedRectangleBorder(
-              borderRadius: .all(.circular(12.0)),
-            ),
-          ),
-          onPressed: () {
-            HapticFeedback.mediumImpact().ignore();
-            // await context.octopus.pop();
-            _updateCheckController.update();
-            // Future.delayed(
-            //   const Duration(milliseconds: 10),
-            //   () => _updateCheckController.update(),
-            // );
+        StateConsumer<UpdateCheckController, UpdateCheckState>(
+          controller: _updateCheckController,
+          builder: (_, updateState, __) {
+            final isApplying = updateState is ApplyingUpdateState;
+            return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: .all(.circular(12.0)),
+                ),
+              ),
+              onPressed: isApplying
+                  ? null
+                  : () {
+                      HapticFeedback.mediumImpact().ignore();
+                      _updateCheckController.update();
+                    },
+              child: Text(
+                isApplying ? 'Updating...' : 'Update Now',
+              ),
+            );
           },
-          child: const Text(
-            'Update Now',
-          ),
         ),
         const SizedBox(height: 10.0),
-        TextButton(
-          onPressed: () {
-            HapticFeedback.mediumImpact().ignore();
-            _updateCheckController.ignoreUpdate();
-            context.octopus.pop();
+        StateConsumer<UpdateCheckController, UpdateCheckState>(
+          controller: _updateCheckController,
+          builder: (_, updateState, __) {
+            final isApplying = updateState is ApplyingUpdateState;
+            return TextButton(
+              onPressed: isApplying
+                  ? null
+                  : () {
+                      HapticFeedback.mediumImpact().ignore();
+                      _updateCheckController.ignoreUpdate();
+                      context.octopus.pop();
+                    },
+              child: const Text(
+                'Maybe Later',
+              ),
+            );
           },
-          child: const Text(
-            'Maybe Later',
-          ),
         ),
       ],
     ),

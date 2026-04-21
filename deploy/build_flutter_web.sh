@@ -18,6 +18,10 @@ log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
 SW_GIT_REF="${SW_GIT_REF:-master}"
 SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-00c7d604d0248906eff557f7c6127b3789addc0f}"
+# The currently published sw git ref still auto-calls skipWaiting() during
+# install. Once the forked fix is pushed and auth-app refreshes its lockfile,
+# generated sw.js must pass the strict waiting-worker validation below.
+SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF="${SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF:-00c7d604d0248906eff557f7c6127b3789addc0f}"
 SW_RESOLVED_REF=""
 
 extract_sw_lock_section() {
@@ -126,6 +130,37 @@ validate_generated_bootstrap() {
 
     log_error "Generated bootstrap.js failed validation for sw dependency ${SW_RESOLVED_REF:-unknown}"
     log_error "Stale dispose marker: ${has_stale_dispose}, async patch marker: ${has_async_patch}, one-shot bridge marker: ${has_once_bridge}"
+    return 1
+}
+
+validate_generated_service_worker() {
+    local sw_path="build/web/sw.js"
+    local install_skipwaiting=0
+    local skipwaiting_count=0
+
+    if [ ! -f "$sw_path" ]; then
+        log_error "Generated service worker validation failed: $sw_path not found"
+        return 1
+    fi
+
+    if grep -q 'await self.skipWaiting()' "$sw_path"; then
+        install_skipwaiting=1
+    fi
+    skipwaiting_count="$( (grep -o 'self\.skipWaiting()' "$sw_path" || true) | wc -l | tr -d ' ')"
+
+    if [ "$install_skipwaiting" -eq 0 ] && [ "${skipwaiting_count}" -eq 2 ]; then
+        log_info "Verified generated sw.js keeps skipWaiting limited to the message-driven update path"
+        return 0
+    fi
+
+    if [ -n "$SW_RESOLVED_REF" ] && [ "$SW_RESOLVED_REF" = "$SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF" ]; then
+        log_warning "Generated sw.js still matches the known auto-activating sw package at ${SW_RESOLVED_REF}"
+        log_warning "Push the waiting-worker fix to service-worker-generator and refresh auth-app/pubspec.lock to turn this into a hard failure"
+        return 0
+    fi
+
+    log_error "Generated sw.js failed validation for sw dependency ${SW_RESOLVED_REF:-unknown}"
+    log_error "Install-time skipWaiting marker: ${install_skipwaiting}, self.skipWaiting() call count: ${skipwaiting_count}"
     return 1
 }
 
@@ -462,6 +497,7 @@ if ! dart run sw:generate --version="${SW_VERSION}"; then
 fi
 
 validate_generated_bootstrap || exit 1
+validate_generated_service_worker || exit 1
 
 # Verify the final shipping entrypoints exist.
 for f in index.html sw.js bootstrap.js; do

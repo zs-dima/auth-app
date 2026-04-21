@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:web/web.dart' as web;
 
@@ -93,17 +94,36 @@ final class UpdateCheckApiImpl implements UpdateCheckApi {
   Future<void> updateApplication() async {
     final bootstrap = _bootstrap;
     if (bootstrap == null) {
+      logger.d('UpdateCheckApiImpl.updateApplication | bootstrap missing, forcing reload');
       // Dev build without sw's bootstrap.js — fall back to a plain reload
       // so the browser re-fetches flutter_bootstrap.js.
       web.window.location.reload();
       return;
     }
     try {
-      await bootstrap.applyUpdate(true.toJS).toDart.timeout(_applyUpdateTimeout);
+      final applied = (await bootstrap.applyUpdate(true.toJS).toDart.timeout(_applyUpdateTimeout)).toDart;
+      if (applied) {
+        logger.d('UpdateCheckApiImpl.updateApplication | activated waiting worker');
+        return;
+      }
+      if (_updatePending) {
+        logger.w(
+          'UpdateCheckApiImpl.updateApplication | applyUpdate returned false while a pending update exists, forcing reload',
+        );
+        web.window.location.reload();
+        return;
+      }
+      logger.w('UpdateCheckApiImpl.updateApplication | no pending update to apply');
+      throw StateError('No pending update available to apply');
+    } on TimeoutException {
+      logger.w('UpdateCheckApiImpl.updateApplication | applyUpdate timed out, forcing reload');
+      // applyUpdate hung (no controllerchange) — force a reload so the
+      // user is never stranded on the update banner.
+      web.window.location.reload();
+    } on StateError {
+      rethrow;
     } on Object {
-      // applyUpdate hung (no controllerchange) or threw at the interop
-      // boundary — force a reload so the user is never stranded on the
-      // update banner.
+      logger.w('UpdateCheckApiImpl.updateApplication | applyUpdate failed, forcing reload');
       web.window.location.reload();
     }
   }
@@ -126,7 +146,7 @@ final class UpdateCheckApiImpl implements UpdateCheckApi {
     final bootstrap = _bootstrap;
     if (bootstrap == null) return;
     try {
-      bootstrap.onUpdateAvailable(_markUpdatePending.toJS);
+      bootstrap.onUpdateAvailable((() => _markUpdatePending('Bootstrap.onUpdateAvailable')).toJS);
     } on Object {
       // Interop call failed; nothing useful to recover here.
       return;
@@ -145,7 +165,7 @@ final class UpdateCheckApiImpl implements UpdateCheckApi {
     try {
       final registration = await serviceWorker.getRegistration().toDart;
       if (registration != null && registration.waiting != null && serviceWorker.controller != null) {
-        _markUpdatePending();
+        _markUpdatePending('registration probe');
       }
     } on Object {
       // Best-effort probe; ignore failures.
@@ -154,8 +174,9 @@ final class UpdateCheckApiImpl implements UpdateCheckApi {
 
   /// Flip the pending flag (idempotent) and tickle the broadcast stream so
   /// the controller can re-evaluate without waiting for its periodic poll.
-  void _markUpdatePending() {
+  void _markUpdatePending(String source) {
     if (_disposed) return;
+    logger.d('UpdateCheckApiImpl pending update detected via $source | origin: ${web.window.location.origin}');
     _updatePending = true;
     if (!_updateController.isClosed) _updateController.add(null);
   }

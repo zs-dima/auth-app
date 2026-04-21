@@ -13,40 +13,59 @@ class AppUpdateAvailableWidget extends MaterialBanner {
          leading: Icon(Icons.cloud_download_outlined, color: Theme.of(context).colorScheme.onSecondaryContainer),
          content: StateConsumer<UpdateCheckController, UpdateCheckState>(
            controller: updateCheckController,
-           builder: (_, updateState, __) => Text.rich(
-             TextSpan(
-               text: 'A new version (v${updateState.version}) of the app is available.\n',
-               style: Theme.of(context).textTheme.bodyLarge,
-               children: [
-                 TextSpan(
-                   text: 'Please update to continue for the best experience.',
-                   style: Theme.of(context).textTheme.bodyMedium,
-                 ),
-               ],
-             ),
-           ),
+           builder: (_, updateState, __) {
+             final isApplying = updateState is ApplyingUpdateState;
+             return Text.rich(
+               TextSpan(
+                 text: 'A new version (v${updateState.version}) of the app is available.\n',
+                 style: Theme.of(context).textTheme.bodyLarge,
+                 children: [
+                   TextSpan(
+                     text: isApplying
+                         ? 'Applying the update and reloading the page...'
+                         : 'Please update to continue for the best experience.',
+                     style: Theme.of(context).textTheme.bodyMedium,
+                   ),
+                 ],
+               ),
+             );
+           },
          ),
          actions: [
-           FilledButton(
-             onPressed: () async {
-               HapticFeedback.mediumImpact().ignore();
-               ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-               await Future<void>.delayed(Durations.medium1);
-               updateCheckController.update();
+           StateConsumer<UpdateCheckController, UpdateCheckState>(
+             controller: updateCheckController,
+             builder: (_, updateState, __) {
+               final isApplying = updateState is ApplyingUpdateState;
+               return FilledButton(
+                 onPressed: isApplying
+                     ? null
+                     : () {
+                         HapticFeedback.mediumImpact().ignore();
+                         updateCheckController.update();
+                       },
+                 child: Text(
+                   isApplying ? 'Updating...' : 'Update Now',
+                 ),
+               );
              },
-             child: const Text(
-               'Update Now',
-             ),
            ),
-           TextButton(
-             onPressed: () {
-               HapticFeedback.mediumImpact().ignore();
-               ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-               updateCheckController.ignoreUpdate();
+           StateConsumer<UpdateCheckController, UpdateCheckState>(
+             controller: updateCheckController,
+             builder: (_, updateState, __) {
+               final isApplying = updateState is ApplyingUpdateState;
+               return TextButton(
+                 onPressed: isApplying
+                     ? null
+                     : () {
+                         HapticFeedback.mediumImpact().ignore();
+                         ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                         updateCheckController.ignoreUpdate();
+                       },
+                 child: const Text(
+                   'Later',
+                 ),
+               );
              },
-             child: const Text(
-               'Later',
-             ),
            ),
          ],
        );
