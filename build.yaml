@@ -5,6 +5,7 @@ targets:
       - pubspec.yaml
       - lib/**
       - test/**
+      - assets/**
     builders:
       json_serializable:
         options:
