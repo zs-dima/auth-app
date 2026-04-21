@@ -13,6 +13,67 @@ log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 log_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 
+# Expected Git source for the service-worker generator. CI can override these
+# explicitly, but local runs default to the committed deploy configuration.
+SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
+SW_GIT_REF="${SW_GIT_REF:-master}"
+
+extract_sw_lock_section() {
+    if [ ! -f "pubspec.lock" ]; then
+        log_error "pubspec.lock not found; cannot validate sw dependency"
+        return 1
+    fi
+
+    awk '
+        /^  sw:$/ { in_sw = 1 }
+        in_sw {
+            if ($0 ~ /^  [^ ]/ && $0 !~ /^  sw:$/) {
+                exit
+            }
+            print
+        }
+    ' pubspec.lock
+}
+
+validate_sw_dependency() {
+    local sw_lock_section
+    local sw_source
+    local sw_url
+    local sw_ref
+    local sw_resolved_ref
+
+    sw_lock_section="$(extract_sw_lock_section)"
+    if [ -z "$sw_lock_section" ]; then
+        log_error "pubspec.lock is missing the sw dependency entry"
+        return 1
+    fi
+
+    sw_source="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^    source: //p' | head -n 1)"
+    sw_url="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      url: //p' | head -n 1 | tr -d '"')"
+    sw_ref="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      ref: //p' | head -n 1 | tr -d '"')"
+    sw_resolved_ref="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      resolved-ref: //p' | head -n 1 | tr -d '"')"
+
+    if [ "$sw_source" != "git" ]; then
+        log_error "sw must resolve from git in pubspec.lock, found source: ${sw_source:-missing}"
+        printf '%s\n' "$sw_lock_section" >&2
+        return 1
+    fi
+
+    if [ "$sw_url" != "$SW_GIT_URL" ]; then
+        log_error "sw git URL mismatch. Expected ${SW_GIT_URL}, found ${sw_url:-missing}"
+        printf '%s\n' "$sw_lock_section" >&2
+        return 1
+    fi
+
+    if [ "$sw_ref" != "$SW_GIT_REF" ]; then
+        log_error "sw git ref mismatch. Expected ${SW_GIT_REF}, found ${sw_ref:-missing}"
+        printf '%s\n' "$sw_lock_section" >&2
+        return 1
+    fi
+
+    log_info "Verified sw dependency source: ${sw_url}@${sw_ref} (${sw_resolved_ref:-no resolved-ref})"
+}
+
 # Track overall build time
 BUILD_START=$(date +%s)
 
@@ -47,7 +108,8 @@ log_info "Removed example folders from packages"
 
 # 1. Fetch Flutter dependencies for the main app
 log_step "1/6 Getting Flutter packages for main app..."
-flutter pub get || { log_error "Failed to get Flutter packages"; exit 1; }
+flutter pub get --enforce-lockfile || { log_error "Failed to get Flutter packages from the committed lockfile"; exit 1; }
+validate_sw_dependency || exit 1
 
 # 1.5 Activate pubspec_generator (actual generation runs after build_runner in step 3.5)
 dart pub global activate pubspec_generator || { log_error "Failed to activate pubspec_generator"; exit 1; }
