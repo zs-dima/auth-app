@@ -26,13 +26,13 @@ RUN flutter channel stable
 RUN flutter upgrade --force
 RUN flutter doctor -v
 
-RUN (cd packages/model/auth_model && flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs --release)
+RUN (cd packages/model/auth_model && flutter pub get && dart run build_runner build --delete-conflicting-outputs --release)
 RUN flutter pub get
 RUN dart run intl_utils:generate
-RUN flutter pub run build_runner build --delete-conflicting-outputs --release
+RUN dart run build_runner build --delete-conflicting-outputs --release
 RUN flutter build web --release --no-source-maps \
     --dart-define=APP_ENVIRONMENT=$APP_ENVIRONMENT \
-    --web-renderer canvaskit \
+    --wasm --no-web-resources-cdn --tree-shake-icons \
     --base-href /
 
 

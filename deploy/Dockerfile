@@ -16,13 +16,13 @@ COPY --chown=101:101 . .
 ARG APP_ENVIRONMENT
 ENV APP_ENVIRONMENT=$APP_ENVIRONMENT
 
-RUN (cd packages/model/auth_model && flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs --release)
+RUN (cd packages/model/auth_model && flutter pub get && dart run build_runner build --delete-conflicting-outputs --release)
 RUN flutter pub get
 RUN dart run intl_utils:generate
-RUN flutter pub run build_runner build --delete-conflicting-outputs --release
+RUN dart run build_runner build --delete-conflicting-outputs --release
 RUN flutter build web --release --no-source-maps \
     --dart-define=APP_ENVIRONMENT=$APP_ENVIRONMENT \
-    --web-renderer canvaskit \
+    --wasm --no-web-resources-cdn --tree-shake-icons \
     --base-href /
 
 # Swap dev index.html for the prod template before sw:generate.

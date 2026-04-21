@@ -63,7 +63,7 @@
         "Dependencies"
       ],
       "command": [
-        "cd packages/model/auth_model && fvm dart run build_runner build --delete-conflicting-outputs --release"
+        "cd packages/model/auth_model && dart run build_runner build --delete-conflicting-outputs --release"
       ],
       "group": {
         "kind": "none",

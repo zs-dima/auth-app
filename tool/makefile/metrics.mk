@@ -21,4 +21,4 @@ dependency-validator:
 	@pub run dependency_validator
 
 pana:
-	@fvm dart pub global activate pana && pana --json --no-warning --line-length 120
+	@dart pub global activate pana && pana --json --no-warning --line-length 120

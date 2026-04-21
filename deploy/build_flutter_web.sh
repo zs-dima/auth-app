@@ -2,7 +2,7 @@
 set -euo pipefail  # Exit on errors or unset vars, and pipeline failures.
 
 # Configure maximum parallel codegen jobs (tunable via env or default)
-MAX_PARALLEL_JOBS=${MAX_PARALLEL_JOBS:-$(nproc)}
+MAX_PARALLEL_JOBS=${MAX_PARALLEL_JOBS:-$(nproc 2>/dev/null || echo 4)}
 
 # Color codes for pretty logging
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
@@ -12,6 +12,9 @@ log_info()    { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 log_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
+
+# Track overall build time
+BUILD_START=$(date +%s)
 
 # Cleanup function to run on exit (trap)
 cleanup() {
@@ -46,13 +49,8 @@ log_info "Removed example folders from packages"
 log_step "1/6 Getting Flutter packages for main app..."
 flutter pub get || { log_error "Failed to get Flutter packages"; exit 1; }
 
-# 1.5 Generate pubspec constant (CLI mode, no build_runner dependency)
-log_info "Generating pubspec.yaml.g.dart..."
+# 1.5 Activate pubspec_generator (actual generation runs after build_runner in step 3.5)
 dart pub global activate pubspec_generator || { log_error "Failed to activate pubspec_generator"; exit 1; }
-dart pub global run pubspec_generator:generate \
-    --input pubspec.yaml \
-    --output lib/_core/generated/constant/pubspec.yaml.g.dart || { log_error "Failed to generate pubspec.yaml.g.dart"; exit 1; }
-log_info "pubspec.yaml.g.dart generated successfully"
 
 # 2. Generate OpenAPI client from the spec (must run before build_runner)
 log_step "2/6 Generating OpenAPI client..."
@@ -259,14 +257,13 @@ else
     log_info "No code generation tasks needed"
 fi
 
-# 3.5 Verify pubspec.yaml.g.dart survived code generation (build_runner -d may delete it)
+# 3.5 Generate pubspec.yaml.g.dart (runs after build_runner to avoid -d deleting it)
 PUBSPEC_GEN="lib/_core/constant/pubspec.yaml.g.dart"
-if [ ! -f "$PUBSPEC_GEN" ]; then
-    log_warning "pubspec.yaml.g.dart was deleted by code generation, regenerating..."
-    dart pub global run pubspec_generator:generate \
-        --input pubspec.yaml \
-        --output "$PUBSPEC_GEN" || { log_error "Failed to regenerate pubspec.yaml.g.dart"; exit 1; }
-fi
+log_info "Generating pubspec.yaml.g.dart..."
+dart pub global run pubspec_generator:generate \
+    --input pubspec.yaml \
+    --output "$PUBSPEC_GEN" || { log_error "Failed to generate pubspec.yaml.g.dart"; exit 1; }
+log_info "pubspec.yaml.g.dart generated successfully"
 
 # 4. Build the Flutter web app (release mode)
 log_step "4/6 Building Flutter web app..."
@@ -274,21 +271,21 @@ log_step "4/6 Building Flutter web app..."
 # Use a bash array so values stay correctly quoted when passed through.
 BUILD_DEFINES=()
 if [[ -n "${S3_URL:-}" ]]; then
-    BUILD_DEFINES+=(--dart-define=S3_URL=${S3_URL})
+    BUILD_DEFINES+=(--dart-define="S3_URL=${S3_URL}")
     log_info "Added S3_URL to build defines"
 fi
 if [[ -n "${OAI_KEY:-}" ]]; then
-    BUILD_DEFINES+=(--dart-define=OAI_KEY=${OAI_KEY})
+    BUILD_DEFINES+=(--dart-define="OAI_KEY=${OAI_KEY}")
     log_info "Added OAI_KEY to build defines"
 fi
 if [[ -n "${WHISPER_ADDRESS:-}" ]]; then
-    BUILD_DEFINES+=(--dart-define=WHISPER_ADDRESS=${WHISPER_ADDRESS})
+    BUILD_DEFINES+=(--dart-define="WHISPER_ADDRESS=${WHISPER_ADDRESS}")
     log_info "Added WHISPER_ADDRESS to build defines"
 fi
 
 # Run the Flutter web build with environment-specific config.
 if ! flutter build web --release --no-pub "${BUILD_DEFINES[@]}" \
-    --dart-define-from-file=config/${APP_ENVIRONMENT}.env \
+    --dart-define-from-file="config/${APP_ENVIRONMENT}.env" \
     --source-maps --wasm --no-web-resources-cdn --tree-shake-icons --base-href /; then
     log_error "Flutter web build failed"
     exit 1
@@ -366,7 +363,7 @@ log_info "✅ Service worker generated successfully (sw.js + bootstrap.js, flutt
 # 5. Upload source maps to Sentry (if credentials provided)
 log_step "5/6 Uploading source maps to Sentry..."
 if [[ -n "${SENTRY_AUTH_TOKEN:-}" && -n "${SENTRY_ORG:-}" && -n "${SENTRY_PROJECT:-}" ]]; then
-    if ! flutter pub run sentry_dart_plugin; then
+    if ! dart run sentry_dart_plugin; then
         log_warning "Sentry source map upload failed, but continuing (non-critical)"
     else
         log_info "✅ Source maps uploaded to Sentry"
@@ -387,13 +384,17 @@ fi
 # 6. Generate a build info file for traceability
 log_step "6/6 Generating build info..."
 BUILD_INFO_FILE="build/web/build-info.json"
+
+# Extract Flutter version safely (fallback if --machine format changes)
+FLUTTER_VER=$(flutter --version --machine 2>/dev/null | grep '"frameworkVersion"' | cut -d'"' -f4 || echo "unknown")
+
 cat > "$BUILD_INFO_FILE" << EOF
 {
   "environment": "$APP_ENVIRONMENT",
   "buildTime": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "gitCommit": "$(git rev-parse HEAD 2>/dev/null || echo 'unknown')",
   "gitBranch": "$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown')",
-  "flutterVersion": "$(flutter --version --machine | grep '"frameworkVersion"' | cut -d'"' -f4)",
+  "flutterVersion": "$FLUTTER_VER",
   "packagesWithCodeGen": $job_count,
   "buildHost": "$(hostname)"
 }
@@ -403,7 +404,10 @@ log_info "Build info written to $BUILD_INFO_FILE"
 
 # Calculate build output size for information
 BUILD_SIZE=$(du -sh build/web | cut -f1)
-log_info "Build size: $BUILD_SIZE"
+BUILD_END=$(date +%s)
+BUILD_DURATION=$(( BUILD_END - BUILD_START ))
+BUILD_MINS=$(( BUILD_DURATION / 60 ))
+BUILD_SECS=$(( BUILD_DURATION % 60 ))
 
 # Final build summary logs
 echo ""
@@ -411,7 +415,7 @@ log_info "📊 Build Summary:"
 log_info "  Environment: $APP_ENVIRONMENT"
 log_info "  Code generation jobs: $job_count"
 log_info "  Build size: $BUILD_SIZE"
-log_info "  Build time: $(date)"
+log_info "  Total build time: ${BUILD_MINS}m ${BUILD_SECS}s"
 log_info "  Output directory: build/web/"
 echo ""
 log_info "✅ Flutter web build completed successfully!"

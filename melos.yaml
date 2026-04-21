@@ -6,4 +6,3 @@ packages:
 scripts:
   analyze:
     exec: dart analyze .
-sdkPath: .fvm/flutter_sdk
