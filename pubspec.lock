@@ -1297,6 +1297,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.1"
+  sw:
+    dependency: "direct dev"
+    description:
+      name: sw
+      sha256: "15940126fd051eb02ce86f820e9cf1a4173dfdb0656a2d47751cc0c8fea2c49a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   sync_http:
     dependency: transitive
     description:
