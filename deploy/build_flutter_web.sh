@@ -258,7 +258,7 @@ else
 fi
 
 # 3.5 Generate pubspec.yaml.g.dart (runs after build_runner to avoid -d deleting it)
-PUBSPEC_GEN="lib/_core/constant/pubspec.yaml.g.dart"
+PUBSPEC_GEN="lib/_core/generated/constant/pubspec.yaml.g.dart"
 log_info "Generating pubspec.yaml.g.dart..."
 dart pub global run pubspec_generator:generate \
     --input pubspec.yaml \
