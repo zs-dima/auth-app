@@ -226,7 +226,10 @@ dev_dependencies:
   #mockito: ^5.4.2
 
   sentry_dart_plugin: ^3.2.1
-  sw: ^0.1.2
+  sw:
+    git:
+      url: https://github.com/zs-dima/service-worker-generator.git
+      ref: master
 
   # Lints
   lints_tool:
