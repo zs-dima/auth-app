@@ -17,6 +17,12 @@ log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 # explicitly, but local runs default to the committed deploy configuration.
 SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
 SW_GIT_REF="${SW_GIT_REF:-master}"
+# The currently locked git ref in auth-app is known to contain stale packaged
+# Dart bootstrap assets even though the TypeScript source is fixed. Keep builds
+# working until the fork is pushed and pubspec.lock is refreshed to the corrected
+# commit, then stale bootstrap output becomes a hard failure automatically.
+SW_KNOWN_STALE_RESOLVED_REF="${SW_KNOWN_STALE_RESOLVED_REF:-824945adc07353cfbe9a2aeae798ad8bcff0a00c}"
+SW_RESOLVED_REF=""
 
 extract_sw_lock_section() {
     if [ ! -f "pubspec.lock" ]; then
@@ -72,7 +78,59 @@ validate_sw_dependency() {
         return 1
     fi
 
+    SW_RESOLVED_REF="${sw_resolved_ref}"
     log_info "Verified sw dependency source: ${sw_url}@${sw_ref} (${sw_resolved_ref:-no resolved-ref})"
+}
+
+require_generated_file() {
+    local path="$1"
+    local hint="$2"
+
+    if [ -f "$path" ]; then
+        log_info "Verified generated file: $path"
+        return 0
+    fi
+
+    log_error "Missing generated file: $path"
+    log_error "$hint"
+    return 1
+}
+
+validate_generated_bootstrap() {
+    local bootstrap_path="build/web/bootstrap.js"
+    local has_stale_dispose=0
+    local has_async_patch=0
+    local has_once_bridge=0
+
+    if [ ! -f "$bootstrap_path" ]; then
+        log_error "Generated bootstrap validation failed: $bootstrap_path not found"
+        return 1
+    fi
+
+    if grep -q 'updateHandlers.clear' "$bootstrap_path"; then
+        has_stale_dispose=1
+    fi
+    if grep -q 'instanceof Promise' "$bootstrap_path"; then
+        has_async_patch=1
+    fi
+    if grep -Eq 'sw-update-available.{0,200}\{[[:space:]]*once[[:space:]]*:[[:space:]]*(true|!0)' "$bootstrap_path"; then
+        has_once_bridge=1
+    fi
+
+    if [ "$has_stale_dispose" -eq 0 ] && [ "$has_async_patch" -eq 1 ] && [ "$has_once_bridge" -eq 0 ]; then
+        log_info "Verified generated bootstrap.js contains the patched SW update flow"
+        return 0
+    fi
+
+    if [ -n "$SW_RESOLVED_REF" ] && [ "$SW_RESOLVED_REF" = "$SW_KNOWN_STALE_RESOLVED_REF" ]; then
+        log_warning "Generated bootstrap.js still matches the known-stale sw package at ${SW_RESOLVED_REF}"
+        log_warning "Push the fixed service-worker-generator fork and refresh auth-app/pubspec.lock to turn this into a hard failure"
+        return 0
+    fi
+
+    log_error "Generated bootstrap.js failed validation for sw dependency ${SW_RESOLVED_REF:-unknown}"
+    log_error "Stale dispose marker: ${has_stale_dispose}, async patch marker: ${has_async_patch}, one-shot bridge marker: ${has_once_bridge}"
+    return 1
 }
 
 # Track overall build time
@@ -328,6 +386,11 @@ dart pub global run pubspec_generator:generate \
     --output "$PUBSPEC_GEN" || { log_error "Failed to generate pubspec.yaml.g.dart"; exit 1; }
 log_info "pubspec.yaml.g.dart generated successfully"
 
+ASSETS_GEN="lib/_core/generated/resources/assets.gen.dart"
+require_generated_file \
+    "$ASSETS_GEN" \
+    "FlutterGen output is required by EnvironmentLoader. In CI, avoid restoring .dart_tool/build on a clean checkout if this file is missing." || exit 1
+
 # 4. Build the Flutter web app (release mode)
 log_step "4/6 Building Flutter web app..."
 # Construct extra --dart-define arguments for any provided secret keys.
@@ -401,6 +464,8 @@ if ! dart run sw:generate --version="${SW_VERSION}"; then
     log_error "Service worker generation failed"
     exit 1
 fi
+
+validate_generated_bootstrap || exit 1
 
 # Verify the final shipping entrypoints exist.
 for f in index.html sw.js bootstrap.js; do

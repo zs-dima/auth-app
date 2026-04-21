@@ -1302,7 +1302,7 @@ packages:
     description:
       path: "."
       ref: master
-      resolved-ref: "824945adc07353cfbe9a2aeae798ad8bcff0a00c"
+      resolved-ref: "00c7d604d0248906eff557f7c6127b3789addc0f"
       url: "https://github.com/zs-dima/service-worker-generator.git"
     source: git
     version: "0.1.3"
