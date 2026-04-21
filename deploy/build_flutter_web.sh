@@ -17,11 +17,7 @@ log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 # explicitly, but local runs default to the committed deploy configuration.
 SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
 SW_GIT_REF="${SW_GIT_REF:-master}"
-# The currently locked git ref in auth-app is known to contain stale packaged
-# Dart bootstrap assets even though the TypeScript source is fixed. Keep builds
-# working until the fork is pushed and pubspec.lock is refreshed to the corrected
-# commit, then stale bootstrap output becomes a hard failure automatically.
-SW_KNOWN_STALE_RESOLVED_REF="${SW_KNOWN_STALE_RESOLVED_REF:-824945adc07353cfbe9a2aeae798ad8bcff0a00c}"
+SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-00c7d604d0248906eff557f7c6127b3789addc0f}"
 SW_RESOLVED_REF=""
 
 extract_sw_lock_section() {
@@ -78,6 +74,12 @@ validate_sw_dependency() {
         return 1
     fi
 
+    if [ -n "$SW_GIT_RESOLVED_REF" ] && [ "$sw_resolved_ref" != "$SW_GIT_RESOLVED_REF" ]; then
+        log_error "sw resolved-ref mismatch. Expected ${SW_GIT_RESOLVED_REF}, found ${sw_resolved_ref:-missing}"
+        printf '%s\n' "$sw_lock_section" >&2
+        return 1
+    fi
+
     SW_RESOLVED_REF="${sw_resolved_ref}"
     log_info "Verified sw dependency source: ${sw_url}@${sw_ref} (${sw_resolved_ref:-no resolved-ref})"
 }
@@ -119,12 +121,6 @@ validate_generated_bootstrap() {
 
     if [ "$has_stale_dispose" -eq 0 ] && [ "$has_async_patch" -eq 1 ] && [ "$has_once_bridge" -eq 0 ]; then
         log_info "Verified generated bootstrap.js contains the patched SW update flow"
-        return 0
-    fi
-
-    if [ -n "$SW_RESOLVED_REF" ] && [ "$SW_RESOLVED_REF" = "$SW_KNOWN_STALE_RESOLVED_REF" ]; then
-        log_warning "Generated bootstrap.js still matches the known-stale sw package at ${SW_RESOLVED_REF}"
-        log_warning "Push the fixed service-worker-generator fork and refresh auth-app/pubspec.lock to turn this into a hard failure"
         return 0
     fi
 
