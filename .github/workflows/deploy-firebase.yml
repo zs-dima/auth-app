@@ -71,22 +71,22 @@ jobs:
           fi
           echo "✅ ${{ env.ENV }} environment"
 
-      - name: 📦 Cache Flutter Pub packages
-        uses: actions/cache@v5
-        with:
-          path: /var/cache/pub # GitLab: .pub-cache
-          key: flutter-pub-${{ hashFiles('pubspec.lock') }}
-          restore-keys: |
-            flutter-pub-
+      # - name: 📦 Cache Flutter Pub packages
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: /var/cache/pub # GitLab: .pub-cache
+      #     key: flutter-pub-${{ hashFiles('pubspec.lock') }}
+      #     restore-keys: |
+      #       flutter-pub-
 
-      - name: 📦 Cache build_runner outputs
-        uses: actions/cache@v5
-        with:
-          path: .dart_tool/build
-          key: dart-tool-v2-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('build.yaml') }}
-          restore-keys: |
-            dart-tool-v2-${{ hashFiles('pubspec.lock') }}-
-            dart-tool-v2-
+      # - name: 📦 Cache build_runner outputs
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: .dart_tool/build
+      #     key: dart-tool-v2-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('build.yaml') }}
+      #     restore-keys: |
+      #       dart-tool-v2-${{ hashFiles('pubspec.lock') }}-
+      #       dart-tool-v2-
 
       - name: 🔒 Configure Git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -97,6 +97,7 @@ jobs:
           set -euo pipefail
 
           sw_lock_section="$(awk '
+            { sub(/\r$/, "") }
             /^  sw:$/ { in_sw = 1 }
             in_sw {
               if ($0 ~ /^  [^ ]/ && $0 !~ /^  sw:$/) {

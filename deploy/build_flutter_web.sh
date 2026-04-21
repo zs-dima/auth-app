@@ -25,6 +25,7 @@ extract_sw_lock_section() {
     fi
 
     awk '
+        { sub(/\r$/, "") }
         /^  sw:$/ { in_sw = 1 }
         in_sw {
             if ($0 ~ /^  [^ ]/ && $0 !~ /^  sw:$/) {
