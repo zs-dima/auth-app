@@ -32,6 +32,8 @@ env:
   FLUTTER_CHANNEL: "stable" # master / dev / beta / stable (default)
   FLUTTER_VERSION: "3.41.7" # 3.38.0 / '' (default)
   SENTRY_PROJECT: "auth-app"
+  FIREBASE_PROJECT_ID: "zs-auth-app"
+  FIREBASE_TOOLS_VERSION: "15.15.0"
 
 jobs:
   build_and_deploy_web:
@@ -40,7 +42,8 @@ jobs:
     # needs: [lint, test] TODO
     container:
       image: plugfox/flutter:3.41.7-web
-    if: github.actor != 'dependabot[bot]' && (github.ref_name == 'main' || startsWith(github.ref, 'refs/tags'))
+    if: github.actor != 'dependabot[bot]' && (github.ref_name == 'main' || github.ref_name == 'v3' || github.ref_name ==
+      'dev' || startsWith(github.ref, 'refs/tags'))
     timeout-minutes: 30
     env:
       # Persist PUB_CACHE path. GitLab can use: ${{ github.workspace }}/.pub-cache
@@ -66,7 +69,7 @@ jobs:
           echo "✅ ${{ env.ENV }} environment"
 
       - name: 📦 Cache Flutter Pub packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /var/cache/pub # GitLab: .pub-cache
           key: flutter-pub-${{ hashFiles('pubspec.lock') }}
@@ -74,7 +77,7 @@ jobs:
             flutter-pub-
 
       - name: 📦 Cache build_runner outputs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .dart_tool/build
           key: dart-tool-${{ hashFiles('pubspec.lock') }}-${{ hashFiles('build.yaml') }}
@@ -101,38 +104,65 @@ jobs:
 
       - name: 📦 Upload build artifacts
         if: success() && env.ENV == 'production'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-build-${{ env.ENV }}-${{ github.sha }}
           path: build/web/
           retention-days: 7
 
-      - name: 🟢 Install Node.js 20.x # for Firebase CLI
-        uses: actions/setup-node@v4 # bundles npm & npx
+      - name: 🟢 Install Node.js 24.x # for Firebase CLI
+        uses: actions/setup-node@v6 # bundles npm & npx
         with:
-          node-version: 20
+          node-version: 24
+
+      - name: 🔐 Authenticate to Google Cloud
+        if: success()
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZS_AUTH_APP }}"
 
       - name: ☁ Deploy to Firebase
         if: success()
-        uses: FirebaseExtended/action-hosting-deploy@v0
         id: firebase_deploy
-        with:
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZS_AUTH_APP }}"
-          channelId: ${{ env.ENV == 'production' && 'live' || env.ENV }}
-          projectId: zs-auth-app
-          expires: ${{ env.ENV == 'production' && '' || '30d' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${ENV}" == "production" ]]; then
+            npx "firebase-tools@${FIREBASE_TOOLS_VERSION}" \
+              deploy \
+              --only hosting \
+              --project "${FIREBASE_PROJECT_ID}" \
+              --json >/tmp/firebase-deploy.json
+
+            {
+              echo "details_url=https://${FIREBASE_PROJECT_ID}.web.app/"
+              echo "expire_time="
+              echo "expire_time_formatted="
+            } >> "$GITHUB_OUTPUT"
+          else
+            npx "firebase-tools@${FIREBASE_TOOLS_VERSION}" \
+              hosting:channel:deploy "${ENV}" \
+              --expires 30d \
+              --project "${FIREBASE_PROJECT_ID}" \
+              --json >/tmp/firebase-deploy.json
+
+            node -e "const fs = require('fs'); const raw = fs.readFileSync('/tmp/firebase-deploy.json', 'utf8'); const deployment = JSON.parse(raw); const results = Object.values(deployment.result ?? {}); if (results.length === 0) { throw new Error('Firebase preview deploy returned no hosting results.'); } const expireTime = results[0].expireTime ?? ''; const detailsUrl = results[0].url ?? ''; const expireTimeFormatted = expireTime ? new Date(expireTime).toUTCString() : ''; const output = process.env.GITHUB_OUTPUT; fs.appendFileSync(output, \`details_url=\${detailsUrl}\\n\`); fs.appendFileSync(output, \`expire_time=\${expireTime}\\n\`); fs.appendFileSync(output, \`expire_time_formatted=\${expireTimeFormatted}\\n\`);"
+          fi
 
       - name: 🚀 Deployment Summary
         if: always()
         run: |
-          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ env.ENV }}" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** ${{ steps.firebase_deploy.outputs.details_url || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Expires:** ${{ steps.firebase_deploy.outputs.expire_time || 'Never' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch/Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### 🚀 Deployment Summary"
+            echo ""
+            echo "**Environment:** ${{ env.ENV }}"
+            echo "**URL:** ${{ steps.firebase_deploy.outputs.details_url || 'N/A' }}"
+            echo "**Expires:** ${{ steps.firebase_deploy.outputs.expire_time || 'Never' }}"
+            echo ""
+            echo "**Commit:** ${{ github.sha }}"
+            echo "**Branch/Tag:** ${{ github.ref_name }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📢 Send deployment notification
         if: success() && env.ENV == 'production'
