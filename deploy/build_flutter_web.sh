@@ -18,10 +18,6 @@ log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
 SW_GIT_REF="${SW_GIT_REF:-master}"
 SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-785dbc221fb8cc2f9cd73aa2639da4fe8b750ae4}"
-# The currently published sw git ref still auto-calls skipWaiting() during
-# install. Once the forked fix is pushed and auth-app refreshes its lockfile,
-# generated sw.js must pass the strict waiting-worker validation below.
-SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF="${SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF:-785dbc221fb8cc2f9cd73aa2639da4fe8b750ae4}"
 SW_RESOLVED_REF=""
 
 extract_sw_lock_section() {
@@ -116,7 +112,7 @@ validate_generated_bootstrap() {
     if grep -q 'updateHandlers.clear' "$bootstrap_path"; then
         has_stale_dispose=1
     fi
-    if grep -q 'instanceof Promise' "$bootstrap_path"; then
+    if grep -Eq 'typeof[[:space:]][^[:space:]]+\.then==?"function"|typeof[[:space:]][^[:space:]]+\.then[[:space:]]*===?[[:space:]]*'\''function'\''' "$bootstrap_path"; then
         has_async_patch=1
     fi
     if grep -Eq 'sw-update-available.{0,200}\{[[:space:]]*once[[:space:]]*:[[:space:]]*(true|!0)' "$bootstrap_path"; then
@@ -150,12 +146,6 @@ validate_generated_service_worker() {
 
     if [ "$install_skipwaiting" -eq 0 ] && [ "${skipwaiting_count}" -eq 2 ]; then
         log_info "Verified generated sw.js keeps skipWaiting limited to the message-driven update path"
-        return 0
-    fi
-
-    if [ -n "$SW_RESOLVED_REF" ] && [ "$SW_RESOLVED_REF" = "$SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF" ]; then
-        log_warning "Generated sw.js still matches the known auto-activating sw package at ${SW_RESOLVED_REF}"
-        log_warning "Push the waiting-worker fix to service-worker-generator and refresh auth-app/pubspec.lock to turn this into a hard failure"
         return 0
     fi
 
