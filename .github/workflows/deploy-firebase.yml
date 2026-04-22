@@ -51,7 +51,7 @@ jobs:
       # Expected service-worker generator source for CI builds.
       SW_GIT_URL: "https://github.com/zs-dima/service-worker-generator.git"
       SW_GIT_REF: "master"
-      SW_GIT_RESOLVED_REF: "f4b88538cce835020452cbee5b7df561d08635a7"
+      SW_GIT_RESOLVED_REF: "785dbc221fb8cc2f9cd73aa2639da4fe8b750ae4"
       # Environment
       ENV: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && 'production' ||
         startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-') && 'staging' ||
