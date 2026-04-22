@@ -17,11 +17,11 @@ log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 # explicitly, but local runs default to the committed deploy configuration.
 SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
 SW_GIT_REF="${SW_GIT_REF:-master}"
-SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-4b39fe4cffd6eca28e76396e4c64da253d29c189}"
+SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-f4b88538cce835020452cbee5b7df561d08635a7}"
 # The currently published sw git ref still auto-calls skipWaiting() during
 # install. Once the forked fix is pushed and auth-app refreshes its lockfile,
 # generated sw.js must pass the strict waiting-worker validation below.
-SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF="${SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF:-4b39fe4cffd6eca28e76396e4c64da253d29c189}"
+SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF="${SW_KNOWN_INSTALL_SKIPWAITING_RESOLVED_REF:-f4b88538cce835020452cbee5b7df561d08635a7}"
 SW_RESOLVED_REF=""
 
 extract_sw_lock_section() {
