@@ -59,7 +59,7 @@ class _SignInScreenState extends State<SignInScreen> with _UsernamePasswordFormS
               children: <Widget>[
                 SizedBox(width: 50.0),
                 AppText.headlineLarge(
-                  'Sign-In)->)',
+                  'Sign-In->...',
                   height: 1.0,
                   maxLines: 1,
                   overflow: .ellipsis,
