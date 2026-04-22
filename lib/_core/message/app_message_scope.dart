@@ -68,7 +68,6 @@ class _AppMessageScopeState extends State<AppMessageScope> {
     _updateCheckMessageSubscription?.cancel();
     _updateCheckMessageSubscription = _updateCheckController
         .toStream()
-        .startWith(_updateCheckController.state)
         .whereType<UpdateAvailableState>()
         .distinct()
         .listen(
