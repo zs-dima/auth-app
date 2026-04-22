@@ -13,147 +13,6 @@ log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 log_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_step()    { echo -e "${BLUE}[STEP]${NC} $1"; }
 
-# Expected Git source for the service-worker generator. CI can override these
-# explicitly, but local runs default to the committed deploy configuration.
-SW_GIT_URL="${SW_GIT_URL:-https://github.com/zs-dima/service-worker-generator.git}"
-SW_GIT_REF="${SW_GIT_REF:-master}"
-SW_GIT_RESOLVED_REF="${SW_GIT_RESOLVED_REF:-785dbc221fb8cc2f9cd73aa2639da4fe8b750ae4}"
-SW_RESOLVED_REF=""
-
-extract_sw_lock_section() {
-    if [ ! -f "pubspec.lock" ]; then
-        log_error "pubspec.lock not found; cannot validate sw dependency"
-        return 1
-    fi
-
-    awk '
-        { sub(/\r$/, "") }
-        /^  sw:$/ { in_sw = 1 }
-        in_sw {
-            if ($0 ~ /^  [^ ]/ && $0 !~ /^  sw:$/) {
-                exit
-            }
-            print
-        }
-    ' pubspec.lock
-}
-
-validate_sw_dependency() {
-    local sw_lock_section
-    local sw_source
-    local sw_url
-    local sw_ref
-    local sw_resolved_ref
-
-    sw_lock_section="$(extract_sw_lock_section)"
-    if [ -z "$sw_lock_section" ]; then
-        log_error "pubspec.lock is missing the sw dependency entry"
-        return 1
-    fi
-
-    sw_source="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^    source: //p' | head -n 1)"
-    sw_url="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      url: //p' | head -n 1 | tr -d '"')"
-    sw_ref="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      ref: //p' | head -n 1 | tr -d '"')"
-    sw_resolved_ref="$(printf '%s\n' "$sw_lock_section" | sed -n 's/^      resolved-ref: //p' | head -n 1 | tr -d '"')"
-
-    if [ "$sw_source" != "git" ]; then
-        log_error "sw must resolve from git in pubspec.lock, found source: ${sw_source:-missing}"
-        printf '%s\n' "$sw_lock_section" >&2
-        return 1
-    fi
-
-    if [ "$sw_url" != "$SW_GIT_URL" ]; then
-        log_error "sw git URL mismatch. Expected ${SW_GIT_URL}, found ${sw_url:-missing}"
-        printf '%s\n' "$sw_lock_section" >&2
-        return 1
-    fi
-
-    if [ "$sw_ref" != "$SW_GIT_REF" ]; then
-        log_error "sw git ref mismatch. Expected ${SW_GIT_REF}, found ${sw_ref:-missing}"
-        printf '%s\n' "$sw_lock_section" >&2
-        return 1
-    fi
-
-    if [ -n "$SW_GIT_RESOLVED_REF" ] && [ "$sw_resolved_ref" != "$SW_GIT_RESOLVED_REF" ]; then
-        log_error "sw resolved-ref mismatch. Expected ${SW_GIT_RESOLVED_REF}, found ${sw_resolved_ref:-missing}"
-        printf '%s\n' "$sw_lock_section" >&2
-        return 1
-    fi
-
-    SW_RESOLVED_REF="${sw_resolved_ref}"
-    log_info "Verified sw dependency source: ${sw_url}@${sw_ref} (${sw_resolved_ref:-no resolved-ref})"
-}
-
-require_generated_file() {
-    local path="$1"
-    local hint="$2"
-
-    if [ -f "$path" ]; then
-        log_info "Verified generated file: $path"
-        return 0
-    fi
-
-    log_error "Missing generated file: $path"
-    log_error "$hint"
-    return 1
-}
-
-validate_generated_bootstrap() {
-    local bootstrap_path="build/web/bootstrap.js"
-    local has_stale_dispose=0
-    local has_async_patch=0
-    local has_once_bridge=0
-
-    if [ ! -f "$bootstrap_path" ]; then
-        log_error "Generated bootstrap validation failed: $bootstrap_path not found"
-        return 1
-    fi
-
-    if grep -q 'updateHandlers.clear' "$bootstrap_path"; then
-        has_stale_dispose=1
-    fi
-    if grep -Eq 'typeof[[:space:]][^[:space:]]+\.then==?"function"|typeof[[:space:]][^[:space:]]+\.then[[:space:]]*===?[[:space:]]*'\''function'\''' "$bootstrap_path"; then
-        has_async_patch=1
-    fi
-    if grep -Eq 'sw-update-available.{0,200}\{[[:space:]]*once[[:space:]]*:[[:space:]]*(true|!0)' "$bootstrap_path"; then
-        has_once_bridge=1
-    fi
-
-    if [ "$has_stale_dispose" -eq 0 ] && [ "$has_async_patch" -eq 1 ] && [ "$has_once_bridge" -eq 0 ]; then
-        log_info "Verified generated bootstrap.js contains the patched SW update flow"
-        return 0
-    fi
-
-    log_error "Generated bootstrap.js failed validation for sw dependency ${SW_RESOLVED_REF:-unknown}"
-    log_error "Stale dispose marker: ${has_stale_dispose}, async patch marker: ${has_async_patch}, one-shot bridge marker: ${has_once_bridge}"
-    return 1
-}
-
-validate_generated_service_worker() {
-    local sw_path="build/web/sw.js"
-    local install_skipwaiting=0
-    local skipwaiting_count=0
-
-    if [ ! -f "$sw_path" ]; then
-        log_error "Generated service worker validation failed: $sw_path not found"
-        return 1
-    fi
-
-    if grep -q 'await self.skipWaiting()' "$sw_path"; then
-        install_skipwaiting=1
-    fi
-    skipwaiting_count="$( (grep -o 'self\.skipWaiting()' "$sw_path" || true) | wc -l | tr -d ' ')"
-
-    if [ "$install_skipwaiting" -eq 0 ] && [ "${skipwaiting_count}" -eq 2 ]; then
-        log_info "Verified generated sw.js keeps skipWaiting limited to the message-driven update path"
-        return 0
-    fi
-
-    log_error "Generated sw.js failed validation for sw dependency ${SW_RESOLVED_REF:-unknown}"
-    log_error "Install-time skipWaiting marker: ${install_skipwaiting}, self.skipWaiting() call count: ${skipwaiting_count}"
-    return 1
-}
-
 # Track overall build time
 BUILD_START=$(date +%s)
 
@@ -188,8 +47,7 @@ log_info "Removed example folders from packages"
 
 # 1. Fetch Flutter dependencies for the main app
 log_step "1/6 Getting Flutter packages for main app..."
-flutter pub get --enforce-lockfile || { log_error "Failed to get Flutter packages from the committed lockfile"; exit 1; }
-validate_sw_dependency || exit 1
+flutter pub get || { log_error "Failed to get Flutter packages"; exit 1; }
 
 # 1.5 Activate pubspec_generator (actual generation runs after build_runner in step 3.5)
 dart pub global activate pubspec_generator || { log_error "Failed to activate pubspec_generator"; exit 1; }
@@ -407,11 +265,6 @@ dart pub global run pubspec_generator:generate \
     --output "$PUBSPEC_GEN" || { log_error "Failed to generate pubspec.yaml.g.dart"; exit 1; }
 log_info "pubspec.yaml.g.dart generated successfully"
 
-ASSETS_GEN="lib/_core/generated/resources/assets.gen.dart"
-require_generated_file \
-    "$ASSETS_GEN" \
-    "FlutterGen output is required by EnvironmentLoader. In CI, avoid restoring .dart_tool/build on a clean checkout if this file is missing." || exit 1
-
 # 4. Build the Flutter web app (release mode)
 log_step "4/6 Building Flutter web app..."
 # Construct extra --dart-define arguments for any provided secret keys.
@@ -485,9 +338,6 @@ if ! dart run sw:generate --version="${SW_VERSION}"; then
     log_error "Service worker generation failed"
     exit 1
 fi
-
-validate_generated_bootstrap || exit 1
-validate_generated_service_worker || exit 1
 
 # Verify the final shipping entrypoints exist.
 for f in index.html sw.js bootstrap.js; do

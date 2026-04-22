@@ -48,10 +48,6 @@ jobs:
     env:
       # Persist PUB_CACHE path. GitLab can use: ${{ github.workspace }}/.pub-cache
       PUB_CACHE: /var/cache/pub
-      # Expected service-worker generator source for CI builds.
-      SW_GIT_URL: "https://github.com/zs-dima/service-worker-generator.git"
-      SW_GIT_REF: "master"
-      SW_GIT_RESOLVED_REF: "785dbc221fb8cc2f9cd73aa2639da4fe8b750ae4"
       # Environment
       ENV: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && 'production' ||
         startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-') && 'staging' ||
@@ -83,66 +79,12 @@ jobs:
       - name: 🔒 Configure Git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: 🔎 Verify sw dependency lockfile
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          sw_lock_section="$(awk '
-            { sub(/\r$/, "") }
-            /^  sw:$/ { in_sw = 1 }
-            in_sw {
-              if ($0 ~ /^  [^ ]/ && $0 !~ /^  sw:$/) {
-                exit
-              }
-              print
-            }
-          ' pubspec.lock)"
-
-          if [[ -z "${sw_lock_section}" ]]; then
-            echo "❌ pubspec.lock is missing the sw dependency entry"
-            exit 1
-          fi
-
-          echo "sw lockfile entry:"
-          printf '%s\n' "${sw_lock_section}"
-
-          sw_source="$(printf '%s\n' "${sw_lock_section}" | sed -n 's/^    source: //p' | head -n 1)"
-          sw_url="$(printf '%s\n' "${sw_lock_section}" | sed -n 's/^      url: //p' | head -n 1 | tr -d '"')"
-          sw_ref="$(printf '%s\n' "${sw_lock_section}" | sed -n 's/^      ref: //p' | head -n 1 | tr -d '"')"
-          sw_resolved_ref="$(printf '%s\n' "${sw_lock_section}" | sed -n 's/^      resolved-ref: //p' | head -n 1 | tr -d '"')"
-
-          if [[ "${sw_source}" != "git" ]]; then
-            echo "❌ sw must resolve from git in pubspec.lock, found source: ${sw_source:-missing}"
-            exit 1
-          fi
-
-          if [[ "${sw_url}" != "${SW_GIT_URL}" ]]; then
-            echo "❌ sw git URL mismatch. Expected ${SW_GIT_URL}, found ${sw_url:-missing}"
-            exit 1
-          fi
-
-          if [[ "${sw_ref}" != "${SW_GIT_REF}" ]]; then
-            echo "❌ sw git ref mismatch. Expected ${SW_GIT_REF}, found ${sw_ref:-missing}"
-            exit 1
-          fi
-
-          if [[ "${sw_resolved_ref}" != "${SW_GIT_RESOLVED_REF}" ]]; then
-            echo "❌ sw resolved-ref mismatch. Expected ${SW_GIT_RESOLVED_REF}, found ${sw_resolved_ref:-missing}"
-            exit 1
-          fi
-
-          echo "✅ sw resolves from ${sw_url}@${sw_ref} (${sw_resolved_ref:-no resolved-ref})"
-
       - name: 🐳 Build Flutter Web
         run: bash deploy/build_flutter_web.sh
         env:
           APP_ENVIRONMENT: ${{ env.ENV }}
           GIT_SHA: ${{ github.sha }}
           S3_URL: ${{ secrets.S3_URL }}
-          SW_GIT_URL: ${{ env.SW_GIT_URL }}
-          SW_GIT_REF: ${{ env.SW_GIT_REF }}
-          SW_GIT_RESOLVED_REF: ${{ env.SW_GIT_RESOLVED_REF }}
           # OAI_KEY: ${{ secrets.OAI_KEY }}
           # WHISPER_ADDRESS: ${{ secrets.WHISPER_ADDRESS }}
           # SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

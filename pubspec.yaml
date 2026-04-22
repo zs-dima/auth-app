@@ -210,7 +210,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code generation
-  build_runner: ^2.13.1
+  build_runner: ^2.14.0
   drift_dev: ^2.32.1
   flutter_gen_runner: ^5.14.0
   freezed: ^3.2.5
@@ -225,11 +225,8 @@ dev_dependencies:
   # intl_utils: ^2.8.13
   #mockito: ^5.4.2
 
-  sentry_dart_plugin: ^3.2.1
-  sw:
-    git:
-      url: https://github.com/zs-dima/service-worker-generator.git
-      ref: master
+  sentry_dart_plugin: ^3.3.0
+  sw: ^0.1.4
 
   # Lints
   lints_tool:
