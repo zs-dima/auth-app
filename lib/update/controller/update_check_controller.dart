@@ -87,7 +87,9 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
     // and a `visibilitychange` trigger; both resolve to a
     // `Bootstrap.onUpdateAvailable` event that lands here within ~1s,
     // so the banner appears without waiting for any periodic Dart
-    // timer.
+    // timer. Clearing `_isCurrentPendingUpdateDismissed` on each signal
+    // is what lets a second deploy re-prompt after the user clicked
+    // "Later" on the first one.
     _updateSubscription = _updateCheckApi.onUpdateAvailable.listen(
       (_) {
         _isCurrentPendingUpdateDismissed = false;
@@ -96,10 +98,12 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
       cancelOnError: false,
     );
 
-    // Pull path bootstrap: re-check on construction in case the API's
-    // one-shot probe (`_probeWaitingRegistration`) flipped the flag
-    // before this controller existed. `app_message_scope` calls
-    // `checkForUpdates()` again on its own mount for the same reason.
+    // Pull path bootstrap: re-check on construction in case the API
+    // already saw a pending update before this controller existed
+    // (e.g., sw 0.1.4's `activateWaitingAtBootstrap` left a waiting
+    // worker that `Bootstrap.onUpdateAvailable` signalled during load).
+    // `app_message_scope` calls `checkForUpdates()` again on its own
+    // mount for the same reason.
     checkForUpdates();
   }
 }

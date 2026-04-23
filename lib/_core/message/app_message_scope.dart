@@ -9,26 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:octopus/octopus.dart';
 import 'package:rxdart/rxdart.dart';
 
-// extension AppMessageScopeX on BuildContext {
-//   AppMessageController get message => AppMessageScope.of(this, listen: false);
-// }
-
 extension AppMessageScopeX on BuildContext {
   AppMessageController get message => dependencies.messageController;
 }
 
 /// {@template app_message_scope}
-/// Theme scope is responsible for handling theme-related stuff.
-///
-/// See [AppMessageScope] for more info.
+/// Subscribes to the app-global [AppMessageController] and
+/// [UpdateCheckController] and routes their events into the UI
+/// (toasts and the update banner). Holds no inherited state of its
+/// own — the [AppMessageController] is reached through
+/// `context.dependencies.messageController`.
 /// {@endtemplate}
 class AppMessageScope extends StatefulWidget {
   /// {@macro app_message_scope}
   const AppMessageScope({required this.child, this.octopus, super.key});
-
-  /// Get the [AppMessageController] of the closest [AppMessageScope] ancestor.
-  // static AppMessageController of(BuildContext context, {bool listen = true}) =>
-  //     context.scopeOf<_AppMessageInherited>(listen: listen).controller;
 
   /// The child widget.
   final Widget child;
@@ -40,18 +34,19 @@ class AppMessageScope extends StatefulWidget {
 }
 
 class _AppMessageScopeState extends State<AppMessageScope> {
-  late AppMessageController _messagingController;
-  StreamSubscription<void>? _messageSubscription;
-
-  late UpdateCheckController _updateCheckController;
-  StreamSubscription<void>? _updateCheckMessageSubscription;
-
   static void _appendWithLine(StringBuffer buffer, String text) {
     if (buffer.isNotEmpty) {
       buffer.write('\r\n');
     }
     buffer.write(text);
   }
+
+  late final AppMessageController _messagingController;
+
+  late final UpdateCheckController _updateCheckController;
+  StreamSubscription<void>? _messageSubscription;
+
+  StreamSubscription<void>? _updateCheckMessageSubscription;
 
   @override
   void initState() {
@@ -69,14 +64,24 @@ class _AppMessageScopeState extends State<AppMessageScope> {
     _updateCheckMessageSubscription = _updateCheckController
         .toStream()
         .whereType<UpdateAvailableState>()
-        .distinct()
+        // .distinct()
         .listen(
-          (state) {
-            if (!mounted) return; //  || widget.octopus?.state.children.last.name == Routes.appUpdateAvailable.name
-
-            ScaffoldMessenger.of(context).showMaterialBanner(
-              AppUpdateAvailableWidget(context, updateCheckController: _updateCheckController),
-            );
+          (_) {
+            if (!mounted) return;
+            // Replace any currently-visible banner with a fresh one.
+            // Two back-to-back UpdateAvailableState emissions carry the
+            // same currently-running version (the state's `.version` is
+            // the RUNNING app version, not the pending one — it only
+            // changes after a reload), so `.distinct()` would drop the
+            // second show; `hideCurrentMaterialBanner()` covers that
+            // correctly and also prevents ScaffoldMessenger from queueing
+            // a duplicate on the apply-failure rollback path
+            // (UpdateAvailable -> ApplyingUpdate -> UpdateAvailable).
+            ScaffoldMessenger.of(context)
+              ..hideCurrentMaterialBanner()
+              ..showMaterialBanner(
+                AppUpdateAvailableWidget(context, updateCheckController: _updateCheckController),
+              );
 
             // Future.delayed(
             //   const Duration(seconds: 3),
@@ -92,20 +97,9 @@ class _AppMessageScopeState extends State<AppMessageScope> {
   }
 
   void _subscribeMessages() {
-    // final skipSameFor30Secs = SkipSameMessagesTransformer<MessageState>(
-    //   duration: const Duration(seconds: 20),
-    //   same: (a, b) {
-    //     if (a == b) return true;
-    //     if (a is AppErrorState && b is AppErrorState) return a.error == b.error;
-    //     if (a is NetErrorState && b is NetErrorState) return a.error == b.error || '${a.e}' == '${b.e}';
-    //     return false;
-    //   },
-    // );
-
     _messageSubscription?.cancel();
     _messageSubscription = _messagingController
         .toStream()
-        // .transform(skipSameFor30Secs)
         .bufferTime(const Duration(seconds: 3))
         .where((batch) => batch.isNotEmpty)
         .listen(
@@ -167,75 +161,4 @@ class _AppMessageScopeState extends State<AppMessageScope> {
 
   @override
   Widget build(BuildContext context) => widget.child;
-  // _AppMessageInherited(
-  //   controller: _messagingController,
-  //   state: _messagingController.state,
-  //   child: widget.child,
-  // );
 }
-
-// class _AppMessageInherited extends InheritedWidget {
-//   const _AppMessageInherited({
-//     required this.controller,
-//     required this.state,
-//     required super.child,
-//   });
-
-//   final AppMessageController controller;
-//   final MessageState state;
-
-//   @override
-//   bool updateShouldNotify(covariant _AppMessageInherited oldWidget) => !identical(oldWidget.state, state);
-// }
-
-/// A StreamTransformer that drops an event if it's the same
-/// as the previous event within the given [duration].
-// class SkipSameMessagesTransformer<T> extends StreamTransformerBase<T, T> {
-//   SkipSameMessagesTransformer({required this.duration, required this.same});
-
-//   T? _lastData;
-//   DateTime? _lastTime;
-
-//   final Duration duration;
-//   final bool Function(T value1, T? value2) same;
-
-//   @override
-//   Stream<T> bind(Stream<T> sourceStream) {
-//     StreamSubscription<T>? subscription;
-
-//     // ignore: close_sinks
-//     StreamController<T>? controller;
-
-//     controller = StreamController<T>(
-//       onListen: () {
-//         // Listen to the original source stream
-//         subscription = sourceStream.listen(
-//           (data) {
-//             final now = DateTime.now();
-
-//             final isDuplicateWithinWindow =
-//                 _lastTime != null && now.difference(_lastTime!) < duration && same(data, _lastData);
-//             if (!isDuplicateWithinWindow) {
-//               _lastData = data;
-//               _lastTime = now;
-//               controller?.add(data);
-//             }
-//           },
-//           onError: (Object error, StackTrace stack) {
-//             controller?.addError(error, stack);
-//           },
-//           onDone: controller?.close,
-//           cancelOnError: false,
-//         );
-//       },
-
-//       // This callback fires when the *transformed* stream is canceled.
-//       // We use it to cancel the subscription to the source stream.
-//       onCancel: () {
-//         subscription?.cancel();
-//       },
-//     );
-
-//     return controller.stream;
-//   }
-// }

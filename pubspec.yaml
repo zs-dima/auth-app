@@ -98,7 +98,7 @@ dependencies:
   # Logging & Analytics
   l: ^5.0.1
   stack_trace: ^1.12.1
-  sentry_flutter: ^9.18.0
+  sentry_flutter: ^9.19.0
   # matomo_tracker: ^6.0.0
   # posthog_flutter: ^5.0.0
 
@@ -226,7 +226,7 @@ dev_dependencies:
   #mockito: ^5.4.2
 
   sentry_dart_plugin: ^3.3.0
-  sw: ^0.1.4
+  sw: ^0.1.5
 
   # Lints
   lints_tool:
