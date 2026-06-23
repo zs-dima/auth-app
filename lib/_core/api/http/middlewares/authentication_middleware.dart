@@ -64,33 +64,3 @@ class AuthenticationMiddleware {
     return innerHandler(request, context);
   };
 }
-
-// /// {@template authentication_middleware}
-// /// Middleware for adding authentication headers to API requests.
-// /// {@endtemplate}
-// @immutable
-// class AuthenticationMiddleware {
-//   /// {@macro authentication_middleware}
-//   const AuthenticationMiddleware({required this.credentialsManager});
-
-//   /// Credentials manager for handling authentication tokens
-//   final CredentialsCallbacks credentialsManager;
-
-//   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
-//     final credentials = await credentialsManager.getAccessCredentials();
-
-//     if (credentials?.accessToken != null) {
-//       request.headers['Authorization'] = 'Bearer ${credentials!.accessToken.token}';
-//       request.headers['X-CSRF-Token'] = credentials.refreshToken;
-//     } else if (!credentialsManager.allowAnonymous) {
-//       credentialsManager.authHandler?.handleAuthenticationError();
-//       throw const ApiClientException$Authentication(
-//         code: 'no_auth_credentials',
-//         statusCode: 401,
-//         message: 'No authentication credentials available',
-//       );
-//     }
-
-//     return innerHandler(request, context);
-//   };
-// }
