@@ -30,6 +30,10 @@ class TimeoutMiddleware {
     try {
       return await innerHandler(request, context).timeout(timeout);
     } on TimeoutException catch (e, s) {
+      // Abort the underlying socket so it stops consuming bandwidth — `.timeout()`
+      // alone only stops awaiting. The caller still sees a timeout (below), not a
+      // cancellation, because we've already stopped awaiting the inner future.
+      if (context[kCancelTokenContextKey] case final CancelToken token) token.cancel(e);
       onTimeout?.call(timeout);
       Error.throwWithStackTrace(
         ApiClientException$Timeout(

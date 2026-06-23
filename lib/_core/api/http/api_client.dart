@@ -56,6 +56,78 @@ extension type ApiClientMiddlewareWrapper._(ApiClientMiddleware _fn) {
   ApiClientHandler call(ApiClientHandler innerHandler) => _fn(innerHandler);
 }
 
+/// Context key under which [ApiClient] exposes the effective [CancelToken] for a
+/// request, so middlewares (e.g. timeout) can abort the underlying socket.
+const kCancelTokenContextKey = 'cancelToken';
+
+/// Context flag that opts a request out of automatic retries (RetryMiddleware) and
+/// refresh-retry (TokenRefreshMiddleware). Used for non-resendable bodies (multipart).
+const kNoRetryContextKey = 'no-retry';
+
+/// Context flag that opts a non-idempotent request (POST/PATCH) back into automatic
+/// retries — set it only when the endpoint is safe to repeat (e.g. has an idempotency key).
+const kRetryNonIdempotentContextKey = 'retry-non-idempotent';
+
+/// A token used to cancel one or more in-flight requests.
+///
+/// Pass the same token to several requests to cancel them together (e.g. when
+/// leaving a screen). Backed by a [Completer] that drives `package:http`'s
+/// [http_package.Abortable.abortTrigger]; completing it aborts the request and
+/// surfaces an [ApiClientException$Cancelled] to the caller.
+class CancelToken {
+  final Completer<void> _completer = Completer<void>();
+
+  Object? _reason;
+
+  /// Child tokens that cancel together with this one (e.g. per-request tokens
+  /// linked to a session token). Created lazily; only holds *active* children —
+  /// each detaches on completion (see [link]) so it never grows with total requests.
+  Set<CancelToken>? _children;
+
+  /// Whether [cancel] has already been called.
+  bool get isCancelled => _completer.isCompleted;
+
+  /// The reason passed to [cancel], if any.
+  Object? get reason => _reason;
+
+  /// Future that completes when the token is cancelled. Wired into
+  /// [http_package.AbortableRequest.abortTrigger].
+  Future<void> get whenCancel => _completer.future;
+
+  /// Number of currently-linked child tokens (for tests/diagnostics).
+  @visibleForTesting
+  int get debugLinkedCount => _children?.length ?? 0;
+
+  /// Cancels this token (and any linked children, transitively). Idempotent.
+  void cancel([Object? reason]) {
+    if (_completer.isCompleted) return;
+    // Iterative traversal (no recursion) over this token and its linked children.
+    final pending = <CancelToken>[this];
+    while (pending.isNotEmpty) {
+      final token = pending.removeLast();
+      if (token._completer.isCompleted) continue;
+      token._reason = reason;
+      token._completer.complete();
+      final children = token._children;
+      token._children = null;
+      if (children != null) pending.addAll(children);
+    }
+  }
+
+  /// Links [child] so it cancels when this token cancels (e.g. a session token
+  /// cancelling its in-flight requests). Returns a detach callback — call it when
+  /// the child's work completes so this token stops retaining it. If already
+  /// cancelled, [child] is cancelled immediately and the returned callback is a no-op.
+  void Function() link(CancelToken child) {
+    if (isCancelled) {
+      child.cancel(_reason);
+      return () {};
+    }
+    (_children ??= <CancelToken>{}).add(child);
+    return () => _children?.remove(child);
+  }
+}
+
 /// An HTTP request with a JSON-encoded body.
 extension type const ApiClientRequest(http_package.BaseRequest _request) implements http_package.BaseRequest {
   /// Creates a clone of this request with optional parameter overrides.
@@ -67,10 +139,16 @@ extension type const ApiClientRequest(http_package.BaseRequest _request) impleme
     int? contentLength,
     int? maxRedirects,
   }) {
-    final newRequest = http_package.Request(method ?? _request.method, url ?? _request.url);
+    final source = _request;
+    // Preserve cancellation: rebuild an AbortableRequest carrying the same
+    // abortTrigger so retried attempts (see RetryMiddleware) stay abortable.
+    final abortTrigger = source is http_package.Abortable ? source.abortTrigger : null;
+    final newRequest = abortTrigger == null
+        ? http_package.Request(method ?? source.method, url ?? source.url)
+        : http_package.AbortableRequest(method ?? source.method, url ?? source.url, abortTrigger: abortTrigger);
 
     // Copy existing headers and add/override with new ones
-    newRequest.headers.addAll(_request.headers);
+    newRequest.headers.addAll(source.headers);
     if (headers != null) {
       newRequest.headers.addAll(headers);
     }
@@ -78,12 +156,14 @@ extension type const ApiClientRequest(http_package.BaseRequest _request) impleme
     // Copy body if present
     if (bodyBytes != null) {
       newRequest.bodyBytes = bodyBytes;
-    } else if (_request is http_package.Request) {
-      newRequest.bodyBytes = _request.bodyBytes;
+    } else if (source is http_package.Request) {
+      newRequest.bodyBytes = source.bodyBytes;
     }
 
-    // Set max redirects
-    newRequest.maxRedirects = maxRedirects ?? _request.maxRedirects;
+    // Preserve redirect behaviour
+    newRequest
+      ..maxRedirects = maxRedirects ?? source.maxRedirects
+      ..followRedirects = source.followRedirects;
 
     return ApiClientRequest(newRequest);
   }
@@ -139,17 +219,22 @@ final class ApiClientResponse {
   final ApiClientRequest request;
 
   /// Byte stream of the response body.
+  ///
+  /// Single-subscription: the body can be read **once**. Call exactly one of
+  /// [toBytes], [toJson], or [toText] per response — a second read throws
+  /// "Stream has already been listened to".
   final http_package.ByteStream stream;
 
-  /// Returns the response body as a bytes array.
+  /// Returns the response body as a bytes array. Consumes [stream] (read once).
   Future<Uint8List> toBytes() => stream.toBytes();
 
-  /// Receives the response body as a JSON object.
+  /// Receives the response body as a JSON object. Consumes [stream] (read once).
   Future<Map<String, Object?>> toJson() async {
     final bytes = await toBytes();
     return _jsonConverter.convert(bytes);
   }
 
+  /// Receives the response body as text. Consumes [stream] (read once).
   Future<String> toText() async => utf8.decode(await toBytes());
 
   /// Creates a clone of this response with optional parameter overrides.
@@ -185,8 +270,10 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Map<String, String>? headers,
     Iterable<ApiClientMiddleware>? middlewares, // Middlewares to apply for each request
     int maxRedirects = 5, // Maximum number of redirects to follow
+    CancelToken? Function()? sessionToken, // Session-scoped cancellation (cancelled on logout)
   }) : _maxRedirects = maxRedirects,
        _headers = headers,
+       _sessionToken = sessionToken,
        middlewares = List<ApiClientMiddleware>.unmodifiable(middlewares ?? const Iterable.empty()) {
     // Create the HTTP client.
     final internalClient = client ?? $createHttpClient();
@@ -220,6 +307,11 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   /// Headers to include in requests.
   final Map<String, String>? _headers;
 
+  /// Returns the current session-scoped [CancelToken] (or `null`). Every request aborts
+  /// when this token is cancelled, so ending the session (logout / failed refresh) tears
+  /// down all in-flight requests bound to it.
+  final CancelToken? Function()? _sessionToken;
+
   /// The base URL for the API.
   final Uri Function() baseUrl;
 
@@ -234,12 +326,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Object? body,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: method,
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: body,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a GET request to the given [path].
@@ -248,12 +342,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Map<String, String>? headers,
     Map<String, Object?>? queryParameters, // TODO Map<String, String>?
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'GET',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: null,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a POST request to the given [path].
@@ -263,12 +359,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Object? body,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'POST',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: body,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a POST request with multipart/form-data for file uploads.
@@ -287,10 +385,18 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Map<String, Object?>? queryParameters, // TODO Map<String, String>? queryParameters,
     Map<String, String>? headers,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) {
     try {
       final uri = _mergePath(baseUrl(), path, queryParameters);
-      final multipartRequest = http_package.MultipartRequest('POST', uri);
+      final ctx = context ?? <String, Object?>{};
+      final effectiveToken = cancelToken ?? CancelToken();
+      ctx[kCancelTokenContextKey] = effectiveToken;
+      // A finalized MultipartRequest can't be re-sent and clone() can't rebuild it,
+      // so opt this request out of automatic retry/refresh-retry to avoid an empty body.
+      ctx[kNoRetryContextKey] = true;
+      final detachSession = _linkSession(effectiveToken);
+      final multipartRequest = http_package.AbortableMultipartRequest('POST', uri, abortTrigger: effectiveToken.whenCancel);
 
       // Add headers (avoid content-type and content-length as they're set by MultipartRequest)
       if (_headers != null || headers != null) {
@@ -326,8 +432,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         }
       }
 
-      final ctx = context ?? <String, Object?>{};
-      return FutureApiClientResponse(_handler(ApiClientRequest(multipartRequest), ctx));
+      final future = _handler(ApiClientRequest(multipartRequest), ctx);
+      future.whenComplete(detachSession).ignore();
+      return FutureApiClientResponse(future);
     } on Object catch (e) {
       return FutureApiClientResponse(
         Future<ApiClientResponse>.error(
@@ -350,12 +457,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Object? body,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'PUT',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: body,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a PATCH request to the given [path].
@@ -365,12 +474,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Object? body,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'PATCH',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: body,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a DELETE request to the given [path].
@@ -380,12 +491,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Object? body,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'DELETE',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: body,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Sends a HEAD request to the given [path].
@@ -394,12 +507,14 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Map<String, String>? headers,
     Map<String, String>? queryParameters,
     Map<String, Object?>? context,
+    CancelToken? cancelToken,
   }) => _sendUnstreamed(
     method: 'HEAD',
     url: _mergePath(baseUrl(), path, queryParameters),
     headers: {...?_headers, ...?headers},
     body: null,
     context: context ?? <String, Object?>{},
+    cancelToken: cancelToken,
   );
 
   /// Clone this [ApiClient] with optional parameter overrides.
@@ -453,6 +568,11 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     return uri.replace(queryParameters: {...uri.queryParameters, ...stringParams});
   }
 
+  /// Links [requestToken] to the current session token (if any) so the request is
+  /// cancelled when the session ends. Returns a detach callback to call when the request
+  /// completes — keeping the session token's retained set bounded to in-flight requests.
+  VoidCallback _linkSession(CancelToken requestToken) => _sessionToken?.call()?.link(requestToken) ?? () {};
+
   /// Sends a non-streaming [http_package.Request] and returns a [http_package.Response].
   /// [context] should be a mutable map that can be used to store data that should be available to all middleware.
   FutureApiClientResponse _sendUnstreamed({
@@ -461,9 +581,16 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     required Map<String, String> headers,
     required Object? body,
     required Map<String, Object?> context,
+    CancelToken? cancelToken,
   }) {
     const utf8Encoder = Utf8Encoder();
-    final request = http_package.Request(method, url)
+    // Always abortable: use the caller's token, or an internal one, and expose it
+    // via context so middlewares (e.g. timeout) can tear down the socket. An
+    // abortTrigger that never completes behaves like a normal request.
+    final effectiveToken = cancelToken ?? CancelToken();
+    context[kCancelTokenContextKey] = effectiveToken;
+    final detachSession = _linkSession(effectiveToken);
+    final request = http_package.AbortableRequest(method, url, abortTrigger: effectiveToken.whenCancel)
       ..maxRedirects = _maxRedirects
       ..followRedirects = _maxRedirects > 0;
 
@@ -503,7 +630,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
           'Unsupported body type: ${body.runtimeType}. Supported types are: null, List<int>, String, Map<String, Object?>.',
         );
     }
-    return FutureApiClientResponse(_handler(ApiClientRequest(request), context));
+    final future = _handler(ApiClientRequest(request), context);
+    future.whenComplete(detachSession).ignore();
+    return FutureApiClientResponse(future);
   }
 }
 
@@ -540,6 +669,15 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
         final http_package.StreamedResponse streamedResponse;
         try {
           streamedResponse = await internalClient.send(request._request);
+        } on http_package.RequestAbortedException catch (error, stackTrace) {
+          // The request was cancelled via a CancelToken — surface it distinctly
+          // so callers and RetryMiddleware can tell it apart from a real failure.
+          throwError(
+            completer,
+            ApiClientException$Cancelled(error: error, data: <String, Object?>{'url': request.url.toString()}),
+            stackTrace,
+          );
+          return;
         } on Object catch (error, stackTrace) {
           throwError(
             completer,
@@ -575,7 +713,10 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
                 message: 'Service unavailable (HTTP 503). The server is currently unable to handle the request.',
                 statusCode: statusCode,
                 error: null,
-                data: <String, Object?>{'url': request.url.toString()},
+                data: <String, Object?>{
+                  'url': request.url.toString(),
+                  if (streamedResponse.headers['retry-after'] case final String ra) 'retry-after': ra,
+                },
               );
 
             case 501:
@@ -611,7 +752,10 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
                 message: 'Rate limit exceeded (HTTP 429). Too many requests.',
                 statusCode: statusCode,
                 error: null,
-                data: <String, Object?>{'url': request.url.toString()},
+                data: <String, Object?>{
+                  'url': request.url.toString(),
+                  if (streamedResponse.headers['retry-after'] case final String ra) 'retry-after': ra,
+                },
               );
 
             case 422:
@@ -863,6 +1007,32 @@ final class ApiClientException$Authentication extends ApiClientException {
     required this.code,
     required this.message,
     required this.statusCode,
+    this.error,
+    this.data,
+  });
+
+  @override
+  final String code;
+
+  @override
+  final String message;
+
+  @override
+  final int statusCode;
+
+  @override
+  final Object? error;
+
+  @override
+  final Object? data;
+}
+
+/// Cancellation exception, thrown when a request is aborted via a [CancelToken].
+final class ApiClientException$Cancelled extends ApiClientException {
+  const ApiClientException$Cancelled({
+    this.code = 'cancelled',
+    this.message = 'Request was cancelled.',
+    this.statusCode = 0,
     this.error,
     this.data,
   });

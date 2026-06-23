@@ -6,6 +6,12 @@ const kBearer = 'Bearer';
 const kAuthorization = 'Authorization';
 const kCsrfToken = 'X-CSRF-Token';
 
+/// Context key under which [AuthenticationMiddleware] stores the access token it
+/// attached to the request. `TokenRefreshMiddleware` reads it to decide whether a
+/// `401` should trigger a refresh or the token was already rotated by another
+/// in-flight request.
+const kAccessTokenContextKey = '__access_token';
+
 /// {@template authentication_basic_middleware}
 /// Middleware for handling authentication in API requests.
 /// [AuthenticationMiddleware] middleware is responsible for managing the authentication token
@@ -25,32 +31,37 @@ class AuthenticationMiddleware {
   final VoidCallback logOut;
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
+    // Attach the current credentials. [getToken] is expected to proactively
+    // refresh tokens that are about to expire (see
+    // `AuthenticationRepository.getAccessCredentials`), so on a retry this picks
+    // up the freshly rotated token automatically.
     try {
       final credentials = await getToken();
 
-      // If the token is null or empty, we can log out the user.
+      // Missing/empty credentials are unrecoverable: log out and fail fast with a typed
+      // error (consistent with the rest of the layer). statusCode 0 — not 401 — so the
+      // outer TokenRefreshMiddleware does not attempt to refresh nonexistent credentials.
       if (credentials == null || credentials.accessToken.token.isEmpty)
-        throw Exception('Authentication token is null or empty');
-      request.headers[kAuthorization] = '$kBearer ${credentials.accessToken.token}';
-      request.headers[kCsrfToken] = credentials.refreshToken;
+        throw const ApiClientException$Authentication(
+          code: 'no_credentials',
+          message: 'No authentication credentials available.',
+          statusCode: 0,
+        );
+
+      final token = credentials.accessToken.token;
+      // Only the access token rides along on normal requests; the refresh token is sent
+      // solely to the refresh endpoint, never on every request.
+      request.headers[kAuthorization] = '$kBearer $token';
+      // Record the token so TokenRefreshMiddleware can detect token rotation.
+      context[kAccessTokenContextKey] = token;
     } on Object {
-      // If an error occurs, we can log it or handle it as needed.
-      // For example, if the token is invalid or expired, we can call the logout function.
       logOut();
       rethrow;
     }
 
-    // Call the inner handler with the modified request, which now includes the Authorization header.
-    // If the request is successful, it will return the response.
-    // If an ApiClientException occurs, we can handle it accordingly and check if we need to log out the user.
-    try {
-      return await innerHandler(request, context);
-    } on ApiClientException catch (e) {
-      // If the response indicates an authentication error, we can log out the user.
-      const logoutStatusCodes = <int>{401, 403};
-      if (logoutStatusCodes.contains(e.statusCode)) logOut();
-      rethrow;
-    }
+    // 401/403 handling (refresh + retry) is owned by TokenRefreshMiddleware,
+    // which must wrap this middleware. We simply forward the result here.
+    return innerHandler(request, context);
   };
 }
 

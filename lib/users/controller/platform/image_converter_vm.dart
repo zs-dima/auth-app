@@ -30,7 +30,7 @@ Future<(Uint8List?, String)> toWebPBytes(
 
   Uint8List? upscaledBytes;
   try {
-    upscaledBytes = resizedImage.encode(.WebP);
+    upscaledBytes = resizedImage.encode(const PixerWebPEncoder());
   } finally {
     resizedImage.dispose();
   }

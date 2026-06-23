@@ -1,95 +1,59 @@
-// import 'package:auth_model/auth_model.dart';
-// import 'package:meta/meta.dart';
-// import 'package:auth_app/_core/util/http/api_client.dart';
-// import 'package:auth_app/_core/util/http/mutex.dart';
+import 'package:auth_app/_core/api/http/api_client.dart';
+import 'package:auth_app/_core/api/http/middlewares/authentication_middleware.dart';
+import 'package:auth_model/auth_model.dart';
+import 'package:meta/meta.dart';
 
-// const _kTokenExpirationThreshold = Duration(seconds: 30);
+/// Context key marking that this request already attempted a token refresh, so a
+/// second `401` does not loop forever.
+const kDidRefreshContextKey = '__did_refresh';
 
-// extension StringExtension on AccessToken? {
-//   bool get expiresSoon => this?.expiry.subtract(_kTokenExpirationThreshold).isBefore(DateTime.now().toUtc()) ?? false;
-// }
+/// {@template token_refresh_middleware}
+/// Refreshes the access token on a `401` and retries the original request once.
+///
+/// Must be placed **outside** [AuthenticationMiddleware] in the pipeline so that
+/// the retry re-runs authentication and attaches the freshly rotated token.
+///
+/// Concurrency: when many requests get `401` at the same time, every one calls
+/// [refreshCredentials], but the repository performs the actual network refresh
+/// only once (single-flight) — the rest reuse the rotated token. If the refresh
+/// fails, [refreshCredentials] returns `null` (and triggers logout), so every
+/// waiting request fails fast with its original error instead of retrying.
+/// {@endtemplate}
+@immutable
+class TokenRefreshMiddleware {
+  /// {@macro token_refresh_middleware}
+  const TokenRefreshMiddleware({required this.refreshCredentials});
 
-// /// {@template token_refresh_middleware}
-// /// Middleware for automatically refreshing expired tokens and retrying requests.
-// /// {@endtemplate}
-// @immutable
-// class TokenRefreshMiddleware {
-//   /// Prevents concurrent refresh attempts
-//   static final Mutex _refreshingMutex = Mutex();
+  /// Forces a single-flight token refresh for the access token that was rejected.
+  /// Returns the new credentials, or `null` when the refresh failed.
+  final Future<AccessCredentials?> Function(String usedAccessToken) refreshCredentials;
 
-//   /// {@macro token_refresh_middleware}
-//   const TokenRefreshMiddleware({required CredentialsCallbacks credentialsManager})
-//     : _credentialsManager = credentialsManager;
+  ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
+    try {
+      return await innerHandler(request, context);
+    } on ApiClientException catch (e) {
+      // Only unauthorized errors are recoverable, and only once per request. Skip
+      // requests that opted out of retry (e.g. multipart — a finalized body can't be
+      // re-sent and clone() can't rebuild it).
+      if (e.statusCode != 401 || context[kDidRefreshContextKey] == true || context[kNoRetryContextKey] == true)
+        rethrow;
+      context[kDidRefreshContextKey] = true;
 
-//   /// Credentials manager for handling authentication tokens
-//   final CredentialsCallbacks _credentialsManager;
+      final usedToken = switch (context[kAccessTokenContextKey]) {
+        final String token => token,
+        _ => '',
+      };
 
-//   ApiClientHandler call(ApiClientHandler innerHandler) =>
-//       (request, context) async => _refreshingMutex.synchronize(() async {
-//         try {
-//           final credentials = await _credentialsManager.getAccessCredentials();
-//           final accessToken = credentials?.accessToken;
+      // Single-flight refresh in the repository.
+      final fresh = await refreshCredentials(usedToken);
 
-//           if (credentials == null || accessToken == null) {
-//             _credentialsManager.authHandler?.handleAuthenticationError();
-//             throw const ApiClientException$Authentication(
-//               error: 'Session expired please login',
-//               code: 'no_auth_credentials',
-//               statusCode: 401,
-//               message: 'Session expired please login',
-//             );
-//           }
+      // Refresh failed (logout already triggered by the repository) — fail fast.
+      if (fresh == null) rethrow;
 
-//           final refreshToken = context[kRefreshToken] == true;
-//           if (!refreshToken && accessToken.expiresSoon) {
-//             final refresh = await _credentialsManager.getRefreshTokens(credentials.refreshToken);
-//             accessToken = refresh?.accessToken;
-//             if (accessToken == null) {
-//               final error = DioException(
-//                 error: 'Session expired please login',
-//                 requestOptions: options,
-//                 response: Response(
-//                   statusMessage: 'Session expired please login',
-//                   statusCode: 401,
-//                   requestOptions: options,
-//                 ),
-//               );
-
-//               handler.reject(error);
-//               _credentialsManager.authHandler?.handleAuthenticationError();
-//               return;
-//             }
-//           }
-
-//           return await innerHandler(request, context);
-//         } on ApiClientException catch (e) {
-//           // Only handle 401 Unauthorized errors
-//           if (e.statusCode != 401) rethrow;
-
-//           try {
-//             final credentials = await _credentialsManager.getAccessCredentials();
-//             if (credentials?.refreshToken == null) {
-//               _credentialsManager.authHandler?.handleAuthenticationError();
-//               rethrow;
-//             }
-
-//             // Attempt to refresh tokens
-//             final newCredentials = await _credentialsManager.getRefreshTokens(credentials!.refreshToken);
-//             if (newCredentials?.accessToken == null) {
-//               _credentialsManager.authHandler?.handleAuthenticationError();
-//               rethrow;
-//             }
-
-//             // Update request headers with new tokens
-//             request.headers['Authorization'] = 'Bearer ${newCredentials!.accessToken.token}';
-//             request.headers['X-CSRF-Token'] = newCredentials.refreshToken;
-
-//             // Retry the request
-//             return await innerHandler(request, context);
-//           } catch (e) {
-//             _credentialsManager.authHandler?.handleAuthenticationError();
-//             rethrow;
-//           }
-//         }
-//       });
-// }
+      // Retry once with a fresh request: the original was already finalized by the
+      // first send, and re-sending a finalized http request throws StateError.
+      // AuthenticationMiddleware (inner) re-attaches the new token onto the clone.
+      return innerHandler(request.clone(), context);
+    }
+  };
+}

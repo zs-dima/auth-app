@@ -159,7 +159,8 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   // },
   'gRPC Client factory': (dependencies) {
     List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
-      // Add your interceptors here
+      // Interceptors in a certain order
+      // Sentry → Retry → TokenRefresh → Authentication → Metadata → Timeout → Logger → http
       // e.g. LoggerInterceptor(), RetryInterceptor(), etc.
       // TODO: Deduplicate requests interceptor
       // TODO: Cache interceptor
@@ -171,6 +172,12 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           'X-Environment': dependencies.environment.type.name,
         },
       ),
+
+      // Logger middleware
+      const GrpcLoggerMiddleware(),
+
+      // Sentry middleware
+      const GrpcSentryMiddleware(),
 
       // Retry middleware
       // GrpcRetryMiddleware(
@@ -211,11 +218,11 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       //   ],
       // ),
 
-      // Logger middleware
-      const GrpcLoggerMiddleware(),
-
-      // Sentry middleware
-      const GrpcSentryMiddleware(),
+      // Retry middleware — transient GrpcError codes only (unavailable / resourceExhausted /
+      // aborted / internal / deadlineExceeded). UNAUTHENTICATED is excluded and recovered by the
+      // auth middleware's reactive refresh. Inner of Sentry (so its span covers retries), outer of
+      // auth (appended below). Uses GrpcRetryMiddleware's own GrpcError-based default policy.
+      GrpcRetryMiddleware(),
 
       // Any other middlewares you need
       ...?middlewares,
@@ -268,6 +275,9 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           return null;
         }
       },
+      // Reactive single-flight refresh on UNAUTHENTICATED: refresh once and retry the
+      // call with the rotated token; logout only happens if the refresh fails.
+      refresh: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
       onAuthError: () {
         logger.w('Received "Not authenticated" gRPC response, logging out... ');
         dependencies.authenticationController.signOut();

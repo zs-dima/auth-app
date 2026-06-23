@@ -1,6 +1,22 @@
 import 'package:auth_app/_core/api/http/api_client.dart';
+import 'package:auth_app/_core/api/http/middlewares/authentication_middleware.dart' show kAuthorization, kCsrfToken;
 import 'package:meta/meta.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+
+const kCookie = 'Cookie';
+const kSetCookie = 'Set-Cookie';
+const kProxyAuthorization = 'Proxy-Authorization';
+
+/// Header names whose values carry credentials and must never be sent to Sentry.
+/// Matched case-insensitively (see [redactSensitiveHeaders]).
+const kRedactedHeaders = <String>{kAuthorization, kCsrfToken, kCookie, kSetCookie, kProxyAuthorization};
+
+/// Returns a copy of [headers] with credential-bearing values (see [kRedactedHeaders])
+/// replaced by `<redacted>`, so access/refresh tokens never reach the error backend.
+Map<String, String> redactSensitiveHeaders(Map<String, String> headers) => <String, String>{
+  for (final MapEntry(:key, :value) in headers.entries)
+    key: kRedactedHeaders.any((h) => h.toLowerCase() == key.toLowerCase()) ? '<redacted>' : value,
+};
 
 /// {@template sentry_middleware}
 /// Middleware for Sentry integration in API requests.
@@ -14,24 +30,25 @@ class SentryMiddleware {
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
     final operation = context['operation']?.toString() ?? '[${request.method}] ${request.url.path}';
-    final transaction = // TODO:
-        ( /*$currentSentryTransaction?.startChild(
+    final startTimestamp = DateTime.now().toUtc();
+    // Attach to the active transaction as a child span when one exists, otherwise
+    // start a new root transaction — avoids orphaned/duplicate `http.client` spans.
+    final current = Sentry.getSpan();
+    final transaction =
+        (current?.startChild('http.client', description: operation, startTimestamp: startTimestamp) ??
+              Sentry.startTransaction(
                 'http.client',
+                operation,
                 description: operation,
-                startTimestamp: DateTime.now().toUtc(),
-              ) ??*/ Sentry.startTransaction(
-            'http.client',
-            operation,
-            description: operation,
-            bindToScope: true,
-            startTimestamp: DateTime.now().toUtc(),
-          ))
+                bindToScope: true,
+                startTimestamp: startTimestamp,
+              ))
           ..setData('http-request.method', request.method)
           ..setData('url', request.url.toString())
           ..setData('method', request.method)
           ..setData('path', request.url.path)
           ..setData('query', request.url.queryParameters)
-          ..setData('request_headers', request.headers);
+          ..setData('request_headers', redactSensitiveHeaders(request.headers));
 
     context['sentry.transaction'] = transaction;
 
@@ -50,7 +67,7 @@ class SentryMiddleware {
           'url': request.url,
           'path': request.url.path,
           'query': request.url.queryParameters,
-          'headers': request.headers,
+          'headers': redactSensitiveHeaders(request.headers),
         }),
       );
 

@@ -1,11 +1,33 @@
 import 'dart:math' as math;
 
 import 'package:auth_app/_core/api/http/api_client.dart';
+import 'package:auth_app/_core/api/http/middlewares/timeout_middleware.dart';
 import 'package:meta/meta.dart';
 
+/// HTTP methods that are safe to retry automatically (RFC 9110 §9.2.2).
+const _kIdempotentMethods = <String>{'GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'};
+
+/// Upper bound applied to a server-provided `Retry-After` delay.
+const _kMaxRetryAfter = Duration(seconds: 60);
+
+/// Parses a delta-seconds `Retry-After` from a 429/503 [ApiClientException$Network]
+/// (capped at [_kMaxRetryAfter]). Returns `null` when absent or not delta-seconds.
+Duration? _retryAfter(Object error) {
+  if (error is! ApiClientException$Network) return null;
+  if (error.data case <String, Object?>{'retry-after': final String ra}) {
+    final seconds = int.tryParse(ra.trim());
+    if (seconds != null && seconds >= 0) {
+      final d = Duration(seconds: seconds);
+      return d > _kMaxRetryAfter ? _kMaxRetryAfter : d;
+    }
+  }
+  return null;
+}
+
 /// {@template retry_middleware}
-/// Throws an exception if the request takes longer than the specified duration.
-/// [RetryMiddleware] middleware is useful for preventing requests from hanging indefinitely.
+/// Retries failed requests with exponential backoff (honoring `Retry-After`), for
+/// idempotent methods only. Error classification is delegated to a single policy —
+/// [retryEvaluator] or [defaultRetryEvaluator].
 /// {@endtemplate}
 @immutable
 class RetryMiddleware {
@@ -21,11 +43,25 @@ class RetryMiddleware {
   /// Number of retries for the request.
   final int retries;
 
-  /// Check if the request should be retried based on the error and attempt number.
+  /// Overrides [defaultRetryEvaluator] for deciding whether an error is retryable.
   final bool Function(Object error, int attempt)? retryEvaluator;
 
   /// Exponential backoff factor for retry delays.
   final List<Duration> retryDelays;
+
+  /// The single source of truth for whether [error] is worth retrying — transient
+  /// failures only. Used when [retryEvaluator] is not provided; callers that pass a
+  /// custom evaluator replace this entirely (and should not re-implement it).
+  ///
+  /// `$Cancelled`/`$Timeout` are handled as a mechanic in [call] (their abort token is
+  /// already completed, so a retry would abort instantly) and are intentionally absent here.
+  static bool defaultRetryEvaluator(Object error, int attempt) => switch (error) {
+    ApiClientException$Authentication() => false, // owned by TokenRefreshMiddleware
+    // Transient/network failures only — never non-transient 4xx (400/404/409/422/…).
+    ApiClientException$Network(:final statusCode) =>
+      const <int>{0, 408, 425, 429, 500, 502, 503, 504, 509}.contains(statusCode),
+    _ => false, // unknown errors: do not retry
+  };
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
     final retries = math.min(
@@ -37,8 +73,22 @@ class RetryMiddleware {
     );
     // Ignore retry logic if 'no-retry' or 'sse' is true, or if retries are 0
 
-    final shouldNotRetry = context['no-retry'] == true || context['sse'] == true || retries < 1 || retryDelays.isEmpty;
+    // Only auto-retry idempotent methods — repeating a POST/PATCH whose response was lost
+    // could duplicate a side effect. Non-idempotent endpoints opt in explicitly (e.g. when
+    // they carry an idempotency key).
+    final idempotent =
+        _kIdempotentMethods.contains(request.method.toUpperCase()) ||
+        context[kRetryNonIdempotentContextKey] == true;
+
+    final shouldNotRetry =
+        context[kNoRetryContextKey] == true ||
+        context['sse'] == true ||
+        retries < 1 ||
+        retryDelays.isEmpty ||
+        !idempotent;
     if (shouldNotRetry) return innerHandler(request, context);
+    // Single source of truth for error classification (default unless overridden).
+    final evaluate = retryEvaluator ?? defaultRetryEvaluator;
     var attempt = 0;
     var clonedRequest = request;
     // Retry loop while (attempt < retries)
@@ -46,11 +96,14 @@ class RetryMiddleware {
       try {
         return await innerHandler(clonedRequest, context);
       } catch (e) {
-        if (attempt >= retries || !(retryEvaluator?.call(e, attempt) ?? true)) {
-          rethrow; // If last attempt or retryEvaluator says no, rethrow the error
+        // Mechanic (not policy): a cancelled/timed-out request already completed its abort
+        // token, so a retry would reuse a finished abortTrigger and abort instantly.
+        final mechanicForbidsRetry = e is ApiClientException$Cancelled || e is ApiClientException$Timeout;
+        if (mechanicForbidsRetry || attempt >= retries || !evaluate(e, attempt)) {
+          rethrow; // mechanic forbids, last attempt, or policy says no
         }
-        // Wait for the specified delay before retrying
-        final delay = retryDelays[math.min(attempt, retryDelays.length - 1)];
+        // Honor the server's Retry-After (429/503) when present; otherwise exponential backoff.
+        final delay = _retryAfter(e) ?? retryDelays[math.min(attempt, retryDelays.length - 1)];
         await Future<void>.delayed(delay);
         attempt++;
         clonedRequest = clonedRequest.clone(); // Clone the request for the next attempt

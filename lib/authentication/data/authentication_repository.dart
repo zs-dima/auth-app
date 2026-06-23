@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:auth_app/_core/api/http/mutex.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/_core/tool/device_info.dart';
@@ -33,10 +34,29 @@ class AuthenticationException implements Exception {
 abstract interface class IAuthenticationRepository {
   Stream<AuthUser> get userChanges;
   AuthUser get user;
+
+  /// Session-scoped cancellation: a single token whose lifetime matches the signed-in
+  /// session. It is cancelled when the session ends (logout or a failed refresh), so any
+  /// in-flight request bound to it is aborted; a fresh token is vended for the next session.
+  CancelToken get sessionCancelToken;
+
   Future<UserId> getUserId();
 
   Future<AuthUser> restore();
+
+  /// Returns the current credentials, proactively refreshing them if they are
+  /// about to expire ([AccessToken.expiresSoon]). Single-flight: concurrent
+  /// callers share one refresh.
   Future<AccessCredentials?> getAccessCredentials();
+
+  /// Forces a token refresh after a request was rejected with `401`.
+  ///
+  /// Single-flight via the same mutex as [getAccessCredentials]: when many
+  /// requests get `401` at once, only the first performs the network refresh;
+  /// the rest see that the token already changed ([usedAccessToken] no longer
+  /// matches the current one) and reuse it without another API call.
+  /// Returns `null` (and logs the user out) when the refresh fails.
+  Future<AccessCredentials?> refreshCredentials(String usedAccessToken);
 
   /// Authenticate with credentials.
   /// Returns [AuthUser] on success.
@@ -109,8 +129,37 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
   AuthUser _user = const AuthUser.unauthenticated();
 
+  CancelToken _sessionCancelToken = CancelToken();
+
   @override
-  Future<AccessCredentials?> getAccessCredentials() async => _refreshingMutex.synchronize(_refreshTokens);
+  CancelToken get sessionCancelToken {
+    // A cancelled token means the previous session ended — vend a fresh scope.
+    if (_sessionCancelToken.isCancelled) _sessionCancelToken = CancelToken();
+    return _sessionCancelToken;
+  }
+
+  @override
+  Future<AccessCredentials?> getAccessCredentials() async =>
+      _refreshingMutex.synchronize(() => _doRefresh(force: false));
+
+  @override
+  Future<AccessCredentials?> refreshCredentials(String usedAccessToken) => _refreshingMutex.synchronize(() async {
+    final current = switch (_user) {
+      AuthenticatedUser(:final credentials) => credentials,
+      _ => null,
+    };
+    // Token-generation guard: another request in the same 401 wave already
+    // refreshed, so the stored token differs from the one that got rejected.
+    // Reuse it instead of hitting the refresh endpoint again.
+    if (current != null && current.accessToken.token != usedAccessToken) return current;
+    try {
+      return await _doRefresh(force: true);
+    } on Object {
+      // Failure already cleared credentials, emitted `unauthenticated`, and ended the
+      // session. Signal "could not refresh" to the caller uniformly as null.
+      return null;
+    }
+  });
 
   @override
   Future<UserId> getUserId() async => switch (_user) {
@@ -156,6 +205,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
         if (!token.isNullOrEmpty) _api.signOut(token!).ignore();
       }
     } finally {
+      _endSession(); // abort in-flight requests bound to this session
       _userController.add(_user = const AuthUser.unauthenticated());
       _settings
         ..setUserId(UserIdX.empty).ignore()
@@ -195,7 +245,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
     _user = AuthUser.authenticated(userId: userId, credentials: credentials);
     AccessCredentials? cr;
     try {
-      cr = await _refreshingMutex.synchronize(_refreshTokens);
+      cr = await _refreshingMutex.synchronize(() => _doRefresh(force: false));
     } finally {
       if (cr != null) _userController.add(_user);
     }
@@ -204,6 +254,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
   @override
   Future<void> terminate() async {
+    _endSession(); // abort any in-flight requests bound to the session
     await _authSubscription?.cancel();
     await _userChangesSubscription?.cancel();
     await _userController.close();
@@ -228,8 +279,20 @@ class AuthenticationRepository implements IAuthenticationRepository {
     }
   }
 
-  // @override
-  Future<AccessCredentials?> _refreshTokens() async {
+  /// Ends the current session scope, aborting any in-flight request bound to
+  /// [sessionCancelToken] (called on logout and on a failed refresh). The next
+  /// read of [sessionCancelToken] vends a fresh, uncancelled token.
+  void _endSession() {
+    if (!_sessionCancelToken.isCancelled) _sessionCancelToken.cancel();
+  }
+
+  /// Single source of truth for refreshing tokens. Always invoked inside
+  /// [_refreshingMutex], so only one refresh runs at a time.
+  ///
+  /// When [force] is `false` (proactive path) the current credentials are
+  /// returned untouched unless they are about to expire. When `true` (reactive
+  /// path, after a `401`) the refresh endpoint is always called.
+  Future<AccessCredentials?> _doRefresh({bool force = false}) async {
     switch (_user) {
       case final AuthenticatedUser authUser:
         try {
@@ -238,7 +301,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
             throw Exception('Credentials are missing');
           }
 
-          if (!credentials.accessToken.expiresSoon) return credentials;
+          if (!force && !credentials.accessToken.expiresSoon) return credentials;
 
           // print('>>> accessToken: ${DateFormat().format(credentials.accessToken.expiry)}');
           // print('>>> accessToken: ${credentials.accessToken.token}');
@@ -250,6 +313,7 @@ class AuthenticationRepository implements IAuthenticationRepository {
           );
 
           if (refresh == null) {
+            _endSession();
             _settings
               ..setUserId(UserIdX.empty).ignore()
               ..setCredentials(null).ignore();
@@ -265,21 +329,20 @@ class AuthenticationRepository implements IAuthenticationRepository {
           _userController.add(_user = AuthUser.authenticated(credentials: refresh, userId: userId));
 
           return refresh;
-        } on Object catch (error, stackTrace) {
+        } on Object {
+          _endSession();
           _settings
             ..setUserId(UserIdX.empty).ignore()
             ..setCredentials(null).ignore();
 
           _userController.add(_user = const AuthUser.unauthenticated());
 
-          // print('>>> Failed to refresh tokens: $error');
-
-          Error.throwWithStackTrace('Failed to refresh tokens "$error"', stackTrace);
+          rethrow;
         }
 
       default:
         return null;
-      // throw Exception('User is not authenticated');
+      // Error.throwWithStackTrace('User is not authenticated', stackTrace);
     }
   }
 }
