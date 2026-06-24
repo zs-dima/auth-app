@@ -218,10 +218,13 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       //   ],
       // ),
 
-      // Retry middleware — transient GrpcError codes only (unavailable / resourceExhausted /
-      // aborted / internal / deadlineExceeded). UNAUTHENTICATED is excluded and recovered by the
-      // auth middleware's reactive refresh. Inner of Sentry (so its span covers retries), outer of
-      // auth (appended below). Uses GrpcRetryMiddleware's own GrpcError-based default policy.
+      // Retry middleware — transient GrpcError codes only (unavailable / aborted / internal /
+      // deadlineExceeded; resourceExhausted only with server pushback). UNAUTHENTICATED is excluded
+      // and recovered by the auth middleware's reactive refresh. Inner of Sentry (so its span covers
+      // retries), outer of auth (appended below). Default RetryBackoff = full-jitter exponential
+      // backoff + per-attempt ceiling + total budget; honors `grpc-retry-pushback-ms`.
+      // Connectivity-aware seam: pass `awaitConnectivity:` here once connectivity_plus is wired
+      // (waits for the network instead of burning retries while offline); null = retry immediately.
       GrpcRetryMiddleware(),
 
       // Any other middlewares you need

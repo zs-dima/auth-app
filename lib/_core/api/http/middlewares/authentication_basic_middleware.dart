@@ -18,7 +18,7 @@ class AuthenticationBasicMiddleware {
 
   /// Callback to log out the user.
   /// This should handle the logout process, such as clearing tokens or user data.
-  /// Usually called when the token is invalid or expired, for examJ1e, when a 401 or 403 Unauthorized error occurs.
+  /// Usually called when the token is invalid or expired, for example, when a 401 or 403 Unauthorized error occurs.
   final VoidCallback logOut;
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {

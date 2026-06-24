@@ -78,27 +78,38 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     try {
       await invoker(path, withToken(credentials));
     } on GrpcError catch (e) {
-      // Reactive single-flight refresh + retry ONCE, only on UNAUTHENTICATED.
+      // Auth-error policy on the data path (mirrors HTTP):
+      // - UNAUTHENTICATED (401) → token invalid/expired: refresh once + retry once; log out only
+      //   if there's no refresh or it definitively fails (a 2nd 401 = broken session).
+      // - PERMISSION_DENIED (403) → authenticated but not allowed for this resource: do NOT
+      //   refresh (same roles), do NOT retry, do NOT log out — just surface it (session is valid).
       if (e.code == StatusCode.unauthenticated && refresh != null) {
         final fresh = await refresh!(credentials.accessToken.token);
+        // [refresh] contract: rotated creds on success; `null` on a definitive rejection (repo
+        // already logged out); or it throws on a transient failure (session intact) — which
+        // propagates out of here WITHOUT calling [onAuthError], so a network blip never logs out.
         if (fresh != null && fresh.accessToken.token.isNotEmpty) {
           try {
             await invoker(path, withToken(fresh)); // retry once with the rotated token
             return;
           } on GrpcError catch (err) {
-            if (_isAuthError(err)) onAuthError?.call();
+            if (err.code == StatusCode.unauthenticated) onAuthError?.call(); // fresh token still 401 → broken session
             rethrow;
           }
         }
-        // Refresh failed (repo already cleared creds + ended the session) — log out.
+        // Definitive rejection (repo already cleared creds + ended the session) — log out.
         onAuthError?.call();
         rethrow;
       }
-      if (_isAuthError(e)) onAuthError?.call();
+      // 401 with no refresh available → can't recover → log out. 403 / non-auth codes → surface as-is.
+      if (e.code == StatusCode.unauthenticated) onAuthError?.call();
       rethrow;
     }
   };
 
+  /// Whether [e] is an auth-code error. Used only for the public (sign-in / RefreshTokens) path,
+  /// where such an error means a rejected refresh token ⇒ log out. On the authenticated data path,
+  /// logout is gated on `unauthenticated` alone (403 / PERMISSION_DENIED is surfaced, not logged out).
   static bool _isAuthError(GrpcError e) =>
       e.code == StatusCode.unauthenticated || e.code == StatusCode.permissionDenied;
 }

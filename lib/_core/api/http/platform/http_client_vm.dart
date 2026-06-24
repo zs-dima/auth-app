@@ -22,6 +22,15 @@ String $getOrigin() => '';
 ///
 /// All of these honor `package:http`'s request abortion (`AbortableRequest`), so
 /// cancellation/timeout teardown works consistently across platforms.
+///
+/// TLS certificate pinning is intentionally **not** wired here: `cronet_http` 1.6.0 exposes
+/// no pin config (only `enablePublicKeyPinningBypassForLocalTrustAnchors`) and `cupertino_http`
+/// 3.0.2 exposes no auth-challenge/server-trust hook, so pinning is impossible on the primary
+/// mobile clients via these adapters. It is only achievable on the `dart:io` [io_client.IOClient]
+/// fallback (`SecurityContext`/SPKI) — which on mobile is *not* the active client — so wiring it
+/// here would silently leave Cronet/NSURLSession unpinned (false security). If pinning becomes a
+/// hard requirement it is a separate decision: force `IOClient` everywhere (losing HTTP/3 when on)
+/// or adopt a maintained pinning package.
 http.Client $createHttpClient() {
   try {
     if (Platform.isAndroid) {

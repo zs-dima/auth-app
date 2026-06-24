@@ -152,13 +152,10 @@ class AuthenticationRepository implements IAuthenticationRepository {
     // refreshed, so the stored token differs from the one that got rejected.
     // Reuse it instead of hitting the refresh endpoint again.
     if (current != null && current.accessToken.token != usedAccessToken) return current;
-    try {
-      return await _doRefresh(force: true);
-    } on Object {
-      // Failure already cleared credentials, emitted `unauthenticated`, and ended the
-      // session. Signal "could not refresh" to the caller uniformly as null.
-      return null;
-    }
+    // Contract: returns the rotated creds on success; `null` on a definitive rejection
+    // (session already ended); and rethrows a transient failure (session left intact) so
+    // the caller surfaces the original error and a later request can retry.
+    return _doRefresh(force: true);
   });
 
   @override
@@ -286,63 +283,66 @@ class AuthenticationRepository implements IAuthenticationRepository {
     if (!_sessionCancelToken.isCancelled) _sessionCancelToken.cancel();
   }
 
-  /// Single source of truth for refreshing tokens. Always invoked inside
-  /// [_refreshingMutex], so only one refresh runs at a time.
+  /// Ends the session and clears all local auth state — the definitive logout used when the
+  /// server rejects the refresh token (or credentials are unrecoverable). Aborts in-flight
+  /// requests bound to [sessionCancelToken] and emits `unauthenticated`.
+  void _logOutSession() {
+    _endSession();
+    _settings
+      ..setUserId(UserIdX.empty).ignore()
+      ..setCredentials(null).ignore();
+    _userController.add(_user = const AuthUser.unauthenticated());
+  }
+
+  /// Single source of truth for refreshing tokens. Always invoked inside [_refreshingMutex],
+  /// so only one refresh runs at a time.
   ///
-  /// When [force] is `false` (proactive path) the current credentials are
-  /// returned untouched unless they are about to expire. When `true` (reactive
-  /// path, after a `401`) the refresh endpoint is always called.
+  /// Failure policy (OAuth2 best practice — only a definitive rejection ends the session):
+  /// - **Definitive rejection** ([CredentialsRejectedException], or a `null` result): log out
+  ///   and return `null`.
+  /// - **Transient failure** (network/timeout/5xx): keep the session — on the proactive path
+  ///   ([force] `false`) fall back to the current still-valid credentials; on the reactive path
+  ///   ([force] `true`, after a `401`) rethrow so the caller surfaces the error and retries later.
   Future<AccessCredentials?> _doRefresh({bool force = false}) async {
     switch (_user) {
       case final AuthenticatedUser authUser:
+        final AuthenticatedUser(:AccessCredentials? credentials, :UserId userId) = authUser;
+        // Missing credentials on an "authenticated" user is an unrecoverable, definitive state.
+        if (credentials == null || credentials.accessToken.token.isNullOrSpace) {
+          _logOutSession();
+          return null;
+        }
+
+        // Proactive: nothing to do unless the token is about to expire.
+        if (!force && !credentials.accessToken.expiresSoon) return credentials;
+
         try {
-          final AuthenticatedUser(:AccessCredentials? credentials, :UserId userId) = authUser;
-          if (credentials == null || credentials.accessToken.token.isNullOrSpace) {
-            throw Exception('Credentials are missing');
-          }
+          final refresh = await _api.refreshTokens(credentials.accessToken.token, credentials.refreshToken);
 
-          if (!force && !credentials.accessToken.expiresSoon) return credentials;
-
-          // print('>>> accessToken: ${DateFormat().format(credentials.accessToken.expiry)}');
-          // print('>>> accessToken: ${credentials.accessToken.token}');
-          // print('>>> refreshToken: ${credentials.refreshToken}');
-
-          final refresh = await _api.refreshTokens(
-            credentials.accessToken.token,
-            credentials.refreshToken,
-          );
-
+          // Defensive: an API that signals rejection via `null` instead of throwing.
           if (refresh == null) {
-            _endSession();
-            _settings
-              ..setUserId(UserIdX.empty).ignore()
-              ..setCredentials(null).ignore();
-
-            _userController.add(_user = const AuthUser.unauthenticated());
+            _logOutSession();
             return null;
           }
 
           _settings
             ..setUserId(userId).ignore()
             ..setCredentials(refresh).ignore();
-
           _userController.add(_user = AuthUser.authenticated(credentials: refresh, userId: userId));
-
           return refresh;
+        } on CredentialsRejectedException {
+          // Definitive: the refresh token is invalid/expired/revoked — end the session.
+          _logOutSession();
+          return null;
         } on Object {
-          _endSession();
-          _settings
-            ..setUserId(UserIdX.empty).ignore()
-            ..setCredentials(null).ignore();
-
-          _userController.add(_user = const AuthUser.unauthenticated());
-
+          // Transient: keep the session. Proactive ⇒ use the current (still-valid) token;
+          // reactive ⇒ surface the error so a later request can retry the refresh.
+          if (!force) return credentials;
           rethrow;
         }
 
       default:
         return null;
-      // Error.throwWithStackTrace('User is not authenticated', stackTrace);
     }
   }
 }

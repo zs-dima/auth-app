@@ -3,8 +3,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert' show Converter, JsonEncoder, JsonDecoder, Utf8Decoder, Utf8Encoder, utf8;
-import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:auth_app/_core/api/http/platform/http_client_vm.dart'
     // ignore: uri_does_not_exist
@@ -14,6 +12,14 @@ import 'package:http/http.dart' as http_package;
 
 /// Maximum allowed response size (15 MB by default)
 const int _kMaxResponseSize = 15 * 1024 * 1024;
+
+/// Response bodies larger than this are JSON-decoded on a background isolate (via `compute`)
+/// instead of the UI isolate, so big payloads don't block the current frame.
+const int kJsonIsolateThreshold = 32 * 1024;
+
+/// Top-level JSON decoder for [compute] — must be a top-level/static function with a
+/// sendable argument and result.
+Object? _decodeJsonBytes(List<int> bytes) => const Utf8Decoder().fuse<Object?>(const JsonDecoder()).convert(bytes);
 
 /// A function that takes a [http_package.BaseRequest] and returns a [http_package.StreamedResponse].
 /// The [context] parameter is a map that can be used to store data that should be available to all middleware.
@@ -68,6 +74,22 @@ const kNoRetryContextKey = 'no-retry';
 /// retries — set it only when the endpoint is safe to repeat (e.g. has an idempotency key).
 const kRetryNonIdempotentContextKey = 'retry-non-idempotent';
 
+/// Per-request override (bytes) for the maximum buffered response size. `0` or negative
+/// disables the limit. Falls back to [ApiClient.maxResponseSize] when absent.
+const kMaxResponseSizeContextKey = 'max-response-size';
+
+/// Context flag (`true`) that streams the response: the size cap is bypassed and the raw
+/// [ApiClientResponse.stream] is returned without buffering, for large downloads.
+const kStreamResponseContextKey = 'stream-response';
+
+/// Context value: `void Function(int received, int total)` invoked as the response body is
+/// read. `total` is the `Content-Length`, or `-1` when the server did not declare one.
+const kOnReceiveProgressContextKey = 'on-receive-progress';
+
+/// Per-request override: `bool Function(int statusCode)` deciding whether a response is a
+/// success. Falls back to [ApiClient.validateStatus], then to `statusCode < 400`.
+const kValidateStatusContextKey = 'validate-status';
+
 /// A token used to cancel one or more in-flight requests.
 ///
 /// Pass the same token to several requests to cancel them together (e.g. when
@@ -77,8 +99,6 @@ const kRetryNonIdempotentContextKey = 'retry-non-idempotent';
 class CancelToken {
   final Completer<void> _completer = Completer<void>();
 
-  Object? _reason;
-
   /// Child tokens that cancel together with this one (e.g. per-request tokens
   /// linked to a session token). Created lazily; only holds *active* children —
   /// each detaches on completion (see [link]) so it never grows with total requests.
@@ -87,9 +107,6 @@ class CancelToken {
   /// Whether [cancel] has already been called.
   bool get isCancelled => _completer.isCompleted;
 
-  /// The reason passed to [cancel], if any.
-  Object? get reason => _reason;
-
   /// Future that completes when the token is cancelled. Wired into
   /// [http_package.AbortableRequest.abortTrigger].
   Future<void> get whenCancel => _completer.future;
@@ -97,6 +114,11 @@ class CancelToken {
   /// Number of currently-linked child tokens (for tests/diagnostics).
   @visibleForTesting
   int get debugLinkedCount => _children?.length ?? 0;
+
+  Object? _reason;
+
+  /// The reason passed to [cancel], if any.
+  Object? get reason => _reason;
 
   /// Cancels this token (and any linked children, transitively). Idempotent.
   void cancel([Object? reason]) {
@@ -114,11 +136,7 @@ class CancelToken {
     }
   }
 
-  /// Links [child] so it cancels when this token cancels (e.g. a session token
-  /// cancelling its in-flight requests). Returns a detach callback — call it when
-  /// the child's work completes so this token stops retaining it. If already
-  /// cancelled, [child] is cancelled immediately and the returned callback is a no-op.
-  void Function() link(CancelToken child) {
+  VoidCallback link(CancelToken child) {
     if (isCancelled) {
       child.cancel(_reason);
       return () {};
@@ -130,6 +148,12 @@ class CancelToken {
 
 /// An HTTP request with a JSON-encoded body.
 extension type const ApiClientRequest(http_package.BaseRequest _request) implements http_package.BaseRequest {
+  /// `true` when this request's body is fully materialized in memory and can therefore be
+  /// safely re-sent via [clone]. Returns `false` for `MultipartRequest` / `StreamedRequest`,
+  /// whose bodies are consumed on the first send and cannot be replayed — retry/refresh
+  /// middlewares must skip the retry path for these to avoid silently stripping the body.
+  bool get canBeRetried => _request is http_package.Request;
+
   /// Creates a clone of this request with optional parameter overrides.
   ApiClientRequest clone({
     String? method,
@@ -183,15 +207,16 @@ extension type const FutureApiClientResponse(Future<ApiClientResponse> _future) 
   /// Receives the response body as a JSON object.
   Future<Map<String, Object?>> toJson() => _future.then((response) => response.toJson());
 
+  /// Receives the response body as a JSON list.
+  Future<List<Object?>> toJsonList() => _future.then((response) => response.toJsonList());
+
   /// Receives the response body as a text string.
   Future<String> toText() => _future.then((response) => response.toText());
 }
 
 /// An HTTP response.
 final class ApiClientResponse {
-  static final Converter<List<int>, Map<String, Object?>> _jsonConverter = const Utf8Decoder()
-      .fuse<Object?>(const JsonDecoder())
-      .cast<List<int>, Map<String, Object?>>();
+  static final Converter<List<int>, Object?> _jsonDecoder = const Utf8Decoder().fuse<Object?>(const JsonDecoder());
 
   /// Create a new HTTP response.
   const ApiClientResponse({
@@ -229,13 +254,32 @@ final class ApiClientResponse {
   Future<Uint8List> toBytes() => stream.toBytes();
 
   /// Receives the response body as a JSON object. Consumes [stream] (read once).
+  /// Throws [FormatException] if the body is not a JSON object.
   Future<Map<String, Object?>> toJson() async {
-    final bytes = await toBytes();
-    return _jsonConverter.convert(bytes);
+    final decoded = await _decode(await toBytes());
+    if (decoded is Map<String, Object?>) return decoded;
+    if (decoded is Map) return decoded.cast<String, Object?>();
+    throw FormatException('Expected JSON object but got ${decoded.runtimeType}');
+  }
+
+  /// Receives the response body as a JSON list. Consumes [stream] (read once).
+  /// Throws [FormatException] if the body is not a JSON array.
+  Future<List<Object?>> toJsonList() async {
+    final decoded = await _decode(await toBytes());
+    if (decoded is List<Object?>) return decoded;
+    if (decoded is List) return decoded.cast<Object?>();
+    throw FormatException('Expected JSON array but got ${decoded.runtimeType}');
   }
 
   /// Receives the response body as text. Consumes [stream] (read once).
   Future<String> toText() async => utf8.decode(await toBytes());
+
+  /// Decodes [bytes] as JSON, offloading payloads larger than [kJsonIsolateThreshold] to a
+  /// background isolate (`compute`) so big responses don't block the UI frame; small bodies are
+  /// decoded inline to avoid isolate-spawn overhead.
+  Future<Object?> _decode(List<int> bytes) async => bytes.length > kJsonIsolateThreshold
+      ? await compute(_decodeJsonBytes, bytes, debugLabel: 'ApiClient.decodeJson')
+      : _jsonDecoder.convert(bytes);
 
   /// Creates a clone of this response with optional parameter overrides.
   ApiClientResponse clone({
@@ -271,6 +315,8 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     Iterable<ApiClientMiddleware>? middlewares, // Middlewares to apply for each request
     int maxRedirects = 5, // Maximum number of redirects to follow
     CancelToken? Function()? sessionToken, // Session-scoped cancellation (cancelled on logout)
+    this.maxResponseSize = _kMaxResponseSize, // Max buffered response size (bytes); 0/neg = unlimited
+    this.validateStatus, // Decides success per status code; defaults to `code < 400`
   }) : _maxRedirects = maxRedirects,
        _headers = headers,
        _sessionToken = sessionToken,
@@ -289,7 +335,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     ]);
 
     // Create the handler.
-    _handler = _createHandler(internalClient, pipeline.call);
+    _handler = _createHandler(internalClient, pipeline.call, maxResponseSize, validateStatus);
   }
 
   /// The maximum number of redirects to follow.
@@ -318,15 +364,33 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   /// Immutable list of middlewares to apply for each request.
   final List<ApiClientMiddleware> middlewares;
 
+  /// Default maximum buffered response size in bytes. `0` or negative disables the limit.
+  /// Overridable per request via [kMaxResponseSizeContextKey]; bypassed entirely when the
+  /// request opts into streaming ([kStreamResponseContextKey]).
+  final int maxResponseSize;
+
+  /// Decides whether a response [statusCode] is a success. When it returns `false` the
+  /// response is mapped to a typed [ApiClientException]. Defaults to `statusCode < 400`.
+  /// Overridable per request via [kValidateStatusContextKey].
+  final bool Function(int statusCode)? validateStatus;
+
   /// Sends a [method] request to the given [path].
+  ///
+  /// [stream] returns the response body unbuffered (bypasses the size cap) for large
+  /// downloads. [onReceiveProgress] is called as the body is read with
+  /// `(received, total)` (`total` is the Content-Length, or `-1` when unknown).
+  /// [maxResponseSize] overrides [ApiClient.maxResponseSize] for this request.
   FutureApiClientResponse send(
     String method,
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
+    bool stream = false,
+    void Function(int received, int total)? onReceiveProgress,
+    int? maxResponseSize,
   }) => _sendUnstreamed(
     method: method,
     url: _mergePath(baseUrl(), path, queryParameters),
@@ -334,15 +398,23 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     body: body,
     context: context ?? <String, Object?>{},
     cancelToken: cancelToken,
+    stream: stream,
+    onReceiveProgress: onReceiveProgress,
+    maxResponseSize: maxResponseSize,
   );
 
   /// Sends a GET request to the given [path].
+  ///
+  /// [stream], [onReceiveProgress] and [maxResponseSize] behave as in [send].
   FutureApiClientResponse get(
     String path, {
     Map<String, String>? headers,
-    Map<String, Object?>? queryParameters, // TODO Map<String, String>?
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
+    bool stream = false,
+    void Function(int received, int total)? onReceiveProgress,
+    int? maxResponseSize,
   }) => _sendUnstreamed(
     method: 'GET',
     url: _mergePath(baseUrl(), path, queryParameters),
@@ -350,6 +422,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     body: null,
     context: context ?? <String, Object?>{},
     cancelToken: cancelToken,
+    stream: stream,
+    onReceiveProgress: onReceiveProgress,
+    maxResponseSize: maxResponseSize,
   );
 
   /// Sends a POST request to the given [path].
@@ -357,7 +432,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
   }) => _sendUnstreamed(
@@ -369,7 +444,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     cancelToken: cancelToken,
   );
 
-  /// Sends a POST request with multipart/form-data for file uploads.
+  /// Sends a multipart/form-data request (any [method]) for file uploads.
   ///
   /// The [body] parameter can contain:
   /// - `String` values: added as form fields
@@ -379,10 +454,11 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   ///
   /// Note: `Content-Type` and `Content-Length` headers are automatically set
   /// by the multipart request and should not be provided in [headers].
-  FutureApiClientResponse postMultipart(
+  FutureApiClientResponse sendMultipart(
+    String method,
     String path, {
     Map<String, Object?>? body,
-    Map<String, Object?>? queryParameters, // TODO Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, String>? headers,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
@@ -396,7 +472,11 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
       // so opt this request out of automatic retry/refresh-retry to avoid an empty body.
       ctx[kNoRetryContextKey] = true;
       final detachSession = _linkSession(effectiveToken);
-      final multipartRequest = http_package.AbortableMultipartRequest('POST', uri, abortTrigger: effectiveToken.whenCancel);
+      final multipartRequest = http_package.AbortableMultipartRequest(
+        method.toUpperCase(),
+        uri,
+        abortTrigger: effectiveToken.whenCancel,
+      );
 
       // Add headers (avoid content-type and content-length as they're set by MultipartRequest)
       if (_headers != null || headers != null) {
@@ -450,12 +530,70 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     }
   }
 
+  /// Sends a `POST` multipart/form-data request. Backward-compatible wrapper around [sendMultipart].
+  FutureApiClientResponse postMultipart(
+    String path, {
+    Map<String, Object?>? body,
+    Map<String, Object?>? queryParameters,
+    Map<String, String>? headers,
+    Map<String, Object?>? context,
+    CancelToken? cancelToken,
+  }) => sendMultipart(
+    'POST',
+    path,
+    body: body,
+    queryParameters: queryParameters,
+    headers: headers,
+    context: context,
+    cancelToken: cancelToken,
+  );
+
+  /// Sends a `POST` request with a streaming body — chunks from [bodyStream] are piped to the
+  /// wire as they arrive, so large uploads never have to be fully buffered in memory.
+  ///
+  /// [contentLength] must match the total size of the stream (sets `Content-Length`). The body
+  /// is consumed once and cannot be replayed, so the request is excluded from automatic retry.
+  FutureApiClientResponse postStream(
+    String path, {
+    required Stream<List<int>> bodyStream,
+    required int contentLength,
+    Map<String, String>? headers,
+    Map<String, Object?>? queryParameters,
+    Map<String, Object?>? context,
+    CancelToken? cancelToken,
+  }) {
+    final uri = _mergePath(baseUrl(), path, queryParameters);
+    final ctx = context ?? <String, Object?>{};
+    final effectiveToken = cancelToken ?? CancelToken();
+    ctx[kCancelTokenContextKey] = effectiveToken;
+    ctx[kNoRetryContextKey] = true; // streamed body is consumed on first send (also see canBeRetried)
+    final detachSession = _linkSession(effectiveToken);
+
+    final streamedRequest = http_package.AbortableStreamedRequest('POST', uri, abortTrigger: effectiveToken.whenCancel)
+      ..contentLength = contentLength;
+    if (contentLength > 0) streamedRequest.headers['Content-Length'] = contentLength.toString();
+    if (_headers != null) streamedRequest.headers.addAll(_headers);
+    if (headers != null) streamedRequest.headers.addAll(headers);
+
+    // Pipe the body stream into the request sink as chunks arrive.
+    bodyStream.listen(
+      streamedRequest.sink.add,
+      onError: streamedRequest.sink.addError,
+      onDone: streamedRequest.sink.close,
+      cancelOnError: true,
+    );
+
+    final future = _handler(ApiClientRequest(streamedRequest), ctx);
+    future.whenComplete(detachSession).ignore();
+    return FutureApiClientResponse(future);
+  }
+
   /// Sends a PUT request to the given [path].
   FutureApiClientResponse put(
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
   }) => _sendUnstreamed(
@@ -472,7 +610,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
   }) => _sendUnstreamed(
@@ -489,7 +627,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     String path, {
     Map<String, String>? headers,
     Object? body,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
   }) => _sendUnstreamed(
@@ -505,7 +643,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   FutureApiClientResponse head(
     String path, {
     Map<String, String>? headers,
-    Map<String, String>? queryParameters,
+    Map<String, Object?>? queryParameters,
     Map<String, Object?>? context,
     CancelToken? cancelToken,
   }) => _sendUnstreamed(
@@ -558,14 +696,26 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
 
     if (queryParameters == null || queryParameters.isEmpty) return uri;
 
-    // Convert all values to strings, filtering nulls
-    final stringParams = <String, String>{};
-    for (final entry in queryParameters.entries) {
-      final value = entry.value;
-      if (value != null) stringParams[entry.key] = value.toString();
+    // Build multi-valued query params: collections become repeated keys (?id=1&id=2),
+    // the correct default (Dio's ListFormat.multi). Uri emits repeated keys for any
+    // Iterable<String> value. Nulls (and null list elements) are dropped; an empty list
+    // drops the key entirely. Existing base-URL query params are preserved.
+    final merged = <String, List<String>>{};
+    uri.queryParametersAll.forEach((key, value) => merged[key] = List<String>.of(value));
+    for (final MapEntry(:key, :value) in queryParameters.entries) {
+      if (value == null) continue; // null → no param
+      if (value is Iterable) {
+        final values = <String>[for (final e in value) ?e?.toString()]; // drop null elements
+        if (values.isEmpty)
+          merged.remove(key); // empty/all-null list → drop the key
+        else
+          merged[key] = values;
+      } else {
+        merged[key] = <String>[value.toString()];
+      }
     }
 
-    return uri.replace(queryParameters: {...uri.queryParameters, ...stringParams});
+    return merged.isEmpty ? uri : uri.replace(queryParameters: merged);
   }
 
   /// Links [requestToken] to the current session token (if any) so the request is
@@ -582,6 +732,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     required Object? body,
     required Map<String, Object?> context,
     CancelToken? cancelToken,
+    bool stream = false,
+    void Function(int received, int total)? onReceiveProgress,
+    int? maxResponseSize,
   }) {
     const utf8Encoder = Utf8Encoder();
     // Always abortable: use the caller's token, or an internal one, and expose it
@@ -589,6 +742,11 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     // abortTrigger that never completes behaves like a normal request.
     final effectiveToken = cancelToken ?? CancelToken();
     context[kCancelTokenContextKey] = effectiveToken;
+    // Seed response-handling options for httpHandler (only when set, so an explicit
+    // context entry from the caller is never overwritten).
+    if (stream) context[kStreamResponseContextKey] = true;
+    if (onReceiveProgress != null) context[kOnReceiveProgressContextKey] = onReceiveProgress;
+    if (maxResponseSize != null) context[kMaxResponseSizeContextKey] = maxResponseSize;
     final detachSession = _linkSession(effectiveToken);
     final request = http_package.AbortableRequest(method, url, abortTrigger: effectiveToken.whenCancel)
       ..maxRedirects = _maxRedirects
@@ -625,8 +783,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         request.bodyBytes = bytes;
 
       default:
-        assert(
-          false,
+        throw ArgumentError(
           'Unsupported body type: ${body.runtimeType}. Supported types are: null, List<int>, String, Map<String, Object?>.',
         );
     }
@@ -637,7 +794,17 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
 }
 
 /// Creates a new [ApiClientHandler] from the given [internalClient] and [middleware].
-ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMiddleware middleware) {
+///
+/// [maxResponseSizeDefault] caps the buffered response size (per-request overridable via
+/// [kMaxResponseSizeContextKey], bypassed by [kStreamResponseContextKey]).
+/// [validateStatusDefault] decides success per status code (per-request overridable via
+/// [kValidateStatusContextKey]); when `null`, `statusCode < 400` is used.
+ApiClientHandler _createHandler(
+  http_package.Client internalClient,
+  ApiClientMiddleware middleware,
+  int maxResponseSizeDefault,
+  bool Function(int statusCode)? validateStatusDefault,
+) {
   // Check if the completer is completed and throw an error if it is.
   void throwError(Completer<ApiClientResponse> completer, Object error, StackTrace stackTrace) {
     if (completer.isCompleted)
@@ -693,202 +860,105 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
           return;
         }
 
-        // Check response.
-        int statusCode;
-        try {
-          statusCode = streamedResponse.statusCode;
-          switch (statusCode) {
-            case 509:
-              throw ApiClientException$Network(
-                code: 'bandwidth_limit_exceeded',
-                message: 'Bandwidth limit exceeded (HTTP 509).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 503:
-              throw ApiClientException$Network(
-                code: 'service_unavailable',
-                message: 'Service unavailable (HTTP 503). The server is currently unable to handle the request.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{
-                  'url': request.url.toString(),
-                  if (streamedResponse.headers['retry-after'] case final String ra) 'retry-after': ra,
-                },
-              );
-
-            case 501:
-              throw ApiClientException$Network(
-                code: 'not_implemented',
-                message: 'Not implemented (HTTP 501).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 500:
-              throw ApiClientException$Network(
-                code: 'internal_server_error',
-                message: 'Internal server error (HTTP 500).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case > 499:
-              throw ApiClientException$Network(
-                code: 'server_error',
-                message: 'Internal server error (HTTP $statusCode).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 429:
-              throw ApiClientException$Network(
-                code: 'rate_limit',
-                message: 'Rate limit exceeded (HTTP 429). Too many requests.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{
-                  'url': request.url.toString(),
-                  if (streamedResponse.headers['retry-after'] case final String ra) 'retry-after': ra,
-                },
-              );
-
-            case 422:
-              throw ApiClientException$Network(
-                code: 'validation_error',
-                message: 'Validation error (HTTP 422). Request data is invalid.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 413:
-              throw ApiClientException$Network(
-                code: 'payload_too_large',
-                message: 'Payload too large (HTTP 413). The request payload is too large.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 412:
-              throw ApiClientException$Network(
-                code: 'precondition_failed',
-                message: 'Precondition failed (HTTP 412). The request failed due to a precondition error.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 409:
-              throw ApiClientException$Network(
-                code: 'conflict',
-                message:
-                    'Conflict (HTTP 409). The request could not be completed due to a conflict with the current state of the resource.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 404:
-              throw ApiClientException$Network(
-                code: 'not_found',
-                message: 'Resource not found (HTTP 404).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 403:
-              throw ApiClientException$Authentication(
-                code: 'forbidden',
-                message: 'Forbidden access (HTTP 403). Insufficient permissions.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 401:
-              throw ApiClientException$Authentication(
-                code: 'unauthorized',
-                message: 'Unauthorized access (HTTP 401). Authentication required.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case 400:
-              throw ApiClientException$Network(
-                code: 'bad_request',
-                message: 'Bad request (HTTP 400). The request was malformed or invalid.',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-
-            case > 399:
-              throw ApiClientException$Network(
-                code: 'client_error',
-                message: 'Client error (HTTP $statusCode).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              );
-            /* case > 299:
-              throw ApiClientException$Network(
-                code: 'redirection',
-                message: 'Request was redirected (HTTP $statusCode).',
-                statusCode: statusCode,
-                error: null,
-                data: <String, Object?>{'url': request.url.toString()},
-              ); */
-
-            default:
-              break;
+        // Validate the status code. A success passes through to the body; otherwise it is
+        // mapped to a typed exception. The success predicate is resolved per request
+        // ([kValidateStatusContextKey]) → client default → `statusCode < 400`.
+        final statusCode = streamedResponse.statusCode;
+        final isSuccess = switch (context[kValidateStatusContextKey]) {
+          final bool Function(int statusCode) predicate => predicate,
+          _ => validateStatusDefault ?? _defaultValidateStatus,
+        };
+        if (!isSuccess(statusCode)) {
+          // Capture the error body (bounded) so the server's machine-readable error
+          // code/message/field-errors aren't lost. Parsed as JSON when possible (any
+          // content-type), else raw text; bounded in size to cap memory and telemetry exposure.
+          final errorCap = switch (context[kMaxResponseSizeContextKey]) {
+            final int m when m > 0 => m,
+            _ => maxResponseSizeDefault > 0 ? maxResponseSizeDefault : _kMaxResponseSize,
+          };
+          final errorBytes = await _readErrorBody(
+            streamedResponse,
+            errorCap,
+          ).timeout(const Duration(seconds: 10), onTimeout: () => null);
+          Object? errorBody;
+          if (errorBytes != null && errorBytes.isNotEmpty) {
+            try {
+              errorBody = _decodeJsonBytes(errorBytes);
+            } on Object {
+              errorBody = utf8.decode(errorBytes, allowMalformed: true);
+            }
           }
-        } on Object catch (error, stackTrace) {
-          throwError(completer, error, stackTrace);
+          throwError(
+            completer,
+            // Known codes get a precise typed error; anything else falls back to a generic
+            // client/server network error so a custom predicate can reject any code.
+            _statusToException(statusCode, streamedResponse.headers, request.url, errorBody) ??
+                ApiClientException$Network(
+                  code: statusCode < 500 ? 'client_error' : 'server_error',
+                  message: '${statusCode < 500 ? 'Client' : 'Server'} error (HTTP $statusCode).',
+                  statusCode: statusCode,
+                  error: null,
+                  data: <String, Object?>{'url': request.url.toString(), 'body': ?errorBody},
+                ),
+            .current,
+          );
           return;
         }
 
-        // Read the response stream.
+        // Read the response stream. A streaming request ([kStreamResponseContextKey]) bypasses
+        // the size cap and the empty-body heuristic, returning the raw stream for the caller to
+        // consume without buffering (large downloads).
+        final streaming = context[kStreamResponseContextKey] == true;
+        final maxSize = switch (context[kMaxResponseSizeContextKey]) {
+          final int m => m,
+          _ => maxResponseSizeDefault,
+        };
         int contentLength;
         http_package.ByteStream byteStream;
         try {
           contentLength = streamedResponse.contentLength ?? 0;
 
-          // Check content length limit
-          if (contentLength > _kMaxResponseSize) {
+          // Enforce the declared-size cap unless streaming or the cap is disabled (<= 0).
+          if (!streaming && maxSize > 0 && contentLength > maxSize) {
             throwError(
               completer,
               ApiClientException$Client(
                 code: 'response_too_large',
-                message:
-                    'Response size ($contentLength bytes) exceeds maximum allowed size ($_kMaxResponseSize bytes).',
+                message: 'Response size ($contentLength bytes) exceeds maximum allowed size ($maxSize bytes).',
                 statusCode: statusCode,
                 error: null,
-                data: <String, Object?>{'contentLength': contentLength, 'maxSize': _kMaxResponseSize},
+                data: <String, Object?>{'contentLength': contentLength, 'maxSize': maxSize},
               ),
               .current,
             );
             return;
           }
 
-          byteStream = contentLength > 0 || streamedResponse.headers['content-type'] != null
-              ? streamedResponse.stream
-              : const http_package.ByteStream(Stream.empty());
+          byteStream = !streaming && contentLength <= 0 && streamedResponse.headers['content-type'] == null
+              ? const http_package.ByteStream(Stream.empty())
+              : streamedResponse.stream;
+
+          // Report download progress as the body is consumed, if a callback was provided.
+          // `total` is the Content-Length, or -1 when the server did not declare one.
+          if (context[kOnReceiveProgressContextKey]
+              case final void Function(int received, int total) onReceiveProgress) {
+            final total = contentLength > 0 ? contentLength : -1;
+            var received = 0;
+            byteStream = http_package.ByteStream(
+              byteStream.map((chunk) {
+                received += chunk.length;
+                onReceiveProgress(received, total);
+                return chunk;
+              }),
+            );
+          }
         } on Object catch (error, stackTrace) {
           throwError(
             completer,
             ApiClientException$Client(
               code: 'body_stream_error',
               message: 'Failed to read response stream.',
-              statusCode: streamedResponse.statusCode,
+              statusCode: statusCode,
               error: error,
               data: null,
             ),
@@ -902,7 +972,7 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
           // Decode the response.
           final response = ApiClientResponse(
             stream: byteStream,
-            statusCode: streamedResponse.statusCode,
+            statusCode: statusCode,
             headers: streamedResponse.headers,
             contentLength: contentLength,
             persistentConnection: streamedResponse.persistentConnection,
@@ -921,6 +991,133 @@ ApiClientHandler _createHandler(http_package.Client internalClient, ApiClientMid
   }
 
   return middleware(httpHandler);
+}
+
+/// Default success predicate: any status below 400 (2xx/3xx) is a success.
+bool _defaultValidateStatus(int statusCode) => statusCode < 400;
+
+/// Reads an error response body up to [cap] bytes, returning `null` on overflow, abort, or a
+/// stream error (so error-body capture never blows memory or masks the status error). Error
+/// bodies are small; oversized ones are skipped rather than buffered.
+Future<Uint8List?> _readErrorBody(http_package.StreamedResponse response, int cap) async {
+  if ((response.contentLength ?? 0) > cap) return null; // declared too large → skip
+  try {
+    final bytes = <int>[];
+    await for (final chunk in response.stream) {
+      bytes.addAll(chunk);
+      if (bytes.length > cap) return null; // undeclared overflow → skip
+    }
+    return Uint8List.fromList(bytes);
+  } on Object {
+    return null; // abort / stream error → fall back to the status-only error
+  }
+}
+
+/// Maps a non-success [statusCode] to its typed [ApiClientException], preserving the
+/// original codes/messages, the captured [errorBody] (when present), and `Retry-After` for
+/// 429/503. Returns `null` for codes with no specific mapping — the caller then applies a
+/// generic client/server network error.
+ApiClientException? _statusToException(int statusCode, Map<String, String> headers, Uri url, Object? errorBody) {
+  final retryAfter = headers['retry-after'];
+  Map<String, Object?> data({bool withRetryAfter = false}) => <String, Object?>{
+    'url': url.toString(),
+    'body': ?errorBody,
+    if (withRetryAfter) 'retry-after': ?retryAfter,
+  };
+  return switch (statusCode) {
+    509 => ApiClientException$Network(
+      code: 'bandwidth_limit_exceeded',
+      message: 'Bandwidth limit exceeded (HTTP 509).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    503 => ApiClientException$Network(
+      code: 'service_unavailable',
+      message: 'Service unavailable (HTTP 503). The server is currently unable to handle the request.',
+      statusCode: statusCode,
+      data: data(withRetryAfter: true),
+    ),
+    501 => ApiClientException$Network(
+      code: 'not_implemented',
+      message: 'Not implemented (HTTP 501).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    500 => ApiClientException$Network(
+      code: 'internal_server_error',
+      message: 'Internal server error (HTTP 500).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    > 499 => ApiClientException$Network(
+      code: 'server_error',
+      message: 'Internal server error (HTTP $statusCode).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    429 => ApiClientException$Network(
+      code: 'rate_limit',
+      message: 'Rate limit exceeded (HTTP 429). Too many requests.',
+      statusCode: statusCode,
+      data: data(withRetryAfter: true),
+    ),
+    422 => ApiClientException$Network(
+      code: 'validation_error',
+      message: 'Validation error (HTTP 422). Request data is invalid.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    413 => ApiClientException$Network(
+      code: 'payload_too_large',
+      message: 'Payload too large (HTTP 413). The request payload is too large.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    412 => ApiClientException$Network(
+      code: 'precondition_failed',
+      message: 'Precondition failed (HTTP 412). The request failed due to a precondition error.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    409 => ApiClientException$Network(
+      code: 'conflict',
+      message:
+          'Conflict (HTTP 409). The request could not be completed due to a conflict with the current state of the resource.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    404 => ApiClientException$Network(
+      code: 'not_found',
+      message: 'Resource not found (HTTP 404).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    403 => ApiClientException$Authentication(
+      code: 'forbidden',
+      message: 'Forbidden access (HTTP 403). Insufficient permissions.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    401 => ApiClientException$Authentication(
+      code: 'unauthorized',
+      message: 'Unauthorized access (HTTP 401). Authentication required.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    400 => ApiClientException$Network(
+      code: 'bad_request',
+      message: 'Bad request (HTTP 400). The request was malformed or invalid.',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    > 399 => ApiClientException$Network(
+      code: 'client_error',
+      message: 'Client error (HTTP $statusCode).',
+      statusCode: statusCode,
+      data: data(),
+    ),
+    _ => null,
+  };
 }
 
 // --- Errors --- //
@@ -1052,215 +1249,3 @@ final class ApiClientException$Cancelled extends ApiClientException {
   @override
   final Object? data;
 }
-
-// --- Multipart form data --- //
-
-/// {@template multipart_form_data_builder}
-/// Builder for creating multipart form data requests.
-/// This builder allows you to add fields and files to the form data.
-/// {@endtemplate}
-class MultipartFormDataBuilder {
-  /// Randomly-generated characters used in multipart boundaries.
-  static final math.Random _random = math.Random();
-
-  static final _newlineRegExp = RegExp(r'\r\n|\r|\n');
-
-  /// A regular expression that matches strings that are composed entirely of
-  /// ASCII-compatible characters.
-  static final _asciiOnly = RegExp(r'^[\x00-\x7F]+$');
-
-  /// {@macro multipart_form_data_builder}
-  MultipartFormDataBuilder()
-    : fields = <String, String>{},
-      files = <({String field, String? fileName, String contentType, List<int> bytes})>[];
-
-  /// The form fields to send for this request.
-  final Map<String, String> fields;
-
-  /// The files to send for this request.
-  /// `field` is a unique identifier of field in the form data
-  /// `fileName` is the name of the file, e.g. `image.png`, `document.pdf`, etc.
-  /// `contentType` is the MIME type of the file, e.g. `image/png`, `application/pdf`, `application/octet-stream`, etc.
-  /// `bytes` is the file content as a byte array, e.g. `Uint8List` or `List<int>`.
-  final List<({String field, String? fileName, String contentType, List<int> bytes})> files;
-
-  /// Returns a map of fields and files to be used in a multipart form data request.
-  void addField(String name, String value) {
-    assert(!fields.containsKey(name), 'Field with name "$name" already exists.');
-    fields[name] = value;
-  }
-
-  /// Adds a file to the form data.
-  void addFile(String field, List<int> bytes, {String? fileName, String contentType = 'application/octet-stream'}) {
-    files.add((field: field, fileName: fileName, contentType: contentType, bytes: bytes));
-  }
-
-  /// Finalizes the form data and returns the content type and body.
-  /// The content type is `multipart/form-data` with a randomly-generated boundary.
-  ({String contentType, Uint8List body}) finalize() {
-    if (fields.isEmpty && files.isEmpty) {
-      throw StateError('Cannot finalize empty form data');
-    }
-
-    final boundary = _boundaryString();
-    final contentType = 'multipart/form-data; boundary=$boundary';
-    const emptyLine = <int>[13, 10]; // \r\n
-    const utf8encoder = Utf8Encoder();
-    final separator = utf8encoder.convert('--$boundary\r\n');
-    final close = utf8encoder.convert('--$boundary--\r\n');
-
-    final builder = BytesBuilder(copy: false);
-    for (final MapEntry(key: field, :value) in fields.entries)
-      builder
-        ..add(separator)
-        ..add(utf8encoder.convert(_headerForField(name: field, value: value)))
-        ..add(utf8encoder.convert(value))
-        ..add(emptyLine);
-
-    for (final (:String field, :String? fileName, :String contentType, :List<int> bytes) in files)
-      builder
-        ..add(separator)
-        ..add(utf8encoder.convert(_headerForFile(contentType: contentType, field: field, fileName: fileName)))
-        ..add(bytes)
-        ..add(emptyLine);
-
-    builder.add(close);
-    fields.clear();
-    files.clear();
-
-    return (contentType: contentType, body: builder.takeBytes());
-  }
-
-  /// Returns whether [string] is composed entirely of ASCII-compatible
-  /// characters.
-  static bool isPlainAscii(String string) => _asciiOnly.hasMatch(string);
-
-  /// Returns the header string for a field.
-  ///
-  /// The return value is guaranteed to contain only ASCII characters.
-  static String _headerForField({required String name, required String value}) {
-    var header = 'content-disposition: form-data; name="${_browserEncode(name)}"';
-    if (!isPlainAscii(value)) {
-      header =
-          '$header\r\n'
-          'content-type: text/plain; charset=utf-8\r\n'
-          'content-transfer-encoding: binary';
-    }
-    return '$header\r\n\r\n';
-  }
-
-  /// Returns the header string for a file.
-  ///
-  /// The return value is guaranteed to contain only ASCII characters.
-  static String _headerForFile({required String contentType, required String field, required String? fileName}) {
-    var header =
-        'content-type: $contentType\r\n'
-        'content-disposition: form-data; name="${_browserEncode(field)}"';
-
-    if (fileName != null) header = '$header; filename="${_browserEncode(fileName)}"';
-
-    return '$header\r\n\r\n';
-  }
-
-  /// Encode [value] in the same way browsers do.
-  static String _browserEncode(String value) =>
-      // http://tools.ietf.org/html/rfc2388 mandates some complex encodings for
-      // field names and file names, but in practice user agents seem not to
-      // follow this at all. Instead, they URL-encode `\r`, `\n`, and `\r\n` as
-      // `\r\n`; URL-encode `"`; and do nothing else (even for `%` or non-ASCII
-      // characters). We follow their behavior.
-      value.replaceAll(_newlineRegExp, '%0D%0A').replaceAll('"', '%22');
-
-  /// Returns a randomly-generated multipart boundary string
-  static String _boundaryString() {
-    // The total length of the multipart boundaries used when building the
-    // request body.
-    // According to http://tools.ietf.org/html/rfc1341.html, this can't be longer
-    // than 70.
-    const boundaryLength = 70;
-    const prefix = 'http-boundary-';
-    final list = List<int>.generate(
-      boundaryLength - prefix.length,
-      (index) => kBoundaryCharacters[_random.nextInt(kBoundaryCharacters.length)],
-      growable: false,
-    );
-    return '$prefix${String.fromCharCodes(list)}';
-  }
-}
-
-/// All character codes that are valid in multipart boundaries.
-///
-/// This is the intersection of the characters allowed in the `bcharsnospace`
-/// production defined in [RFC 2046][] and those allowed in the `token`
-/// production defined in [RFC 1521][].
-///
-/// [RFC 2046]: http://tools.ietf.org/html/rfc2046#section-5.1.1.
-/// [RFC 1521]: https://tools.ietf.org/html/rfc1521#section-4
-const List<int> kBoundaryCharacters = <int>[
-  43,
-  95,
-  45,
-  46,
-  48,
-  49,
-  50,
-  51,
-  52,
-  53,
-  54,
-  55,
-  56,
-  57,
-  65,
-  66,
-  67,
-  68,
-  69,
-  70,
-  71,
-  72,
-  73,
-  74,
-  75,
-  76,
-  77,
-  78,
-  79,
-  80,
-  81,
-  82,
-  83,
-  84,
-  85,
-  86,
-  87,
-  88,
-  89,
-  90,
-  97,
-  98,
-  99,
-  100,
-  101,
-  102,
-  103,
-  104,
-  105,
-  106,
-  107,
-  108,
-  109,
-  110,
-  111,
-  112,
-  113,
-  114,
-  115,
-  116,
-  117,
-  118,
-  119,
-  120,
-  121,
-  122,
-];

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auth_model/src/api/auth_exceptions.dart';
 import 'package:auth_model/src/api/i_authentication_api.dart';
 import 'package:auth_model/src/api/proto/auth/v2/auth.pbgrpc.dart' as rpc;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
@@ -80,13 +81,25 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
 
   @override
   Future<AccessCredentials> refreshTokens(String accessToken, RefreshToken refreshToken) async {
-    final result = await client.refreshTokens(
-      rpc.RefreshTokensRequest()..refreshToken = refreshToken,
-    );
-    return AccessCredentials(
-      accessToken: AccessToken.fromJwtToken(result.accessToken),
-      refreshToken: result.refreshToken,
-    );
+    try {
+      final result = await client.refreshTokens(
+        rpc.RefreshTokensRequest()..refreshToken = refreshToken,
+      );
+      return AccessCredentials(
+        accessToken: AccessToken.fromJwtToken(result.accessToken),
+        refreshToken: result.refreshToken,
+      );
+    } on GrpcError catch (e, st) {
+      // Definitive rejection (invalid/expired/revoked refresh token) ⇒ the session is dead.
+      // Transient codes (unavailable/deadlineExceeded/internal/…) and any non-gRPC error
+      // propagate unchanged so the caller can keep the session and retry later.
+      if (e.code == StatusCode.unauthenticated ||
+          e.code == StatusCode.permissionDenied ||
+          e.code == StatusCode.invalidArgument) {
+        Error.throwWithStackTrace(CredentialsRejectedException(e.message ?? 'Refresh token rejected'), st);
+      }
+      rethrow;
+    }
   }
 
   @override

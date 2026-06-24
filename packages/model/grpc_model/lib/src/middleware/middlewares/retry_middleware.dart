@@ -3,25 +3,45 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:core_model/core_model.dart';
 import 'package:grpc/grpc.dart';
 import 'package:meta/meta.dart';
 
+/// Trailing-metadata key by which a gRPC server tells the client how long to wait before
+/// retrying. A negative value means "do not retry" (per the gRPC retry design).
+const _kRetryPushbackHeader = 'grpc-retry-pushback-ms';
+
+/// Upper bound applied to a server pushback delay (the total budget is the real ceiling).
+const _kMaxPushback = Duration(seconds: 60);
+
 /// {@template grpc_retry_middleware}
-/// Middleware for automatic retry of failed gRPC requests.
+/// The **sole** transient-retry layer for the gRPC transport: retries transient unary calls
+/// with full-jitter exponential backoff ([RetryBackoff]), honoring server pushback
+/// (`grpc-retry-pushback-ms`) and a total time budget. Do NOT add retries elsewhere (channel
+/// `retryPolicy`, repositories, use-cases) — nested retries amplify.
 /// {@endtemplate}
 @immutable
 class GrpcRetryMiddleware extends ClientInterceptor {
   /// {@macro grpc_retry_middleware}
   GrpcRetryMiddleware({
-    this.retries = 3,
+    this.backoff = const RetryBackoff(),
     this.retryEvaluator,
-    this.retryDelays = const [Duration(seconds: 1), Duration(seconds: 2), Duration(seconds: 4)],
-  }) : assert(retries >= 0, 'Retries must be non-negative'),
-       assert(retryDelays.isNotEmpty, 'Retry delays must not be empty');
+    this.awaitConnectivity,
+    math.Random? random,
+  }) : _random = random ?? math.Random();
 
-  final int retries;
+  /// Backoff policy: max retries, full-jitter exponential delays, per-attempt ceiling, total budget.
+  final RetryBackoff backoff;
+
+  /// Overrides [_defaultRetryEvaluator] for deciding whether an error is retryable.
   final bool Function(Object error, int attempt)? retryEvaluator;
-  final List<Duration> retryDelays;
+
+  /// Optional connectivity gate awaited (bounded by the remaining budget) before each retry, so
+  /// offline time on a mobile network doesn't burn retry attempts. Injected by the app to keep
+  /// this package Flutter-free; `null` means "retry immediately".
+  final Future<void> Function()? awaitConnectivity;
+
+  final math.Random _random;
 
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
@@ -33,29 +53,70 @@ class GrpcRetryMiddleware extends ClientInterceptor {
 
   Future<R> _executeWithRetry<R>(ResponseFuture<R> Function() invoke) async {
     var attempt = 0;
+    final stopwatch = Stopwatch()..start();
     while (true) {
       try {
         return await invoke();
       } on Object catch (e) {
-        final shouldRetry = retryEvaluator?.call(e, attempt) ?? _defaultRetryEvaluator(e);
-        if (attempt >= retries || !shouldRetry) rethrow;
-        // Exponential backoff delay before retrying
-        await Future<void>.delayed(retryDelays[math.min(attempt, retryDelays.length - 1)]);
+        final pushback = _pushback(e); // server-directed delay, or null
+        final shouldRetry = retryEvaluator?.call(e, attempt) ?? _defaultRetryEvaluator(e, pushback);
+        if (attempt >= backoff.maxRetries || !shouldRetry) rethrow;
+
+        // Server pushback is authoritative (no jitter); otherwise full-jitter backoff.
+        final delay = pushback ?? backoff.backoff(attempt, _random);
+        if (!backoff.withinBudget(stopwatch.elapsed, delay)) rethrow; // total budget
+
+        // Connectivity-aware: wait (bounded by the remaining budget) for the network instead of
+        // burning this attempt while offline. If it never returns in time, give up.
+        final connectivity = awaitConnectivity;
+        if (connectivity != null) {
+          final remaining = backoff.maxElapsed - stopwatch.elapsed;
+          if (remaining <= .zero) rethrow;
+          var online = true;
+          await connectivity().timeout(remaining, onTimeout: () => online = false);
+          if (!online) rethrow;
+        }
+        await Future<void>.delayed(delay);
         attempt++;
       }
     }
   }
 
-  static bool _defaultRetryEvaluator(Object error) => switch (error) {
-    GrpcError(:final code) => const {
-      StatusCode.unavailable,
-      StatusCode.resourceExhausted,
-      StatusCode.aborted,
-      StatusCode.internal,
-      StatusCode.deadlineExceeded,
-    }.contains(code),
-    _ => false,
-  };
+  /// Parses `grpc-retry-pushback-ms` from a [GrpcError]'s trailers. Returns a non-negative
+  /// [Duration] to wait (capped at [_kMaxPushback]), or `null` when absent/negative — a
+  /// negative value is surfaced via [_pushbackForbidsRetry].
+  static Duration? _pushback(Object error) {
+    if (error is! GrpcError) return null;
+    final raw = error.trailers?[_kRetryPushbackHeader];
+    final ms = raw == null ? null : int.tryParse(raw.trim());
+    if (ms == null || ms < 0) return null;
+    final d = Duration(milliseconds: ms);
+    return d > _kMaxPushback ? _kMaxPushback : d;
+  }
+
+  /// `true` when the server explicitly told us NOT to retry (negative pushback).
+  static bool _pushbackForbidsRetry(Object error) {
+    if (error is! GrpcError) return false;
+    final raw = error.trailers?[_kRetryPushbackHeader];
+    final ms = raw == null ? null : int.tryParse(raw.trim());
+    return ms != null && ms < 0;
+  }
+
+  /// Retries transient codes only. `RESOURCE_EXHAUSTED` is retried **only** when the server
+  /// sent a (non-negative) pushback telling us it's safe; a negative pushback forbids any retry.
+  static bool _defaultRetryEvaluator(Object error, Duration? pushback) {
+    if (_pushbackForbidsRetry(error)) return false;
+    return switch (error) {
+      GrpcError(code: StatusCode.resourceExhausted) => pushback != null,
+      GrpcError(:final code) => const {
+        StatusCode.unavailable,
+        StatusCode.aborted,
+        StatusCode.internal,
+        StatusCode.deadlineExceeded,
+      }.contains(code),
+      _ => false,
+    };
+  }
 }
 
 /// ResponseFuture wrapper for retry logic.

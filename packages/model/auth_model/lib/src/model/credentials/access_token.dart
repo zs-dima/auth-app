@@ -39,8 +39,11 @@ class AccessToken {
   /// Time at which the token will be expired (UTC time)
   final DateTime expiry;
 
-  /// Returns true if token expires within 1 second.
-  bool get expiresSoon => DateTime.now().toUtc().isAfter(expiry.subtract(const Duration(seconds: 1)));
+  /// Returns true if the token expires within 30 seconds.
+  ///
+  /// The window must be large enough to refresh proactively before the token
+  /// reaches the server expired, accounting for request latency and clock skew.
+  bool get expiresSoon => DateTime.now().toUtc().isAfter(expiry.subtract(const Duration(seconds: 30)));
 
   bool get hasExpired => DateTime.now().toUtc().isAfter(expiry);
 

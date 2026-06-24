@@ -33,9 +33,12 @@ class TokenRefreshMiddleware {
       return await innerHandler(request, context);
     } on ApiClientException catch (e) {
       // Only unauthorized errors are recoverable, and only once per request. Skip
-      // requests that opted out of retry (e.g. multipart — a finalized body can't be
-      // re-sent and clone() can't rebuild it).
-      if (e.statusCode != 401 || context[kDidRefreshContextKey] == true || context[kNoRetryContextKey] == true)
+      // requests that opted out of retry, or whose body can't be replayed (multipart /
+      // streamed — a finalized body can't be re-sent and clone() can't rebuild it).
+      if (e.statusCode != 401 ||
+          context[kDidRefreshContextKey] == true ||
+          context[kNoRetryContextKey] == true ||
+          !request.canBeRetried)
         rethrow;
       context[kDidRefreshContextKey] = true;
 
@@ -44,10 +47,13 @@ class TokenRefreshMiddleware {
         _ => '',
       };
 
-      // Single-flight refresh in the repository.
+      // Single-flight refresh in the repository. Contract: returns rotated creds on success;
+      // `null` on a definitive rejection (repository already logged out); or throws on a
+      // transient failure (session intact) — which propagates here, surfacing the error without
+      // logging out so a later request can retry.
       final fresh = await refreshCredentials(usedToken);
 
-      // Refresh failed (logout already triggered by the repository) — fail fast.
+      // Definitive rejection (logout already triggered by the repository) — fail fast.
       if (fresh == null) rethrow;
 
       // Retry once with a fresh request: the original was already finalized by the

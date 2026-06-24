@@ -12,13 +12,13 @@ const kCsrfToken = 'X-CSRF-Token';
 /// in-flight request.
 const kAccessTokenContextKey = '__access_token';
 
-/// {@template authentication_basic_middleware}
+/// {@template authentication_middleware}
 /// Middleware for handling authentication in API requests.
 /// [AuthenticationMiddleware] middleware is responsible for managing the authentication token
 /// {@endtemplate}
 @immutable
 class AuthenticationMiddleware {
-  /// {@macro authentication_basic_middleware}
+  /// {@macro authentication_middleware}
   const AuthenticationMiddleware({required this.getToken, required this.logOut});
 
   /// Callback to get the authentication token.
@@ -27,7 +27,7 @@ class AuthenticationMiddleware {
 
   /// Callback to log out the user.
   /// This should handle the logout process, such as clearing tokens or user data.
-  /// Usually called when the token is invalid or expired, for examJ1e, when a 401 or 403 Unauthorized error occurs.
+  /// Usually called when the token is invalid or expired, for example, when a 401 or 403 Unauthorized error occurs.
   final VoidCallback logOut;
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
