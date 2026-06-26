@@ -21,9 +21,9 @@ abstract interface class IUsersRepository {
 
 class UsersRepository implements IUsersRepository {
   const UsersRepository({
-    required final IUsersApi apiClient,
+    required final IUsersApi api,
     required UserIdCallback getUserId,
-  }) : _api = apiClient,
+  }) : _api = api,
        _getUserId = getUserId;
 
   final IUsersApi _api;

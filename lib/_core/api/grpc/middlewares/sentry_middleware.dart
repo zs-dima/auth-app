@@ -1,3 +1,5 @@
+import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
+import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
@@ -15,30 +17,32 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
 
   @override
   ApiClientHandler call(ApiClientHandler invoker) => (path, metadata) async {
-    final operation = /*context['operation']?.toString() ??*/ path;
-    final transaction = // TODO:
-        ( /*$currentSentryTransaction?.startChild(
+    final startTimestamp = DateTime.now().toUtc();
+    // Attach to the active transaction as a child span when one exists, otherwise start a new
+    // root transaction — avoids orphaned/duplicate `grpc.client` spans (mirrors the HTTP middleware).
+    final current = Sentry.getSpan();
+    final transaction =
+        (current?.startChild('grpc.client', description: path, startTimestamp: startTimestamp) ??
+              Sentry.startTransaction(
                 'grpc.client',
-                description: operation,
-                startTimestamp: DateTime.now().toUtc(),
-              ) ??*/ Sentry.startTransaction(
-            'grpc.client',
-            operation,
-            description: operation,
-            bindToScope: true,
-            startTimestamp: DateTime.now().toUtc(),
-          ))
+                path,
+                description: path,
+                bindToScope: true,
+                startTimestamp: startTimestamp,
+              ))
           // ..setData('grpc-request.method', request.method)
           // ..setData('url', request.url.toString())
           // ..setData('method', request.method)
           ..setData('path', path)
           // ..setData('query', request.url.queryParameters)
-          ..setData('request_headers', metadata);
+          ..setData('request_headers', redactSensitiveHeaders(metadata));
 
-    // context['sentry.transaction'] = transaction;
+    // Propagate the trace to the backend so the span continues across services (distributed tracing).
+    final tracedMetadata = Map<String, String>.of(metadata);
+    applyTraceHeaders(transaction, tracedMetadata);
 
     try {
-      await invoker(path, metadata);
+      await invoker(path, tracedMetadata);
       transaction.setData('grpc.response.status_code', 200);
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
     } on Object catch (e, s) {
@@ -51,7 +55,7 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
           // 'url': request.url,
           'path': path,
           // 'query': request.url.queryParameters,
-          'headers': metadata,
+          'headers': redactSensitiveHeaders(metadata),
         }),
       );
 
@@ -70,6 +74,8 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
                 GrpcError(:final code) when code == StatusCode.unauthenticated => const SpanStatus.unauthenticated(),
                 GrpcError(:final code) when code == StatusCode.failedPrecondition =>
                   const SpanStatus.failedPrecondition(),
+                GrpcError(:final code) when code == StatusCode.cancelled => const SpanStatus.cancelled(),
+                GrpcError(:final code) when code == StatusCode.deadlineExceeded => const SpanStatus.deadlineExceeded(),
                 GrpcError(:final code) when code == StatusCode.ok => const SpanStatus.ok(),
                 _ => const SpanStatus.unknownError(),
               },

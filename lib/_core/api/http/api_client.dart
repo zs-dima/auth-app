@@ -66,13 +66,17 @@ extension type ApiClientMiddlewareWrapper._(ApiClientMiddleware _fn) {
 /// request, so middlewares (e.g. timeout) can abort the underlying socket.
 const kCancelTokenContextKey = 'cancelToken';
 
-/// Context flag that opts a request out of automatic retries (RetryMiddleware) and
-/// refresh-retry (TokenRefreshMiddleware). Used for non-resendable bodies (multipart).
+/// Context flag that opts a request out of automatic retries (RetryMiddleware) and the
+/// `401` refresh-retry (AuthenticationMiddleware). Used for non-resendable bodies (multipart).
 const kNoRetryContextKey = 'no-retry';
 
 /// Context flag that opts a non-idempotent request (POST/PATCH) back into automatic
 /// retries — set it only when the endpoint is safe to repeat (e.g. has an idempotency key).
 const kRetryNonIdempotentContextKey = 'retry-non-idempotent';
+
+/// Context flag (`true`) marking a long-lived/server-sent-events request that must **not** be
+/// retried by RetryMiddleware. Set it alongside [kStreamResponseContextKey] for SSE streams.
+const kSseContextKey = 'sse';
 
 /// Per-request override (bytes) for the maximum buffered response size. `0` or negative
 /// disables the limit. Falls back to [ApiClient.maxResponseSize] when absent.
@@ -171,20 +175,17 @@ extension type const ApiClientRequest(http_package.BaseRequest _request) impleme
         ? http_package.Request(method ?? source.method, url ?? source.url)
         : http_package.AbortableRequest(method ?? source.method, url ?? source.url, abortTrigger: abortTrigger);
 
-    // Copy existing headers and add/override with new ones
     newRequest.headers.addAll(source.headers);
     if (headers != null) {
-      newRequest.headers.addAll(headers);
+      newRequest.headers.addAll(headers); // overrides
     }
 
-    // Copy body if present
     if (bodyBytes != null) {
       newRequest.bodyBytes = bodyBytes;
     } else if (source is http_package.Request) {
-      newRequest.bodyBytes = source.bodyBytes;
+      newRequest.bodyBytes = source.bodyBytes; // a StreamedRequest/Multipart body can't be replayed
     }
 
-    // Preserve redirect behaviour
     newRequest
       ..maxRedirects = maxRedirects ?? source.maxRedirects
       ..followRedirects = source.followRedirects;
@@ -274,16 +275,8 @@ final class ApiClientResponse {
   /// Receives the response body as text. Consumes [stream] (read once).
   Future<String> toText() async => utf8.decode(await toBytes());
 
-  /// Decodes [bytes] as JSON, offloading payloads larger than [kJsonIsolateThreshold] to a
-  /// background isolate (`compute`) so big responses don't block the UI frame; small bodies are
-  /// decoded inline to avoid isolate-spawn overhead.
-  Future<Object?> _decode(List<int> bytes) async => bytes.length > kJsonIsolateThreshold
-      ? await compute(_decodeJsonBytes, bytes, debugLabel: 'ApiClient.decodeJson')
-      : _jsonDecoder.convert(bytes);
-
   /// Creates a clone of this response with optional parameter overrides.
   ApiClientResponse clone({
-    // Map<String, Object?>? body,
     int? statusCode,
     Map<String, String>? headers,
     int? contentLength,
@@ -298,6 +291,13 @@ final class ApiClientResponse {
     request: request ?? this.request,
     stream: stream ?? this.stream,
   );
+
+  /// Decodes [bytes] as JSON, offloading payloads larger than [kJsonIsolateThreshold] to a
+  /// background isolate (`compute`) so big responses don't block the UI frame; small bodies are
+  /// decoded inline to avoid isolate-spawn overhead.
+  Future<Object?> _decode(List<int> bytes) async => bytes.length > kJsonIsolateThreshold
+      ? await compute(_decodeJsonBytes, bytes, debugLabel: 'ApiClient.decodeJson')
+      : _jsonDecoder.convert(bytes);
 }
 
 /// {@template api_client}
@@ -321,20 +321,23 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
        _headers = headers,
        _sessionToken = sessionToken,
        middlewares = List<ApiClientMiddleware>.unmodifiable(middlewares ?? const Iterable.empty()) {
-    // Create the HTTP client.
-    final internalClient = client ?? $createHttpClient();
-
-    // Always add close callback for the client being used.
+    final http_package.Client internalClient;
+    if (client == null) {
+      // Best-effort QUIC hint for our own API host so Cronet attempts HTTP/3 on the first
+      // request. `baseUrl` is a lazy resolver and may be unready/throw — then the hint is omitted.
+      Uri? base;
+      try {
+        base = baseUrl();
+      } on Object {
+        base = null;
+      }
+      internalClient = $createHttpClient(quicHints: quicHintsForBaseUrl(base));
+    } else {
+      internalClient = client;
+    }
+    // Closed in reverse order on close(); the internal client is closed last.
     _closeCallbacks.add(internalClient.close);
-
-    // Create the final middlewares pipeline.
-    final pipeline = ApiClientMiddlewareWrapper.merge([
-      /* default middlewares before custom middlewares */
-      ...this.middlewares,
-      /* default middlewares after custom middlewares */
-    ]);
-
-    // Create the handler.
+    final pipeline = ApiClientMiddlewareWrapper.merge([...this.middlewares]);
     _handler = _createHandler(internalClient, pipeline.call, maxResponseSize, validateStatus);
   }
 
@@ -373,6 +376,20 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   /// response is mapped to a typed [ApiClientException]. Defaults to `statusCode < 400`.
   /// Overridable per request via [kValidateStatusContextKey].
   final bool Function(int statusCode)? validateStatus;
+
+  /// Best-effort QUIC hints for the client's own API host so Cronet attempts HTTP/3 on the
+  /// **first** request (not just after an Alt-Svc upgrade) — assuming that host speaks HTTP/3,
+  /// the same bet as `enableQuic: true`. Returns `null` for non-https, hostless, or IPv6-literal
+  /// URLs (hints target hostnames); a wrong/stale hint is harmless (Cronet falls back). Consumed
+  /// by the platform HTTP client factory (`$createHttpClient`); a no-op on iOS/web.
+  @visibleForTesting
+  static List<(String, int, int)>? quicHintsForBaseUrl(Uri? uri) {
+    // `uri.host` strips IPv6 brackets (`::1`), which would be a malformed hint — skip IP-literal
+    // hosts (only IPv6 contains ':'; hostnames and IPv4 never do).
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty || uri.host.contains(':')) return null;
+    final port = uri.hasPort ? uri.port : 443;
+    return <(String, int, int)>[(uri.host, port, port)];
+  }
 
   /// Sends a [method] request to the given [path].
   ///
@@ -471,7 +488,6 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
       // A finalized MultipartRequest can't be re-sent and clone() can't rebuild it,
       // so opt this request out of automatic retry/refresh-retry to avoid an empty body.
       ctx[kNoRetryContextKey] = true;
-      final detachSession = _linkSession(effectiveToken);
       final multipartRequest = http_package.AbortableMultipartRequest(
         method.toUpperCase(),
         uri,
@@ -512,6 +528,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         }
       }
 
+      // Link to the session only now that the request is fully built, so a field-encoding failure
+      // above cannot leave a dead token retained in the session token's children.
+      final detachSession = _linkSession(effectiveToken);
       final future = _handler(ApiClientRequest(multipartRequest), ctx);
       future.whenComplete(detachSession).ignore();
       return FutureApiClientResponse(future);
@@ -567,7 +586,6 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     final effectiveToken = cancelToken ?? CancelToken();
     ctx[kCancelTokenContextKey] = effectiveToken;
     ctx[kNoRetryContextKey] = true; // streamed body is consumed on first send (also see canBeRetried)
-    final detachSession = _linkSession(effectiveToken);
 
     final streamedRequest = http_package.AbortableStreamedRequest('POST', uri, abortTrigger: effectiveToken.whenCancel)
       ..contentLength = contentLength;
@@ -583,6 +601,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
       cancelOnError: true,
     );
 
+    // Link to the session only now that the request is fully built (uniform with the other
+    // senders), so a construction failure above cannot leak a retained session-child token.
+    final detachSession = _linkSession(effectiveToken);
     final future = _handler(ApiClientRequest(streamedRequest), ctx);
     future.whenComplete(detachSession).ignore();
     return FutureApiClientResponse(future);
@@ -687,7 +708,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   static Uri _mergePath(
     Uri base,
     String path, [
-    Map<String, Object?>? queryParameters, // TODO Map<String, String>?
+    Map<String, Object?>? queryParameters, // values: scalar → toString; Iterable → repeated keys; null → dropped
   ]) {
     if (path.startsWith('http://') || path.startsWith('https://')) return Uri.parse(path);
     var cleanPath = path;
@@ -747,18 +768,17 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     if (stream) context[kStreamResponseContextKey] = true;
     if (onReceiveProgress != null) context[kOnReceiveProgressContextKey] = onReceiveProgress;
     if (maxResponseSize != null) context[kMaxResponseSizeContextKey] = maxResponseSize;
-    final detachSession = _linkSession(effectiveToken);
     final request = http_package.AbortableRequest(method, url, abortTrigger: effectiveToken.whenCancel)
       ..maxRedirects = _maxRedirects
       ..followRedirects = _maxRedirects > 0;
 
     request.headers.addAll(headers);
+    // Encode the body by type and set Content-Type/-Length unless the caller already provided them.
     switch (body) {
       case null:
-        break; // No body, do nothing
+        break;
 
       case final List<int> list:
-        // Directly set body bytes
         final bytes = list is Uint8List ? list : Uint8List.fromList(list);
         request.headers
           ..putIfAbsent('Content-Type', () => 'application/octet-stream')
@@ -766,7 +786,6 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         request.bodyBytes = bytes;
 
       case final String str:
-        // Set body as string
         final bytes = utf8Encoder.convert(str);
         request.headers
           ..putIfAbsent('Content-Type', () => 'text/plain; charset=UTF-8')
@@ -774,7 +793,6 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         request.bodyBytes = bytes;
 
       case final Map<String, Object?> map:
-        // Set body as JSON string
         const jsonEncoder = kDebugMode ? JsonEncoder.withIndent('  ') : JsonEncoder();
         final bytes = jsonEncoder.fuse(utf8Encoder).convert(map);
         request.headers
@@ -787,6 +805,9 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
           'Unsupported body type: ${body.runtimeType}. Supported types are: null, List<int>, String, Map<String, Object?>.',
         );
     }
+    // Link to the session only now that the request is fully built, so a body-encoding failure
+    // above cannot leave a dead token retained in the session token's children.
+    final detachSession = _linkSession(effectiveToken);
     final future = _handler(ApiClientRequest(request), context);
     future.whenComplete(detachSession).ignore();
     return FutureApiClientResponse(future);
@@ -824,15 +845,14 @@ ApiClientHandler _createHandler(
       );
   }
 
-  // HTTP handler.
+  // Innermost handler: sends the request and maps the result to an ApiClientResponse/exception.
   Future<ApiClientResponse> httpHandler(ApiClientRequest request, Map<String, Object?> context) {
     final completer = Completer<ApiClientResponse>();
-    // Handle top level errors.
+    // runZonedGuarded routes async errors that escape the inner try/catch through throwError.
     runZonedGuarded<void>(
       () async {
         assert(request.url.scheme.startsWith('http'), 'Invalid URL: ${request.url}');
 
-        // Send a base request.
         final http_package.StreamedResponse streamedResponse;
         try {
           streamedResponse = await internalClient.send(request._request);
@@ -967,19 +987,17 @@ ApiClientHandler _createHandler(
           return;
         }
 
-        // Complete the completer.
         if (!completer.isCompleted) {
-          // Decode the response.
-          final response = ApiClientResponse(
-            stream: byteStream,
-            statusCode: statusCode,
-            headers: streamedResponse.headers,
-            contentLength: contentLength,
-            persistentConnection: streamedResponse.persistentConnection,
-            request: request,
+          completer.complete(
+            ApiClientResponse(
+              stream: byteStream,
+              statusCode: statusCode,
+              headers: streamedResponse.headers,
+              contentLength: contentLength,
+              persistentConnection: streamedResponse.persistentConnection,
+              request: request,
+            ),
           );
-
-          completer.complete(response);
         }
       },
       (error, stackTrace) {

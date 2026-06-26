@@ -6,12 +6,17 @@ import 'package:meta/meta.dart';
 
 /// Per-request override for the connect timeout (request → response headers).
 /// Accepts a [Duration], an `int` of milliseconds, or an absolute [DateTime] deadline;
-/// a zero/past value disables it. Falls back to the legacy `'timeout'`/`'duration'` keys.
+/// a zero/past value disables it. Falls back to the legacy [kTimeoutContextKey]/[kDurationContextKey].
 const kConnectTimeoutContextKey = 'connect-timeout';
 
 /// Per-request override for the receive timeout (max idle gap between body chunks).
 /// Accepts a [Duration] or `int` milliseconds; a zero value disables it.
 const kReceiveTimeoutContextKey = 'receive-timeout';
+
+/// Legacy/alias per-request connect-timeout keys (same accepted value types as
+/// [kConnectTimeoutContextKey]).
+const kTimeoutContextKey = 'timeout';
+const kDurationContextKey = 'duration';
 
 /// {@template timeout_middleware}
 /// Bounds a request with two independent timeouts (mirroring Dio):
@@ -48,7 +53,7 @@ class TimeoutMiddleware {
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
     final connect = _resolve(
-      context[kConnectTimeoutContextKey] ?? context['timeout'] ?? context['duration'],
+      context[kConnectTimeoutContextKey] ?? context[kTimeoutContextKey] ?? context[kDurationContextKey],
       duration ?? connectTimeout,
     );
     final receive = _resolve(context[kReceiveTimeoutContextKey], receiveTimeout);

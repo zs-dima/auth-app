@@ -30,8 +30,9 @@ String $getOrigin() => _window.location.origin;
 /// Creates an HTTP client optimized for browser platforms.
 ///
 /// Uses [BrowserClient] which leverages XMLHttpRequest/Fetch API
-/// and supports credentials for cross-origin requests.
-http.Client $createHttpClient() => browser_client.BrowserClient()
-  // Enable credentials (cookies) for cross-origin requests.
-  // This is necessary for authentication to work properly with APIs.
+/// and supports credentials for cross-origin requests. [quicHints] is ignored — the browser
+/// controls HTTP version and compression itself; the parameter exists only to match the
+/// native factory's signature for the conditional import.
+http.Client $createHttpClient({List<(String, int, int)>? quicHints}) => browser_client.BrowserClient()
+  // Send cookies on cross-origin requests (needed for cookie-based auth).
   ..withCredentials = true;

@@ -2,17 +2,6 @@ import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 
-// class ByteArrayFileJsonConverter implements JsonConverter<Uint8List?, MultipartFile?> {
-//   const ByteArrayFileJsonConverter();
-
-//   @override
-//   Uint8List? fromJson(MultipartFile? json) => null;
-
-//   @override
-//   MultipartFile? toJson(Uint8List? bytes) =>
-//       bytes == null ? null : MultipartFile.fromBytes('image', bytes, filename: 'image.png'); // TODO
-// }
-
 class ByteArrayFileJsonConverter implements JsonConverter<Uint8List?, List<int>?> {
   const ByteArrayFileJsonConverter();
 

@@ -14,7 +14,6 @@ void main() {
     final controller = _buildController(api);
     addTearDown(controller.dispose);
 
-    await _settleController();
     await tester.pumpWidget(
       MaterialApp(
         home: _BannerHost(
@@ -22,8 +21,9 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    // Settle the controller's initial checkForUpdates() and let the post-frame callback insert
+    // the banner. Pumps drive the test's fake clock; a bare `Future.delayed` would never fire here.
+    await tester.pumpAndSettle();
 
     expect(find.byType(MaterialBanner), findsOneWidget);
     expect(find.text('Update Now'), findsOneWidget);
@@ -35,6 +35,10 @@ void main() {
     expect(controller.state, isA<ApplyingUpdateState>());
     expect(find.byType(MaterialBanner), findsOneWidget);
     expect(find.text('Updating...'), findsOneWidget);
+
+    // Finish the in-flight update() handler so nothing dangles into teardown.
+    api.completeUpdate();
+    await tester.pump();
   });
 }
 
@@ -59,11 +63,6 @@ UpdateCheckController _buildController(_FakeUpdateCheckApi api) => .new(
   messageController: AppMessageController(),
 );
 
-Future<void> _settleController() async {
-  await Future<void>.delayed(.zero);
-  await Future<void>.delayed(.zero);
-}
-
 final class _FakeUpdateCheckApi implements UpdateCheckApi {
   _FakeUpdateCheckApi({this.hasPendingUpdate = false});
 
@@ -81,6 +80,12 @@ final class _FakeUpdateCheckApi implements UpdateCheckApi {
   Future<void> updateApplication() {
     updateApplicationCalls++;
     return _pendingUpdateCompleter.future;
+  }
+
+  /// Completes the pending [updateApplication] future so the in-flight `update()` handler can
+  /// finish within the test (instead of dangling until [dispose]).
+  void completeUpdate() {
+    if (!_pendingUpdateCompleter.isCompleted) _pendingUpdateCompleter.complete();
   }
 
   @override

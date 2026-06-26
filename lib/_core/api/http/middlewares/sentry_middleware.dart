@@ -1,22 +1,8 @@
+import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
+import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
 import 'package:auth_app/_core/api/http/api_client.dart';
-import 'package:auth_app/_core/api/http/middlewares/authentication_middleware.dart' show kAuthorization, kCsrfToken;
 import 'package:meta/meta.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-
-const kCookie = 'Cookie';
-const kSetCookie = 'Set-Cookie';
-const kProxyAuthorization = 'Proxy-Authorization';
-
-/// Header names whose values carry credentials and must never be sent to Sentry.
-/// Matched case-insensitively (see [redactSensitiveHeaders]).
-const kRedactedHeaders = <String>{kAuthorization, kCsrfToken, kCookie, kSetCookie, kProxyAuthorization};
-
-/// Returns a copy of [headers] with credential-bearing values (see [kRedactedHeaders])
-/// replaced by `<redacted>`, so access/refresh tokens never reach the error backend.
-Map<String, String> redactSensitiveHeaders(Map<String, String> headers) => <String, String>{
-  for (final MapEntry(:key, :value) in headers.entries)
-    key: kRedactedHeaders.any((h) => h.toLowerCase() == key.toLowerCase()) ? '<redacted>' : value,
-};
 
 /// {@template sentry_middleware}
 /// Middleware for Sentry integration in API requests.
@@ -47,10 +33,13 @@ class SentryMiddleware {
           ..setData('url', request.url.toString())
           ..setData('method', request.method)
           ..setData('path', request.url.path)
-          ..setData('query', request.url.queryParameters)
+          ..setData('query', redactSensitiveQuery(request.url.queryParametersAll))
           ..setData('request_headers', redactSensitiveHeaders(request.headers));
 
     context['sentry.transaction'] = transaction;
+
+    // Propagate the trace to the backend so the span continues across services (distributed tracing).
+    applyTraceHeaders(transaction, request.headers);
 
     try {
       final response = await innerHandler(request, context);
@@ -66,7 +55,7 @@ class SentryMiddleware {
           'method': request.method,
           'url': request.url,
           'path': request.url.path,
-          'query': request.url.queryParameters,
+          'query': redactSensitiveQuery(request.url.queryParametersAll),
           'headers': redactSensitiveHeaders(request.headers),
         }),
       );

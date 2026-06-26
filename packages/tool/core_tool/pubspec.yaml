@@ -23,7 +23,7 @@ dependencies:
   intl: any
 
   # Code generation
-  json_annotation: ^4.11.0
+  json_annotation: ^4.12.0
 
 dev_dependencies:
   lints_tool:

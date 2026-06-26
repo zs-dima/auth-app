@@ -6,10 +6,8 @@ import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
 
 /// {@template grpc_logger_middleware}
-/// [GrpcLoggerMiddleware] is used to print logs during network requests.
-/// It should be one of the first interceptors added to the gRPC [Client],
-/// otherwise modifications by following interceptors will not be logged.
-/// This is because the execution of interceptors is in the order of addition.
+/// Logs each call's path, outcome and duration. Place it early in the pipeline (outermost)
+/// so it still sees changes made by later interceptors.
 /// {@endtemplate}
 @immutable
 class GrpcLoggerMiddleware extends GrpcMiddleware {

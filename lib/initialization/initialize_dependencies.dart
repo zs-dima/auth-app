@@ -159,11 +159,19 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   // },
   'gRPC Client factory': (dependencies) {
     List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
-      // Interceptors in a certain order
-      // Sentry → Retry → TokenRefresh → Authentication → Metadata → Timeout → Logger → http
-      // e.g. LoggerInterceptor(), RetryInterceptor(), etc.
+      // Order (outermost → innermost): Logger → Metadata → Sentry → Retry → Authentication → wire.
+      // - Logger: logs the final outcome + total duration (outside Retry ⇒ one line per logical call).
+      // - Metadata: static X-* headers (app version, locale, environment); before Sentry so Sentry
+      //   captures (and redacts) them.
+      // - Sentry: span wraps Retry so it covers every attempt.
+      // - Retry: transient gRPC codes only; UNAUTHENTICATED is excluded (recovered by auth's refresh).
+      // - Authentication (appended via `middlewares` below): innermost ⇒ token attached per attempt and
+      //   401→refresh→retry-once runs closest to the wire (mirrors the HTTP Retry→Auth pipeline).
       // TODO: Deduplicate requests interceptor
       // TODO: Cache interceptor
+
+      // Logger middleware
+      const GrpcLoggerMiddleware(),
 
       // Metadata middleware
       GrpcMetadataMiddleware(
@@ -172,9 +180,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           'X-Environment': dependencies.environment.type.name,
         },
       ),
-
-      // Logger middleware
-      const GrpcLoggerMiddleware(),
 
       // Sentry middleware
       const GrpcSentryMiddleware(),
@@ -223,8 +228,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       // and recovered by the auth middleware's reactive refresh. Inner of Sentry (so its span covers
       // retries), outer of auth (appended below). Default RetryBackoff = full-jitter exponential
       // backoff + per-attempt ceiling + total budget; honors `grpc-retry-pushback-ms`.
-      // Connectivity-aware seam: pass `awaitConnectivity:` here once connectivity_plus is wired
-      // (waits for the network instead of burning retries while offline); null = retry immediately.
       GrpcRetryMiddleware(),
 
       // Any other middlewares you need
@@ -339,7 +342,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Prepare users repository': (dependencies) {
     dependencies
       ..usersRepository = UsersRepository(
-        apiClient: dependencies.usersClient,
+        api: dependencies.usersClient,
         getUserId: dependencies.authenticationRepository.getUserId,
       )
       ..usersController = UsersController(

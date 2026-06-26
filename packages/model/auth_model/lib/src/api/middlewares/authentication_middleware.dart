@@ -33,7 +33,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
   /// rejected with `UNAUTHENTICATED`, and returns the new credentials (or `null`
   /// when the refresh failed). When provided, an `UNAUTHENTICATED` response is
   /// recovered by refreshing once and retrying the call — instead of logging out
-  /// immediately. Mirrors the HTTP `TokenRefreshMiddleware`.
+  /// immediately. Mirrors the HTTP `AuthenticationMiddleware`.
   final Future<AccessCredentials?> Function(String usedAccessToken)? refresh;
 
   /// Callback when authentication fails (logout). Called when there is no token,

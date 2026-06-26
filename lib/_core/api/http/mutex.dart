@@ -16,10 +16,8 @@ class Mutex {
   /// Returns the number of tasks waiting for the mutex.
   int get tasks => _queue.length;
 
-  /// Locks the mutex and returns
-  /// a future that completes when the lock is acquired.
-  /// The returned function can be called to unlock the mutex,
-  /// but it should only be called once and relatively expensive to call.
+  /// Acquires the lock: returns a future that completes when it's this caller's turn.
+  /// Await it, do the work, then call [unlock] exactly once to release.
   Future<void> lock() {
     final previous = _queue.lastOrNull?.future ?? Future<void>.value();
     _queue.add(Completer<void>.sync());
@@ -52,6 +50,7 @@ class Mutex {
   }
 }
 
+// Example usage
 // void main() async {
 //   final mutex = Mutex();
 

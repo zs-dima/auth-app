@@ -19,27 +19,23 @@ const _kMaxPushback = Duration(seconds: 60);
 /// with full-jitter exponential backoff ([RetryBackoff]), honoring server pushback
 /// (`grpc-retry-pushback-ms`) and a total time budget. Do NOT add retries elsewhere (channel
 /// `retryPolicy`, repositories, use-cases) — nested retries amplify.
+///
+/// Consistency note (vs HTTP `RetryMiddleware`): gRPC has no verb semantics, so retry is purely
+/// codes-based (any unary call) and `DEADLINE_EXCEEDED` is retried with a fresh deadline per
+/// attempt. `UNAVAILABLE` is process-safe; a non-idempotent RPC sensitive to `INTERNAL`/`ABORTED`
+/// retries should opt out via a custom [retryEvaluator]. Intentional, transport-appropriate.
 /// {@endtemplate}
 @immutable
 class GrpcRetryMiddleware extends ClientInterceptor {
   /// {@macro grpc_retry_middleware}
-  GrpcRetryMiddleware({
-    this.backoff = const RetryBackoff(),
-    this.retryEvaluator,
-    this.awaitConnectivity,
-    math.Random? random,
-  }) : _random = random ?? math.Random();
+  GrpcRetryMiddleware({this.backoff = const RetryBackoff(), this.retryEvaluator, math.Random? random})
+    : _random = random ?? math.Random();
 
   /// Backoff policy: max retries, full-jitter exponential delays, per-attempt ceiling, total budget.
   final RetryBackoff backoff;
 
   /// Overrides [_defaultRetryEvaluator] for deciding whether an error is retryable.
   final bool Function(Object error, int attempt)? retryEvaluator;
-
-  /// Optional connectivity gate awaited (bounded by the remaining budget) before each retry, so
-  /// offline time on a mobile network doesn't burn retry attempts. Injected by the app to keep
-  /// this package Flutter-free; `null` means "retry immediately".
-  final Future<void> Function()? awaitConnectivity;
 
   final math.Random _random;
 
@@ -65,17 +61,6 @@ class GrpcRetryMiddleware extends ClientInterceptor {
         // Server pushback is authoritative (no jitter); otherwise full-jitter backoff.
         final delay = pushback ?? backoff.backoff(attempt, _random);
         if (!backoff.withinBudget(stopwatch.elapsed, delay)) rethrow; // total budget
-
-        // Connectivity-aware: wait (bounded by the remaining budget) for the network instead of
-        // burning this attempt while offline. If it never returns in time, give up.
-        final connectivity = awaitConnectivity;
-        if (connectivity != null) {
-          final remaining = backoff.maxElapsed - stopwatch.elapsed;
-          if (remaining <= .zero) rethrow;
-          var online = true;
-          await connectivity().timeout(remaining, onTimeout: () => online = false);
-          if (!online) rethrow;
-        }
         await Future<void>.delayed(delay);
         attempt++;
       }

@@ -5,10 +5,8 @@ import 'package:auth_app/_core/log/logger.dart';
 import 'package:meta/meta.dart';
 
 /// {@template logger_middleware}
-/// [LoggerMiddleware] is used to print logs during network requests.
-/// It should be one of the first interceptors added to the [ApiClient],
-/// otherwise modifications by following interceptors will not be logged.
-/// This is because the execution of interceptors is in the order of addition.
+/// Logs each request's method, path, outcome and duration. Place it early in the pipeline
+/// (outermost) so it still sees changes made by later middlewares.
 /// {@endtemplate}
 @immutable
 class LoggerMiddleware {
