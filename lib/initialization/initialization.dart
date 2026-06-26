@@ -55,7 +55,7 @@ Future<Dependencies> $initializeApp({
               text: message,
             );
 
-            onProgress?.call(offset + progress, message);
+            onProgress?.call(progress, message);
           },
         ).timeout(
           const Duration(minutes: 7),
