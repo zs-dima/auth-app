@@ -43,7 +43,7 @@ workspace:
   - packages/tool/core_tool
   - packages/tool/lints_tool
   - packages/tool/converter/json_converter
-  # - packages/rest_client
+  - packages/model/rest_client
   - packages/ui
 
 dependencies:
@@ -68,8 +68,8 @@ dependencies:
     path: packages/tool/core_tool
   json_converter:
     path: packages/tool/converter/json_converter
-  # rest_client:
-  #   path: packages/rest_client
+  rest_client:
+    path: packages/model/rest_client
   ui:
     path: packages/ui
 

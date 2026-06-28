@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/api/http/api_client.dart';
-import 'package:auth_app/_core/api/http/mutex.dart';
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/_core/tool/device_info.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:core_model/core_model.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -23,7 +23,10 @@ class AuthenticationException implements Exception {
   String _getMessage() => switch (result) {
     AuthResultFailed(message: final msg) => msg ?? 'Authentication failed',
     AuthResultLocked(message: final msg, :final lockoutInfo) =>
-      msg ?? 'Account locked. Try again in ${lockoutInfo.retryAfterSeconds} seconds.',
+      msg ??
+          (lockoutInfo.retryAfterSeconds > 0
+              ? 'Account locked. Try again in ${lockoutInfo.retryAfterSeconds} seconds.'
+              : 'Account locked. Please try again later.'),
     AuthResultSuspended(message: final msg) => msg ?? 'Account suspended',
     AuthResultPending(message: final msg) => msg ?? 'Account pending verification',
     AuthResultMfaRequired() => 'MFA verification required',
@@ -91,8 +94,15 @@ abstract interface class IAuthenticationRepository {
 }
 
 class AuthenticationRepository implements IAuthenticationRepository {
-  /// Prevents concurrent refresh attempts
-  static final Mutex _refreshingMutex = Mutex();
+  /// Serializes ALL auth-state mutations (refresh + logout), so a refresh cannot interleave with
+  /// a logout. Instance-scoped (not `static`): one lock per repository, so multi-account /
+  /// impersonation / test instances don't head-of-line block each other (A22).
+  final Mutex _refreshingMutex = Mutex();
+
+  /// Monotonic session generation. Bumped whenever the session ends ([_endSession]); a refresh
+  /// started in an older generation must not commit its rotated tokens (A2 — prevents a logout
+  /// that races an in-flight refresh from being "resurrected" with fresh credentials).
+  int _sessionEpoch = 0;
 
   AuthenticationRepository({
     required final IAuthenticationApi api,
@@ -195,20 +205,26 @@ class AuthenticationRepository implements IAuthenticationRepository {
   }
 
   @override
-  Future<void> signOut() => Future<void>.delayed(.zero, () async {
-    try {
-      if (_user case final AuthenticatedUser authenticatedUser) {
-        final token = authenticatedUser.credentials?.accessToken.token;
-        if (!token.isNullOrEmpty) _api.signOut(token!).ignore();
+  Future<void> signOut() {
+    // End the session synchronously (bump epoch + cancel the token) BEFORE awaiting the lock, so an
+    // in-flight refresh holding the mutex sees the new epoch and discards its rotated tokens instead
+    // of resurrecting this just-ended session (A2). Clearing of state then runs under the mutex so
+    // it is serialized after any in-flight refresh commit.
+    _endSession();
+    return _refreshingMutex.synchronize(() async {
+      try {
+        if (_user case final AuthenticatedUser authenticatedUser) {
+          final token = authenticatedUser.credentials?.accessToken.token;
+          if (!token.isNullOrEmpty) _api.signOut(token!).ignore();
+        }
+      } finally {
+        _userController.add(_user = const AuthUser.unauthenticated());
+        _settings
+          ..setUserId(UserIdX.empty).ignore()
+          ..setCredentials(null).ignore();
       }
-    } finally {
-      _endSession(); // abort in-flight requests bound to this session
-      _userController.add(_user = const AuthUser.unauthenticated());
-      _settings
-        ..setUserId(UserIdX.empty).ignore()
-        ..setCredentials(null).ignore();
-    }
-  });
+    });
+  }
 
   @override
   Future<bool> recoveryStart(String identifier, {IdentifierType identifierType = .email}) =>
@@ -235,7 +251,19 @@ class AuthenticationRepository implements IAuthenticationRepository {
   @override
   Future<AuthUser> restore() async {
     final userId = _settings.userId;
-    final credentials = await _settings.getCredentials();
+
+    // A corrupt or schema-incompatible persisted credentials blob must NOT hard-fail app startup:
+    // clear it and degrade to logged-out so the user can sign in again (the 'Restore credentials'
+    // init step would otherwise rethrow this as fatal).
+    AccessCredentials? credentials;
+    try {
+      credentials = await _settings.getCredentials();
+    } on Object catch (e, st) {
+      logger.w('Failed to restore credentials; clearing persisted session', error: e, stackTrace: st);
+      await _settings.setUserId(UserIdX.empty);
+      await _settings.setCredentials(null);
+      return _user;
+    }
 
     if (userId == UserIdX.empty || credentials == null) return _user;
 
@@ -277,9 +305,11 @@ class AuthenticationRepository implements IAuthenticationRepository {
   }
 
   /// Ends the current session scope, aborting any in-flight request bound to
-  /// [sessionCancelToken] (called on logout and on a failed refresh). The next
-  /// read of [sessionCancelToken] vends a fresh, uncancelled token.
+  /// [sessionCancelToken] (called on logout and on a failed refresh). Bumps [_sessionEpoch] so a
+  /// concurrent in-flight refresh won't commit into the ended session. The next read of
+  /// [sessionCancelToken] vends a fresh, uncancelled token.
   void _endSession() {
+    _sessionEpoch++;
     if (!_sessionCancelToken.isCancelled) _sessionCancelToken.cancel();
   }
 
@@ -316,8 +346,15 @@ class AuthenticationRepository implements IAuthenticationRepository {
         // Proactive: nothing to do unless the token is about to expire.
         if (!force && !credentials.accessToken.expiresSoon) return credentials;
 
+        // Snapshot the session generation: if a logout ends the session while the network refresh
+        // is in flight, the rotated tokens below must be discarded (A2 — no session resurrection).
+        final epoch = _sessionEpoch;
         try {
           final refresh = await _api.refreshTokens(credentials.accessToken.token, credentials.refreshToken);
+
+          // The session ended (logout) while we were awaiting the refresh — drop the rotated tokens
+          // so they are neither persisted nor emitted; the logout's cleared state stands.
+          if (epoch != _sessionEpoch) return null;
 
           // Defensive: an API that signals rejection via `null` instead of throwing.
           if (refresh == null) {

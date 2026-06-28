@@ -4,6 +4,8 @@ import 'dart:async';
 
 import 'package:auth_app/_core/api/grpc/middlewares/logger_middleware.dart';
 import 'package:auth_app/_core/api/grpc/middlewares/sentry_middleware.dart';
+import 'package:auth_app/_core/api/http/middlewares/logger_middleware.dart';
+import 'package:auth_app/_core/api/http/middlewares/sentry_middleware.dart';
 import 'package:auth_app/_core/controller/controller_observer.dart';
 import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/_core/environment/environment_loader.dart';
@@ -35,6 +37,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:rest_client/rest_client.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,13 +80,20 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Creating app metadata': (dependencies) => dependencies.metadata = AppMetadata.platform(),
   'Observer state management': (_) => Controller.observer = ControllerObserver.instance(logger),
   'Initializing analytics': (_) {
+    // TODO(planned): initialize analytics here.
     // await Firebase.initializeApp(
     //   options: DefaultFirebaseOptions.currentPlatform,
     // );
   },
-  'Log app open': (_) {},
-  'Get remote config': (_) {},
-  'Restore settings': (_) {},
+  'Log app open': (_) {
+    /* TODO(planned): emit app-open analytics event. */
+  },
+  'Get remote config': (_) {
+    /* TODO(planned): fetch remote config. */
+  },
+  'Restore settings': (_) {
+    /* TODO(planned): restore persisted settings. */
+  },
   'Environment': (dependencies) async {
     final environmentLoader = EnvironmentLoader();
     dependencies.environment = await environmentLoader();
@@ -143,7 +153,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     dependencies.settings = settings;
   },
   'Storage repository': (dependencies) {
-    //
+    // TODO(planned): wire the storage repository.
   },
   // 'Theme repository': (dependencies) {
   //   final settings = dependencies.settings;
@@ -158,6 +168,13 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   dependencies.localeRepository = localeRepository;
   // },
   'gRPC Client factory': (dependencies) {
+    // Note: unlike the external HTTP client, the gRPC clients are intentionally NOT wired to the
+    // session CancelToken. gRPC cancellation is already covered by per-call deadlines
+    // (GrpcClientOptions.default/streamCallTimeout), subscription teardown (the stream's onCancel
+    // cancels the in-flight call), and the server rejecting a revoked token. The list RPCs are
+    // one-shot (.first/.toList), so nothing lingers across a session — a CancelToken→ResponseFuture
+    // bridge would be non-idiomatic machinery for an already-covered case. If a hard "abort all on
+    // logout" guarantee is ever needed, prefer channel.terminate() + lazy re-init over a token bridge.
     List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
       // Order (outermost → innermost): Logger → Metadata → Sentry → Retry → Authentication → wire.
       // - Logger: logs the final outcome + total duration (outside Retry ⇒ one line per logical call).
@@ -234,39 +251,26 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       ...?middlewares,
     ];
 
-    GrpcAuthenticationClient grpsAuthFactory([Iterable<ClientInterceptor>? middlewares]) {
-      // Create the gRPC channel
-      final environment = dependencies.environment;
-      final authChannel = GrpcClientChannel(environment.authService);
+    // Each client wraps a GrpcClientChannel (retained for shutdown on teardown — A6) and shares the
+    // same interceptor stack. timeout defaults to GrpcClientOptions.defaultCallTimeout (30s, unary);
+    // streaming RPCs override per-call.
+    GrpcAuthenticationClient grpcAuthFactory([Iterable<ClientInterceptor>? middlewares]) => .new(
+      GrpcClientOptions(
+        GrpcClientChannel(dependencies.environment.authService),
+        interceptors: interceptorsFactory(middlewares),
+      ),
+    );
 
-      // Create auth client with middleware support
-      return GrpcAuthenticationClient(
-        GrpcClientOptions(
-          authChannel,
-          interceptors: interceptorsFactory(middlewares),
-          timeout: const Duration(seconds: 30),
-        ),
-      );
-    }
-
-    GrpcUsersClient grpcUsersFactory([Iterable<ClientInterceptor>? middlewares]) {
-      // Create the gRPC channel
-      final environment = dependencies.environment;
-      final usersChannel = GrpcClientChannel(environment.appService);
-
-      // Create users client with middleware support
-      return GrpcUsersClient(
-        GrpcClientOptions(
-          usersChannel,
-          interceptors: interceptorsFactory(middlewares),
-          timeout: const Duration(seconds: 30),
-        ),
-      );
-    }
+    GrpcUsersClient grpcUsersFactory([Iterable<ClientInterceptor>? middlewares]) => .new(
+      GrpcClientOptions(
+        GrpcClientChannel(dependencies.environment.appService),
+        interceptors: interceptorsFactory(middlewares),
+      ),
+    );
 
     dependencies
       ..interceptorsFactory = interceptorsFactory
-      ..grpsAuthFactory = grpsAuthFactory
+      ..grpcAuthFactory = grpcAuthFactory
       ..grpcUsersFactory = grpcUsersFactory;
   },
 
@@ -276,34 +280,28 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       getToken: () async {
         try {
           return await dependencies.credentialsManager.getAccessCredentials();
-        } on Object catch (e, _) {
-          logger.w('Error getting token: $e');
-          return null;
+        } on Object catch (e, st) {
+          // Surface a transient credential-resolution failure (do NOT collapse to `null`, which the
+          // middleware treats as "definitively no token" and would force a spurious logout — A3).
+          logger.w('Error resolving access credentials', error: e);
+          Error.throwWithStackTrace(e, st);
         }
       },
       // Reactive single-flight refresh on UNAUTHENTICATED: refresh once and retry the
       // call with the rotated token; logout only happens if the refresh fails.
       refresh: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
+      // Route auth failures through the single auth-state bus (A26) instead of poking the controller
+      // directly; the repository's handler subscription performs the actual sign-out.
       onAuthError: () {
-        logger.w('Received "Not authenticated" gRPC response, logging out... ');
-        dependencies.authenticationController.signOut();
+        logger.w('Received an unauthenticated gRPC response; signing out via the auth bus');
+        dependencies.authenticationHandler.handleAuthenticationError();
       },
-      unauthenticatedPaths: const <String>{
-        // gRPC public methods (authentication)
-        '/auth.v2.AuthService/Authenticate',
-        '/auth.v2.AuthService/SignUp',
-        '/auth.v2.AuthService/SignOut',
-        '/auth.v2.AuthService/RecoveryStart',
-        '/auth.v2.AuthService/RecoveryConfirm',
-        '/auth.v2.AuthService/RefreshTokens',
-        // gRPC public methods (OAuth)
-        '/auth.v2.AuthService/GetOAuthUrl',
-        '/auth.v2.AuthService/ExchangeOAuthCode',
-      },
+      // Single source of truth lives in auth_model and is asserted against the generated stub (A19).
+      unauthenticatedPaths: kAuthServicePublicPaths,
     );
 
     dependencies
-      ..authClient = dependencies.grpsAuthFactory([authenticationMiddleware])
+      ..authClient = dependencies.grpcAuthFactory([authenticationMiddleware])
       ..usersClient = dependencies.grpcUsersFactory([authenticationMiddleware]);
   },
 
@@ -321,8 +319,9 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
 
     dependencies.credentialsManager = CredentialsCallbacks(
       getAccessCredentials: () => dependencies.authenticationRepository.getAccessCredentials(),
+      // Refresh is owned by the repository (AuthenticationRepository.refreshCredentials, wired into
+      // the auth middleware's `refresh` callback above), so this callback is intentionally a no-op.
       getRefreshTokens: (_) async => null, // dependencies.authenticationRepository.refreshTokens(),
-      authHandler: authenticationHandler,
       allowAnonymous: true,
     );
 
@@ -334,6 +333,26 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     );
   },
 
+  // External HTTP client: S3 presigned uploads and other third-party/unauthenticated calls.
+  // Mirrors the gRPC middleware ordering (Logger → Sentry → Retry → Timeout → wire), but
+  // deliberately omits auth + app-metadata: a presigned URL is self-authenticated and
+  // first-party `X-*` headers must not leak to third parties. Session-scoped cancellation is
+  // bound to the auth repository's token so logout tears down any in-flight upload.
+  'Prepare external HTTP client': (dependencies) {
+    dependencies.externalHttpClient = ApiClient(
+      // Only used for QUIC hints + relative-path merge; requests pass absolute URLs (S3).
+      baseUrl: () => Uri.parse(dependencies.environment.s3Url),
+      sessionToken: () => dependencies.authenticationRepository.sessionCancelToken,
+      middlewares: <ApiClientMiddleware>[
+        const HttpLoggerMiddleware().call,
+        // propagateTrace: false — never inject sentry-trace/baggage into third-party (S3) requests;
+        // the span + error capture still run for upload monitoring.
+        const HttpSentryMiddleware(propagateTrace: false).call,
+        RetryMiddleware().call,
+        const TimeoutMiddleware().call,
+      ],
+    );
+  },
   'Prepare authentication controller': (dependencies) =>
       dependencies.authenticationController = AuthenticationController(
         repository: dependencies.authenticationRepository,
@@ -352,6 +371,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       ..avatarController = AvatarController(
         s3Url: dependencies.environment.s3Url,
         repository: dependencies.usersRepository,
+        httpClient: dependencies.externalHttpClient,
         messageController: dependencies.messageController,
       );
   },
@@ -458,13 +478,31 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //         cancelOnError: false,
   //       );
   // },
-  'Log app initialized': (_) {},
+  'Log app initialized': (_) {
+    /* TODO(planned): emit app-initialized analytics event. */
+  },
 };
 
-Future<void> $disposeDependencies() async {
+Future<void> $disposeDependencies(Dependencies dependencies) async {
   await _logSubscription?.cancel();
   // await _logTblSubscription?.cancel();
   await _authUserSubscription?.cancel();
   await _authUserInfoSubscription?.cancel();
   await _impersonationSubscription?.cancel();
+
+  // Tear down auth + transport resources (A6). Every dispose API below already existed but was
+  // never wired, leaking the two gRPC channels (HTTP/2 sockets + keep-alive), the external HTTP
+  // client's connection pool, the auth handler's broadcast controller, and the repository's
+  // controller + subscriptions. Best-effort: a teardown error must not crash app shutdown.
+  try {
+    // Source → sink order: shut transports down first so no late RPC/stream event races a closing
+    // controller, then tear down the auth coordinator and its streams.
+    await dependencies.authClient.dispose();
+    await dependencies.usersClient.dispose();
+    dependencies.externalHttpClient.close();
+    await dependencies.authenticationRepository.terminate();
+    await dependencies.authenticationHandler.close();
+  } on Object catch (e, stackTrace) {
+    logger.w('Error disposing dependencies', error: e, stackTrace: stackTrace);
+  }
 }

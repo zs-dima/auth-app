@@ -1,11 +1,14 @@
-// ignore_for_file: type_annotate_public_apis, avoid_dynamic, prefer-explicit-parameter-names, avoid-dynamic, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters, use_function_type_syntax_for_parameters, prefer-async-callback, prefer-explicit-function-type
+// The handler-based middleware API intentionally uses function-typedef parameters; suppress the
+// matching style lints (deduplicated — A9).
+// ignore_for_file: type_annotate_public_apis, avoid_dynamic, avoid-dynamic, prefer-explicit-parameter-names, use_function_type_syntax_for_parameters, prefer-async-callback, prefer-explicit-function-type
 
 import 'dart:async';
-import 'dart:ui';
 
+import 'package:async/async.dart';
 import 'package:grpc/grpc.dart';
+import 'package:grpc_model/src/middleware/response_future_holder.dart';
 
-typedef ApiClientHandler = Future<void> Function(String path, Map<String, String> metadata);
+typedef GrpcMiddlewareHandler = Future<void> Function(String path, Map<String, String> metadata);
 
 /// Base class for gRPC client middleware.
 ///
@@ -37,11 +40,13 @@ abstract class GrpcMiddleware implements ClientInterceptor {
   ///   }
   /// }
   /// ```
-  // Future<void> call(
-  //   String path,
-  //   ApiClientHandler invoker,
-  // );
-  ApiClientHandler call(ApiClientHandler invoker);
+  GrpcMiddlewareHandler call(GrpcMiddlewareHandler invoker);
+
+  /// Variant of [call] used for **streaming** RPCs. Defaults to [call] so most middleware behave
+  /// identically for unary and streaming. Override when streaming needs different handling — e.g.
+  /// the auth middleware must NOT replay-retry a streaming call, since the request `Stream` can't
+  /// be re-listened (a retried `invoker` would throw `StateError`).
+  GrpcMiddlewareHandler callStreaming(GrpcMiddlewareHandler invoker) => call(invoker);
 
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
@@ -50,7 +55,7 @@ abstract class GrpcMiddleware implements ClientInterceptor {
     CallOptions options,
     ClientUnaryInvoker<Q, R> invoker,
   ) {
-    final holder = _ResponseFutureHolder<R>();
+    final holder = ResponseFutureHolder<R>();
 
     Future<R> execute() async {
       final handler = call((path, metadata) async {
@@ -63,7 +68,7 @@ abstract class GrpcMiddleware implements ClientInterceptor {
       return holder.response!;
     }
 
-    return _DeferredResponseFuture<R>(execute(), holder);
+    return HolderResponseFuture<R>(execute(), holder);
   }
 
   @override
@@ -74,100 +79,60 @@ abstract class GrpcMiddleware implements ClientInterceptor {
     ClientStreamingInvoker<Q, R> invoker,
   ) {
     final holder = _ResponseStreamHolder<R>();
-    final controller = StreamController<R>();
+
+    // Register cancellation BEFORE any async work starts, so an early unsubscribe (e.g. the screen
+    // is popped before the underlying call is even created) still aborts it. If the response is not
+    // yet set we record the intent; `execute` cancels the call the moment it exists (A17). Without
+    // this, a cancel that arrives before `holder.response` is set was silently dropped and the
+    // server-streaming RPC kept running until it completed or hit the stream deadline.
+    final controller = StreamController<R>()..onCancel = () => (holder..cancelled = true).response?.cancel();
 
     Future<void> execute() async {
-      final handler = call((path, metadata) async {
+      final handler = callStreaming((path, metadata) async {
         final mergedOptions = metadata.isEmpty ? options : options.mergedWith(CallOptions(metadata: metadata));
         final response = invoker(method, requests, mergedOptions);
-        holder.response = response;
+
+        // Publish the live call (so a concurrent onCancel can abort it) AND read the cancel flag in
+        // one expression: the cascade assigns `response` first, then evaluates to `holder` whose
+        // `cancelled` we check. If the consumer already unsubscribed before the call existed, abort.
+        if ((holder..response = response).cancelled) {
+          await response.cancel();
+          return;
+        }
 
         await for (final event in response) {
-          controller.add(event);
+          if (!controller.isClosed) controller.add(event);
         }
       });
 
       try {
         await handler(method.path, options.metadata);
       } on Object catch (e, s) {
-        controller.addError(e, s);
+        if (!controller.isClosed) controller.addError(e, s);
       } finally {
-        await controller.close();
+        if (!controller.isClosed) await controller.close();
       }
     }
 
     execute();
 
-    controller.onCancel = () => holder.response?.cancel();
-
     return _DeferredResponseStream<R>(controller.stream, holder);
   }
 }
 
-/// Holder for a response that may be set asynchronously.
-class _ResponseFutureHolder<R> {
-  ResponseFuture<R>? response;
-}
-
-/// Holder for a streaming response.
+/// Holder for a streaming response. [cancelled] records a consumer unsubscribe that arrived before
+/// [response] existed, so the call can be aborted as soon as it is created (A17).
 class _ResponseStreamHolder<R> {
   ResponseStream<R>? response;
+  bool cancelled = false;
 }
 
-/// Wraps a deferred [ResponseFuture] that's initialized asynchronously.
-class _DeferredResponseFuture<R> implements ResponseFuture<R> {
-  const _DeferredResponseFuture(this._future, this._holder);
+/// Wraps a deferred [ResponseStream] that's initialized asynchronously. Extends [StreamView]
+/// (like grpc's own ResponseStream) so every Stream method delegates automatically; only the
+/// gRPC-specific members are overridden.
+class _DeferredResponseStream<R> extends StreamView<R> implements ResponseStream<R> {
+  const _DeferredResponseStream(super.stream, this._holder);
 
-  final Future<R> _future;
-  final _ResponseFutureHolder<R> _holder;
-
-  @override
-  Future<Map<String, String>> get headers async {
-    try {
-      await _future;
-    } on Object {
-      // Ignore - we just need to wait for the response to be available
-    }
-    return _holder.response?.headers ?? Future<Map<String, String>>.value(const <String, String>{});
-  }
-
-  @override
-  Future<Map<String, String>> get trailers async {
-    try {
-      await _future;
-    } on Object {
-      // Ignore
-    }
-    return _holder.response?.trailers ?? Future<Map<String, String>>.value(const <String, String>{});
-  }
-
-  @override
-  Future<void> cancel() async => _holder.response?.cancel();
-
-  @override
-  Stream<R> asStream() => Stream<R>.fromFuture(_future);
-
-  @override
-  Future<R> catchError(Function onError, {bool Function(Object error)? test}) =>
-      _future.catchError(onError, test: test);
-
-  @override
-  Future<S> then<S>(FutureOr<S> Function(R value) onValue, {Function? onError}) =>
-      _future.then(onValue, onError: onError);
-
-  @override
-  Future<R> whenComplete(FutureOr<void> Function() action) => _future.whenComplete(action);
-
-  @override
-  Future<R> timeout(Duration timeLimit, {FutureOr<R> Function()? onTimeout}) =>
-      _future.timeout(timeLimit, onTimeout: onTimeout);
-}
-
-/// Wraps a deferred [ResponseStream] that's initialized asynchronously.
-class _DeferredResponseStream<R> implements ResponseStream<R> {
-  const _DeferredResponseStream(this._stream, this._holder);
-
-  final Stream<R> _stream;
   final _ResponseStreamHolder<R> _holder;
 
   @override
@@ -179,162 +144,27 @@ class _DeferredResponseStream<R> implements ResponseStream<R> {
       _holder.response?.trailers ?? Future<Map<String, String>>.value(const <String, String>{});
 
   @override
-  Future<R> get first => _stream.first;
-
-  @override
-  bool get isBroadcast => _stream.isBroadcast;
-
-  @override
-  Future<bool> get isEmpty => _stream.isEmpty;
-
-  @override
-  Future<R> get last => _stream.last;
-
-  @override
-  Future<int> get length => _stream.length;
-
-  @override
-  ResponseFuture<R> get single => _SingleResponseFuture<R>(_stream.single);
+  ResponseFuture<R> get single => _SingleResponseFuture<R>(super.single, _holder);
 
   @override
   Future<void> cancel() async => _holder.response?.cancel();
-
-  @override
-  StreamSubscription<R> listen(
-    void Function(R event)? onData, {
-    Function? onError,
-    VoidCallback? onDone,
-    bool? cancelOnError,
-  }) => _stream.listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
-
-  // Delegate all Stream methods to the underlying stream
-  @override
-  Future<bool> any(bool Function(R element) test) => _stream.any(test);
-
-  @override
-  Stream<R> asBroadcastStream({
-    void Function(StreamSubscription<R> subscription)? onListen,
-    void Function(StreamSubscription<R> subscription)? onCancel,
-  }) => _stream.asBroadcastStream(onListen: onListen, onCancel: onCancel);
-
-  @override
-  Stream<E> asyncExpand<E>(Stream<E>? Function(R event) convert) => _stream.asyncExpand(convert);
-
-  @override
-  Stream<E> asyncMap<E>(FutureOr<E> Function(R event) convert) => _stream.asyncMap(convert);
-
-  @override
-  Stream<S> cast<S>() => _stream.cast<S>();
-
-  @override
-  Future<bool> contains(Object? needle) => _stream.contains(needle);
-
-  @override
-  Stream<R> distinct([bool Function(R previous, R next)? equals]) => _stream.distinct(equals);
-
-  @override
-  Future<E> drain<E>([E? futureValue]) => _stream.drain(futureValue);
-
-  @override
-  Future<R> elementAt(int index) => _stream.elementAt(index);
-
-  @override
-  Future<bool> every(bool Function(R element) test) => _stream.every(test);
-
-  @override
-  Stream<S> expand<S>(Iterable<S> Function(R element) convert) => _stream.expand(convert);
-
-  @override
-  Future<R> firstWhere(bool Function(R element) test, {R Function()? orElse}) =>
-      _stream.firstWhere(test, orElse: orElse);
-
-  @override
-  Future<S> fold<S>(S initialValue, S Function(S previous, R element) combine) => _stream.fold(initialValue, combine);
-
-  @override
-  Future<void> forEach(void Function(R element) action) => _stream.forEach(action);
-
-  @override
-  Stream<R> handleError(Function onError, {bool test(error)?}) => _stream.handleError(onError, test: test);
-
-  @override
-  Future<String> join([String separator = '']) => _stream.join(separator);
-
-  @override
-  Future<R> lastWhere(bool Function(R element) test, {R Function()? orElse}) => _stream.lastWhere(test, orElse: orElse);
-
-  @override
-  Stream<S> map<S>(S Function(R event) convert) => _stream.map(convert);
-
-  @override
-  Future<dynamic> pipe(StreamConsumer<R> streamConsumer) => _stream.pipe(streamConsumer);
-
-  @override
-  Future<R> reduce(R Function(R previous, R element) combine) => _stream.reduce(combine);
-
-  @override
-  Future<R> singleWhere(bool Function(R element) test, {R Function()? orElse}) =>
-      _stream.singleWhere(test, orElse: orElse);
-
-  @override
-  Stream<R> skip(int count) => _stream.skip(count);
-
-  @override
-  Stream<R> skipWhile(bool Function(R element) test) => _stream.skipWhile(test);
-
-  @override
-  Stream<R> take(int count) => _stream.take(count);
-
-  @override
-  Stream<R> takeWhile(bool Function(R element) test) => _stream.takeWhile(test);
-
-  @override
-  Stream<R> timeout(Duration timeLimit, {void Function(EventSink<R> sink)? onTimeout}) =>
-      _stream.timeout(timeLimit, onTimeout: onTimeout);
-
-  @override
-  Future<List<R>> toList() => _stream.toList();
-
-  @override
-  Future<Set<R>> toSet() => _stream.toSet();
-
-  @override
-  Stream<S> transform<S>(StreamTransformer<R, S> streamTransformer) => _stream.transform(streamTransformer);
-
-  @override
-  Stream<R> where(bool Function(R event) test) => _stream.where(test);
 }
 
-/// A simple ResponseFuture wrapper for the single getter.
-class _SingleResponseFuture<R> implements ResponseFuture<R> {
-  const _SingleResponseFuture(this._future);
+/// A [ResponseFuture] for the `single` getter — delegates the Future API via [DelegatingFuture]
+/// and the gRPC metadata/cancel to the stream holder.
+class _SingleResponseFuture<R> extends DelegatingFuture<R> implements ResponseFuture<R> {
+  _SingleResponseFuture(super.future, this._holder);
 
-  final Future<R> _future;
-
-  @override
-  Future<Map<String, String>> get headers async => const <String, String>{};
+  final _ResponseStreamHolder<R> _holder;
 
   @override
-  Future<Map<String, String>> get trailers async => const <String, String>{};
+  Future<Map<String, String>> get headers async =>
+      _holder.response?.headers ?? Future<Map<String, String>>.value(const <String, String>{});
 
   @override
-  Future<void> cancel() async {}
+  Future<Map<String, String>> get trailers async =>
+      _holder.response?.trailers ?? Future<Map<String, String>>.value(const <String, String>{});
 
   @override
-  Stream<R> asStream() => Stream<R>.fromFuture(_future);
-
-  @override
-  Future<R> catchError(Function onError, {bool Function(Object error)? test}) =>
-      _future.catchError(onError, test: test);
-
-  @override
-  Future<S> then<S>(FutureOr<S> Function(R value) onValue, {Function? onError}) =>
-      _future.then(onValue, onError: onError);
-
-  @override
-  Future<R> whenComplete(FutureOr<void> Function() action) => _future.whenComplete(action);
-
-  @override
-  Future<R> timeout(Duration timeLimit, {FutureOr<R> Function()? onTimeout}) =>
-      _future.timeout(timeLimit, onTimeout: onTimeout);
+  Future<void> cancel() async => _holder.response?.cancel();
 }

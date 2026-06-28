@@ -24,6 +24,17 @@ void main() {
       expect(headers['sentry-trace'], equals('inbound'));
     });
 
+    test('does not duplicate a differently-cased inbound trace header (case-insensitive)', () {
+      final span = Sentry.startTransaction('t', 'op');
+      final headers = <String, String>{'Sentry-Trace': 'inbound'};
+
+      applyTraceHeaders(span, headers);
+
+      // The inbound (capitalized) header is respected; no second lowercase key is added.
+      expect(headers.keys.where((k) => k.toLowerCase() == 'sentry-trace').length, equals(1));
+      expect(headers['Sentry-Trace'], equals('inbound'));
+    });
+
     test('omits baggage when the span has none', () {
       final span = Sentry.startTransaction('t', 'op');
       final headers = <String, String>{};

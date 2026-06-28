@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:auth_model/src/client/authentication_handler.dart';
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 
@@ -17,15 +16,13 @@ typedef AccessCredentialsCallback = Future<AccessCredentials?> Function();
 typedef RefreshTokensCallback = Future<AccessCredentials?> Function(RefreshToken refreshToken);
 
 class CredentialsCallbacks {
-  CredentialsCallbacks({
+  const CredentialsCallbacks({
     required this.getAccessCredentials,
     required this.getRefreshTokens,
-    this.authHandler,
     this.allowAnonymous = false,
   });
 
   final AccessCredentialsCallback getAccessCredentials;
   final RefreshTokensCallback getRefreshTokens;
-  IAuthenticationHandler? authHandler;
   final bool allowAnonymous;
 }

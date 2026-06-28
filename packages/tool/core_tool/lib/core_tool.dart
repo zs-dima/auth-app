@@ -4,6 +4,7 @@ export 'src/enum.dart';
 export 'src/future.dart';
 export 'src/iterable.dart';
 export 'src/json.dart';
+export 'src/mutex.dart';
 export 'src/numeric.dart';
 export 'src/object.dart';
 export 'src/stream.dart';

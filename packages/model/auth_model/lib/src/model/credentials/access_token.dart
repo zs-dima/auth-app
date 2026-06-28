@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:intl/intl.dart';
+import 'package:meta/meta.dart';
 
 /// An OAuth2 access token.
 /// Inspired by https://pub.dev/packages/googleapis_auth
+@immutable
 class AccessToken {
   /// [expiry] must be a UTC `DateTime`.
   AccessToken({this.type = 'Bearer', required this.token, required this.expiry})
@@ -15,11 +17,17 @@ class AccessToken {
     }
   }
 
+  /// Parses a signed JWT and reads its `exp` claim.
+  ///
+  /// Throws a [FormatException] (a typed, recognized error — never a bare `Exception`) when the
+  /// token is not a well-formed JWT or lacks an integer `exp`. Callers map this deliberately: on
+  /// the sign-in/success path to a failed result, on the refresh path to a definitive rejection —
+  /// so a malformed token never slips through the auth-error policy as an opaque crash (A12).
   factory AccessToken.fromJwtToken(String token) {
     final tokenMap = _decodeJwtToken(token);
 
     final expiry = tokenMap['exp'];
-    if (expiry is! int) throw Exception('invalid token');
+    if (expiry is! int) throw const FormatException('Malformed JWT: missing or non-integer "exp" claim');
 
     return AccessToken(token: token, expiry: DateTime.fromMillisecondsSinceEpoch(expiry * 1000, isUtc: true));
   }
@@ -47,6 +55,14 @@ class AccessToken {
 
   bool get hasExpired => DateTime.now().toUtc().isAfter(expiry);
 
+  @override
+  int get hashCode => Object.hash(type, token, expiry);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AccessToken && other.type == type && other.token == token && other.expiry == expiry;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'type': type,
     'data': token,
@@ -56,17 +72,21 @@ class AccessToken {
   @override
   String toString() => 'AccessToken(type=$type, data=$token, expiry=${DateFormat().format(expiry)})';
 
-  // TODO use JwtValidator
+  // Decode-only by design: a public OAuth client holds no server HMAC secret, so client-side
+  // signature verification would be meaningless (hence no JwtValidator here — only `exp` matters).
   static Map<String, Object?> _decodeJwtToken(String token) {
     final parts = token.split('.');
     if (parts.length != 3) {
-      throw Exception('Invalid token');
+      throw const FormatException('Malformed JWT: expected 3 dot-separated segments');
     }
 
-    final payload = parts[1];
-    final normalized = base64Url.normalize(payload);
-    final resp = utf8.decode(base64Url.decode(normalized));
-
-    return jsonDecode(resp) as Map<String, Object?>;
+    // base64Url.decode / utf8.decode / jsonDecode all throw FormatException on bad input, which
+    // propagates as the same typed error the callers handle.
+    final normalized = base64Url.normalize(parts[1]);
+    final decoded = jsonDecode(utf8.decode(base64Url.decode(normalized)));
+    if (decoded is! Map<String, Object?>) {
+      throw const FormatException('Malformed JWT: payload is not a JSON object');
+    }
+    return decoded;
   }
 }

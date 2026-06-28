@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:auth_app/_core/api/_core/transport_log.dart';
 import 'package:auth_app/_core/log/logger.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
@@ -19,7 +20,7 @@ class GrpcLoggerMiddleware extends GrpcMiddleware {
   final bool logError;
 
   @override
-  ApiClientHandler call(ApiClientHandler invoker) => (path, metadata) async {
+  GrpcMiddlewareHandler call(GrpcMiddlewareHandler invoker) => (path, metadata) async {
     final stopwatch = Stopwatch()..start();
     try {
       if (logRequest) {
@@ -27,23 +28,19 @@ class GrpcLoggerMiddleware extends GrpcMiddleware {
       }
       await invoker(path, metadata);
       if (logResponse) {
-        logger.v4(
-          '🌍 '
-          '$path '
-          '-> success '
-          '| ${stopwatch.elapsedMilliseconds}ms',
-        );
+        logger.v4(formatTransportLog(subject: path, outcome: 'success', elapsedMs: stopwatch.elapsedMilliseconds));
       }
     } on Object catch (e, s) {
       if (logError) {
         logger.w(
-          '🌍 '
-          '$path '
-          '-> ${switch (e) {
-            GrpcError(:final code) => code,
-            _ => 'error',
-          }} '
-          '| ${stopwatch.elapsedMilliseconds}ms',
+          formatTransportLog(
+            subject: path,
+            outcome: switch (e) {
+              GrpcError(:final code) => '$code',
+              _ => 'error',
+            },
+            elapsedMs: stopwatch.elapsedMilliseconds,
+          ),
           stackTrace: s,
         );
       }

@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:auth_app/_core/api/http/api_client.dart';
 import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_model/auth_model.dart' show GrpcException;
 import 'package:grpc/grpc.dart';
 import 'package:grpc/protos.dart';
+import 'package:rest_client/rest_client.dart';
 
 typedef AppMessageBlocErrorCallback = void Function(String message);
 typedef AppMessageBlocLocalizeErrorCallback = String Function(Localization l);
@@ -25,10 +26,20 @@ mixin AppMessageControllerMixin {
     _messageController.showAppMessage(message, backgroundColor);
   }
 
+  // Transport-specific errors (`GrpcError` from gRPC, `ApiClientException` from the HTTP
+  // ApiClient) intentionally surface to this UI boundary, which switches on each to render a
+  // transport-appropriate message. This is a deliberate boundary, not a missing abstraction:
+  // there is no unified error type, callers pass the raw transport error here.
   void setError(String message, [Object? e, StackTrace? s, AppMessageBlocErrorCallback? onError]) {
     final msg = formatMessage(message);
 
     switch (e) {
+      // Domain gRPC failure mapped at the API client (A8). Raw GrpcError is still handled below for
+      // any error surfacing straight from the interceptor/stream layer.
+      case GrpcException _:
+        _setGrpcException(msg, e, s);
+        break;
+
       case GrpcError _:
         _setGrpcError(msg, e);
         break;
@@ -72,6 +83,19 @@ mixin AppMessageControllerMixin {
     }
 
     _messageController.showGrpcError(error, message);
+  }
+
+  void _setGrpcException(String message, GrpcException error, [StackTrace? s]) {
+    // The domain client maps GrpcError -> GrpcException (A8) but keeps the original error in [cause].
+    // At this app-layer UI boundary we may inspect it to reuse the richer, code-specific rendering
+    // (e.g. "Backend unavailable") instead of a generic caption — A8 still holds because no
+    // domain/business code sees GrpcError, only this boundary does (F1).
+    if (error.cause case final GrpcError grpcError) {
+      _setGrpcError(message, grpcError, s);
+      return;
+    }
+    _log.e('gRPC Error: $message\n$error', stackTrace: s);
+    _messageController.showGrpcException(error, message);
   }
 
   void _setApiError(String message, ApiClientException error, [StackTrace? s]) {

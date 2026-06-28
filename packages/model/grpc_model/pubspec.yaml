@@ -13,6 +13,7 @@ dependencies:
     path: ../../model/core_model
 
   # SDK extensions
+  async: any
   collection: any
   meta: any
   uuid: any
@@ -23,5 +24,8 @@ dependencies:
   protobuf: ^6.0.0
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
   lints_tool:
     path: ../../tool/lints_tool

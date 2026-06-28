@@ -15,15 +15,11 @@ dependencies:
     path: ../../model/core_model
   grpc_model:
     path: ../../model/grpc_model
-  json_converter:
-    path: ../../tool/converter/json_converter
 
   # SDK extensions
-  collection: any
   meta: any
   uuid: any
   fixnum: any
-  async: any
   crypto: any
 
   # Internationalization
@@ -36,13 +32,17 @@ dependencies:
   # API
   grpc: ^5.1.0
   protobuf: ^6.0.0
-  retry: ^3.1.2
 
 dev_dependencies:
   # Code generation
   build_runner: ^2.15.0
   freezed: ^4.0.0-dev.3
   json_serializable: ^6.14.0
+
+  # Tests
+  flutter_test:
+    sdk: flutter
+  http: ^1.6.0
 
   # Lints
   lints_tool:

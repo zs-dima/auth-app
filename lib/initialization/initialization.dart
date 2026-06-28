@@ -95,12 +95,11 @@ Future<Dependencies> $initializeApp({
 @visibleForTesting
 Future<void> $resetApp(Dependencies dependencies) async {}
 
-/// Disposes the app and releases all resources.
-@visibleForTesting
+/// Disposes the app and releases all resources (A6): cancels module subscriptions and tears down
+/// the gRPC channels, external HTTP client, auth handler and repository owned by [dependencies].
+/// Wired to the app lifecycle (`AppLifecycleListener.onDetached` in `AppTree`).
 Future<void> $disposeApp(Dependencies dependencies) async {
-  await $disposeDependencies();
-  // TODO
-  // await dependencies.dispose();
+  await $disposeDependencies(dependencies);
   // await $resetApp(dependencies);
   // await Sentry.close();
   // await Octopus.dispose();

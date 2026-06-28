@@ -1,10 +1,11 @@
 import 'dart:ui';
 
-import 'package:auth_app/_core/api/http/api_client.dart';
+import 'package:auth_model/auth_model.dart' show GrpcException;
 import 'package:control/control.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
+import 'package:rest_client/rest_client.dart';
 
 part 'message_controller.freezed.dart';
 
@@ -55,6 +56,7 @@ final class AppMessageController extends StateController<MessageState> with Sequ
 
   void showAppError(String error, [Object? e, StackTrace? s]) => setState(MessageState.appError(error));
   void showGrpcError(GrpcError e, String message) => setState(MessageState.netError(e.detail(message), e));
+  void showGrpcException(GrpcException e, String message) => setState(MessageState.netError(message, e));
   void showApiError(ApiClientException e, String message) => setState(MessageState.netError(message, e));
 
   void progressStarted({String? type, String? message}) => showProgress(.started, type, message);

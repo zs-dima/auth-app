@@ -18,6 +18,7 @@ import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/widgets.dart';
 import 'package:grpc/grpc.dart';
+import 'package:rest_client/rest_client.dart';
 
 extension DependenciesX on BuildContext {
   // Dependencies get dependencies => DependenciesScope.of(this);
@@ -49,15 +50,17 @@ class Dependencies {
   late final List<ClientInterceptor> Function([Iterable<ClientInterceptor>? middlewares]) interceptorsFactory;
 
   /// gRPC Authentication factory
-  late final GrpcAuthenticationClient Function([Iterable<ClientInterceptor>? middlewares]) grpsAuthFactory;
+  late final GrpcAuthenticationClient Function([Iterable<ClientInterceptor>? middlewares]) grpcAuthFactory;
 
   /// gRPC Users factory
   late final GrpcUsersClient Function([Iterable<ClientInterceptor>? middlewares]) grpcUsersFactory;
 
-  /// gRPC Authentication client
+  /// gRPC Authentication client. The container owns the concrete client so it can be disposed on
+  /// teardown (A6, via the `GrpcClient` base); consumers (repositories) receive the narrowed
+  /// `IAuthenticationApi` interface, so dependency inversion still holds at the boundary (A21).
   late final GrpcAuthenticationClient authClient;
 
-  /// gRPC Users client
+  /// gRPC Users client (owned concretely for disposal; consumers receive `IUsersApi`).
   late final GrpcUsersClient usersClient;
 
   /// Authentication handler
@@ -81,8 +84,11 @@ class Dependencies {
   /// Database
   late final Database database;
 
-  /// API Client
-  // late final ApiClient apiClient;
+  /// HTTP client for external / unauthenticated requests (e.g. S3 presigned uploads,
+  /// static manifests). Carries retry / timeout / Sentry / session-cancellation, but NOT
+  /// the auth or app-metadata middleware — those are first-party concerns and must not ride
+  /// along on third-party requests (a presigned URL is self-authenticated).
+  late final ApiClient externalHttpClient;
 
   /// Message controller
   late final AppMessageController messageController;

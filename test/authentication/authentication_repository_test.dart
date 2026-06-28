@@ -1,8 +1,10 @@
-import 'package:auth_app/_core/api/http/api_client.dart';
+import 'dart:async';
+
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/authentication/data/authentication_repository.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:core_model/core_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
@@ -56,6 +58,26 @@ class _FakeApi implements IAuthenticationApi {
   Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Holds `refreshTokens` open on [gate] so a test can interleave a logout with an in-flight refresh.
+class _GatedApi implements IAuthenticationApi {
+  _GatedApi(this.gate);
+  final Completer<void> gate;
+  int refreshCalls = 0;
+
+  @override
+  Future<AccessCredentials?> refreshTokens(String accessToken, RefreshToken refreshToken) async {
+    refreshCalls++;
+    await gate.future;
+    return _creds('B');
+  }
+
+  @override
+  Future<void> signOut(String token) async {}
+
+  @override
+  Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeSettings implements ISettingsRepository {
   _FakeSettings(this.stored);
   AccessCredentials? stored;
@@ -79,7 +101,7 @@ class _FakeSettings implements ISettingsRepository {
   Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-AuthenticationRepository _repo(_FakeApi api, _FakeSettings settings) =>
+AuthenticationRepository _repo(IAuthenticationApi api, _FakeSettings settings) =>
     AuthenticationRepository(api: api, authHandler: AuthenticationHandler(), settings: settings, metadata: _metadata);
 
 void main() {
@@ -189,6 +211,34 @@ void main() {
       final after = currentSession();
       expect(after.isCancelled, isFalse);
       expect(identical(before, after), isFalse);
+    });
+
+    test('logout during an in-flight refresh does not resurrect the session (A2 epoch guard)', () async {
+      final gate = Completer<void>();
+      final api = _GatedApi(gate);
+      final repo = _repo(api, _FakeSettings(_creds('A')));
+      addTearDown(repo.terminate);
+      await repo.restore();
+
+      final emitted = <AuthUser>[];
+      final sub = repo.userChanges.listen(emitted.add);
+
+      // 1) Start a reactive refresh; it parks inside the mutex awaiting the gated network call.
+      final refreshFuture = repo.refreshCredentials('A');
+      await Future<void>.delayed(Duration.zero);
+
+      // 2) User logs out while the refresh is in flight (bumps the session epoch synchronously).
+      final signOutFuture = repo.signOut();
+
+      // 3) Let the refresh resolve with rotated tokens — they must be discarded by the epoch guard.
+      gate.complete();
+      await refreshFuture;
+      await signOutFuture;
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(repo.user, isA<UnauthenticatedUser>(), reason: 'logout wins; rotated tokens must not revive the session');
+      expect(emitted.isNotEmpty && emitted.last is UnauthenticatedUser, isTrue);
     });
   });
 }

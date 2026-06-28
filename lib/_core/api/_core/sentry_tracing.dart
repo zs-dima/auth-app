@@ -4,14 +4,21 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// [headers] (HTTP headers or gRPC metadata) so the backend continues the same trace — giving
 /// end-to-end traces across the client and the backend microservices.
 ///
-/// Uses [Map.putIfAbsent] so an inbound trace header is never overridden. Appropriate here because
-/// these clients only call first-party services; if a third-party host were ever added, scope
-/// propagation via Sentry's `tracePropagationTargets` so `baggage` isn't leaked off-domain.
+/// Idempotent: an already-present trace header is never overridden. The "already present" check is
+/// case-insensitive (HTTP header names are case-insensitive), so a differently-cased inbound
+/// `Sentry-Trace`/`Baggage` is respected rather than duplicated. Sentry's header `.name`s are
+/// lowercase, as is gRPC metadata.
+///
+/// Call this only for first-party services. For third-party hosts (e.g. an S3 presigned upload)
+/// trace propagation must be skipped so `sentry-trace`/`baggage` aren't leaked off-domain — the
+/// HTTP `HttpSentryMiddleware` gates this via its `propagateTrace` flag (the external client sets it
+/// to `false`).
 void applyTraceHeaders(ISentrySpan span, Map<String, String> headers) {
+  final present = headers.keys.map((k) => k.toLowerCase()).toSet();
   final trace = span.toSentryTrace();
-  headers.putIfAbsent(trace.name, () => trace.value);
+  if (!present.contains(trace.name)) headers[trace.name] = trace.value;
   final baggage = span.toBaggageHeader();
-  if (baggage != null && baggage.value.isNotEmpty) {
-    headers.putIfAbsent(baggage.name, () => baggage.value);
+  if (baggage != null && baggage.value.isNotEmpty && !present.contains(baggage.name)) {
+    headers[baggage.name] = baggage.value;
   }
 }

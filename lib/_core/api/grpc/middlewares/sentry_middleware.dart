@@ -16,7 +16,7 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
   const GrpcSentryMiddleware();
 
   @override
-  ApiClientHandler call(ApiClientHandler invoker) => (path, metadata) async {
+  GrpcMiddlewareHandler call(GrpcMiddlewareHandler invoker) => (path, metadata) async {
     final startTimestamp = DateTime.now().toUtc();
     // Attach to the active transaction as a child span when one exists, otherwise start a new
     // root transaction — avoids orphaned/duplicate `grpc.client` spans (mirrors the HTTP middleware).
@@ -43,47 +43,48 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
 
     try {
       await invoker(path, tracedMetadata);
-      transaction.setData('grpc.response.status_code', 200);
+      transaction.setData('grpc.response.status_code', StatusCode.ok); // gRPC OK (0), not HTTP 200
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
     } on Object catch (e, s) {
-      await Sentry.captureException(
-        e,
-        stackTrace: s,
-        withScope: (scope) => scope.span = transaction,
-        hint: Hint.withMap({
-          // 'method': request.method,
-          // 'url': request.url,
-          'path': path,
-          // 'query': request.url.queryParameters,
-          'headers': redactSensitiveHeaders(metadata),
-        }),
-      );
+      // Cancellation is an expected event (session/screen closed), not a bug — don't spam Sentry
+      // issues with it; the span is still finished (with a `cancelled` status) and the error rethrown.
+      if (e is! GrpcError || e.code != StatusCode.cancelled) {
+        await Sentry.captureException(
+          e,
+          stackTrace: s,
+          withScope: (scope) => scope.span = transaction,
+          hint: Hint.withMap({
+            // 'method': request.method,
+            // 'url': request.url,
+            'path': path,
+            // 'query': request.url.queryParameters,
+            'headers': redactSensitiveHeaders(metadata),
+          }),
+        );
+      }
 
       if (!transaction.finished) {
-        transaction
-            .finish(
-              status: switch (e) {
-                GrpcError(:final code) when code == StatusCode.unavailable => const SpanStatus.unavailable(),
-                GrpcError(:final code) when code == StatusCode.unimplemented => const SpanStatus.unimplemented(),
-                GrpcError(:final code) when code == StatusCode.internal => const SpanStatus.internalError(),
-                GrpcError(:final code) when code == StatusCode.resourceExhausted =>
-                  const SpanStatus.resourceExhausted(),
-                GrpcError(:final code) when code == StatusCode.aborted => const SpanStatus.aborted(),
-                GrpcError(:final code) when code == StatusCode.notFound => const SpanStatus.notFound(),
-                GrpcError(:final code) when code == StatusCode.permissionDenied => const SpanStatus.permissionDenied(),
-                GrpcError(:final code) when code == StatusCode.unauthenticated => const SpanStatus.unauthenticated(),
-                GrpcError(:final code) when code == StatusCode.failedPrecondition =>
-                  const SpanStatus.failedPrecondition(),
-                GrpcError(:final code) when code == StatusCode.cancelled => const SpanStatus.cancelled(),
-                GrpcError(:final code) when code == StatusCode.deadlineExceeded => const SpanStatus.deadlineExceeded(),
-                GrpcError(:final code) when code == StatusCode.ok => const SpanStatus.ok(),
-                _ => const SpanStatus.unknownError(),
-              },
-              endTimestamp: DateTime.now().toUtc(),
-            )
-            .ignore();
+        transaction.finish(status: _spanStatusFor(e), endTimestamp: DateTime.now().toUtc()).ignore();
       }
       rethrow;
     }
+  };
+
+  /// Maps a thrown error to the Sentry [SpanStatus] used to finish the transaction. Mirrors the
+  /// HTTP `HttpSentryMiddleware._spanStatusFor` for cross-transport symmetry (A8-adjacent).
+  static SpanStatus _spanStatusFor(Object e) => switch (e) {
+    GrpcError(:final code) when code == StatusCode.unavailable => const .unavailable(),
+    GrpcError(:final code) when code == StatusCode.unimplemented => const .unimplemented(),
+    GrpcError(:final code) when code == StatusCode.internal => const .internalError(),
+    GrpcError(:final code) when code == StatusCode.resourceExhausted => const .resourceExhausted(),
+    GrpcError(:final code) when code == StatusCode.aborted => const .aborted(),
+    GrpcError(:final code) when code == StatusCode.notFound => const .notFound(),
+    GrpcError(:final code) when code == StatusCode.permissionDenied => const .permissionDenied(),
+    GrpcError(:final code) when code == StatusCode.unauthenticated => const .unauthenticated(),
+    GrpcError(:final code) when code == StatusCode.failedPrecondition => const .failedPrecondition(),
+    GrpcError(:final code) when code == StatusCode.cancelled => const .cancelled(),
+    GrpcError(:final code) when code == StatusCode.deadlineExceeded => const .deadlineExceeded(),
+    GrpcError(:final code) when code == StatusCode.ok => const .ok(),
+    _ => const .unknownError(),
   };
 }

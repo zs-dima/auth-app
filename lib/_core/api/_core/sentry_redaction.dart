@@ -24,15 +24,16 @@ const kRedactedQueryParams = <String>{
 };
 
 /// Returns a copy of [headers] (HTTP headers or gRPC metadata) with credential-bearing values
-/// (see [kRedactedHeaders]) replaced by `<redacted>`.
+/// (see [kRedactedHeaders]) replaced by `<redacted>`. Names are matched case-insensitively against
+/// the (lowercase) [kRedactedHeaders] set — an O(1) lookup.
 Map<String, String> redactSensitiveHeaders(Map<String, String> headers) => <String, String>{
   for (final MapEntry(:key, :value) in headers.entries)
-    key: kRedactedHeaders.any((h) => h.toLowerCase() == key.toLowerCase()) ? '<redacted>' : value,
+    key: kRedactedHeaders.contains(key.toLowerCase()) ? '<redacted>' : value,
 };
 
 /// Returns a copy of [query] (use `Uri.queryParametersAll` to preserve multi-value params) with
 /// values for sensitive-named keys (see [kRedactedQueryParams]) replaced by `['<redacted>']`.
 Map<String, List<String>> redactSensitiveQuery(Map<String, List<String>> query) => <String, List<String>>{
   for (final MapEntry(:key, :value) in query.entries)
-    key: kRedactedQueryParams.any((k) => k.toLowerCase() == key.toLowerCase()) ? const ['<redacted>'] : value,
+    key: kRedactedQueryParams.contains(key.toLowerCase()) ? const ['<redacted>'] : value,
 };

@@ -226,13 +226,11 @@ final class AuthenticationController extends StateController<AuthenticationState
       setProgressStarted();
       setState(AuthenticationState.processing(user: state.user, message: 'Sending verification...'));
 
-      final success = await _repository.requestVerification(type);
-      if (success) {
-        onSuccess?.call();
-        setState(AuthenticationState.idle(user: state.user, message: 'Verification email sent.'));
-      } else {
-        setState(AuthenticationState.idle(user: state.user, error: 'Failed to send verification email.'));
-      }
+      // The API throws a domain error on failure (A4); success always reaches here. Failures are
+      // surfaced by the `error:` handler below.
+      await _repository.requestVerification(type);
+      onSuccess?.call();
+      setState(AuthenticationState.idle(user: state.user, message: 'Verification email sent.'));
     },
     error: (error, _) async {
       setState(
@@ -272,13 +270,10 @@ final class AuthenticationController extends StateController<AuthenticationState
   void recoveryConfirm({required String token, required String newPassword, VoidCallback? onSuccess}) => handle(
     () async {
       setState(AuthenticationState.processing(user: state.user, message: 'Sending reset email...'));
-      final success = await _repository.recoveryConfirm(token: token, newPassword: newPassword);
-      if (success) {
-        onSuccess?.call();
-        setState(AuthenticationState.idle(user: state.user, message: 'Password reset email sent.'));
-      } else {
-        setState(AuthenticationState.idle(user: state.user, error: 'Failed to send reset email.'));
-      }
+      // The API throws a domain error on failure (A4); success always reaches here.
+      await _repository.recoveryConfirm(token: token, newPassword: newPassword);
+      onSuccess?.call();
+      setState(AuthenticationState.idle(user: state.user, message: 'Password reset email sent.'));
     },
     error: (error, _) async {
       setState(
