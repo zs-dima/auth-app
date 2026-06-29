@@ -4,12 +4,14 @@ abstract final class Headers {
   static const contentEncodingHeader = 'content-encoding';
   static const contentLengthHeader = 'content-length';
   static const contentTypeHeader = 'content-type';
+  static const retryAfterHeader = 'retry-after';
   static const wwwAuthenticateHeader = 'www-authenticate';
 
   /// Authorization schemes for the [authorizationHeader] value.
   static const bearerScheme = 'Bearer';
   static const basicScheme = 'Basic';
 
+  static const octetStreamContentType = 'application/octet-stream';
   static const jsonContentType = 'application/json';
   static const jsonUtf8ContentType = 'application/json; charset=utf-8';
   static const formUrlEncodedContentType = 'application/x-www-form-urlencoded';

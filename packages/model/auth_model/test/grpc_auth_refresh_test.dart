@@ -26,7 +26,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refresh: (used) async {
+        refreshCredentials: (used) async {
           refreshCalls++;
           return _creds('B');
         },
@@ -53,7 +53,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refresh: (used) async {
+        refreshCredentials: (used) async {
           refreshCalls++;
           return null; // refresh failed
         },
@@ -81,7 +81,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refresh: (used) async {
+        refreshCredentials: (used) async {
           refreshCalls++;
           return _creds('B');
         },
@@ -110,7 +110,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refresh: (used) async {
+        refreshCredentials: (used) async {
           refreshCalls++;
           return _creds('B');
         },
@@ -140,7 +140,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refresh: (used) async {
+        refreshCredentials: (used) async {
           refreshCalls++;
           return _creds('B'); // a refresh IS available, but streaming must not use it
         },
@@ -164,6 +164,7 @@ void main() {
 
       final mw = GrpcAuthenticationMiddleware(
         getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => _creds('B'), // required, but streaming never refreshes
         onAuthError: () => loggedOut = true,
       );
 

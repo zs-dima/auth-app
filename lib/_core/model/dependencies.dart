@@ -69,9 +69,6 @@ class Dependencies {
   /// Authentication repository
   late final IAuthenticationRepository authenticationRepository;
 
-  /// CredentialsManager
-  late final CredentialsCallbacks credentialsManager;
-
   /// Users repository
   late final IUsersRepository usersRepository;
 

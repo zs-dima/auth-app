@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
+import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
 import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/credentials/sign_in_data.dart';
@@ -43,8 +44,9 @@ abstract interface class IAuthenticationApi {
     required IDeviceInfo deviceInfo,
   });
 
-  /// Sign out and invalidate current session.
-  Future<void> signOut(String token);
+  /// Sign out and invalidate current session. Takes the [AccessToken] so the transport can attach it
+  /// for best-effort server-side revocation; an expired/invalid token must not block sign-out.
+  Future<void> signOut(AccessToken token);
 
   /// Refresh access token using refresh token.
   ///

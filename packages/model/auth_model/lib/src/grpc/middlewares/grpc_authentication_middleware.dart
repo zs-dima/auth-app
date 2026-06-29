@@ -3,16 +3,11 @@ import 'dart:async';
 // VoidCallback is the platform-neutral typedef from authentication_handler (NOT dart:ui), so this
 // package stays web-safe (A1).
 import 'package:auth_model/src/client/authentication_handler.dart' show VoidCallback;
+import 'package:auth_model/src/grpc/grpc_authorization.dart';
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
-
-/// gRPC metadata key carrying the bearer token. gRPC metadata keys are lowercase ASCII —
-/// kept as a plain constant so this platform-agnostic package never reaches for
-/// `dart:io`'s `HttpHeaders` (which breaks the web build — see A1).
-const _kAuthorizationKey = 'authorization';
-const _kBearerScheme = 'Bearer';
 
 /// Fully-qualified gRPC method paths of `auth.v2.AuthService` that are PUBLIC — no access token is
 /// attached and a `401` does not trigger refresh-retry. Single source of truth co-located with the
@@ -48,8 +43,8 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
   /// {@macro grpc_authentication_middleware}
   const GrpcAuthenticationMiddleware({
     required this.getToken,
-    this.refresh,
-    this.onAuthError,
+    required this.refreshCredentials,
+    required this.onAuthError,
     this.unauthenticatedPaths = const <String>{},
   });
 
@@ -60,14 +55,14 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
 
   /// Forces a single-flight token refresh for the access token that was just
   /// rejected with `UNAUTHENTICATED`, and returns the new credentials (or `null`
-  /// when the refresh failed). When provided, an `UNAUTHENTICATED` response is
-  /// recovered by refreshing once and retrying the call — instead of logging out
-  /// immediately. Mirrors the HTTP `AuthenticationMiddleware`.
-  final Future<AccessCredentials?> Function(String usedAccessToken)? refresh;
+  /// when the refresh failed). An `UNAUTHENTICATED` response is recovered by
+  /// refreshing once and retrying the call — instead of logging out immediately.
+  /// Mirrors the HTTP `RestAuthenticationMiddleware`.
+  final Future<AccessCredentials?> Function(String usedAccessToken) refreshCredentials;
 
   /// Callback when authentication fails (logout). Called when there is no token,
   /// on `PERMISSION_DENIED`, or on `UNAUTHENTICATED` that refresh could not recover.
-  final VoidCallback? onAuthError;
+  final VoidCallback onAuthError;
 
   final Set<String> unauthenticatedPaths;
 
@@ -81,28 +76,27 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     } on GrpcError catch (e) {
       // Auth-error policy on the (unary) data path (mirrors HTTP):
       // - UNAUTHENTICATED (401) → token invalid/expired: refresh once + retry once; log out only
-      //   if there's no refresh or it definitively fails (a 2nd 401 = broken session).
+      //   if the refresh definitively fails (a 2nd 401 = broken session).
       // - PERMISSION_DENIED (403) → authenticated but not allowed: do NOT refresh/retry/log out.
-      if (e.code == StatusCode.unauthenticated && refresh != null) {
-        final fresh = await refresh!(credentials.accessToken.token);
-        // [refresh] contract: rotated creds on success; `null` on a definitive rejection (repo
-        // already logged out); or it throws on a transient failure (session intact) — which
+      if (e.code == StatusCode.unauthenticated) {
+        final fresh = await refreshCredentials(credentials.accessToken.token);
+        // [refreshCredentials] contract: rotated creds on success; `null` on a definitive rejection
+        // (repo already logged out); or it throws on a transient failure (session intact) — which
         // propagates out of here WITHOUT calling [onAuthError], so a network blip never logs out.
         if (fresh != null && fresh.accessToken.token.isNotEmpty) {
           try {
             await invoker(path, _withToken(metadata, fresh)); // retry once with the rotated token
             return;
           } on GrpcError catch (err) {
-            if (err.code == StatusCode.unauthenticated) onAuthError?.call(); // fresh token still 401 → broken session
+            if (err.code == StatusCode.unauthenticated) onAuthError(); // fresh token still 401 → broken session
             rethrow;
           }
         }
         // Definitive rejection (repo already cleared creds + ended the session) — log out.
-        onAuthError?.call();
+        onAuthError();
         rethrow;
       }
-      // 401 with no refresh available → can't recover → log out. 403 / non-auth codes → surface as-is.
-      if (e.code == StatusCode.unauthenticated) onAuthError?.call();
+      // 403 / non-auth codes → surface as-is.
       rethrow;
     }
   };
@@ -119,7 +113,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     try {
       await invoker(path, _withToken(metadata, credentials));
     } on GrpcError catch (e) {
-      if (e.code == StatusCode.unauthenticated) onAuthError?.call();
+      if (e.code == StatusCode.unauthenticated) onAuthError();
       rethrow;
     }
   };
@@ -130,7 +124,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     try {
       await invoker(path, metadata);
     } on GrpcError catch (e) {
-      if (_isAuthError(e)) onAuthError?.call();
+      if (_isAuthError(e)) onAuthError();
       rethrow;
     }
   }
@@ -143,7 +137,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
   Future<AccessCredentials> _resolveCredentials() async {
     final c = await getToken();
     if (c == null || c.accessToken.token.isEmpty) {
-      onAuthError?.call();
+      onAuthError();
       throw const GrpcError.unauthenticated('Authentication token is null or empty');
     }
     return c;
@@ -151,8 +145,11 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
 
   /// Builds a fresh metadata copy (the original may be unmodifiable) carrying only the access
   /// token. The refresh token is sent solely to the RefreshTokens RPC, never on every request.
+  /// The scheme comes from the token itself ([AccessToken.type], usually `Bearer`) — the single
+  /// transport-neutral source of truth, mirroring the REST middleware. The key is the shared
+  /// [kGrpcAuthorizationKey]; the value is [AccessToken.authorizationHeaderValue] (also used by `signOut`).
   Map<String, String> _withToken(Map<String, String> metadata, AccessCredentials c) =>
-      Map<String, String>.of(metadata)..[_kAuthorizationKey] = '$_kBearerScheme ${c.accessToken.token}';
+      Map<String, String>.of(metadata)..[kGrpcAuthorizationKey] = c.accessToken.authorizationHeaderValue;
 
   /// Whether [e] is an auth-code error. Used only for the public (sign-in / RefreshTokens) path,
   /// where such an error means a rejected refresh token ⇒ log out. On the authenticated data path,

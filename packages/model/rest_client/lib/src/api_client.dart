@@ -7,6 +7,7 @@ import 'dart:convert' show Converter, JsonEncoder, JsonDecoder, Utf8Decoder, Utf
 import 'package:core_model/core_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http_package;
+import 'package:rest_client/src/headers.dart';
 import 'package:rest_client/src/platform/http_client_vm.dart'
     // ignore: uri_does_not_exist
     if (dart.library.js_interop) 'package:rest_client/src/platform/http_client_js.dart';
@@ -444,7 +445,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
         final mergedHeaders = {...?_headers, ...?headers};
         for (final MapEntry(:key, :value) in mergedHeaders.entries) {
           final lowerKey = key.toLowerCase();
-          if (lowerKey != 'content-type' && lowerKey != 'content-length') {
+          if (lowerKey != Headers.contentTypeHeader && lowerKey != Headers.contentLengthHeader) {
             multipartRequest.headers[key] = value;
           }
         }
@@ -534,7 +535,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
 
     final streamedRequest = http_package.AbortableStreamedRequest('POST', uri, abortTrigger: effectiveToken.whenCancel)
       ..contentLength = contentLength;
-    if (contentLength > 0) streamedRequest.headers['Content-Length'] = contentLength.toString();
+    if (contentLength > 0) streamedRequest.headers[Headers.contentLengthHeader] = contentLength.toString();
     if (_headers != null) streamedRequest.headers.addAll(_headers);
     if (headers != null) streamedRequest.headers.addAll(headers);
 
@@ -726,23 +727,23 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
       case final List<int> list:
         final bytes = list is Uint8List ? list : Uint8List.fromList(list);
         request.headers
-          ..putIfAbsent('Content-Type', () => 'application/octet-stream')
-          ..putIfAbsent('Content-Length', () => bytes.length.toString());
+          ..putIfAbsent(Headers.contentTypeHeader, () => Headers.octetStreamContentType)
+          ..putIfAbsent(Headers.contentLengthHeader, () => bytes.length.toString());
         request.bodyBytes = bytes;
 
       case final String str:
         final bytes = utf8Encoder.convert(str);
         request.headers
-          ..putIfAbsent('Content-Type', () => 'text/plain; charset=UTF-8')
-          ..putIfAbsent('Content-Length', () => bytes.length.toString());
+          ..putIfAbsent(Headers.contentTypeHeader, () => Headers.textPlainUtf8ContentType)
+          ..putIfAbsent(Headers.contentLengthHeader, () => bytes.length.toString());
         request.bodyBytes = bytes;
 
       case final Map<String, Object?> map:
         const jsonEncoder = kDebugMode ? JsonEncoder.withIndent('  ') : JsonEncoder();
         final bytes = jsonEncoder.fuse(utf8Encoder).convert(map);
         request.headers
-          ..putIfAbsent('Content-Type', () => 'application/json; charset=UTF-8')
-          ..putIfAbsent('Content-Length', () => bytes.length.toString());
+          ..putIfAbsent(Headers.contentTypeHeader, () => Headers.jsonUtf8ContentType)
+          ..putIfAbsent(Headers.contentLengthHeader, () => bytes.length.toString());
         request.bodyBytes = bytes;
 
       default:
@@ -899,7 +900,7 @@ ApiClientHandler _createHandler(
             return;
           }
 
-          byteStream = !streaming && contentLength <= 0 && streamedResponse.headers['content-type'] == null
+          byteStream = !streaming && contentLength <= 0 && streamedResponse.headers[Headers.contentTypeHeader] == null
               ? const http_package.ByteStream(Stream.empty())
               : streamedResponse.stream;
 
@@ -981,7 +982,7 @@ Future<Uint8List?> _readErrorBody(http_package.StreamedResponse response, int ca
 /// 429/503. Returns `null` for codes with no specific mapping — the caller then applies a
 /// generic client/server network error.
 ApiClientException? _statusToException(int statusCode, Map<String, String> headers, Uri url, Object? errorBody) {
-  final retryAfter = headers['retry-after'];
+  final retryAfter = headers[Headers.retryAfterHeader];
   Map<String, Object?> data({bool withRetryAfter = false}) => <String, Object?>{
     'url': url.toString(),
     'body': ?errorBody,

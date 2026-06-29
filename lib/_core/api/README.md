@@ -7,7 +7,11 @@ in `packages/model/*` is **deliberate**, not an unfinished migration:
   - `rest_client` → `AuthenticationBasicMiddleware`, `RetryMiddleware`, `TimeoutMiddleware`,
     `MetadataMiddleware` (takes a plain `Map<String, String>`).
   - `grpc_model` → `GrpcMetadataMiddleware`, `GrpcRetryMiddleware`, `GrpcCompressionMiddleware`.
-  - `auth_model` → `GrpcAuthenticationMiddleware` (token attach + single-flight refresh).
+  - `auth_model` → `GrpcAuthenticationMiddleware` and `RestAuthenticationMiddleware` (token attach +
+    single-flight refresh). The REST auth middleware is a tested mirror of the gRPC one but is **not
+    yet wired** into any client — today the only `ApiClient` is the external S3 client, which is
+    deliberately unauthenticated. It is kept ready for when a first-party authenticated REST
+    transport is added.
 
 - **Observability middleware lives here, in `lib`** — it depends on app-only concerns and would force
   the packages to take on those dependencies if moved:

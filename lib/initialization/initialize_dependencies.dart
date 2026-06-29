@@ -279,7 +279,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     final authenticationMiddleware = GrpcAuthenticationMiddleware(
       getToken: () async {
         try {
-          return await dependencies.credentialsManager.getAccessCredentials();
+          return await dependencies.authenticationRepository.getAccessCredentials();
         } on Object catch (e, st) {
           // Surface a transient credential-resolution failure (do NOT collapse to `null`, which the
           // middleware treats as "definitively no token" and would force a spurious logout — A3).
@@ -289,7 +289,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       },
       // Reactive single-flight refresh on UNAUTHENTICATED: refresh once and retry the
       // call with the rotated token; logout only happens if the refresh fails.
-      refresh: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
+      refreshCredentials: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
       // Route auth failures through the single auth-state bus (A26) instead of poking the controller
       // directly; the repository's handler subscription performs the actual sign-out.
       onAuthError: () {
@@ -316,14 +316,6 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Prepare authentication repository': (dependencies) {
     final settings = dependencies.settings;
     final authenticationHandler = dependencies.authenticationHandler;
-
-    dependencies.credentialsManager = CredentialsCallbacks(
-      getAccessCredentials: () => dependencies.authenticationRepository.getAccessCredentials(),
-      // Refresh is owned by the repository (AuthenticationRepository.refreshCredentials, wired into
-      // the auth middleware's `refresh` callback above), so this callback is intentionally a no-op.
-      getRefreshTokens: (_) async => null, // dependencies.authenticationRepository.refreshTokens(),
-      allowAnonymous: true,
-    );
 
     return dependencies.authenticationRepository = AuthenticationRepository(
       api: dependencies.authClient,

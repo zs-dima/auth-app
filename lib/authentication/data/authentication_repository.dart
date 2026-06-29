@@ -214,8 +214,8 @@ class AuthenticationRepository implements IAuthenticationRepository {
     return _refreshingMutex.synchronize(() async {
       try {
         if (_user case final AuthenticatedUser authenticatedUser) {
-          final token = authenticatedUser.credentials?.accessToken.token;
-          if (!token.isNullOrEmpty) _api.signOut(token!).ignore();
+          final accessToken = authenticatedUser.credentials?.accessToken;
+          if (accessToken != null && accessToken.token.isNotEmpty) _api.signOut(accessToken).ignore();
         }
       } finally {
         _userController.add(_user = const AuthUser.unauthenticated());

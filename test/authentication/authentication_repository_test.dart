@@ -52,7 +52,7 @@ class _FakeApi implements IAuthenticationApi {
   }
 
   @override
-  Future<void> signOut(String token) async {}
+  Future<void> signOut(AccessToken token) async {}
 
   @override
   Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -72,7 +72,7 @@ class _GatedApi implements IAuthenticationApi {
   }
 
   @override
-  Future<void> signOut(String token) async {}
+  Future<void> signOut(AccessToken token) async {}
 
   @override
   Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

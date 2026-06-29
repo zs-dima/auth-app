@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auth_model/src/api/auth_exceptions.dart';
 import 'package:auth_model/src/api/i_authentication_api.dart';
 import 'package:auth_model/src/grpc/grpc_authentication_converter.dart';
+import 'package:auth_model/src/grpc/grpc_authorization.dart';
 import 'package:auth_model/src/grpc/grpc_call_guard.dart';
 import 'package:auth_model/src/grpc/grpc_exceptions.dart';
 import 'package:auth_model/src/grpc/proto/auth/v2/auth.pbgrpc.dart' as rpc;
@@ -71,14 +72,16 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   }
 
   @override
-  Future<void> signOut(String token) async {
+  Future<void> signOut(AccessToken token) async {
     try {
       await client.signOut(
         rpc.SignOutRequest(),
-        options: CallOptions(metadata: {'authorization': 'Bearer $token'}),
+        options: CallOptions(metadata: {kGrpcAuthorizationKey: token.authorizationHeaderValue}),
       );
     } on Exception {
-      // Ignore - logout always succeeds on the client side (best-effort server revocation).
+      // Ignore - logout always succeeds on the client side (best-effort server revocation). An
+      // expired/invalid token here is irrelevant: the server rejects, we swallow it, the user still
+      // signs out (the repository ends the session regardless — see AuthenticationRepository.signOut).
     }
   }
 
