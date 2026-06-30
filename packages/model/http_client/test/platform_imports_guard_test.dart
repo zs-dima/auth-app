@@ -1,4 +1,4 @@
-// Architecture guard: rest_client is a *portable* HTTP client and web is a shipping target, so its
+// Architecture guard: http_client is a *portable* HTTP client and web is a shipping target, so its
 // `lib/` must never import `dart:ui` (couples to the Flutter engine) or `dart:html`. `dart:io` is
 // permitted ONLY in the conditionally-imported VM platform file (`src/platform/http_client_vm.dart`);
 // the web build selects `http_client_js.dart` (dart:js_interop) instead — see the conditional import
@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('rest_client lib stays portable (dart:io only in the platform layer; never dart:ui/dart:html)', () {
+  test('http_client lib stays portable (dart:io only in the platform layer; never dart:ui/dart:html)', () {
     // dart:ui / dart:html: never allowed anywhere in lib.
     final bannedEverywhere = RegExp(r'''import\s+['"]dart:(ui|html)['"]''');
     // dart:io: allowed ONLY in the conditionally-imported VM platform file, never in shared code.
@@ -32,7 +32,7 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'rest_client must stay portable (web target; Flutter-engine-free core). '
+      reason: 'http_client must stay portable (web target; Flutter-engine-free core). '
           'Offending imports:\n${offenders.join('\n')}',
     );
   });

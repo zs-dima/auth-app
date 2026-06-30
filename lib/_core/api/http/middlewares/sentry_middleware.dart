@@ -1,7 +1,7 @@
 import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
 import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
+import 'package:http_client/http_client.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/rest_client.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// {@template sentry_middleware}

@@ -57,7 +57,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
   /// rejected with `UNAUTHENTICATED`, and returns the new credentials (or `null`
   /// when the refresh failed). An `UNAUTHENTICATED` response is recovered by
   /// refreshing once and retrying the call — instead of logging out immediately.
-  /// Mirrors the HTTP `RestAuthenticationMiddleware`.
+  /// Mirrors the HTTP `HttpAuthenticationMiddleware`.
   final Future<AccessCredentials?> Function(String usedAccessToken) refreshCredentials;
 
   /// Callback when authentication fails (logout). Called when there is no token,
@@ -146,7 +146,7 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
   /// Builds a fresh metadata copy (the original may be unmodifiable) carrying only the access
   /// token. The refresh token is sent solely to the RefreshTokens RPC, never on every request.
   /// The scheme comes from the token itself ([AccessToken.type], usually `Bearer`) — the single
-  /// transport-neutral source of truth, mirroring the REST middleware. The key is the shared
+  /// transport-neutral source of truth, mirroring the HTTP middleware. The key is the shared
   /// [kGrpcAuthorizationKey]; the value is [AccessToken.authorizationHeaderValue] (also used by `signOut`).
   Map<String, String> _withToken(Map<String, String> metadata, AccessCredentials c) =>
       Map<String, String>.of(metadata)..[kGrpcAuthorizationKey] = c.accessToken.authorizationHeaderValue;

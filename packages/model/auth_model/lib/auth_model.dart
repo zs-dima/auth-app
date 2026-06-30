@@ -11,6 +11,8 @@ export 'src/grpc/grpc_authentication_client.dart';
 export 'src/grpc/grpc_exceptions.dart';
 export 'src/grpc/grpc_users_client.dart';
 export 'src/grpc/middlewares/grpc_authentication_middleware.dart';
+// ── HTTP transport (auth middleware; clients live in the consuming app) ──
+export 'src/http/middlewares/http_authentication_middleware.dart';
 // ── Domain models (transport-free) ───────────────────────────────────────────
 export 'src/model/credentials/access_credentials.dart';
 export 'src/model/credentials/access_token.dart';
@@ -24,5 +26,3 @@ export 'src/model/user/i_user_info.dart';
 export 'src/model/user/user.dart';
 export 'src/model/user/user_id.dart';
 export 'src/model/user/user_info.dart';
-// ── REST/HTTP transport (auth middleware; clients live in the consuming app) ──
-export 'src/rest/middlewares/rest_authentication_middleware.dart';

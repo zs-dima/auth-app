@@ -1,4 +1,4 @@
-library rest_client;
+library http_client;
 
 // CancelToken and VoidCallback are generic primitives in core_model; re-exported so the HTTP client
 // API stays self-contained (and VoidCallback stays the single platform-neutral typedef — A1).

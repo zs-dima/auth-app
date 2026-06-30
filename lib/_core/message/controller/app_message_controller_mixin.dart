@@ -8,7 +8,7 @@ import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_model/auth_model.dart' show GrpcException;
 import 'package:grpc/grpc.dart';
 import 'package:grpc/protos.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 typedef AppMessageBlocErrorCallback = void Function(String message);
 typedef AppMessageBlocLocalizeErrorCallback = String Function(Localization l);

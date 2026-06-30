@@ -2,8 +2,8 @@ import 'dart:developer' as developer;
 
 import 'package:auth_app/_core/api/_core/transport_log.dart';
 import 'package:auth_app/_core/log/logger.dart';
+import 'package:http_client/http_client.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/rest_client.dart';
 
 /// {@template logger_middleware}
 /// Logs each request's method, path, outcome and duration. Place it early in the pipeline

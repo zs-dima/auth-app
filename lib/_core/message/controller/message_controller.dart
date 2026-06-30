@@ -5,7 +5,7 @@ import 'package:control/control.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 part 'message_controller.freezed.dart';
 

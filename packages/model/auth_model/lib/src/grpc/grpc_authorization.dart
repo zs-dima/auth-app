@@ -4,5 +4,5 @@
 /// shared by the authentication middleware and the manual attach in `signOut`.
 ///
 /// The metadata *value* is built from the token via `AccessToken.authorizationHeaderValue` — the
-/// single transport-neutral source of truth, shared with the REST middleware.
+/// single transport-neutral source of truth, shared with the HTTP middleware.
 const kGrpcAuthorizationKey = 'authorization';

@@ -18,7 +18,7 @@ import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:flutter/widgets.dart';
 import 'package:grpc/grpc.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 extension DependenciesX on BuildContext {
   // Dependencies get dependencies => DependenciesScope.of(this);

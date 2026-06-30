@@ -1,5 +1,5 @@
+import 'package:http_client/src/api_client.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/src/api_client.dart';
 
 /// {@template metadata_middleware}
 /// Middleware for adding a fixed set of metadata headers to every API request.

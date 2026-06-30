@@ -2,21 +2,21 @@ import 'package:auth_model/auth_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
   refreshToken: RefreshToken('r-$token'),
 );
 
-ApiClient _client(MockClient mock, RestAuthenticationMiddleware mw) => ApiClient(
+ApiClient _client(MockClient mock, HttpAuthenticationMiddleware mw) => ApiClient(
   baseUrl: () => Uri.parse('https://api.test'),
   client: mock,
   middlewares: <ApiClientMiddleware>[mw.call],
 );
 
 void main() {
-  group('RestAuthenticationMiddleware reactive refresh', () {
+  group('HttpAuthenticationMiddleware reactive refresh', () {
     test('401 → single refresh → retry once with the rotated token', () async {
       var refreshCalls = 0;
       var loggedOut = false;
@@ -30,7 +30,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -58,7 +58,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -85,7 +85,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -113,7 +113,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -139,7 +139,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => null,
           refreshCredentials: (used) async => _creds('B'),
           onAuthError: () => loggedOut = true,
@@ -161,7 +161,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => throw const FormatException('secure-storage hiccup'),
           refreshCredentials: (used) async => _creds('B'),
           onAuthError: () => loggedOut = true,
@@ -185,7 +185,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -211,7 +211,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async => _creds('B'),
           onAuthError: () => loggedOut = true,
@@ -236,7 +236,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;
@@ -269,7 +269,7 @@ void main() {
       });
       final api = _client(
         mock,
-        RestAuthenticationMiddleware(
+        HttpAuthenticationMiddleware(
           getToken: () async => _creds('A'),
           refreshCredentials: (used) async {
             refreshCalls++;

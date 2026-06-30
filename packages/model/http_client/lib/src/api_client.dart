@@ -7,10 +7,10 @@ import 'dart:convert' show Converter, JsonEncoder, JsonDecoder, Utf8Decoder, Utf
 import 'package:core_model/core_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http_package;
-import 'package:rest_client/src/headers.dart';
-import 'package:rest_client/src/platform/http_client_vm.dart'
+import 'package:http_client/src/headers.dart';
+import 'package:http_client/src/platform/http_client_vm.dart'
     // ignore: uri_does_not_exist
-    if (dart.library.js_interop) 'package:rest_client/src/platform/http_client_js.dart';
+    if (dart.library.js_interop) 'package:http_client/src/platform/http_client_js.dart';
 
 /// Maximum allowed response size (15 MB by default)
 const int _kMaxResponseSize = 15 * 1024 * 1024;
@@ -247,7 +247,7 @@ final class ApiClientResponse {
 }
 
 /// {@template api_client}
-/// An HTTP client that sends requests to a REST API.
+/// An HTTP client that sends requests to a JSON/HTTP API.
 /// {@endtemplate}
 class ApiClient /* with http_package.BaseClient implements http_package.Client */ {
   /// Returns the current window origin for the HTTP client.

@@ -5,7 +5,7 @@ import 'package:core_model/core_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 /// Mirrors the behavioural middleware of `Dependencies.externalHttpClient` (see
 /// `initialize_dependencies.dart`): Retry + Timeout, and deliberately NO auth / app-metadata.

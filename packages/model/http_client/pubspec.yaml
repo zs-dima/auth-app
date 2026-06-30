@@ -1,4 +1,4 @@
-name: rest_client
+name: http_client
 resolution: workspace
 
 description: Portable HTTP client (ApiClient) with an onion middleware pipeline.

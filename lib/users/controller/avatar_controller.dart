@@ -7,7 +7,7 @@ import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:rest_client/rest_client.dart';
+import 'package:http_client/http_client.dart';
 
 part 'avatar_controller.freezed.dart';
 
@@ -37,7 +37,7 @@ final class AvatarController extends StateController<AvatarState>
   final String _s3Url;
 
   /// Per-upload cancellation token. Lets the user abort an in-flight avatar upload via [cancelUpload]
-  /// without ending the whole session (A25); the rest_client pipeline aborts the socket on cancel.
+  /// without ending the whole session (A25); the http_client pipeline aborts the socket on cancel.
   CancelToken? _uploadCancelToken;
 
   /// Aborts the in-flight avatar upload, if any.

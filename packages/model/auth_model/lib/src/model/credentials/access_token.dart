@@ -57,7 +57,7 @@ class AccessToken {
 
   /// `'<scheme> <token>'` — the single transport-neutral Authorization value, used both as the gRPC
   /// `authorization` metadata value and the HTTP `Authorization` header value. The scheme is [type]
-  /// (usually `Bearer`); the gRPC and REST auth middlewares both build their header from this getter.
+  /// (usually `Bearer`); the gRPC and HTTP auth middlewares both build their header from this getter.
   String get authorizationHeaderValue => '$type $token';
 
   @override

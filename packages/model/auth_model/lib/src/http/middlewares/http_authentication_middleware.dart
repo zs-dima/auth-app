@@ -1,10 +1,10 @@
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
-import 'package:meta/meta.dart';
 // VoidCallback here is the single platform-neutral typedef from core_model (NOT dart:ui),
-// re-exported by rest_client — so this middleware stays usable off the Flutter UI isolate.
-import 'package:rest_client/rest_client.dart';
+// re-exported by http_client — so this middleware stays usable off the Flutter UI isolate.
+import 'package:http_client/http_client.dart';
+import 'package:meta/meta.dart';
 
-/// {@template rest_authentication_middleware}
+/// {@template http_authentication_middleware}
 /// Attaches the access token to each request and transparently recovers from a `401` by
 /// refreshing once and retrying — both concerns in one middleware (mirroring the gRPC
 /// [GrpcAuthenticationMiddleware]), so there is no cross-middleware context or ordering coupling.
@@ -20,9 +20,9 @@ import 'package:rest_client/rest_client.dart';
 ///   refresh-retry, but still log out on a `401`/`403` auth-code error.
 /// {@endtemplate}
 @immutable
-class RestAuthenticationMiddleware {
-  /// {@macro rest_authentication_middleware}
-  const RestAuthenticationMiddleware({
+class HttpAuthenticationMiddleware {
+  /// {@macro http_authentication_middleware}
+  const HttpAuthenticationMiddleware({
     required this.getToken,
     required this.refreshCredentials,
     required this.onAuthError,

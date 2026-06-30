@@ -5,7 +5,7 @@ import 'package:meta/meta.dart';
 ///
 /// Wraps `package:grpc`'s [GrpcError]/[StatusCode] so callers of `IAuthenticationApi` /
 /// `IUsersApi` can classify failures (network vs auth vs server vs bad-request vs cancelled)
-/// WITHOUT importing `package:grpc`. Parallel to — but NOT interchangeable with — `rest_client`'s
+/// WITHOUT importing `package:grpc`. Parallel to — but NOT interchangeable with — `http_client`'s
 /// `ApiClientException`: both share the `Cancelled`/`Network`/`Authentication` backbone, but this
 /// family adds `Request`/`Server` while HTTP adds `Client`/`Timeout`, and [code] here is the raw
 /// gRPC status as an `int` whereas HTTP's is a semantic `String`. The shared idea is

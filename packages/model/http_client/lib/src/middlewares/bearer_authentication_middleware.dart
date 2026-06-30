@@ -1,15 +1,15 @@
 // VoidCallback is the single platform-neutral typedef from core_model (NOT dart:ui), so this
 // "portable" package stays web/server-safe (A1) — mirrors auth_model's auth middlewares.
 import 'package:core_model/core_model.dart' show VoidCallback;
+import 'package:http_client/src/api_client.dart';
+import 'package:http_client/src/headers.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/src/api_client.dart';
-import 'package:rest_client/src/headers.dart';
 
 /// {@template bearer_authentication_middleware}
 /// Minimal Bearer-token auth middleware: attaches `Authorization: Bearer <token>` to every request
 /// and logs out when the token is missing or the server replies `401`/`403`. It performs **no**
 /// token refresh and has **no** public-path exemptions — for the full refresh / retry-once /
-/// single-flight flow use `auth_model`'s `RestAuthenticationMiddleware`.
+/// single-flight flow use `auth_model`'s `HttpAuthenticationMiddleware`.
 ///
 /// Named after the **Bearer** scheme it implements (RFC 6750) — NOT HTTP Basic auth. See the
 /// deprecated `AuthenticationBasicMiddleware` alias kept for backward compatibility.
@@ -37,7 +37,7 @@ class BearerAuthenticationMiddleware {
         );
       }
       // Header key + scheme come from the shared [Headers] constants (single source of truth),
-      // mirroring auth_model's RestAuthenticationMiddleware.
+      // mirroring auth_model's HttpAuthenticationMiddleware.
       request.headers[Headers.authorizationHeader] = '${Headers.bearerScheme} $token';
     } on Object {
       // Missing token or a token-resolution failure → log out and surface the error.

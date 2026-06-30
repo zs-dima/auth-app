@@ -36,8 +36,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
+import 'package:http_client/http_client.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:rest_client/rest_client.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

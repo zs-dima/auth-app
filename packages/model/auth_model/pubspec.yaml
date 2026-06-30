@@ -15,8 +15,8 @@ dependencies:
     path: ../../model/core_model
   grpc_model:
     path: ../../model/grpc_model
-  rest_client:
-    path: ../../model/rest_client
+  http_client:
+    path: ../../model/http_client
 
   # SDK extensions
   meta: any

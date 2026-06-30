@@ -43,4 +43,30 @@ void main() {
     );
     expect(AccessToken(token: 'x', expiry: expiry), isNot(equals(AccessToken(token: 'y', expiry: expiry))));
   });
+
+  group('AccessToken.expiresSoon / hasExpired (30s proactive-refresh window)', () {
+    AccessToken expiringIn(Duration d) => .new(token: 'x', expiry: DateTime.now().toUtc().add(d));
+
+    test('not soon when expiry is comfortably beyond the 30s window', () {
+      expect(expiringIn(const Duration(seconds: 35)).expiresSoon, isFalse);
+      expect(expiringIn(const Duration(minutes: 2)).expiresSoon, isFalse);
+    });
+
+    test('soon when expiry falls inside the 30s window', () {
+      expect(expiringIn(const Duration(seconds: 29)).expiresSoon, isTrue);
+      expect(expiringIn(const Duration(seconds: 5)).expiresSoon, isTrue);
+    });
+
+    test('an already-expired token is both expired and soon', () {
+      final token = expiringIn(const Duration(seconds: -5));
+      expect(token.hasExpired, isTrue);
+      expect(token.expiresSoon, isTrue);
+    });
+
+    test('a far-future token is neither expired nor soon', () {
+      final token = expiringIn(const Duration(minutes: 10));
+      expect(token.hasExpired, isFalse);
+      expect(token.expiresSoon, isFalse);
+    });
+  });
 }

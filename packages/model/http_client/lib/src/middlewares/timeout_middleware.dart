@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:core_model/core_model.dart';
 import 'package:http/http.dart' as http_package;
+import 'package:http_client/src/api_client.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/src/api_client.dart';
 
 /// Per-request override for the connect timeout (request → response headers).
 /// Accepts a [Duration], an `int` of milliseconds, or an absolute [DateTime] deadline;

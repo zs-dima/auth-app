@@ -2,9 +2,9 @@
 import 'dart:math' as math;
 
 import 'package:core_model/core_model.dart';
+import 'package:http_client/src/api_client.dart';
+import 'package:http_client/src/middlewares/timeout_middleware.dart';
 import 'package:meta/meta.dart';
-import 'package:rest_client/src/api_client.dart';
-import 'package:rest_client/src/middlewares/timeout_middleware.dart';
 
 /// HTTP methods that are safe to retry automatically (RFC 9110 §9.2.2).
 const _kIdempotentMethods = <String>{'GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'};
