@@ -55,7 +55,7 @@ void main() {
       });
       final api = buildClient(client: mock);
 
-      await expectLater(api.post('/data', body: {'x': 1}), throwsA(isA<ApiClientException$Network>()));
+      await expectLater(api.post('/data', body: {'x': 1}), throwsA(isA<ApiClientException$Server>()));
       expect(attempts, 1, reason: 'POST is not idempotent — not auto-retried');
     });
 
@@ -80,7 +80,7 @@ void main() {
       });
       final api = buildClient(client: mock);
 
-      await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Network>()));
+      await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Request>()));
       expect(attempts, 1, reason: '4xx client errors are not transient');
     });
 
@@ -101,13 +101,19 @@ void main() {
 
   group('RetryMiddleware.defaultRetryEvaluator', () {
     test('retries only transient network/5xx/429 errors', () {
-      ApiClientException$Network net(int code) =>
-          ApiClientException$Network(code: 'x', message: 'x', statusCode: code);
+      // Build the realistic subtype per status (mirrors _statusToException); the evaluator keys off
+      // the base ApiClientException's statusCode regardless of subtype.
+      ApiClientException ex(int code) => switch (code) {
+        0 => ApiClientException$Network(code: 'x', message: 'x', statusCode: code),
+        401 || 403 => ApiClientException$Authentication(code: 'x', message: 'x', statusCode: code),
+        >= 500 => ApiClientException$Server(code: 'x', message: 'x', statusCode: code),
+        _ => ApiClientException$Request(code: 'x', message: 'x', statusCode: code),
+      };
       for (final code in [0, 408, 425, 429, 500, 502, 503, 504, 509]) {
-        expect(RetryMiddleware.defaultRetryEvaluator(net(code), 0), isTrue, reason: 'transient $code');
+        expect(RetryMiddleware.defaultRetryEvaluator(ex(code), 0), isTrue, reason: 'transient $code');
       }
       for (final code in [400, 401, 403, 404, 409, 422, 501]) {
-        expect(RetryMiddleware.defaultRetryEvaluator(net(code), 0), isFalse, reason: 'non-transient $code');
+        expect(RetryMiddleware.defaultRetryEvaluator(ex(code), 0), isFalse, reason: 'non-transient $code');
       }
     });
 
@@ -216,7 +222,7 @@ void main() {
       // A non-JSON-encodable field fails encoding before the session is linked.
       await expectLater(
         api.postMultipart('/x', body: <String, Object?>{'f': <Object?>[DateTime.now()]}),
-        throwsA(isA<ApiClientException$Client>()),
+        throwsA(isA<ApiClientException$Internal>()),
       );
       expect(session.debugLinkedCount, 0, reason: 'no link retained when multipart construction fails');
     });
@@ -302,7 +308,7 @@ void main() {
       final mock = MockClient((_) async => http.Response('x' * 100, 200));
       await expectLater(
         bareClient(mock, maxResponseSize: 10).get('/x'),
-        throwsA(isA<ApiClientException$Client>().having((e) => e.code, 'code', 'response_too_large')),
+        throwsA(isA<ApiClientException$Internal>().having((e) => e.code, 'code', 'response_too_large')),
       );
     });
 
@@ -462,7 +468,7 @@ void main() {
         ],
       );
 
-      await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Network>()));
+      await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Server>()));
       expect(attempts, 1, reason: 'budget exhausted after the first attempt — no retry');
     });
   });
@@ -510,7 +516,7 @@ void main() {
     test('an oversized error body is skipped (no body key), still typed', () async {
       final mock = MockClient((_) async => http.Response('x' * 100, 500));
       final e = await failOf(() => bareClient(mock, maxResponseSize: 10).get('/x'));
-      expect(e, isA<ApiClientException$Network>());
+      expect(e, isA<ApiClientException$Server>());
       expect((e.data! as Map).containsKey('body'), isFalse);
     });
   });

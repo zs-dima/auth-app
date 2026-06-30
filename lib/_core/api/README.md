@@ -4,7 +4,7 @@ This folder holds the **app-layer** API middleware. The split between what lives
 in `packages/model/*` is **deliberate**, not an unfinished migration:
 
 - **Transport-generic middleware lives in packages** — it has no app dependencies and is reusable:
-  - `rest_client` → `AuthenticationBasicMiddleware`, `RetryMiddleware`, `TimeoutMiddleware`,
+  - `rest_client` → `BearerAuthenticationMiddleware`, `RetryMiddleware`, `TimeoutMiddleware`,
     `MetadataMiddleware` (takes a plain `Map<String, String>`).
   - `grpc_model` → `GrpcMetadataMiddleware`, `GrpcRetryMiddleware`, `GrpcCompressionMiddleware`.
   - `auth_model` → `GrpcAuthenticationMiddleware` and `RestAuthenticationMiddleware` (token attach +

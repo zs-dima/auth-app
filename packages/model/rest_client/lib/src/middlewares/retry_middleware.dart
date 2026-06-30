@@ -13,14 +13,14 @@ const _kIdempotentMethods = <String>{'GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 
 /// the total [RetryBackoff.maxElapsed] budget is the real ceiling).
 const _kMaxRetryAfter = Duration(seconds: 60);
 
-/// Parses a delta-seconds `Retry-After` from a 429/503 [ApiClientException$Network]
-/// (capped at [_kMaxRetryAfter]). Returns `null` when absent or not delta-seconds.
+/// Parses a delta-seconds `Retry-After` from a 429/503 [ApiClientException] (429 → `$Request`,
+/// 503 → `$Server`) (capped at [_kMaxRetryAfter]). Returns `null` when absent or not delta-seconds.
 ///
 /// The HTTP-date form (RFC 9110 §10.2.3) is intentionally NOT parsed: it is rare in practice, and
 /// when present the caller falls back to bounded full-jitter backoff — safe, just not honoring the
 /// exact date. This avoids a date-parsing dependency for a near-unused path.
 Duration? _retryAfter(Object error) {
-  if (error is! ApiClientException$Network) return null;
+  if (error is! ApiClientException) return null;
   if (error.data case <String, Object?>{'retry-after': final String ra}) {
     final seconds = int.tryParse(ra.trim());
     if (seconds != null && seconds >= 0) {
@@ -67,8 +67,12 @@ class RetryMiddleware {
   /// already completed, so a retry would abort instantly) and are intentionally absent here.
   static bool defaultRetryEvaluator(Object error, int attempt) => switch (error) {
     ApiClientException$Authentication() => false, // owned by AuthenticationMiddleware (401 refresh)
-    // Transient/network failures only — never non-transient 4xx (400/404/409/422/…).
-    ApiClientException$Network(:final statusCode) => const <int>{
+    // $Cancelled/$Timeout: their abort token is already completed, so a retry would abort instantly.
+    // Also enforced as a mechanic in [call]; matched here too so the evaluator is correct in isolation.
+    ApiClientException$Cancelled() || ApiClientException$Timeout() => false,
+    // Transient failures only, keyed on the status code across every subtype ($Network=0, $Server
+    // 5xx, $Request 408/425/429) — never a non-transient 4xx (400/404/409/422/…).
+    ApiClientException(:final statusCode) => const <int>{
       0,
       408,
       425,

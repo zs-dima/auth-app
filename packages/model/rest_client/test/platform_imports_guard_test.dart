@@ -3,7 +3,7 @@
 // permitted ONLY in the conditionally-imported VM platform file (`src/platform/http_client_vm.dart`);
 // the web build selects `http_client_js.dart` (dart:js_interop) instead — see the conditional import
 // in `api_client.dart`. This fails fast if a platform import sneaks into the shared code — the exact
-// regression that let `dart:ui` slip into AuthenticationBasicMiddleware (A1).
+// regression that let `dart:ui` slip into BearerAuthenticationMiddleware (A1).
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

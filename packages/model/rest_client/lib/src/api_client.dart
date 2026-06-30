@@ -483,7 +483,7 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     } on Object catch (e) {
       return FutureApiClientResponse(
         Future<ApiClientResponse>.error(
-          ApiClientException$Client(
+          ApiClientException$Internal(
             code: 'invalid_request',
             message: 'Failed to create multipart request: $e',
             statusCode: 0,
@@ -780,7 +780,7 @@ ApiClientHandler _createHandler(
       completer.completeError(error, stackTrace);
     else
       completer.completeError(
-        ApiClientException$Client(
+        ApiClientException$Internal(
           code: 'unknown_error',
           message: 'Unknown error.',
           statusCode: 0,
@@ -856,16 +856,7 @@ ApiClientHandler _createHandler(
           }
           throwError(
             completer,
-            // Known codes get a precise typed error; anything else falls back to a generic
-            // client/server network error so a custom predicate can reject any code.
-            _statusToException(statusCode, streamedResponse.headers, request.url, errorBody) ??
-                ApiClientException$Network(
-                  code: statusCode < 500 ? 'client_error' : 'server_error',
-                  message: '${statusCode < 500 ? 'Client' : 'Server'} error (HTTP $statusCode).',
-                  statusCode: statusCode,
-                  error: null,
-                  data: <String, Object?>{'url': request.url.toString(), 'body': ?errorBody},
-                ),
+            _statusToException(statusCode, streamedResponse.headers, request.url, errorBody),
             .current,
           );
           return;
@@ -888,7 +879,7 @@ ApiClientHandler _createHandler(
           if (!streaming && maxSize > 0 && contentLength > maxSize) {
             throwError(
               completer,
-              ApiClientException$Client(
+              ApiClientException$Internal(
                 code: 'response_too_large',
                 message: 'Response size ($contentLength bytes) exceeds maximum allowed size ($maxSize bytes).',
                 statusCode: statusCode,
@@ -921,7 +912,7 @@ ApiClientHandler _createHandler(
         } on Object catch (error, stackTrace) {
           throwError(
             completer,
-            ApiClientException$Client(
+            ApiClientException$Internal(
               code: 'body_stream_error',
               message: 'Failed to read response stream.',
               statusCode: statusCode,
@@ -977,112 +968,52 @@ Future<Uint8List?> _readErrorBody(http_package.StreamedResponse response, int ca
   }
 }
 
-/// Maps a non-success [statusCode] to its typed [ApiClientException], preserving the
-/// original codes/messages, the captured [errorBody] (when present), and `Retry-After` for
-/// 429/503. Returns `null` for codes with no specific mapping — the caller then applies a
-/// generic client/server network error.
-ApiClientException? _statusToException(int statusCode, Map<String, String> headers, Uri url, Object? errorBody) {
-  final retryAfter = headers[Headers.retryAfterHeader];
-  Map<String, Object?> data({bool withRetryAfter = false}) => <String, Object?>{
+/// Maps a non-success [statusCode] to its typed [ApiClientException], preserving the per-code
+/// `code`/`message`, the captured [errorBody] (when present), and `Retry-After` (429/503).
+///
+/// Total over every non-success code (so the caller needs no fallback): 401/403 →
+/// [ApiClientException$Authentication]; 5xx → [ApiClientException$Server]; everything else (4xx and
+/// any other non-2xx) → [ApiClientException$Request]. A transport failure with no HTTP response is
+/// NOT handled here — it surfaces as [ApiClientException$Network] from the `send` catch.
+ApiClientException _statusToException(int statusCode, Map<String, String> headers, Uri url, Object? errorBody) {
+  final (code, message) = _codeAndMessageFor(statusCode);
+  final data = <String, Object?>{
     'url': url.toString(),
     'body': ?errorBody,
-    if (withRetryAfter) 'retry-after': ?retryAfter,
+    if (statusCode == 429 || statusCode == 503) 'retry-after': ?headers[Headers.retryAfterHeader],
   };
   return switch (statusCode) {
-    509 => ApiClientException$Network(
-      code: 'bandwidth_limit_exceeded',
-      message: 'Bandwidth limit exceeded (HTTP 509).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    503 => ApiClientException$Network(
-      code: 'service_unavailable',
-      message: 'Service unavailable (HTTP 503). The server is currently unable to handle the request.',
-      statusCode: statusCode,
-      data: data(withRetryAfter: true),
-    ),
-    501 => ApiClientException$Network(
-      code: 'not_implemented',
-      message: 'Not implemented (HTTP 501).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    500 => ApiClientException$Network(
-      code: 'internal_server_error',
-      message: 'Internal server error (HTTP 500).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    > 499 => ApiClientException$Network(
-      code: 'server_error',
-      message: 'Internal server error (HTTP $statusCode).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    429 => ApiClientException$Network(
-      code: 'rate_limit',
-      message: 'Rate limit exceeded (HTTP 429). Too many requests.',
-      statusCode: statusCode,
-      data: data(withRetryAfter: true),
-    ),
-    422 => ApiClientException$Network(
-      code: 'validation_error',
-      message: 'Validation error (HTTP 422). Request data is invalid.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    413 => ApiClientException$Network(
-      code: 'payload_too_large',
-      message: 'Payload too large (HTTP 413). The request payload is too large.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    412 => ApiClientException$Network(
-      code: 'precondition_failed',
-      message: 'Precondition failed (HTTP 412). The request failed due to a precondition error.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    409 => ApiClientException$Network(
-      code: 'conflict',
-      message:
-          'Conflict (HTTP 409). The request could not be completed due to a conflict with the current state of the resource.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    404 => ApiClientException$Network(
-      code: 'not_found',
-      message: 'Resource not found (HTTP 404).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    403 => ApiClientException$Authentication(
-      code: 'forbidden',
-      message: 'Forbidden access (HTTP 403). Insufficient permissions.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    401 => ApiClientException$Authentication(
-      code: 'unauthorized',
-      message: 'Unauthorized access (HTTP 401). Authentication required.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    400 => ApiClientException$Network(
-      code: 'bad_request',
-      message: 'Bad request (HTTP 400). The request was malformed or invalid.',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    > 399 => ApiClientException$Network(
-      code: 'client_error',
-      message: 'Client error (HTTP $statusCode).',
-      statusCode: statusCode,
-      data: data(),
-    ),
-    _ => null,
+    401 || 403 => ApiClientException$Authentication(code: code, message: message, statusCode: statusCode, data: data),
+    >= 500 => ApiClientException$Server(code: code, message: message, statusCode: statusCode, data: data),
+    _ => ApiClientException$Request(code: code, message: message, statusCode: statusCode, data: data),
   };
 }
+
+/// Per-code semantic `(code, message)` for a non-success HTTP [statusCode]. Unlisted codes fall back
+/// to a generic server (5xx) or client label, keeping [_statusToException] total.
+(String, String) _codeAndMessageFor(int statusCode) => switch (statusCode) {
+  509 => ('bandwidth_limit_exceeded', 'Bandwidth limit exceeded (HTTP 509).'),
+  503 => (
+    'service_unavailable',
+    'Service unavailable (HTTP 503). The server is currently unable to handle the request.',
+  ),
+  501 => ('not_implemented', 'Not implemented (HTTP 501).'),
+  500 => ('internal_server_error', 'Internal server error (HTTP 500).'),
+  >= 500 => ('server_error', 'Internal server error (HTTP $statusCode).'),
+  429 => ('rate_limit', 'Rate limit exceeded (HTTP 429). Too many requests.'),
+  422 => ('validation_error', 'Validation error (HTTP 422). Request data is invalid.'),
+  413 => ('payload_too_large', 'Payload too large (HTTP 413). The request payload is too large.'),
+  412 => ('precondition_failed', 'Precondition failed (HTTP 412). The request failed due to a precondition error.'),
+  409 => (
+    'conflict',
+    'Conflict (HTTP 409). The request could not be completed due to a conflict with the current state of the resource.',
+  ),
+  404 => ('not_found', 'Resource not found (HTTP 404).'),
+  403 => ('forbidden', 'Forbidden access (HTTP 403). Insufficient permissions.'),
+  401 => ('unauthorized', 'Unauthorized access (HTTP 401). Authentication required.'),
+  400 => ('bad_request', 'Bad request (HTTP 400). The request was malformed or invalid.'),
+  _ => ('client_error', 'Client error (HTTP $statusCode).'),
+};
 
 // --- Errors --- //
 
@@ -1110,9 +1041,12 @@ abstract class ApiClientException implements Exception {
   String toString() => message;
 }
 
-/// Client exception.
-final class ApiClientException$Client extends ApiClientException {
-  const ApiClientException$Client({
+/// Internal (client-side) exception — a fault on the client side of THIS package: a response-stream
+/// read error, response-size overflow, request-construction failure, or an unknown internal error.
+/// This is NOT an HTTP "client error (4xx)" — those are [ApiClientException$Request]. [statusCode]
+/// is 0 unless a partial response was already seen.
+final class ApiClientException$Internal extends ApiClientException {
+  const ApiClientException$Internal({
     required this.code,
     required this.message,
     required this.statusCode,
@@ -1136,9 +1070,66 @@ final class ApiClientException$Client extends ApiClientException {
   final Object? data;
 }
 
-/// Network exception.
+/// Network (transport) exception — the request never produced an HTTP response: DNS/TCP/TLS/socket
+/// failure or `connectionError` ([statusCode] is 0). HTTP error *responses* are
+/// [ApiClientException$Request] (4xx) / [ApiClientException$Server] (5xx), not this.
 final class ApiClientException$Network extends ApiClientException {
   const ApiClientException$Network({
+    required this.code,
+    required this.message,
+    required this.statusCode,
+    this.error,
+    this.data,
+  });
+
+  @override
+  final String code;
+
+  @override
+  final String message;
+
+  @override
+  final int statusCode;
+
+  @override
+  final Object? error;
+
+  @override
+  final Object? data;
+}
+
+/// Request exception — the server responded with a non-auth client-error status (4xx, e.g.
+/// 400/404/409/422). The request itself is at fault and is NOT retryable. Inspect [statusCode] /
+/// [code] and the `body` in [data] for the server's machine-readable error.
+final class ApiClientException$Request extends ApiClientException {
+  const ApiClientException$Request({
+    required this.code,
+    required this.message,
+    required this.statusCode,
+    this.error,
+    this.data,
+  });
+
+  @override
+  final String code;
+
+  @override
+  final String message;
+
+  @override
+  final int statusCode;
+
+  @override
+  final Object? error;
+
+  @override
+  final Object? data;
+}
+
+/// Server exception — the server responded with a 5xx status (e.g. 500/502/503). The request may be
+/// safe to resend; [RetryMiddleware] already retries the transient subset of these.
+final class ApiClientException$Server extends ApiClientException {
+  const ApiClientException$Server({
     required this.code,
     required this.message,
     required this.statusCode,

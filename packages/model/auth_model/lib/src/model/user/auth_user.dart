@@ -2,9 +2,6 @@ import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-typedef AuthenticatedCallback<T> = T Function(AuthenticatedUser user);
-typedef UnauthenticatedCallback<T> = T Function();
-
 /// {@template user}
 /// The user entry model.
 /// {@endtemplate}

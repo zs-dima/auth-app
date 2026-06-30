@@ -209,7 +209,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       //       switch (error) {
       //         ApiClientException$Authentication() => false, // Do not retry on authentication errors
       //         TimeoutException() || ApiClientException$Timeout() => true, // Retry on timeout exceptions
-      //         ApiClientException$Client(:final code) => !const <String>{
+      //         ApiClientException$Internal(:final code) => !const <String>{
       //           'canceled',
       //           'aborted',
       //           'cancel',
@@ -218,7 +218,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       //           'unexpected_error',
       //           'unknown error',
       //         }.contains(code), // Do not retry on cancellation or abort errors
-      //         ApiClientException$Network(:final statusCode) => const <int>{
+      //         ApiClientException(:final statusCode) => const <int>{ // 4xx→$Request, 5xx→$Server
       //           400, // Bad Request
       //           //401, // Unauthorized
       //           //403, // Forbidden
