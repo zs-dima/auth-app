@@ -3,6 +3,7 @@ import 'package:auth_model/src/grpc/proto/users/v2/users.pb.dart' as users;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
+import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
@@ -253,7 +254,7 @@ extension ProtoAuthResponseX on rpc.AuthResponse {
           userId: user.userId.toId(),
           credentials: AccessCredentials(
             accessToken: AccessToken.fromJwtToken(tokens.accessToken),
-            refreshToken: tokens.refreshToken,
+            refreshToken: RefreshToken(tokens.refreshToken),
           ),
         ),
         rpc.AuthStatus.AUTH_STATUS_MFA_REQUIRED => AuthResultMfaRequired(

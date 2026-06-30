@@ -1,10 +1,9 @@
+// VoidCallback is the single platform-neutral typedef from core_model (NOT dart:ui), so this
+// "portable" package stays web/server-safe (A1) — mirrors auth_model's auth middlewares.
+import 'package:core_model/core_model.dart' show VoidCallback;
 import 'package:meta/meta.dart';
 import 'package:rest_client/src/api_client.dart';
 import 'package:rest_client/src/headers.dart';
-
-// Platform-neutral typedef (NOT dart:ui) so this "portable" package stays web/server-safe (A1) —
-// mirrors auth_model's GrpcAuthenticationMiddleware, which uses the same neutral callback for logout.
-typedef VoidCallback = void Function();
 
 /// {@template bearer_authentication_middleware}
 /// Minimal Bearer-token auth middleware: attaches `Authorization: Bearer <token>` to every request

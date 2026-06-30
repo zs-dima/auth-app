@@ -15,7 +15,7 @@ class AccessCredentials {
   /// hard-failed at startup (the repository additionally clears an undecodable blob).
   factory AccessCredentials.fromJson(Map<String, dynamic> json) => AccessCredentials(
     accessToken: AccessToken.fromJson((json['accessToken'] as Map).cast<String, dynamic>()),
-    refreshToken: json['refreshToken'] as RefreshToken,
+    refreshToken: RefreshToken(json['refreshToken'] as String),
     scopes: (json['scopes'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
   );
 
@@ -35,7 +35,7 @@ class AccessCredentials {
   /// [AccessToken.toJson]) — not the object — so callers can inspect/merge the map before encoding.
   Map<String, dynamic> toJson() => <String, dynamic>{
     'accessToken': accessToken.toJson(),
-    'refreshToken': refreshToken,
+    'refreshToken': refreshToken.value,
     'scopes': scopes,
   };
 

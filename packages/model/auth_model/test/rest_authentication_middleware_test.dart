@@ -6,7 +6,7 @@ import 'package:rest_client/rest_client.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
-  refreshToken: 'r-$token',
+  refreshToken: RefreshToken('r-$token'),
 );
 
 ApiClient _client(MockClient mock, RestAuthenticationMiddleware mw) => ApiClient(

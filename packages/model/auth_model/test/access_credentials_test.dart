@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:auth_model/src/model/credentials/access_token.dart';
+import 'package:auth_model/src/model/credentials/refresh_token.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AccessCredentials _creds() => AccessCredentials(
   accessToken: AccessToken(token: 'a', expiry: DateTime.utc(2030)),
-  refreshToken: 'r',
+  refreshToken: const RefreshToken('r'),
   scopes: const <String>['s1', 's2'],
 );
 

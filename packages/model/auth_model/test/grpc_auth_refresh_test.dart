@@ -4,7 +4,7 @@ import 'package:grpc/grpc.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
-  refreshToken: 'r-$token',
+  refreshToken: RefreshToken('r-$token'),
 );
 
 void main() {

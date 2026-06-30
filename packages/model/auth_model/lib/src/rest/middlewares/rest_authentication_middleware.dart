@@ -1,10 +1,8 @@
-// VoidCallback is the platform-neutral typedef from authentication_handler (NOT dart:ui), so this
-// middleware stays usable off the Flutter UI isolate — mirrors GrpcAuthenticationMiddleware.
-import 'package:auth_model/src/client/authentication_handler.dart' show VoidCallback;
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 import 'package:meta/meta.dart';
-// hide VoidCallback: rest_client re-exports an identical typedef; we use auth_model's platform-neutral one.
-import 'package:rest_client/rest_client.dart' hide VoidCallback;
+// VoidCallback here is the single platform-neutral typedef from core_model (NOT dart:ui),
+// re-exported by rest_client — so this middleware stays usable off the Flutter UI isolate.
+import 'package:rest_client/rest_client.dart';
 
 /// {@template rest_authentication_middleware}
 /// Attaches the access token to each request and transparently recovers from a `401` by

@@ -89,11 +89,11 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   Future<AccessCredentials> refreshTokens(String accessToken, RefreshToken refreshToken) async {
     try {
       final result = await client.refreshTokens(
-        rpc.RefreshTokensRequest()..refreshToken = refreshToken,
+        rpc.RefreshTokensRequest()..refreshToken = refreshToken.value,
       );
       return AccessCredentials(
         accessToken: AccessToken.fromJwtToken(result.accessToken),
-        refreshToken: result.refreshToken,
+        refreshToken: RefreshToken(result.refreshToken),
       );
     } on GrpcError catch (e, st) {
       // Definitive rejection (invalid/expired/revoked refresh token) ⇒ the session is dead.

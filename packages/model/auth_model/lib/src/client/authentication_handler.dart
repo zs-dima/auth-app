@@ -1,5 +1,7 @@
 import 'dart:async';
 
+// VoidCallback is the single platform-neutral typedef from core_model (NOT dart:ui), reused below.
+import 'package:core_model/core_model.dart' show VoidCallback;
 import 'package:meta/meta.dart';
 
 enum AuthenticationState {
@@ -9,7 +11,6 @@ enum AuthenticationState {
 }
 
 typedef AuthenticationCallback = void Function(AuthenticationState state);
-typedef VoidCallback = void Function();
 
 /// The single, transport-agnostic auth-state bus. BOTH transports report an auth failure into it
 /// (gRPC via `GrpcAuthenticationMiddleware.onAuthError`, and any future authenticated HTTP path),

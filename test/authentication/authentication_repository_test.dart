@@ -9,14 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
-  refreshToken: 'r-$token',
+  refreshToken: RefreshToken('r-$token'),
 );
 
 /// Credentials whose access token is valid but within the `expiresSoon` window, so the
 /// proactive path attempts a refresh.
 AccessCredentials _credsExpiring(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(seconds: 10))),
-  refreshToken: 'r-$token',
+  refreshToken: RefreshToken('r-$token'),
 );
 
 final _metadata = AppMetadata(

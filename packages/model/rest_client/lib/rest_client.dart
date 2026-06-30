@@ -1,7 +1,8 @@
 library rest_client;
 
-// CancelToken is a generic primitive in core_model; re-exported so the HTTP client API stays self-contained.
-export 'package:core_model/core_model.dart' show CancelToken;
+// CancelToken and VoidCallback are generic primitives in core_model; re-exported so the HTTP client
+// API stays self-contained (and VoidCallback stays the single platform-neutral typedef — A1).
+export 'package:core_model/core_model.dart' show CancelToken, VoidCallback;
 
 // Core client: ApiClient, ApiClientHandler/Middleware/Wrapper, ApiClientRequest/Response,
 // the ApiClientException hierarchy, and the request context keys.

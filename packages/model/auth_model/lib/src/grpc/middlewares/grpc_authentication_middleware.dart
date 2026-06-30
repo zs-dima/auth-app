@@ -1,10 +1,10 @@
 import 'dart:async';
 
-// VoidCallback is the platform-neutral typedef from authentication_handler (NOT dart:ui), so this
-// package stays web-safe (A1).
-import 'package:auth_model/src/client/authentication_handler.dart' show VoidCallback;
 import 'package:auth_model/src/grpc/grpc_authorization.dart';
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
+// VoidCallback is the single platform-neutral typedef from core_model (NOT dart:ui), so this
+// package stays web-safe (A1).
+import 'package:core_model/core_model.dart' show VoidCallback;
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
