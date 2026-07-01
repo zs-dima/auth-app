@@ -101,7 +101,56 @@ class _FakeSettings implements ISettingsRepository {
   Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-AuthenticationRepository _repo(IAuthenticationApi api, _FakeSettings settings) =>
+/// Fake API that returns a preset [AuthResult] from `authenticate()` and counts `signOut()` calls.
+class _SignInApi implements IAuthenticationApi {
+  _SignInApi(this.result);
+  final AuthResult result;
+  int signOutCalls = 0;
+
+  @override
+  Future<AuthResult> authenticate(ISignInData data, IDeviceInfo deviceInfo) async => result;
+
+  @override
+  Future<void> signOut(AccessToken token) async => signOutCalls++;
+
+  @override
+  Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Settings that record userId + credentials and can park the FIRST [setCredentials] on a gate, so a
+/// test can freeze a sign-in inside `_persistSession` and fire a concurrent logout.
+class _RecordingSettings implements ISettingsRepository {
+  AccessCredentials? credentials;
+  Completer<void>? gate; // one-shot: parks only the first setCredentials
+
+  @override
+  String get installationId => 'test-install';
+
+  UserId _userId = UserIdX.empty;
+  @override
+  UserId get userId => _userId;
+
+  @override
+  Future<AccessCredentials?> getCredentials() async => credentials;
+
+  @override
+  Future<void> setUserId(UserId userId) async => _userId = userId;
+
+  @override
+  Future<void> setCredentials(AccessCredentials? value) async {
+    final g = gate;
+    if (g != null) {
+      gate = null;
+      await g.future;
+    }
+    credentials = value;
+  }
+
+  @override
+  Object? noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+AuthenticationRepository _repo(IAuthenticationApi api, ISettingsRepository settings) =>
     AuthenticationRepository(api: api, authHandler: AuthenticationHandler(), settings: settings, metadata: _metadata);
 
 void main() {
@@ -239,6 +288,40 @@ void main() {
 
       expect(repo.user, isA<UnauthenticatedUser>(), reason: 'logout wins; rotated tokens must not revive the session');
       expect(emitted.isNotEmpty && emitted.last is UnauthenticatedUser, isTrue);
+    });
+
+    test('logout during an in-flight sign-in does not tear or resurrect state', () async {
+      final creds = _creds('S');
+      final api = _SignInApi(AuthResultSuccess(userId: 'user-42', credentials: creds));
+      final settings = _RecordingSettings();
+      final repo = _repo(api, settings);
+      addTearDown(repo.terminate);
+
+      // Freeze the sign-in inside `_persistSession` (parks on the first setCredentials).
+      final gate = Completer<void>();
+      settings.gate = gate;
+
+      final signInFuture = repo.signIn(const SignInData(identifier: 'a@b.c', password: 'pw'));
+      await Future<void>.delayed(Duration.zero); // let sign-in authenticate and park inside persist
+
+      // A concurrent logout arrives (as the authHandler subscription would deliver it).
+      final signOutFuture = repo.signOut();
+
+      gate.complete();
+      await signInFuture;
+      await signOutFuture;
+      await Future<void>.delayed(Duration.zero);
+
+      // Invariant: in-memory state and persisted state agree — no torn / resurrected session.
+      // (Pre-fix, the un-serialized sign-in commit could leave `_user` authenticated while the
+      // persisted userId/credentials were cleared by the racing logout.)
+      if (repo.user case AuthenticatedUser(:final userId)) {
+        expect(settings.userId, userId);
+        expect(settings.credentials, isNotNull);
+      } else {
+        expect(settings.userId, UserIdX.empty);
+        expect(settings.credentials, isNull);
+      }
     });
   });
 }

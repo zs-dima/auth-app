@@ -61,4 +61,16 @@ final class AppMessageController extends StateController<MessageState> with Sequ
 
   void progressStarted({String? type, String? message}) => showProgress(.started, type, message);
   void progressDone({String? type, String? message}) => showProgress(.done, type, message);
+
+  /// Unconditionally drains the progress reference counter.
+  ///
+  /// Emits a final [AppProgress.done] when the counter was non-zero so any subscribed overlays
+  /// remove themselves. Intended as a safety net at boundaries where "no progress should be in
+  /// flight" is an invariant (e.g. sign-out), not as a replacement for paired `progressStarted` /
+  /// `progressDone` calls.
+  void resetProgress() {
+    if (_progress == 0) return;
+    _progress = 0;
+    setState(const MessageState.progress(.done));
+  }
 }

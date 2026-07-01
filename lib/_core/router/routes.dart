@@ -69,12 +69,35 @@ abstract final class RouteNode {
   static const String user = 'user';
 }
 
+/// Reads a required `int` router argument, throwing an explicit [ArgumentError] (instead of an
+/// opaque null-deref / cast error) when it is missing or malformed — e.g. a hand-edited deep link.
+int _requireIntArg(String? raw, String key) {
+  if (raw == null) throw ArgumentError('Missing router argument "$key" for type int');
+  final value = int.tryParse(raw);
+  if (value == null) throw ArgumentError('Router argument "$key" is not a valid int: "$raw"');
+  return value;
+}
+
+/// Reads a required `bool` router argument, throwing an explicit [ArgumentError] when missing/invalid.
+bool _requireBoolArg(String? raw, String key) {
+  if (raw == null) throw ArgumentError('Missing router argument "$key" for type bool');
+  final value = bool.tryParse(raw);
+  if (value == null) throw ArgumentError('Router argument "$key" is not a valid bool: "$raw"');
+  return value;
+}
+
+/// Reads a required `String` router argument, throwing an explicit [ArgumentError] when missing.
+String _requireStringArg(String? raw, String key) {
+  if (raw == null) throw ArgumentError('Missing router argument "$key" for type String');
+  return raw;
+}
+
 extension OctopusNodeX on OctopusNode {
   T get<T>(String key) => switch (T) {
-    const (int) => int.tryParse(arguments[key]!) as T,
-    const (bool) => bool.tryParse(arguments[key]!) as T,
-    const (String) => arguments[key] as T,
-    const (List<int>) => arguments[key]?.split(',').map(int.tryParse).nonNulls.toList() as T,
+    const (int) => _requireIntArg(arguments[key], key) as T,
+    const (bool) => _requireBoolArg(arguments[key], key) as T,
+    const (String) => _requireStringArg(arguments[key], key) as T,
+    const (List<int>) => (arguments[key]?.split(',').map(int.tryParse).nonNulls.toList() ?? const <int>[]) as T,
     _ => throw ArgumentError('Unsupported router Node type $T'),
   };
 
@@ -93,10 +116,10 @@ extension OctopusNodeX on OctopusNode {
 
 extension OctopusStateX on OctopusState {
   T get<T>(String key) => switch (T) {
-    const (int) => int.tryParse(arguments[key]!) as T,
-    const (bool) => bool.tryParse(arguments[key]!) as T,
-    const (String) => arguments[key] as T,
-    const (List<int>) => arguments[key]?.split(',').map(int.tryParse).nonNulls.toList() as T,
+    const (int) => _requireIntArg(arguments[key], key) as T,
+    const (bool) => _requireBoolArg(arguments[key], key) as T,
+    const (String) => _requireStringArg(arguments[key], key) as T,
+    const (List<int>) => (arguments[key]?.split(',').map(int.tryParse).nonNulls.toList() ?? const <int>[]) as T,
     _ => throw ArgumentError('Unsupported router Node type $T'),
   };
 

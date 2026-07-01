@@ -106,6 +106,11 @@ mixin AppMessageControllerMixin {
   void setProgressStarted() => _messageController.progressStarted();
   void setProgressDone() => _messageController.progressDone();
 
+  /// Safety net that unconditionally drains the progress counter — see
+  /// [AppMessageController.resetProgress]. Use at boundaries where no progress should be in flight
+  /// (e.g. sign-out), so a stale overlay left by an unbalanced `setProgressStarted` is cleared.
+  void resetProgress() => _messageController.resetProgress();
+
   /// Rethrows the error with the stack trace.
   static Never throwWithStackTrace(Object error, StackTrace stackTrace) => Error.throwWithStackTrace(error, stackTrace);
 

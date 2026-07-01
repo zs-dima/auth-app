@@ -171,6 +171,10 @@ final class AuthenticationController extends StateController<AuthenticationState
         ),
       );
     },
+    // Safety net: drain any progress overlay left behind by a scoped controller whose `done` never
+    // balanced a prior `setProgressStarted` (e.g. its scope was unmounted mid-flight), so the
+    // sign-in screen doesn't show a stuck spinner with no event left to clear it.
+    done: () async => resetProgress(),
     name: 'signOut',
   );
 
