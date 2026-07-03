@@ -29,4 +29,17 @@ void main() {
       expect(decoded.scopes, isEmpty);
     });
   });
+
+  group('AccessCredentials redaction (no secrets in toString)', () {
+    test('toString masks both the access token and the refresh token', () {
+      final creds = AccessCredentials(
+        accessToken: AccessToken(token: 'secret-access-jwt', expiry: DateTime.utc(2030)),
+        refreshToken: const RefreshToken('secret-refresh-value'),
+      );
+      final str = creds.toString();
+      expect(str, isNot(contains('secret-access-jwt')));
+      expect(str, isNot(contains('secret-refresh-value')));
+      expect(str, contains('***'));
+    });
+  });
 }

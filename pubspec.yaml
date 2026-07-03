@@ -80,7 +80,7 @@ dependencies:
   collection: any
   # characters: any
   # convert: any
-  crypto: any
+  # crypto: any
   uuid: any # TODO: Remove
   web: ^1.1.1
 

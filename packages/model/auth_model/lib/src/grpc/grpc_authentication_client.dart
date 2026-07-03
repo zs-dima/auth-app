@@ -15,6 +15,7 @@ import 'package:auth_model/src/model/credentials/sign_in_data.dart';
 import 'package:core_model/core_model.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart' as grpc;
+import 'package:meta/meta.dart';
 
 /// gRPC client for authentication service.
 class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> implements IAuthenticationApi {
@@ -79,9 +80,7 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
         options: CallOptions(metadata: {kGrpcAuthorizationKey: token.authorizationHeaderValue}),
       );
     } on Exception {
-      // Ignore - logout always succeeds on the client side (best-effort server revocation). An
-      // expired/invalid token here is irrelevant: the server rejects, we swallow it, the user still
-      // signs out (the repository ends the session regardless — see AuthenticationRepository.signOut).
+      // Best-effort server revocation: client logout must never fail on a network/token error.
     }
   }
 
@@ -91,10 +90,7 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
       final result = await client.refreshTokens(
         rpc.RefreshTokensRequest()..refreshToken = refreshToken.value,
       );
-      return AccessCredentials(
-        accessToken: AccessToken.fromJwtToken(result.accessToken),
-        refreshToken: RefreshToken(result.refreshToken),
-      );
+      return mapRefreshResponse(result, refreshToken);
     } on GrpcError catch (e, st) {
       // Definitive rejection (invalid/expired/revoked refresh token) ⇒ the session is dead.
       if (e.code == StatusCode.unauthenticated ||
@@ -102,19 +98,26 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
           e.code == StatusCode.invalidArgument) {
         Error.throwWithStackTrace(CredentialsRejectedException(e.message ?? 'Refresh token rejected'), st);
       }
-      // Transient codes (unavailable/deadlineExceeded/internal/…) → domain transient error so the
-      // repository keeps the session and retries later (mapped, never a raw GrpcError — A8).
+      // Transient codes → domain transient error (mapped, never a raw GrpcError — A8).
       Error.throwWithStackTrace(GrpcException.from(e), st);
     } on FormatException catch (e, st) {
-      // A12: a malformed/unsigned JWT in the refresh response is a definitive, unrecoverable state —
-      // map to a definitive rejection so the repository logs out cleanly instead of looping forever
-      // treating a structurally-dead session as a transient failure.
+      // A12: a malformed JWT in the refresh response is definitive — it must never loop as transient.
       Error.throwWithStackTrace(
         CredentialsRejectedException('Invalid token in refresh response: ${e.message}'),
         st,
       );
     }
   }
+
+  /// Maps a `RefreshTokens` response, reusing [previousRefreshToken] when the server omits a
+  /// rotated one (RFC 6749 §6) — storing `""` would poison the next refresh into a spurious logout.
+  /// The access token is always rotated; its JWT `exp` drives proactive refresh (A12).
+  @visibleForTesting
+  static AccessCredentials mapRefreshResponse(rpc.TokenPair result, RefreshToken previousRefreshToken) =>
+      AccessCredentials(
+        accessToken: AccessToken.fromJwtToken(result.accessToken),
+        refreshToken: result.refreshToken.isEmpty ? previousRefreshToken : RefreshToken(result.refreshToken),
+      );
 
   @override
   Future<bool> validateCredentials() async {
@@ -145,8 +148,7 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
 
   @override
   Future<bool> recoveryConfirm({required String token, required String newPassword}) async {
-    // Throws a domain [GrpcException] on a transport/server error (A4) instead of collapsing every
-    // failure — including cancellation/network — into an indistinguishable `false`.
+    // Throws a domain [GrpcException] on failure (A4) instead of collapsing everything to `false`.
     await guardGrpcCall(
       () => client.recoveryConfirm(
         rpc.RecoveryConfirmRequest()

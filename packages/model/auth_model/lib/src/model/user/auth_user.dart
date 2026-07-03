@@ -20,10 +20,7 @@ sealed class AuthUser with _AuthUserPatternMatching, _AuthUserShortcuts {
 
   /// {@macro user}
   factory AuthUser.fromJson(Map<String, Object?> json) => switch (json['userId']) {
-    final UserId userId => AuthUser.authenticated(
-      credentials: AccessCredentials.fromJson(json['credentials']! as Map<String, dynamic>),
-      userId: userId,
-    ),
+    UserId() => AuthenticatedUser.fromJson(json),
     _ => const UnauthenticatedUser(),
   };
 
@@ -63,7 +60,9 @@ class UnauthenticatedUser extends AuthUser {
 
   @override
   AuthUser copyWith({AccessCredentials? credentials, UserId? userId}) =>
-      userId == null ? const UnauthenticatedUser() : .authenticated(userId: userId, credentials: credentials!);
+      // The direct constructor, NOT the [AuthUser.authenticated] factory: credentials may
+      // legitimately be absent here, and the factory requires them.
+      userId == null ? const UnauthenticatedUser() : AuthenticatedUser(userId: userId, credentials: credentials);
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is UnauthenticatedUser;
@@ -82,7 +81,12 @@ final class AuthenticatedUser extends AuthUser {
     if (json.isEmpty) throw FormatException('Json is empty', json);
     if (json case <String, Object?>{'userId': final UserId userId})
       return AuthenticatedUser(
-        credentials: AccessCredentials.fromJson(json['credentials']! as Map<String, dynamic>),
+        // Tolerate a missing/null value: [toJson] writes `credentials: null` for the
+        // "authenticated but credentials lost" state, and the round-trip must preserve it.
+        credentials: switch (json['credentials']) {
+          final Map<String, dynamic> js => AccessCredentials.fromJson(js),
+          _ => null,
+        },
         userId: userId,
       );
     throw FormatException('Invalid json format', json);

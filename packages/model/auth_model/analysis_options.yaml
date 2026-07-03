@@ -6,5 +6,5 @@ formatter:
 
 analyzer:
   exclude:
-    # Generated
-    - "lib/**/generated/**"
+    # Generated protobuf code
+    - "lib/src/grpc/proto/**"

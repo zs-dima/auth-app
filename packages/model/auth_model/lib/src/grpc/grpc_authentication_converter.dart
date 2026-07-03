@@ -254,7 +254,11 @@ extension ProtoAuthResponseX on rpc.AuthResponse {
           userId: user.userId.toId(),
           credentials: AccessCredentials(
             accessToken: AccessToken.fromJwtToken(tokens.accessToken),
-            refreshToken: RefreshToken(tokens.refreshToken),
+            // Issuance MUST carry a refresh token — the RFC 6749 §6 omission rule applies only to
+            // REFRESH responses; "" would poison the first refresh into a spurious logout.
+            refreshToken: tokens.refreshToken.isEmpty
+                ? (throw const FormatException('AUTH_STATUS_SUCCESS without a refresh_token'))
+                : RefreshToken(tokens.refreshToken),
           ),
         ),
         rpc.AuthStatus.AUTH_STATUS_MFA_REQUIRED => AuthResultMfaRequired(
@@ -283,8 +287,7 @@ extension ProtoAuthResponseX on rpc.AuthResponse {
         _ => AuthResultFailed(message: message.isNotEmpty ? message : null),
       };
     } on FormatException {
-      // A12: AUTH_STATUS_SUCCESS carried a malformed/unsigned access token — surface a failed result
-      // instead of throwing an opaque error out of the sign-in/verify path.
+      // A12: a malformed token in a SUCCESS response surfaces as a failed result, not a crash.
       return const AuthResultFailed(message: 'Received an invalid authentication token from the server.');
     }
   }

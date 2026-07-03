@@ -9,17 +9,10 @@ import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
 
-/// Fully-qualified gRPC method paths of `auth.v2.AuthService` that are PUBLIC — no access token is
-/// attached and a `401` does not trigger refresh-retry. Single source of truth co-located with the
-/// auth middleware (A19); a test asserts every entry matches a real generated method path.
-///
-/// `VerifyMfa` (called after `Authenticate` returns MFA_REQUIRED, with only a challenge token) and
-/// `ConfirmVerification` (email/phone verification before sign-in) are public: the caller has no
-/// access token yet, so omitting them made the middleware attach a missing token and force a
-/// spurious logout — the bug A19 fixes.
-///
-/// `RequestVerification` is intentionally NOT here: per `auth.proto` it is a resend "for a verified
-/// user / when the token expired", i.e. an authenticated call that must carry the access token (S1).
+/// PUBLIC `auth.v2.AuthService` paths — no token attach, no refresh-retry. Single source of truth,
+/// asserted against the generated stubs by a test (A19). `VerifyMfa` and `ConfirmVerification` are
+/// public because the caller has no access token yet; `RequestVerification` is deliberately absent —
+/// it is an authenticated resend (S1).
 const Set<String> kAuthServicePublicPaths = <String>{
   '/auth.v2.AuthService/Authenticate',
   '/auth.v2.AuthService/SignUp',
@@ -27,12 +20,16 @@ const Set<String> kAuthServicePublicPaths = <String>{
   '/auth.v2.AuthService/VerifyMfa',
   '/auth.v2.AuthService/RecoveryStart',
   '/auth.v2.AuthService/RecoveryConfirm',
-  '/auth.v2.AuthService/RefreshTokens',
+  kAuthServiceRefreshTokensPath,
   '/auth.v2.AuthService/ConfirmVerification',
   // OAuth
   '/auth.v2.AuthService/GetOAuthUrl',
   '/auth.v2.AuthService/ExchangeOAuthCode',
 };
+
+/// The refresh-token RPC: an auth-code rejection HERE is definitive session death; on the other
+/// public paths it is a flow error — see [sessionEndingPaths].
+const String kAuthServiceRefreshTokensPath = '/auth.v2.AuthService/RefreshTokens';
 
 /// {@template grpc_authentication_middleware}
 /// Middleware for handling authentication in gRPC requests.
@@ -46,25 +43,28 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     required this.refreshCredentials,
     required this.onAuthError,
     this.unauthenticatedPaths = const <String>{},
+    this.sessionEndingPaths = const <String>{},
   });
 
-  /// Callback to get the authentication token.
-  /// This should return a valid token for the API client. Expected to proactively
-  /// refresh tokens that are about to expire (single-flight in the repository).
+  /// Resolves the current credentials; expected to proactively refresh an expiring token
+  /// (single-flight in the repository).
   final Future<AccessCredentials?> Function() getToken;
 
-  /// Forces a single-flight token refresh for the access token that was just
-  /// rejected with `UNAUTHENTICATED`, and returns the new credentials (or `null`
-  /// when the refresh failed). An `UNAUTHENTICATED` response is recovered by
-  /// refreshing once and retrying the call — instead of logging out immediately.
-  /// Mirrors the HTTP `HttpAuthenticationMiddleware`.
+  /// Single-flight refresh for the just-rejected access token. Contract: rotated credentials on
+  /// success; `null` on a definitive rejection (session already ended); a throw is transient-shaped
+  /// (incl. a request whose session ended before the refresh ran) — the call fails, no logout.
   final Future<AccessCredentials?> Function(String usedAccessToken) refreshCredentials;
 
-  /// Callback when authentication fails (logout). Called when there is no token,
-  /// on `PERMISSION_DENIED`, or on `UNAUTHENTICATED` that refresh could not recover.
+  /// Fire-and-forget logout signal (idempotent, routed via the auth bus — A26): no credentials,
+  /// or an `UNAUTHENTICATED` that refresh could not recover.
   final VoidCallback onAuthError;
 
   final Set<String> unauthenticatedPaths;
+
+  /// Subset of [unauthenticatedPaths] whose auth-code rejection is DEFINITIVE for the stored
+  /// session (the refresh endpoint): fires [onAuthError]. Other public-path auth errors are flow
+  /// errors, not session death.
+  final Set<String> sessionEndingPaths;
 
   @override
   GrpcMiddlewareHandler call(GrpcMiddlewareHandler invoker) => (path, metadata) async {
@@ -74,15 +74,10 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     try {
       await invoker(path, _withToken(metadata, credentials));
     } on GrpcError catch (e) {
-      // Auth-error policy on the (unary) data path (mirrors HTTP):
-      // - UNAUTHENTICATED (401) → token invalid/expired: refresh once + retry once; log out only
-      //   if the refresh definitively fails (a 2nd 401 = broken session).
-      // - PERMISSION_DENIED (403) → authenticated but not allowed: do NOT refresh/retry/log out.
+      // 401 → refresh once + retry once; logout only on a definitive failure (a 2nd 401 = broken
+      // session). 403 → surface as-is: no refresh, no retry, no logout.
       if (e.code == StatusCode.unauthenticated) {
         final fresh = await refreshCredentials(credentials.accessToken.token);
-        // [refreshCredentials] contract: rotated creds on success; `null` on a definitive rejection
-        // (repo already logged out); or it throws on a transient failure (session intact) — which
-        // propagates out of here WITHOUT calling [onAuthError], so a network blip never logs out.
         if (fresh != null && fresh.accessToken.token.isNotEmpty) {
           try {
             await invoker(path, _withToken(metadata, fresh)); // retry once with the rotated token
@@ -106,34 +101,33 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     if (unauthenticatedPaths.contains(path)) return _public(invoker, path, metadata);
 
     final credentials = await _resolveCredentials();
-    // Server-streaming RPCs (e.g. listUsers): the request `Stream` can't be replayed, so we attach
-    // the token and surface errors WITHOUT reactive refresh-retry (mirrors GrpcRetryMiddleware,
-    // which excludes streaming). The proactive getToken() keeps the token valid at call start; an
-    // UNAUTHENTICATED logs out and propagates rather than re-invoking a consumed stream.
+    // Repair-without-replay: a consumed request stream can't be re-invoked, so on UNAUTHENTICATED
+    // we refresh (single-flight) but never replay — the caller resubscribes with the rotated token.
+    // Logout only on a definitive refresh failure; the original error is always rethrown (A3).
     try {
       await invoker(path, _withToken(metadata, credentials));
     } on GrpcError catch (e) {
-      if (e.code == StatusCode.unauthenticated) onAuthError();
+      if (e.code == StatusCode.unauthenticated) {
+        final fresh = await refreshCredentials(credentials.accessToken.token);
+        if (fresh == null || fresh.accessToken.token.isEmpty) onAuthError();
+      }
       rethrow;
     }
   };
 
-  /// Public endpoints (sign-in / RefreshTokens / OAuth): no token, no refresh-retry, but still log
-  /// out on an auth-code error (e.g. an invalid/expired refresh token).
+  /// Public endpoints: no token, no refresh-retry. Logout ONLY on a [sessionEndingPaths] auth
+  /// error (rejected refresh token); other public-path auth errors are flow errors.
   Future<void> _public(GrpcMiddlewareHandler invoker, String path, Map<String, String> metadata) async {
     try {
       await invoker(path, metadata);
     } on GrpcError catch (e) {
-      if (_isAuthError(e)) onAuthError();
+      if (sessionEndingPaths.contains(path) && _isAuthError(e)) onAuthError();
       rethrow;
     }
   }
 
-  /// Resolves the current credentials.
-  ///
-  /// Logout is gated on a *definitively absent* token only (`null`/empty). A transient failure to
-  /// resolve credentials (e.g. a secure-storage hiccup) propagates as-is — failing this one call
-  /// WITHOUT logging out, since the session may still be valid and a later request can retry (A3).
+  /// Resolves the current credentials. Logout only on a definitively absent token (`null`/empty);
+  /// a transient resolution failure propagates as-is — no logout (A3).
   Future<AccessCredentials> _resolveCredentials() async {
     final c = await getToken();
     if (c == null || c.accessToken.token.isEmpty) {
@@ -143,17 +137,13 @@ class GrpcAuthenticationMiddleware extends GrpcMiddleware {
     return c;
   }
 
-  /// Builds a fresh metadata copy (the original may be unmodifiable) carrying only the access
-  /// token. The refresh token is sent solely to the RefreshTokens RPC, never on every request.
-  /// The scheme comes from the token itself ([AccessToken.type], usually `Bearer`) — the single
-  /// transport-neutral source of truth, mirroring the HTTP middleware. The key is the shared
-  /// [kGrpcAuthorizationKey]; the value is [AccessToken.authorizationHeaderValue] (also used by `signOut`).
+  /// Fresh metadata copy (the original may be unmodifiable) carrying only the access token via
+  /// [AccessToken.authorizationHeaderValue]; the refresh token never rides on data calls.
   Map<String, String> _withToken(Map<String, String> metadata, AccessCredentials c) =>
       Map<String, String>.of(metadata)..[kGrpcAuthorizationKey] = c.accessToken.authorizationHeaderValue;
 
-  /// Whether [e] is an auth-code error. Used only for the public (sign-in / RefreshTokens) path,
-  /// where such an error means a rejected refresh token ⇒ log out. On the authenticated data path,
-  /// logout is gated on `unauthenticated` alone (403 / PERMISSION_DENIED is surfaced, not logged out).
+  /// Auth-code check for the public path only; on the data path logout is gated on
+  /// `unauthenticated` alone (403 is surfaced, never a logout).
   static bool _isAuthError(GrpcError e) =>
       e.code == StatusCode.unauthenticated || e.code == StatusCode.permissionDenied;
 }

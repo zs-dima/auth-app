@@ -1,6 +1,8 @@
 name: grpc_model
 resolution: workspace
 
+description: Shared gRPC runtime — client channel and options, middlewares, and generated core/v2 protos.
+
 publish_to: "none"
 
 version: 1.0.0+1

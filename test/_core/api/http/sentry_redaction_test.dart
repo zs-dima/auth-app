@@ -47,5 +47,44 @@ void main() {
       });
       expect(redacted['Access_Token'], ['<redacted>']);
     });
+
+    test('redacts AWS SigV4 presigned-URL material', () {
+      final redacted = redactSensitiveQuery(<String, List<String>>{
+        'X-Amz-Signature': ['deadbeef'],
+        'X-Amz-Credential': ['AKIA123/20260703/us-east-1/s3/aws4_request'],
+        'X-Amz-Security-Token': ['sts-secret'],
+        'X-Amz-Expires': ['900'], // public metadata — preserved
+      });
+
+      expect(redacted['X-Amz-Signature'], ['<redacted>']);
+      expect(redacted['X-Amz-Credential'], ['<redacted>']);
+      expect(redacted['X-Amz-Security-Token'], ['<redacted>']);
+      expect(redacted['X-Amz-Expires'], ['900']);
+    });
+  });
+
+  group('redactSensitiveUrl', () {
+    test('masks presigned-URL secrets while preserving scheme/host/path and public params', () {
+      final url = Uri.parse(
+        'https://bucket.s3.example.com/avatars/u-1.png'
+        '?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA123%2Fscope'
+        '&X-Amz-Signature=deadbeef&X-Amz-Expires=900',
+      );
+
+      final redacted = redactSensitiveUrl(url);
+
+      expect(redacted, isNot(contains('deadbeef')));
+      expect(redacted, isNot(contains('AKIA123')));
+      // The marker is percent-encoded by Uri.replace ('%3Credacted%3E') — assert encoding-agnostically.
+      expect(redacted, contains('redacted'));
+      expect(redacted, contains('https://bucket.s3.example.com/avatars/u-1.png'));
+      expect(redacted, contains('X-Amz-Algorithm=AWS4-HMAC-SHA256'));
+      expect(redacted, contains('X-Amz-Expires=900'));
+    });
+
+    test('returns a query-less URL unchanged', () {
+      final url = Uri.parse('https://api.example.com/v2/users');
+      expect(redactSensitiveUrl(url), url.toString());
+    });
   });
 }

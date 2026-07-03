@@ -1,10 +1,6 @@
-/// Thrown when the authorization server **definitively rejects** the refresh token —
-/// it is invalid, expired, revoked, or reused (`invalid_grant`; gRPC `UNAUTHENTICATED` /
-/// `PERMISSION_DENIED` / `INVALID_ARGUMENT` on the refresh RPC).
-///
-/// This signals the session is genuinely dead and the user must re-authenticate.
-/// Transient failures (no connectivity, timeout, `UNAVAILABLE`, 5xx) are **not** mapped to
-/// this — they propagate as their original error so callers can keep the session and retry.
+/// The authorization server **definitively rejected** the refresh token (invalid / expired /
+/// revoked / reused; gRPC `UNAUTHENTICATED` / `PERMISSION_DENIED` / `INVALID_ARGUMENT` on the
+/// refresh RPC): the session is dead. Transient failures are never mapped to this.
 class CredentialsRejectedException implements Exception {
   const CredentialsRejectedException([this.message = 'Refresh token rejected by the server']);
 
@@ -12,4 +8,15 @@ class CredentialsRejectedException implements Exception {
 
   @override
   String toString() => 'CredentialsRejectedException: $message';
+}
+
+/// The rejected access token was not minted in the CURRENT session — the request outlived a
+/// sign-out/sign-in (A27). Transient-shaped for the auth middlewares (no `onAuthError`): the
+/// stale request fails, the current session is untouched. Expected teardown for telemetry;
+/// carries no token material.
+class RequestSessionEndedException implements Exception {
+  const RequestSessionEndedException();
+
+  @override
+  String toString() => 'RequestSessionEndedException: the originating session has ended';
 }

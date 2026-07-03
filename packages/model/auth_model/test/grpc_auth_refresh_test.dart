@@ -69,7 +69,7 @@ void main() {
       expect(loggedOut, isTrue);
     });
 
-    test('public (unauthenticated) path: no token, no refresh, but logout on auth error', () async {
+    test('session-ending public path (RefreshTokens): no token, no refresh, but logout on auth error', () async {
       var refreshCalls = 0;
       var loggedOut = false;
       String? seenAuth = 'unset';
@@ -86,16 +86,140 @@ void main() {
           return _creds('B');
         },
         onAuthError: () => loggedOut = true,
-        unauthenticatedPaths: const {'/auth.v2.AuthService/RefreshTokens'},
+        unauthenticatedPaths: const {kAuthServiceRefreshTokensPath},
+        sessionEndingPaths: const {kAuthServiceRefreshTokensPath},
       );
 
       await expectLater(
-        mw.call(invoker)('/auth.v2.AuthService/RefreshTokens', <String, String>{}),
+        mw.call(invoker)(kAuthServiceRefreshTokensPath, <String, String>{}),
         throwsA(isA<GrpcError>()),
       );
       expect(refreshCalls, 0, reason: 'public paths do not refresh');
       expect(seenAuth, isNull, reason: 'no token attached on public paths');
-      expect(loggedOut, isTrue, reason: 'auth error on a public path still logs out');
+      expect(loggedOut, isTrue, reason: 'a rejected refresh token ends the session');
+    });
+
+    test('non-session-ending public path (Authenticate): UNAUTHENTICATED is a flow error, NOT a logout', () async {
+      var loggedOut = false;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async =>
+          throw const GrpcError.unauthenticated('bad password / wrong MFA code');
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => _creds('B'),
+        onAuthError: () => loggedOut = true,
+        unauthenticatedPaths: const {'/auth.v2.AuthService/Authenticate', kAuthServiceRefreshTokensPath},
+        sessionEndingPaths: const {kAuthServiceRefreshTokensPath},
+      );
+
+      await expectLater(
+        mw.call(invoker)('/auth.v2.AuthService/Authenticate', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(loggedOut, isFalse, reason: 'a rejected sign-in must not tear down a (possibly other) session');
+    });
+
+    test('transient refreshCredentials failure propagates WITHOUT logout (A3)', () async {
+      var loggedOut = false;
+      var attempts = 0;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async {
+        attempts++;
+        throw const GrpcError.unauthenticated('nope');
+      }
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => throw const GrpcError.unavailable('network blip'),
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.call(invoker)('/users.v1.UsersService/List', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(attempts, 1, reason: 'no retry when the refresh itself failed');
+      expect(loggedOut, isFalse, reason: 'a transient refresh failure keeps the session (A3)');
+    });
+
+    test('a retry that returns PERMISSION_DENIED rethrows WITHOUT logout', () async {
+      var loggedOut = false;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async {
+        if (metadata['authorization'] == 'Bearer B') throw const GrpcError.permissionDenied('forbidden');
+        throw const GrpcError.unauthenticated('expired');
+      }
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => _creds('B'),
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.call(invoker)('/users.v1.UsersService/List', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(loggedOut, isFalse, reason: '403 after a successful refresh is authorization, not a broken session');
+    });
+
+    test('missing credentials (getToken → null) logs out and throws UNAUTHENTICATED, no invoke', () async {
+      var loggedOut = false;
+      var attempts = 0;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async => attempts++;
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => null,
+        refreshCredentials: (used) async => _creds('B'),
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.call(invoker)('/users.v1.UsersService/List', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(attempts, 0, reason: 'no call is attempted without a token');
+      expect(loggedOut, isTrue);
+    });
+
+    test('transient getToken failure propagates WITHOUT logout (A3)', () async {
+      var loggedOut = false;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async {}
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => throw const GrpcError.unavailable('secure-storage hiccup'),
+        refreshCredentials: (used) async => _creds('B'),
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.call(invoker)('/users.v1.UsersService/List', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(loggedOut, isFalse, reason: 'a transient credential-resolution failure is not a logout (A3)');
+    });
+
+    test('forwards the exact attached access token as usedAccessToken', () async {
+      String? forwarded;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async {
+        if (metadata['authorization'] != 'Bearer B') throw const GrpcError.unauthenticated('expired');
+      }
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async {
+          forwarded = used;
+          return _creds('B');
+        },
+        onAuthError: () {},
+      );
+
+      await mw.call(invoker)('/users.v1.UsersService/List', <String, String>{});
+      expect(forwarded, 'A', reason: 'the raw token that was rejected is forwarded to the single-flight guard');
     });
 
     test('PERMISSION_DENIED (403) on an authenticated path: no refresh, no retry, no logout', () async {
@@ -127,8 +251,8 @@ void main() {
     });
   });
 
-  group('GrpcAuthenticationMiddleware streaming (no replay-retry)', () {
-    test('UNAUTHENTICATED on a stream logs out and surfaces — without a second invoke', () async {
+  group('GrpcAuthenticationMiddleware streaming (repair without replay)', () {
+    test('UNAUTHENTICATED repairs the session (refresh) but does NOT replay the stream or log out', () async {
       var refreshCalls = 0;
       var loggedOut = false;
       var attempts = 0;
@@ -142,7 +266,7 @@ void main() {
         getToken: () async => _creds('A'),
         refreshCredentials: (used) async {
           refreshCalls++;
-          return _creds('B'); // a refresh IS available, but streaming must not use it
+          return _creds('B'); // repair succeeds
         },
         onAuthError: () => loggedOut = true,
       );
@@ -151,9 +275,47 @@ void main() {
         mw.callStreaming(invoker)('/users.v2.UserService/ListUsers', <String, String>{}),
         throwsA(isA<GrpcError>()),
       );
-      expect(attempts, 1, reason: 'streaming request is not replayed (no re-listen → no StateError)');
-      expect(refreshCalls, 0, reason: 'streaming does not reactively refresh');
-      expect(loggedOut, isTrue, reason: 'an unrecoverable streaming 401 ends the session');
+      expect(attempts, 1, reason: 'a consumed stream is never replayed (caller resubscribes)');
+      expect(refreshCalls, 1, reason: 'streaming DOES repair the session on 401 (A3), just without replay');
+      expect(loggedOut, isFalse, reason: 'a recoverable streaming 401 must not tear down the session');
+    });
+
+    test('UNAUTHENTICATED with a definitive refresh failure logs out', () async {
+      var loggedOut = false;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async =>
+          throw const GrpcError.unauthenticated('nope');
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => null, // definitive rejection
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.callStreaming(invoker)('/users.v2.UserService/ListUsers', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(loggedOut, isTrue, reason: 'a definitively unrecoverable streaming 401 ends the session');
+    });
+
+    test('UNAUTHENTICATED with a transient refresh failure propagates WITHOUT logout (A3)', () async {
+      var loggedOut = false;
+
+      Future<void> invoker(String path, Map<String, String> metadata) async =>
+          throw const GrpcError.unauthenticated('nope');
+
+      final mw = GrpcAuthenticationMiddleware(
+        getToken: () async => _creds('A'),
+        refreshCredentials: (used) async => throw const GrpcError.unavailable('network blip'),
+        onAuthError: () => loggedOut = true,
+      );
+
+      await expectLater(
+        mw.callStreaming(invoker)('/users.v2.UserService/ListUsers', <String, String>{}),
+        throwsA(isA<GrpcError>()),
+      );
+      expect(loggedOut, isFalse, reason: 'a transient refresh failure keeps the session (A3)');
     });
 
     test('happy path attaches the token and does not log out', () async {

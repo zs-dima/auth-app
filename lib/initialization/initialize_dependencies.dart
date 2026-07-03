@@ -143,7 +143,13 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   'Settings': (dependencies) async {
     final sharedPreferences = await SharedPreferences.getInstance();
     final preferencesDao = AppPreferencesDao(sharedPreferences);
-    const secureStorage = FlutterSecureStorage();
+    // Apple keychain pinned to first_unlock_this_device: background writes after the first unlock,
+    // no cross-device keychain restore. Android v10 defaults are already strong; existing entries
+    // stay readable and self-heal via F2 (refresh_token.md §10.2).
+    const secureStorage = FlutterSecureStorage(
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+      mOptions: MacOsOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+    );
     const securePreferencesDao = AppSecurePreferencesDao(secureStorage);
     final settings = SettingsRepository(
       preferences: preferencesDao,
@@ -168,13 +174,9 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   dependencies.localeRepository = localeRepository;
   // },
   'gRPC Client factory': (dependencies) {
-    // Note: unlike the external HTTP client, the gRPC clients are intentionally NOT wired to the
-    // session CancelToken. gRPC cancellation is already covered by per-call deadlines
-    // (GrpcClientOptions.default/streamCallTimeout), subscription teardown (the stream's onCancel
-    // cancels the in-flight call), and the server rejecting a revoked token. The list RPCs are
-    // one-shot (.first/.toList), so nothing lingers across a session — a CancelToken→ResponseFuture
-    // bridge would be non-idiomatic machinery for an already-covered case. If a hard "abort all on
-    // logout" guarantee is ever needed, prefer channel.terminate() + lazy re-init over a token bridge.
+    // A6: gRPC clients are intentionally NOT wired to the session CancelToken — per-call deadlines,
+    // subscription teardown, and server-side token rejection already cover it. If a hard "abort all
+    // on logout" is ever needed, prefer channel.terminate() + lazy re-init over a token bridge.
     List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
       // Order (outermost → innermost): Logger → Metadata → Sentry → Retry → Authentication → wire.
       // - Logger: logs the final outcome + total duration (outside Retry ⇒ one line per logical call).
@@ -287,17 +289,16 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           Error.throwWithStackTrace(e, st);
         }
       },
-      // Reactive single-flight refresh on UNAUTHENTICATED: refresh once and retry the
-      // call with the rotated token; logout only happens if the refresh fails.
       refreshCredentials: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
-      // Route auth failures through the single auth-state bus (A26) instead of poking the controller
-      // directly; the repository's handler subscription performs the actual sign-out.
+      // Logout only via the single auth-state bus (A26); the repository performs the sign-out.
       onAuthError: () {
         logger.w('Received an unauthenticated gRPC response; signing out via the auth bus');
         dependencies.authenticationHandler.handleAuthenticationError();
       },
       // Single source of truth lives in auth_model and is asserted against the generated stub (A19).
       unauthenticatedPaths: kAuthServicePublicPaths,
+      // Only a rejected RefreshTokens ends the session; other public-path auth errors are flow errors.
+      sessionEndingPaths: const <String>{kAuthServiceRefreshTokensPath},
     );
 
     dependencies
@@ -325,11 +326,8 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     );
   },
 
-  // External HTTP client: S3 presigned uploads and other third-party/unauthenticated calls.
-  // Mirrors the gRPC middleware ordering (Logger → Sentry → Retry → Timeout → wire), but
-  // deliberately omits auth + app-metadata: a presigned URL is self-authenticated and
-  // first-party `X-*` headers must not leak to third parties. Session-scoped cancellation is
-  // bound to the auth repository's token so logout tears down any in-flight upload.
+  // External HTTP client (S3 presigned / third-party): deliberately no auth and no first-party
+  // X-* headers (must not leak off-domain); session-bound so logout tears down in-flight uploads.
   'Prepare external HTTP client': (dependencies) {
     dependencies.externalHttpClient = ApiClient(
       // Only used for QUIC hints + relative-path merge; requests pass absolute URLs (S3).

@@ -21,6 +21,10 @@ const kRedactedQueryParams = <String>{
   'password',
   'sig',
   'signature',
+  // AWS SigV4 presigned-URL material: signature = bearer capability, security token = STS secret.
+  'x-amz-signature',
+  'x-amz-credential',
+  'x-amz-security-token',
 };
 
 /// Returns a copy of [headers] (HTTP headers or gRPC metadata) with credential-bearing values
@@ -37,3 +41,11 @@ Map<String, List<String>> redactSensitiveQuery(Map<String, List<String>> query) 
   for (final MapEntry(:key, :value) in query.entries)
     key: kRedactedQueryParams.contains(key.toLowerCase()) ? const ['<redacted>'] : value,
 };
+
+/// Renders [url] with sensitive query values (see [kRedactedQueryParams]) replaced by `<redacted>`.
+/// For TELEMETRY (span data / hints / log lines) only — never send the returned URL anywhere: a
+/// redacted presigned URL is intentionally broken. A URL without a query is returned unchanged.
+String redactSensitiveUrl(Uri url) {
+  if (url.query.isEmpty) return url.toString();
+  return url.replace(queryParameters: redactSensitiveQuery(url.queryParametersAll)).toString();
+}

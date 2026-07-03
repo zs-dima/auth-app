@@ -10,9 +10,8 @@ import 'package:meta/meta.dart';
 class AccessCredentials {
   const AccessCredentials({required this.accessToken, required this.refreshToken, this.scopes = const <String>[]});
 
-  /// Decodes a persisted blob. Tolerant of older/partial schemas — a missing `scopes` list is
-  /// treated as empty rather than throwing — so a returning user with a pre-existing blob is not
-  /// hard-failed at startup (the repository additionally clears an undecodable blob).
+  /// Decodes a persisted blob; tolerant of older schemas (missing `scopes` → empty) so a
+  /// returning user is never hard-failed at startup.
   factory AccessCredentials.fromJson(Map<String, dynamic> json) => AccessCredentials(
     accessToken: AccessToken.fromJson((json['accessToken'] as Map).cast<String, dynamic>()),
     refreshToken: RefreshToken(json['refreshToken'] as String),
@@ -31,8 +30,7 @@ class AccessCredentials {
   @override
   int get hashCode => Object.hash(accessToken, refreshToken, Object.hashAll(scopes));
 
-  /// Serializes to a plain JSON map. `accessToken` is emitted as a nested map (via
-  /// [AccessToken.toJson]) — not the object — so callers can inspect/merge the map before encoding.
+  /// Serializes to a plain JSON map (`accessToken` as a nested map).
   Map<String, dynamic> toJson() => <String, dynamic>{
     'accessToken': accessToken.toJson(),
     'refreshToken': refreshToken.value,
@@ -47,8 +45,10 @@ class AccessCredentials {
           other.refreshToken == refreshToken &&
           _scopesEqual(other.scopes, scopes);
 
+  // Redacts both secrets: the refresh token is masked HERE because an extension type can't
+  // override toString — `'$refreshToken'` would print the raw value (refresh_token.md §13).
   @override
-  String toString() => 'AccessCredentials(accessToken=$accessToken, refreshToken=$refreshToken, scopes=$scopes)';
+  String toString() => 'AccessCredentials(accessToken=$accessToken, refreshToken=***, scopes=$scopes)';
 }
 
 bool _scopesEqual(List<String> a, List<String> b) {

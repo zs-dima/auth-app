@@ -1,5 +1,6 @@
 import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
 import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
+import 'package:auth_model/auth_model.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc_model/grpc_model.dart';
 import 'package:meta/meta.dart';
@@ -46,9 +47,11 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
       transaction.setData('grpc.response.status_code', StatusCode.ok); // gRPC OK (0), not HTTP 200
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
     } on Object catch (e, s) {
-      // Cancellation is an expected event (session/screen closed), not a bug — don't spam Sentry
-      // issues with it; the span is still finished (with a `cancelled` status) and the error rethrown.
-      if (e is! GrpcError || e.code != StatusCode.cancelled) {
+      // Expected teardown (cancellation; a request that outlived its session — A27): no Sentry
+      // issue; the span still finishes and the error rethrows.
+      final expectedTeardown =
+          (e is GrpcError && e.code == StatusCode.cancelled) || e is RequestSessionEndedException;
+      if (!expectedTeardown) {
         await Sentry.captureException(
           e,
           stackTrace: s,
@@ -85,6 +88,7 @@ class GrpcSentryMiddleware extends GrpcMiddleware {
     GrpcError(:final code) when code == StatusCode.cancelled => const .cancelled(),
     GrpcError(:final code) when code == StatusCode.deadlineExceeded => const .deadlineExceeded(),
     GrpcError(:final code) when code == StatusCode.ok => const .ok(),
+    RequestSessionEndedException() => const .cancelled(),
     _ => const .unknownError(),
   };
 }

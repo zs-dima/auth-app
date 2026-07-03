@@ -44,6 +44,14 @@ void main() {
     expect(AccessToken(token: 'x', expiry: expiry), isNot(equals(AccessToken(token: 'y', expiry: expiry))));
   });
 
+  test('toString redacts the token material (never leaks the raw JWT to logs/telemetry)', () {
+    final token = AccessToken(token: 'super-secret-jwt-value', expiry: DateTime.utc(2030));
+    final str = token.toString();
+    expect(str, isNot(contains('super-secret-jwt-value')));
+    expect(str, contains('***'));
+    expect(str, contains('Bearer')); // scheme is safe to show
+  });
+
   group('AccessToken.expiresSoon / hasExpired (30s proactive-refresh window)', () {
     AccessToken expiringIn(Duration d) => .new(token: 'x', expiry: DateTime.now().toUtc().add(d));
 

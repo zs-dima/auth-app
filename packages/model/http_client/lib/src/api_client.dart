@@ -68,8 +68,10 @@ extension type ApiClientMiddlewareWrapper._(ApiClientMiddleware _fn) {
 /// request, so middlewares (e.g. timeout) can abort the underlying socket.
 const kCancelTokenContextKey = 'cancelToken';
 
-/// Context flag that opts a request out of automatic retries (RetryMiddleware) and the
-/// `401` refresh-retry (AuthenticationMiddleware). Used for non-resendable bodies (multipart).
+/// Context flag that opts a request out of RESENDING its body — automatic retries (RetryMiddleware)
+/// and the `401` refresh-RETRY (AuthenticationMiddleware). Used for non-resendable bodies (multipart).
+/// Note: it does NOT opt out of session repair — a `401` still triggers a single-flight token refresh;
+/// only the body replay is skipped (the caller retries against the rotated token).
 const kNoRetryContextKey = 'no-retry';
 
 /// Context flag that opts a non-idempotent request (POST/PATCH) back into automatic
@@ -635,6 +637,10 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     headers: headers ?? _headers,
     middlewares: middlewares ?? this.middlewares,
     maxRedirects: maxRedirects ?? _maxRedirects,
+    // Carried over: a clone must not silently lose the session binding, size cap, or predicate.
+    sessionToken: _sessionToken,
+    maxResponseSize: maxResponseSize,
+    validateStatus: validateStatus,
   );
 
   /// Closes the client and cleans up any resources associated with it.
@@ -656,10 +662,16 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     String path, [
     Map<String, Object?>? queryParameters, // values: scalar → toString; Iterable → repeated keys; null → dropped
   ]) {
-    if (path.startsWith('http://') || path.startsWith('https://')) return Uri.parse(path);
-    var cleanPath = path;
-    while (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
-    final uri = base.replace(path: '${base.path}/$cleanPath');
+    final Uri uri;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      // An absolute URL (e.g. a presigned S3 upload) bypasses the base but still honors
+      // [queryParameters] below.
+      uri = Uri.parse(path);
+    } else {
+      var cleanPath = path;
+      while (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+      uri = base.replace(path: '${base.path}/$cleanPath');
+    }
 
     if (queryParameters == null || queryParameters.isEmpty) return uri;
 

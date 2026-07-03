@@ -67,7 +67,15 @@ final class AuthenticationController extends StateController<AuthenticationState
       // Handle MFA required - not an error, but a flow continuation
       if (error case AuthenticationException(result: AuthResultMfaRequired(:final mfaChallenge))) {
         setProgressDone();
-        onMfaRequired?.call(mfaChallenge);
+        if (onMfaRequired == null) {
+          // No MFA UI wired for this entry point: surface a truthful error instead of silently
+          // ending the spinner (a dead-end that looks like nothing happened). TODO: MFA challenge screen.
+          const message = 'Multi-factor authentication is required for this account.';
+          setError(message);
+          setState(AuthenticationState.idle(user: state.user, error: message));
+          return;
+        }
+        onMfaRequired(mfaChallenge);
         return;
       }
 

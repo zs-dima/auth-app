@@ -1,4 +1,5 @@
 import 'package:android_id/android_id.dart';
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:core_model/core_model.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:platform_info/platform_info.dart';
@@ -34,56 +35,74 @@ class DeviceInfo implements IDeviceInfo {
     final deviceOs = platform.operatingSystem.toString();
 
     if (platform.js) {
-      return DeviceInfo(
+      return DeviceInfo._unknown(
         appVersion: appVersion,
         installationId: installationId,
-        deviceId: installationId,
-        deviceName: 'Unknown device',
-        deviceModel: 'Unknown model',
         deviceOs: deviceOs,
-        deviceOsVersion: platform.version,
+        osVersion: platform.version,
       );
     }
 
     final deviceInfo = DeviceInfoPlugin();
 
-    switch (platform.operatingSystem) {
-      case OperatingSystem$iOS():
-        final iosInfo = await deviceInfo.iosInfo;
-        return DeviceInfo(
-          appVersion: appVersion,
-          installationId: installationId,
-          deviceId: iosInfo.identifierForVendor ?? installationId,
-          deviceName: iosInfo.name,
-          deviceModel: iosInfo.model,
-          deviceOs: deviceOs,
-          deviceOsVersion: platform.version,
-        );
+    // A device-info read must never block authentication (ClientInfo is session labeling, not a
+    // credential): a plugin failure degrades to the unknown-device fallback.
+    try {
+      switch (platform.operatingSystem) {
+        case OperatingSystem$iOS():
+          final iosInfo = await deviceInfo.iosInfo;
+          return DeviceInfo(
+            appVersion: appVersion,
+            installationId: installationId,
+            deviceId: iosInfo.identifierForVendor ?? installationId,
+            deviceName: iosInfo.name,
+            deviceModel: iosInfo.model,
+            deviceOs: deviceOs,
+            deviceOsVersion: platform.version,
+          );
 
-      case OperatingSystem$Android():
-        const androidIdPlugin = AndroidId();
-        final androidId = await androidIdPlugin.getId();
-        final androidInfo = await deviceInfo.androidInfo;
-        return DeviceInfo(
-          appVersion: appVersion,
-          installationId: installationId,
-          deviceId: androidId ?? installationId,
-          deviceName: androidInfo.host,
-          deviceModel: androidInfo.model,
-          deviceOs: deviceOs,
-          deviceOsVersion: platform.version,
-        );
+        case OperatingSystem$Android():
+          const androidIdPlugin = AndroidId();
+          final androidId = await androidIdPlugin.getId();
+          final androidInfo = await deviceInfo.androidInfo;
+          return DeviceInfo(
+            appVersion: appVersion,
+            installationId: installationId,
+            deviceId: androidId ?? installationId,
+            deviceName: androidInfo.host,
+            deviceModel: androidInfo.model,
+            deviceOs: deviceOs,
+            deviceOsVersion: platform.version,
+          );
 
-      default:
-        return DeviceInfo(
-          appVersion: appVersion,
-          installationId: installationId,
-          deviceId: installationId,
-          deviceName: 'Unknown device',
-          deviceModel: 'Unknown model',
-          deviceOs: deviceOs,
-          deviceOsVersion: platform.version,
-        );
+        default:
+          return DeviceInfo._unknown(
+            appVersion: appVersion,
+            installationId: installationId,
+            deviceOs: deviceOs,
+            osVersion: platform.version,
+          );
+      }
+    } on Object catch (error, stackTrace) {
+      logger.w('Failed to read device info; using the unknown-device fallback', error: error, stackTrace: stackTrace);
+      return DeviceInfo._unknown(
+        appVersion: appVersion,
+        installationId: installationId,
+        deviceOs: deviceOs,
+        osVersion: platform.version,
+      );
     }
   }
+
+  /// Fallback identity when platform device info is unavailable (web, unsupported platforms, or a
+  /// failed plugin read): the stable [installationId] doubles as the device id.
+  const DeviceInfo._unknown({
+    required this.appVersion,
+    required this.installationId,
+    required this.deviceOs,
+    required String osVersion,
+  }) : deviceId = installationId,
+       deviceName = 'Unknown device',
+       deviceModel = 'Unknown model',
+       deviceOsVersion = osVersion;
 }

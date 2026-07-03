@@ -1,7 +1,7 @@
 name: core_model
 resolution: workspace
 
-description: Core data classes
+description: Core data classes and shared primitives
 
 publish_to: "none"
 

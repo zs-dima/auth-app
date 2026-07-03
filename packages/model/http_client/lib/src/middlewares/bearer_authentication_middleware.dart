@@ -11,8 +11,7 @@ import 'package:meta/meta.dart';
 /// token refresh and has **no** public-path exemptions — for the full refresh / retry-once /
 /// single-flight flow use `auth_model`'s `HttpAuthenticationMiddleware`.
 ///
-/// Named after the **Bearer** scheme it implements (RFC 6750) — NOT HTTP Basic auth. See the
-/// deprecated `AuthenticationBasicMiddleware` alias kept for backward compatibility.
+/// Named after the **Bearer** scheme it implements (RFC 6750) — NOT HTTP Basic auth.
 /// {@endtemplate}
 @immutable
 class BearerAuthenticationMiddleware {

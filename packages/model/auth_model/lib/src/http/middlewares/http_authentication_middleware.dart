@@ -5,19 +5,13 @@ import 'package:http_client/http_client.dart';
 import 'package:meta/meta.dart';
 
 /// {@template http_authentication_middleware}
-/// Attaches the access token to each request and transparently recovers from a `401` by
-/// refreshing once and retrying — both concerns in one middleware (mirroring the gRPC
-/// [GrpcAuthenticationMiddleware]), so there is no cross-middleware context or ordering coupling.
+/// HTTP mirror of the gRPC [GrpcAuthenticationMiddleware]: attaches the access token and recovers
+/// from a `401` by a single-flight refresh + retry-once.
 ///
-/// Failure policy (HTTP semantics / OAuth2):
-/// - **401** (token invalid/expired) → single-flight [refreshCredentials] + retry **once** with
-///   the rotated token (skipped when the body can't be replayed or the request opts out via
-///   [kNoRetryContextKey]). Log out only when refresh fails definitively or a 2nd `401` survives.
-/// - **403** (authenticated but not allowed) → surfaced as-is: no refresh, no retry, no logout.
-/// - Missing/empty credentials → log out and fail fast. A *transient* failure to resolve
-///   credentials (e.g. a secure-storage hiccup) propagates as-is WITHOUT logging out (A3).
-/// - Paths in [unauthenticatedPaths] (sign-in / refresh / public) skip token-attach and
-///   refresh-retry, but still log out on a `401`/`403` auth-code error.
+/// Policy: 401 → refresh + retry once (the body resend is skipped for non-replayable requests and
+/// [kNoRetryContextKey] — the session is still repaired); 403 → surfaced as-is; missing credentials
+/// → fail fast + logout; transient resolution/refresh failures propagate without logout (A3);
+/// [unauthenticatedPaths] skip attach/retry; [sessionEndingPaths] auth errors are definitive.
 /// {@endtemplate}
 @immutable
 class HttpAuthenticationMiddleware {
@@ -27,43 +21,43 @@ class HttpAuthenticationMiddleware {
     required this.refreshCredentials,
     required this.onAuthError,
     this.unauthenticatedPaths = const <String>{},
+    this.sessionEndingPaths = const <String>{},
   });
 
-  /// Resolves the current credentials. Expected to proactively refresh tokens that are about to
-  /// expire (single-flight in the repository), so the common path is cheap/cached.
+  /// Resolves the current credentials; expected to proactively refresh an expiring token
+  /// (single-flight in the repository).
   final Future<AccessCredentials?> Function() getToken;
 
-  /// Forces a single-flight refresh for the access token that was just rejected with `401`.
-  /// Contract: returns the rotated credentials on success; `null` on a definitive rejection
-  /// (the repository has already cleared the session); or **throws** on a transient failure
-  /// (session intact) — which propagates without logging out so a later request can retry.
+  /// Single-flight refresh for the just-rejected access token. Contract: rotated credentials on
+  /// success; `null` on a definitive rejection (session already ended); a throw is transient-shaped
+  /// (incl. a request whose session ended before the refresh ran) — the call fails, no logout.
   final Future<AccessCredentials?> Function(String usedAccessToken) refreshCredentials;
 
-  /// Callback when authentication fails (logout). Invoked when credentials are missing, refresh
-  /// fails definitively, or a `401` survives a refresh. Mirrors the gRPC `GrpcAuthenticationMiddleware`.
+  /// Fire-and-forget logout signal (idempotent, via the auth bus — A26): missing credentials,
+  /// a definitive refresh failure, or a `401` surviving the refresh.
   final VoidCallback onAuthError;
 
-  /// Request URL paths (exact match on `request.url.path`) that are public — sign-in / refresh /
-  /// OAuth: no token is attached and a `401` does not trigger a refresh-retry. Mirrors the gRPC
-  /// [GrpcAuthenticationMiddleware.unauthenticatedPaths].
+  /// Public request paths (exact match on `request.url.path`): no token attach, no refresh-retry.
   final Set<String> unauthenticatedPaths;
 
+  /// Subset of [unauthenticatedPaths] whose auth-code rejection is DEFINITIVE (the refresh
+  /// endpoint): fires [onAuthError]. Other public-path auth errors are flow errors.
+  final Set<String> sessionEndingPaths;
+
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
-    // Public endpoints (sign-in / refresh / OAuth): no token, no refresh-retry, but still log out
-    // on an auth-code error (e.g. an invalid/expired refresh token).
+    // Public endpoints: no token, no refresh-retry; logout only on a session-ending auth error.
     if (unauthenticatedPaths.contains(request.url.path)) {
       try {
         return await innerHandler(request, context);
       } on ApiClientException catch (e) {
-        if (e.statusCode == 401 || e.statusCode == 403) onAuthError();
+        if (sessionEndingPaths.contains(request.url.path) && (e.statusCode == 401 || e.statusCode == 403)) {
+          onAuthError();
+        }
         rethrow;
       }
     }
 
-    // Resolve the current credentials. [getToken] proactively refreshes tokens about to expire.
-    // Logout is gated on a *definitively absent* token only (`null`/empty). A transient failure to
-    // resolve credentials (e.g. a secure-storage hiccup) propagates as-is — failing this one call
-    // WITHOUT logging out, since the session may still be valid and a later request can retry (A3).
+    // Logout only on a definitively absent token; a transient resolution failure propagates (A3).
     final credentials = await getToken();
     if (credentials == null || credentials.accessToken.token.isEmpty) {
       onAuthError();
@@ -74,27 +68,27 @@ class HttpAuthenticationMiddleware {
       );
     }
 
-    // Attach on the original request (mutate in place), NOT a clone: clone() rebuilds a plain
-    // Request and can't replay a multipart/streamed body, so cloning here would drop the upload.
-    // Only the access token rides along; the refresh token is sent solely to the refresh endpoint.
-    // The scheme comes from the token itself ([AccessToken.type], usually `Bearer`) — the single
-    // transport-neutral source of truth, mirroring the gRPC middleware.
+    // Mutate in place, NOT a clone — clone() can't replay a multipart/streamed body. Only the
+    // access token rides along ([AccessToken.authorizationHeaderValue]).
     request.headers[Headers.authorizationHeader] = credentials.accessToken.authorizationHeaderValue;
 
     try {
       return await innerHandler(request, context);
     } on ApiClientException catch (e) {
-      // Only 401 is refreshable. 403 (authorization) and everything else surface as-is; a body
-      // that can't be replayed (multipart / streamed) can't be retried.
-      if (e.statusCode != 401 || !request.canBeRetried || context[kNoRetryContextKey] == true) rethrow;
+      // Only 401 is refreshable; 403 (authorization) and everything else surface as-is.
+      if (e.statusCode != 401) rethrow;
 
-      // Single-flight refresh: rotated creds on success; `null` ⇒ definitive (session already
-      // ended); throws ⇒ transient (propagates here without logout so a later request retries).
+      // Non-replayable/opted-out bodies still get the session REPAIR — only the resend is skipped.
+      final canReplay = request.canBeRetried && context[kNoRetryContextKey] != true;
+
       final fresh = await refreshCredentials(credentials.accessToken.token);
       if (fresh == null || fresh.accessToken.token.isEmpty) {
         onAuthError();
         rethrow;
       }
+
+      // Repaired: non-replayable → surface the original 401; else retry once with the rotated token.
+      if (!canReplay) rethrow;
 
       // Retry once with a fresh clone carrying the rotated token (the original was finalized).
       try {

@@ -36,7 +36,8 @@ class HttpSentryMiddleware {
                 startTimestamp: startTimestamp,
               ))
           ..setData('http.request.method', request.method)
-          ..setData('url', request.url.toString())
+          // Redacted: a raw presigned/S3 URL is a live bearer capability (X-Amz-Signature & co).
+          ..setData('url', redactSensitiveUrl(request.url))
           ..setData('path', request.url.path)
           ..setData('query', redactSensitiveQuery(request.url.queryParametersAll))
           ..setData('request_headers', redactSensitiveHeaders(request.headers));
@@ -52,8 +53,7 @@ class HttpSentryMiddleware {
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
       return response;
     } on Object catch (e, s) {
-      // Cancellation is an expected event (session/screen closed), not a bug — don't spam Sentry
-      // issues with it; the span is still finished (with a `cancelled` status) and the error rethrown.
+      // Expected teardown (cancellation): no Sentry issue; the span still finishes and rethrows.
       if (e is! ApiClientException$Cancelled) {
         await Sentry.captureException(
           e,
@@ -61,7 +61,8 @@ class HttpSentryMiddleware {
           withScope: (scope) => scope.span = transaction,
           hint: Hint.withMap({
             'method': request.method,
-            'url': request.url,
+            // Redacted string, not the raw Uri — same rationale as the span-data 'url' field.
+            'url': redactSensitiveUrl(request.url),
             'path': request.url.path,
             'query': redactSensitiveQuery(request.url.queryParametersAll),
             'headers': redactSensitiveHeaders(request.headers),

@@ -37,4 +37,11 @@ sealed class UserInfo with _$UserInfo implements IUserInfo, Comparable<UserInfo>
 
   @override
   int compareTo(UserInfo other) => name.toLowerCase().compareTo(other.name.toLowerCase());
+
+  // PII redact-at-source (refresh_token.md §13): reachable from logs/state-observer/Sentry.
+  // Freezed skips generating toString when the class declares one.
+  @override
+  String toString() =>
+      'UserInfo(id: $id, name: ***, email: ***, role: $role, status: $status, phone: ***, '
+      'avatarUrl: $avatarUrl, locale: $locale, timezone: $timezone)';
 }

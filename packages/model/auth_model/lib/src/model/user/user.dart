@@ -55,4 +55,13 @@ sealed class User with _$User implements IUserInfo, Comparable<User> {
 
   @override
   int compareTo(User other) => name.toLowerCase().compareTo(other.name.toLowerCase());
+
+  // PII redact-at-source (refresh_token.md §13): reachable from logs/state-observer/Sentry.
+  // Freezed skips generating toString when the class declares one.
+  @override
+  String toString() =>
+      'User(id: $id, name: ***, email: ***, role: $role, status: $status, phone: ***, '
+      'emailVerified: $emailVerified, phoneVerified: $phoneVerified, mfaEnabled: $mfaEnabled, '
+      'hasPassword: $hasPassword, avatarUrl: $avatarUrl, locale: $locale, timezone: $timezone, '
+      'createdAt: $createdAt, updatedAt: $updatedAt)';
 }

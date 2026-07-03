@@ -22,7 +22,7 @@ dependencies:
   meta: any
   uuid: any
   fixnum: any
-  crypto: any
+  # crypto: any
 
   # Internationalization
   intl: any

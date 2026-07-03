@@ -282,6 +282,60 @@ void main() {
       expect(seen!.queryParametersAll.containsKey('skip'), isFalse);
       expect(seen!.queryParametersAll.containsKey('empty'), isFalse);
     });
+
+    test('an absolute URL keeps its own query and honors queryParameters', () async {
+      Uri? seen;
+      final mock = MockClient((request) async {
+        seen = request.url;
+        return http.Response('ok', 200);
+      });
+
+      await bareClient(mock).get('https://cdn.example.com/file.png?present=1', queryParameters: {'extra': 'x'});
+
+      expect(seen!.host, 'cdn.example.com');
+      expect(seen!.queryParameters['present'], '1', reason: 'the URL\'s own query survives');
+      expect(seen!.queryParameters['extra'], 'x', reason: 'queryParameters are merged, not silently dropped');
+    });
+  });
+
+  group('ApiClient.clone', () {
+    test('preserves the response-size cap', () async {
+      final mock = MockClient((_) async => http.Response('x' * 100, 200));
+      // `client` is the one thing clone() cannot carry over (ownership) — pass it explicitly.
+      final copy = bareClient(mock, maxResponseSize: 10).clone(client: mock);
+
+      await expectLater(
+        copy.get('/x'),
+        throwsA(isA<ApiClientException$Internal>().having((e) => e.code, 'code', 'response_too_large')),
+      );
+    });
+
+    test('preserves the validateStatus predicate', () async {
+      final mock = MockClient((_) async => http.Response('body', 404));
+      final copy = bareClient(mock, validateStatus: (c) => c == 404).clone(client: mock);
+
+      final res = await copy.get('/x');
+      expect(res.statusCode, 404, reason: 'the custom success predicate survives the clone');
+    });
+
+    test('preserves the session-cancellation binding', () async {
+      final session = CancelToken()..cancel(); // an already-ended session cancels new links immediately
+      final mock = MockClient.streaming((request, _) async {
+        await (request as http.Abortable).abortTrigger; // already completed via the session link
+        throw http.RequestAbortedException(request.url);
+      });
+      final origin = ApiClient(
+        baseUrl: () => Uri.parse('https://api.test'),
+        client: mock,
+        sessionToken: () => session,
+      );
+
+      await expectLater(
+        origin.clone(client: mock).get('/x'),
+        throwsA(isA<ApiClientException$Cancelled>()),
+        reason: 'the clone stays bound to the session token',
+      );
+    });
   });
 
   group('validateStatus', () {

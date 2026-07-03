@@ -12,7 +12,7 @@ lib/src/
             # Method signatures use only domain types — no proto/gRPC types leak through.
   grpc/     # The single transport implementation: gRPC clients, converter, exceptions,
             # call guard, auth middleware, and the generated proto (grpc/proto/**).
-  client/   # Transport-neutral glue: AuthenticationHandler (logout bus), credentials callbacks.
+  client/   # Transport-neutral glue: AuthenticationHandler (logout bus).
 ```
 
 ## Why does a "model" package depend on `grpc` / `grpc_model`?

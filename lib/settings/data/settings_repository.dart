@@ -86,13 +86,24 @@ class SettingsRepository implements ISettingsRepository {
 
   @override
   Future<void> setCredentials(AccessCredentials? value) async {
-    if (value == await getCredentials()) return;
+    // Clearing must NEVER depend on decoding the existing blob: a corrupt / schema-incompatible value
+    // makes getCredentials() throw, and if removal were gated on that read the session would wedge
+    // permanently — restore()'s recovery (which calls setCredentials(null)) and sign-in's persist
+    // could never overwrite it. So the null path removes unconditionally.
     if (value == null) {
       await _securePreferences.credentials.remove();
-    } else {
-      final js = json.encode(value.toJson());
-      await _securePreferences.credentials.set(js);
+      return;
     }
+    // Dedup guard: skip the write when the stored value already matches. An undecodable existing blob
+    // is treated as "different" so the new value overwrites it (self-healing) instead of throwing.
+    AccessCredentials? current;
+    try {
+      current = await getCredentials();
+    } on Object {
+      current = null;
+    }
+    if (value == current) return;
+    await _securePreferences.credentials.set(json.encode(value.toJson()));
   }
 
   @override
