@@ -5,6 +5,10 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+
+  <!-- DEV-RELAXED CSP: `flutter run` needs 'unsafe-inline' (DWDS), gstatic (CanvasKit) and ws: (debug service). Strict policy lives in index.prod.html; details in web/README.md. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' http: https: ws: wss:; object-src 'none'; base-uri 'self'; form-action 'self'">
+
   <meta name="description" content="Authentication demo app.">
   <meta name="theme-color" content="#f4fdf7" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
@@ -23,7 +27,7 @@
 
 </head>
   <body>
-    <!-- Loading progress bridge called by Dart JS interop -->
+    <!-- Called unguarded by Dart JS interop — must exist (prod gets real ones from bootstrap.js). -->
     <script>
       window.updateLoadingProgress = function (progress, text) {};
       window.removeLoadingIndicator = function () {};

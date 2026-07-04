@@ -6,11 +6,6 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-
-  <!-- STRICT CSP (XSS → refresh-token defense): all scripts external, no 'unsafe-inline'.
-       gstatic is REQUIRED (release CanvasKit/skwasm CDN). Rationale + CDN-header checklist: web/README.md. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; form-action 'self'">
-
   <meta name="description" content="Authentication demo app.">
   <meta name="theme-color" content="#f4fdf7" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
@@ -61,8 +56,55 @@
 
 </head>
 <body>
-  <!-- External (strict CSP forbids inline); must run before the deferred bootstrap. -->
-  <script src="launch_params.js"></script>
+  <script>
+    // Extract incoming launch parameters (initial message, referrer, UTM params)
+    (function() {
+      var data = { message: null, referrer: null, params: {} };
+
+      // 1. Try window.name (primary channel)
+      if (window.name) {
+        try {
+          var parsed = JSON.parse(window.name);
+          if (parsed && typeof parsed === 'object' && ('message' in parsed || 'referrer' in parsed)) {
+            data.message = parsed.message || null;
+            data.referrer = parsed.referrer || null;
+            if (parsed.params && typeof parsed.params === 'object') {
+              data.params = parsed.params;
+            }
+            window.name = ''; // Clear after reading
+          }
+        } catch (e) {
+          // Not our data, ignore
+        }
+      }
+
+      // 2. Read query parameters (present in both primary and fallback)
+      var searchParams = new URLSearchParams(window.location.search);
+      if (!data.referrer) {
+        data.referrer = searchParams.get('referrer') || null;
+      }
+      // Extract custom params from URL (fallback path puts them in query)
+      searchParams.forEach(function(value, key) {
+        if (key !== 'auto_accept_policies' && key !== 'referrer') {
+          if (!data.params[key]) {
+            data.params[key] = value;
+          }
+        }
+      });
+
+      // 3. Read message from hash (fallback path only)
+      if (!data.message && window.location.hash.length > 1) {
+        try {
+          data.message = decodeURIComponent(window.location.hash.substring(1));
+        } catch (e) {
+          data.message = window.location.hash.substring(1);
+        }
+      }
+
+      // Expose to Dart (URL cleanup is handled on the Dart side)
+      window._appInitialParams = data;
+    })();
+  </script>
 
   <script defer data-sw-bootstrap src="bootstrap.js"></script>
 </body>
