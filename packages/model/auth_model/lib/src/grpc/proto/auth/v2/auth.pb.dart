@@ -1087,9 +1087,8 @@ class SignUpRequest extends $pb.GeneratedMessage {
   void clearTimezone() => $_clearField(8);
 
   /// Client-generated idempotency key (UUID v4 recommended).
-  /// Guarantees at-most-once execution for retries on network failures.
-  /// Server ignores the request body if a matching key was already processed
-  /// and returns the original response.
+  /// Reserved for idempotent retries on network failures: accepted but not yet
+  /// enforced by the server (planned capability).
   @$pb.TagNumber(9)
   $core.String get idempotencyKey => $_getSZ(8);
   @$pb.TagNumber(9)
@@ -1107,12 +1106,14 @@ class VerifyMfaRequest extends $pb.GeneratedMessage {
     MfaMethod? method,
     $core.String? code,
     ClientInfo? clientInfo,
+    $3.UUID? installationId,
   }) {
     final result = create();
     if (challengeToken != null) result.challengeToken = challengeToken;
     if (method != null) result.method = method;
     if (code != null) result.code = code;
     if (clientInfo != null) result.clientInfo = clientInfo;
+    if (installationId != null) result.installationId = installationId;
     return result;
   }
 
@@ -1135,6 +1136,8 @@ class VerifyMfaRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'code')
     ..aOM<ClientInfo>(4, _omitFieldNames ? '' : 'clientInfo',
         subBuilder: ClientInfo.create)
+    ..aOM<$3.UUID>(5, _omitFieldNames ? '' : 'installationId',
+        subBuilder: $3.UUID.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1197,6 +1200,20 @@ class VerifyMfaRequest extends $pb.GeneratedMessage {
   void clearClientInfo() => $_clearField(4);
   @$pb.TagNumber(4)
   ClientInfo ensureClientInfo() => $_ensure(3);
+
+  /// Unique installation/app instance ID. Required like on every other
+  /// session-creating RPC (stored on the session; sessions.installation_id
+  /// is NOT NULL and is the JWT claim source on refresh).
+  @$pb.TagNumber(5)
+  $3.UUID get installationId => $_getN(4);
+  @$pb.TagNumber(5)
+  set installationId($3.UUID value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasInstallationId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearInstallationId() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $3.UUID ensureInstallationId() => $_ensure(4);
 }
 
 class RefreshTokensRequest extends $pb.GeneratedMessage {
@@ -2061,7 +2078,8 @@ class RecoveryStartRequest extends $pb.GeneratedMessage {
   void clearIdentifierType() => $_clearField(2);
 
   /// Client-generated idempotency key (UUID v4 recommended).
-  /// Prevents duplicate recovery emails on network retries.
+  /// Reserved for deduplicating recovery emails on network retries: accepted
+  /// but not yet enforced by the server (planned capability).
   @$pb.TagNumber(3)
   $core.String get idempotencyKey => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -3125,14 +3143,9 @@ class DisableMfaRequest extends $pb.GeneratedMessage {
 }
 
 /// Request to list active sessions.
+/// The current session is derived from the access token's `sid` claim.
 class ListSessionsRequest extends $pb.GeneratedMessage {
-  factory ListSessionsRequest({
-    $core.String? refreshToken,
-  }) {
-    final result = create();
-    if (refreshToken != null) result.refreshToken = refreshToken;
-    return result;
-  }
+  factory ListSessionsRequest() => create();
 
   ListSessionsRequest._();
 
@@ -3147,7 +3160,6 @@ class ListSessionsRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ListSessionsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'auth.v2'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'refreshToken')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3168,16 +3180,6 @@ class ListSessionsRequest extends $pb.GeneratedMessage {
   static ListSessionsRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ListSessionsRequest>(create);
   static ListSessionsRequest? _defaultInstance;
-
-  /// Active refresh token used to identify the current session
-  @$pb.TagNumber(1)
-  $core.String get refreshToken => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set refreshToken($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRefreshToken() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRefreshToken() => $_clearField(1);
 }
 
 /// Response for listing sessions

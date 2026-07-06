@@ -13,7 +13,9 @@
         "-t${workspaceFolder}/lib/main.dart",
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },
@@ -38,7 +40,9 @@
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
         "--dart-define=DROP_DATABASE=true",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },
@@ -52,7 +56,9 @@
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
         "--dart-define=IN_MEMORY_DATABASE=true",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },
@@ -66,7 +72,9 @@
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
         "--device-id=web-server",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },
@@ -79,7 +87,9 @@
       "args": [
         "--dart-define-from-file=config/staging.env",
         "--dart-define-from-file=config/keys.env",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },
@@ -92,7 +102,9 @@
       "args": [
         "--dart-define-from-file=config/production.env",
         "--dart-define-from-file=config/keys.env",
-        "--web-port=8008"
+        "--web-port=8008",
+        "--web-header=Cross-Origin-Opener-Policy=same-origin",
+        "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
       "env": {}
     },

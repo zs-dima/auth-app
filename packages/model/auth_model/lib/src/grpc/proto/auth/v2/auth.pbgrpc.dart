@@ -68,7 +68,22 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$authenticate, request, options: options);
   }
 
-  /// Refresh access token using refresh token
+  /// Exchange a refresh token for a new token pair (public endpoint — the
+  /// refresh token itself is the credential; no Bearer JWT is required).
+  ///
+  /// Server contract (mirrors the client spec refresh_token.md §12.2):
+  /// - The refresh token is rotated on EVERY success; the response always
+  ///   carries the new refresh token, which the client MUST persist.
+  /// - A grace window (REFRESH_ROTATE_GRACE_SECONDS, default 60s) accepts the
+  ///   immediately-previous token to absorb lost responses and retries; each
+  ///   grace replay returns a fresh token and never extends the window.
+  /// - Presenting any older (already-rotated) token is treated as token theft:
+  ///   the whole session is revoked and UNAUTHENTICATED is returned.
+  /// - Definitive rejections (UNAUTHENTICATED / PERMISSION_DENIED /
+  ///   INVALID_ARGUMENT) mean the session is dead — the client must sign out.
+  ///   Transient faults are reported as UNAVAILABLE / INTERNAL — safe to retry.
+  /// - Session lifetime: sliding idle TTL (REFRESH_TOKEN_TTL_DAYS) capped by an
+  ///   absolute limit (SESSION_ABSOLUTE_TTL_DAYS) since last re-authentication.
   $grpc.ResponseFuture<$0.TokenPair> refreshTokens(
     $0.RefreshTokensRequest request, {
     $grpc.CallOptions? options,
@@ -225,8 +240,9 @@ class AuthServiceClient extends $grpc.Client {
     return $createUnaryCall(_$disableMfa, request, options: options);
   }
 
-  /// List all active sessions for current user
-  /// POST because refresh_token in body must not appear in URLs/logs
+  /// List all active sessions for the current user.
+  /// The current session is identified by the access token's `sid` claim
+  /// (OIDC session identifier) — no request payload is needed.
   $grpc.ResponseFuture<$0.ListSessionsResponse> listSessions(
     $0.ListSessionsRequest request, {
     $grpc.CallOptions? options,

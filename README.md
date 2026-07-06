@@ -62,7 +62,12 @@ Auth App provides a modern, responsive UI for authentication and user management
 
 ```bash
 # Run on Chrome (Web)
-flutter run -d chrome --dart-define-from-file=config/development.env
+# COOP/COEP headers enable cross-origin isolation (SharedArrayBuffer), so the drift
+# database picks an OPFS storage instead of falling back to IndexedDB — same headers
+# as production (see firebase.json).
+flutter run -d chrome --dart-define-from-file=config/development.env \
+  --web-header=Cross-Origin-Opener-Policy=same-origin \
+  --web-header=Cross-Origin-Embedder-Policy=require-corp
 
 # Run on Windows
 flutter run -d windows --dart-define-from-file=config/development.env

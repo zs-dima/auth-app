@@ -19,6 +19,10 @@ sealed class AvatarState with _$AvatarState {
 
 final class AvatarController extends StateController<AvatarState>
     with DroppableControllerHandler, AppMessageControllerMixin {
+  /// How often remote avatar updates are picked up. Within one interval the URL
+  /// is stable, so image caches work and a failed load isn't retried on rebuild.
+  static const Duration _avatarRefreshInterval = Duration(minutes: 10);
+
   AvatarController({
     super.initialState = const AvatarState.idle(UserIdX.empty, ''),
     required String s3Url,
@@ -111,10 +115,14 @@ final class AvatarController extends StateController<AvatarState>
   );
 
   /// Get avatar URL with cache-busting version.
+  ///
+  /// Own upload/delete busts immediately via [_versions]; otherwise the version
+  /// ticks once per [_avatarRefreshInterval] to pick up other users' changes.
   String getUrl(UserId userId) {
     if (userId.isEmpty) return '';
 
-    final version = _versions[userId] ?? DateTime.now().millisecondsSinceEpoch;
+    final version =
+        _versions[userId] ?? (DateTime.now().millisecondsSinceEpoch ~/ _avatarRefreshInterval.inMilliseconds);
     return '${_s3Url.trimEnd2('/')}/users/$userId/avatar.webp?v=$version';
   }
 }

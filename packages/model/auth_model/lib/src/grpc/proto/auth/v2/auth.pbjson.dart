@@ -504,7 +504,17 @@ const VerifyMfaRequest$json = {
       '4': 1,
       '5': 11,
       '6': '.auth.v2.ClientInfo',
+      '8': {},
       '10': 'clientInfo'
+    },
+    {
+      '1': 'installation_id',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.core.v2.UUID',
+      '8': {},
+      '10': 'installationId'
     },
   ],
 };
@@ -513,8 +523,10 @@ const VerifyMfaRequest$json = {
 final $typed_data.Uint8List verifyMfaRequestDescriptor = $convert.base64Decode(
     'ChBWZXJpZnlNZmFSZXF1ZXN0EjAKD2NoYWxsZW5nZV90b2tlbhgBIAEoCUIHukgEcgIQAVIOY2'
     'hhbGxlbmdlVG9rZW4SNAoGbWV0aG9kGAIgASgOMhIuYXV0aC52Mi5NZmFNZXRob2RCCLpIBYIB'
-    'AiAAUgZtZXRob2QSHQoEY29kZRgDIAEoCUIJukgGcgQQBhggUgRjb2RlEjQKC2NsaWVudF9pbm'
-    'ZvGAQgASgLMhMuYXV0aC52Mi5DbGllbnRJbmZvUgpjbGllbnRJbmZv');
+    'AiAAUgZtZXRob2QSHQoEY29kZRgDIAEoCUIJukgGcgQQBhggUgRjb2RlEjwKC2NsaWVudF9pbm'
+    'ZvGAQgASgLMhMuYXV0aC52Mi5DbGllbnRJbmZvQga6SAPIAQFSCmNsaWVudEluZm8SPgoPaW5z'
+    'dGFsbGF0aW9uX2lkGAUgASgLMg0uY29yZS52Mi5VVUlEQga6SAPIAQFSDmluc3RhbGxhdGlvbk'
+    'lk');
 
 @$core.Deprecated('Use refreshTokensRequestDescriptor instead')
 const RefreshTokensRequest$json = {
@@ -1114,22 +1126,15 @@ final $typed_data.Uint8List disableMfaRequestDescriptor = $convert.base64Decode(
 @$core.Deprecated('Use listSessionsRequestDescriptor instead')
 const ListSessionsRequest$json = {
   '1': 'ListSessionsRequest',
-  '2': [
-    {
-      '1': 'refresh_token',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '8': {},
-      '10': 'refreshToken'
-    },
+  '9': [
+    {'1': 1, '2': 2},
   ],
+  '10': ['refresh_token'],
 };
 
 /// Descriptor for `ListSessionsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List listSessionsRequestDescriptor = $convert.base64Decode(
-    'ChNMaXN0U2Vzc2lvbnNSZXF1ZXN0EiwKDXJlZnJlc2hfdG9rZW4YASABKAlCB7pIBHICEAFSDH'
-    'JlZnJlc2hUb2tlbg==');
+final $typed_data.Uint8List listSessionsRequestDescriptor = $convert
+    .base64Decode('ChNMaXN0U2Vzc2lvbnNSZXF1ZXN0SgQIARACUg1yZWZyZXNoX3Rva2Vu');
 
 @$core.Deprecated('Use listSessionsResponseDescriptor instead')
 const ListSessionsResponse$json = {

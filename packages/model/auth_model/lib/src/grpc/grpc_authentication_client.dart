@@ -323,8 +323,8 @@ class GrpcAuthenticationClient extends grpc.GrpcClient<rpc.AuthServiceClient> im
   // ===========================================================================
 
   @override
-  Future<List<SessionInfo>> listSessions(String refreshToken) async {
-    final result = await guardGrpcCall(() => client.listSessions(rpc.ListSessionsRequest()..refreshToken = refreshToken));
+  Future<List<SessionInfo>> listSessions() async {
+    final result = await guardGrpcCall(() => client.listSessions(rpc.ListSessionsRequest()));
     return result.sessions.map((s) => s.toSessionInfo()).toList();
   }
 

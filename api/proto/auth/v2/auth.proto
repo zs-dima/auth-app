@@ -52,7 +52,22 @@ service AuthService {
     };
   }
 
-  // Refresh access token using refresh token
+  // Exchange a refresh token for a new token pair (public endpoint — the
+  // refresh token itself is the credential; no Bearer JWT is required).
+  //
+  // Server contract (mirrors the client spec refresh_token.md §12.2):
+  // - The refresh token is rotated on EVERY success; the response always
+  //   carries the new refresh token, which the client MUST persist.
+  // - A grace window (REFRESH_ROTATE_GRACE_SECONDS, default 60s) accepts the
+  //   immediately-previous token to absorb lost responses and retries; each
+  //   grace replay returns a fresh token and never extends the window.
+  // - Presenting any older (already-rotated) token is treated as token theft:
+  //   the whole session is revoked and UNAUTHENTICATED is returned.
+  // - Definitive rejections (UNAUTHENTICATED / PERMISSION_DENIED /
+  //   INVALID_ARGUMENT) mean the session is dead — the client must sign out.
+  //   Transient faults are reported as UNAVAILABLE / INTERNAL — safe to retry.
+  // - Session lifetime: sliding idle TTL (REFRESH_TOKEN_TTL_DAYS) capped by an
+  //   absolute limit (SESSION_ABSOLUTE_TTL_DAYS) since last re-authentication.
   rpc RefreshTokens(RefreshTokensRequest) returns (TokenPair) {
     option (google.api.http) = {
       post: "/v2/auth/token/refresh"
@@ -242,12 +257,12 @@ service AuthService {
   // Sessions
   // =========================================================================
 
-  // List all active sessions for current user
-  // POST because refresh_token in body must not appear in URLs/logs
+  // List all active sessions for the current user.
+  // The current session is identified by the access token's `sid` claim
+  // (OIDC session identifier) — no request payload is needed.
   rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse) {
     option (google.api.http) = {
-      post: "/v2/auth/sessions"
-      body: "*"
+      get: "/v2/auth/sessions"
     };
   }
 
@@ -493,9 +508,8 @@ message SignUpRequest {
   string timezone = 8 [ (buf.validate.field).string.max_len = 64 ];
 
   // Client-generated idempotency key (UUID v4 recommended).
-  // Guarantees at-most-once execution for retries on network failures.
-  // Server ignores the request body if a matching key was already processed
-  // and returns the original response.
+  // Reserved for idempotent retries on network failures: accepted but not yet
+  // enforced by the server (planned capability).
   string idempotency_key = 9 [ (buf.validate.field).string.max_len = 64 ];
 }
 
@@ -511,7 +525,12 @@ message VerifyMfaRequest {
   string code = 3 [ (buf.validate.field).string = {min_len : 6, max_len : 32} ];
 
   // Client info for session creation
-  ClientInfo client_info = 4;
+  ClientInfo client_info = 4 [ (buf.validate.field).required = true ];
+
+  // Unique installation/app instance ID. Required like on every other
+  // session-creating RPC (stored on the session; sessions.installation_id
+  // is NOT NULL and is the JWT claim source on refresh).
+  core.v2.UUID installation_id = 5 [ (buf.validate.field).required = true ];
 }
 
 message RefreshTokensRequest {
@@ -622,7 +641,8 @@ message RecoveryStartRequest {
   IdentifierType identifier_type = 2;
 
   // Client-generated idempotency key (UUID v4 recommended).
-  // Prevents duplicate recovery emails on network retries.
+  // Reserved for deduplicating recovery emails on network retries: accepted
+  // but not yet enforced by the server (planned capability).
   string idempotency_key = 3 [ (buf.validate.field).string.max_len = 64 ];
 }
 
@@ -649,9 +669,8 @@ message ChangePasswordRequest {
 // =============================================================================
 // EMAIL/PHONE VERIFICATION
 // =============================================================================
-// Uses DB: users.email_verified, users.phone_verified
-// Note: Verification tokens stored in separate verification_tokens table (to be
-// added)
+// Uses DB: users.email_verified, users.phone_verified,
+// auth.email_verification_tokens (single-use, hashed, TTL-bound)
 
 message RequestVerificationRequest {
   // Type of verification
@@ -777,9 +796,11 @@ message DisableMfaRequest {
 // =============================================================================
 
 // Request to list active sessions.
+// The current session is derived from the access token's `sid` claim.
 message ListSessionsRequest {
-  // Active refresh token used to identify the current session
-  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
+  // Removed: refresh tokens must never ride data RPCs
+  reserved 1;
+  reserved "refresh_token";
 }
 
 // Response for listing sessions
