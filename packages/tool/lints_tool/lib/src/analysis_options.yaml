@@ -22,6 +22,8 @@ analyzer:
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
     - "**/*.pbgrpc.dart"
+    - "**/*.connect.client.dart"
+    - "**/*.connect.spec.dart"
     # Flutter Version Manager
     - ".fvm/**"
     # Tools

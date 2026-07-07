@@ -10,6 +10,16 @@
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
+import 'dart:async' as $async;
 import 'dart:core' as $core;
 
+import 'package:protobuf/protobuf.dart' as $pb;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+/// Placeholder for future app-level RPCs (health check, feature flags, etc.)
+class AppServiceApi {
+  final $pb.RpcClient _client;
+
+  AppServiceApi(this._client);
+}

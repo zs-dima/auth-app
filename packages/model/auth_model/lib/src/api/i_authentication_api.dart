@@ -52,9 +52,9 @@ abstract interface class IAuthenticationApi {
   ///
   /// Failure contract: a **definitive** rejection (invalid/expired/revoked refresh token, or a
   /// malformed token in the response) is signalled by throwing `CredentialsRejectedException`; a
-  /// transient failure throws `GrpcException$Network`. An implementation MAY alternatively return
+  /// transient failure throws `RpcException$Network`. An implementation MAY alternatively return
   /// `null` to signal definitive rejection — callers also treat `null` that way (see the defensive
-  /// branch in `AuthenticationRepository`). The gRPC client throws (never returns `null`); the
+  /// branch in `AuthenticationRepository`). The Connect client throws (never returns `null`); the
   /// nullable return keeps the door open for other transports/mocks.
   Future<AccessCredentials?> refreshTokens(String accessToken, RefreshToken refreshToken);
 

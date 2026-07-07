@@ -15,7 +15,7 @@ Consequences:
 - A **long-lived refresh token in browser storage cannot be protected from same-origin script.** An
   XSS on this origin can exfiltrate it. The CSP below is the primary mitigation; keep it strict.
 - Prefer short refresh-token lifetimes / rotation server-side (the client already handles rotation and
-  RFC 6749 §6 refresh-token omission — see `GrpcAuthenticationClient.mapRefreshResponse`).
+  RFC 6749 §6 refresh-token omission — see `ConnectAuthenticationClient.mapRefreshResponse`).
 - A more robust design (future work, not implemented) keeps the refresh token in an `HttpOnly`,
   `Secure`, `SameSite` cookie the JS never sees, with the server refreshing on a cookie-authenticated
   endpoint. That requires backend support and is out of scope here.
@@ -46,7 +46,7 @@ A CSP `<meta>` is set, but **dev and prod policies deliberately differ**:
 `style-src 'unsafe-inline'` is unavoidable — Flutter web injects inline styles.
 `script-src 'wasm-unsafe-eval'` is required by CanvasKit.
 
-`connect-src` is deliberately permissive (`'self' https: wss:` in prod) because the gRPC-web /
+`connect-src` is deliberately permissive (`'self' https: wss:` in prod) because the Connect RPC /
 app-service / S3 origins come from **runtime environment config** and cannot be enumerated in a
 static template.
 
@@ -65,7 +65,7 @@ static template.
 
 ### Production hardening checklist (do at the CDN / server, not in `<meta>`)
 
-- **Pin `connect-src`** to the exact gRPC-web / app / S3 origins for the environment (via an HTTP
+- **Pin `connect-src`** to the exact Connect RPC / app / S3 origins for the environment (via an HTTP
   `Content-Security-Policy` response header, which overrides/augments the meta).
 - Set **`frame-ancestors 'none'`** (and `X-Frame-Options: DENY`) — clickjacking protection; these are
   **ignored** in a `<meta>` CSP and must be HTTP headers.

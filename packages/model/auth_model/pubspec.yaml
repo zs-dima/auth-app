@@ -13,8 +13,8 @@ dependencies:
   # Packages
   core_model:
     path: ../../model/core_model
-  grpc_model:
-    path: ../../model/grpc_model
+  connect_model:
+    path: ../../model/connect_model
   http_client:
     path: ../../model/http_client
 
@@ -32,7 +32,7 @@ dependencies:
   json_annotation: ^4.12.0
 
   # API
-  grpc: ^5.1.0
+  connectrpc: ^1.0.0
   protobuf: ^6.0.0
 
 dev_dependencies:

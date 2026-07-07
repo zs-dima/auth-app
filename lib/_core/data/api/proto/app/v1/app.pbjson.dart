@@ -14,3 +14,11 @@
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
+
+const $core.Map<$core.String, $core.dynamic> AppServiceBase$json = {'1': 'AppService'};
+
+@$core.Deprecated('Use appServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> AppServiceBase$messageJson = {};
+
+/// Descriptor for `AppService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List appServiceDescriptor = $convert.base64Decode('CgpBcHBTZXJ2aWNl');

@@ -36,9 +36,9 @@ class _AppTreeState extends State<AppTree> with WidgetsBindingObserver {
     if (dependencies == null) return;
 
     switch (state) {
-      // App-wide teardown (A6): when the engine detaches, release the gRPC channels, the external HTTP
-      // client, and the auth handler/repository. `detached` is best-effort on mobile but reliable on
-      // desktop/web/hot-restart.
+      // App-wide teardown (A6): when the engine detaches, release the shared Connect HTTP client, the
+      // external HTTP client, and the auth handler/repository. `detached` is best-effort on mobile but
+      // reliable on desktop/web/hot-restart.
       case .detached:
         $disposeApp(dependencies).ignore();
 

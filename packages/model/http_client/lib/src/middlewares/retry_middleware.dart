@@ -39,10 +39,10 @@ Duration? _retryAfter(Object error) {
 /// Error classification is delegated to a single policy — [retryEvaluator] or
 /// [defaultRetryEvaluator].
 ///
-/// Consistency note (vs gRPC `GrpcRetryMiddleware`): HTTP gates on method idempotency (RFC 9110)
-/// and does **not** retry `$Timeout` (its abort token is already consumed). gRPC has no verb
-/// semantics (retries any unary on transient codes) and retries `DEADLINE_EXCEEDED` with a fresh
-/// deadline per attempt. Both are intentional, transport-appropriate differences.
+/// Consistency note (vs Connect `ConnectRetryMiddleware`): HTTP gates on method idempotency
+/// (RFC 9110) and does **not** retry `$Timeout` (its abort token is already consumed). RPC has no
+/// verb semantics (retries any unary on transient codes) and retries `DEADLINE_EXCEEDED` within
+/// the whole-call deadline budget. Both are intentional, transport-appropriate differences.
 /// {@endtemplate}
 @immutable
 class RetryMiddleware {

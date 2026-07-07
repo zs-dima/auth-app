@@ -1,13 +1,13 @@
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Injects Sentry distributed-tracing headers (`sentry-trace` + `baggage`) from [span] into
-/// [headers] (HTTP headers or gRPC metadata) so the backend continues the same trace — giving
+/// [headers] (HTTP headers or RPC metadata) so the backend continues the same trace — giving
 /// end-to-end traces across the client and the backend microservices.
 ///
 /// Idempotent: an already-present trace header is never overridden. The "already present" check is
 /// case-insensitive (HTTP header names are case-insensitive), so a differently-cased inbound
 /// `Sentry-Trace`/`Baggage` is respected rather than duplicated. Sentry's header `.name`s are
-/// lowercase, as is gRPC metadata.
+/// lowercase, as are Connect request headers.
 ///
 /// Call this only for first-party services. For third-party hosts (e.g. an S3 presigned upload)
 /// trace propagation must be skipped so `sentry-trace`/`baggage` aren't leaked off-domain — the

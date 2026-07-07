@@ -30,8 +30,10 @@ updates:
       separator: /
     target-branch: "main"
 
+  # NB: packages/vendor/connectrpc is deliberately NOT listed — it is a pinned vendored copy
+  # (see its VENDORED.md); dependabot must not bump it.
   - package-ecosystem: "pub"
-    directory: "/packages/model/grpc_model" # Location of package manifests
+    directory: "/packages/model/connect_model" # Location of package manifests
     schedule:
       interval: "weekly"
     pull-request-branch-name:

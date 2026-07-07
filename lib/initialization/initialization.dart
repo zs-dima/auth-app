@@ -96,8 +96,8 @@ Future<Dependencies> $initializeApp({
 Future<void> $resetApp(Dependencies dependencies) async {}
 
 /// Disposes the app and releases all resources (A6): cancels module subscriptions and tears down
-/// the gRPC channels, external HTTP client, auth handler and repository owned by [dependencies].
-/// Wired to the app lifecycle (`AppLifecycleListener.onDetached` in `AppTree`).
+/// the shared Connect HTTP client, external HTTP client, auth handler and repository owned by
+/// [dependencies]. Wired to the app lifecycle (`AppLifecycleListener.onDetached` in `AppTree`).
 Future<void> $disposeApp(Dependencies dependencies) async {
   await $disposeDependencies(dependencies);
   // await $resetApp(dependencies);

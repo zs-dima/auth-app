@@ -1,11 +1,13 @@
 # Auth App
 
-A cross-platform Flutter client for authentication and user management via gRPC services.
+A cross-platform Flutter client for authentication and user management via Connect RPC services
+(the [Connect protocol](https://connectrpc.com) with binary protobuf on every platform — HTTP/2 with
+pinned TLS on native, the browser fetch stack on web; no gRPC-Web translation proxy).
 
 ## Backend Services
 
-Rust gRPC service: [zs-dima/auth-service-rs](https://github.com/zs-dima/auth-service-rs)
-Go gRPC service:   [zs-dima/auth-service](https://github.com/zs-dima/auth-service)
+Rust Connect RPC service: [zs-dima/auth-service-rs](https://github.com/zs-dima/auth-service-rs)
+Go gRPC service (legacy): [zs-dima/auth-service](https://github.com/zs-dima/auth-service) — gRPC-only, not compatible with this client's Connect transport
 
 ## Overview
 
@@ -31,7 +33,7 @@ Auth App provides a modern, responsive UI for authentication and user management
 
 - [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.41+)
 - [Dart SDK](https://dart.dev/get-dart) (3.8+)
-- Running backend service (Rust or Go)
+- Running Rust Connect RPC backend service ([zs-dima/auth-service-rs](https://github.com/zs-dima/auth-service-rs))
 
 ### Installation
 

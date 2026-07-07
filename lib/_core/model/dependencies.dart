@@ -16,8 +16,9 @@ import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:connect_model/connect_model.dart';
+import 'package:connectrpc/connect.dart';
 import 'package:flutter/widgets.dart';
-import 'package:grpc/grpc.dart';
 import 'package:http_client/http_client.dart';
 
 extension DependenciesX on BuildContext {
@@ -47,21 +48,25 @@ class Dependencies {
   late final ISettingsRepository settings;
 
   /// Interceptors factory
-  late final List<ClientInterceptor> Function([Iterable<ClientInterceptor>? middlewares]) interceptorsFactory;
+  late final List<Interceptor> Function([Iterable<Interceptor>? middlewares]) interceptorsFactory;
 
-  /// gRPC Authentication factory
-  late final GrpcAuthenticationClient Function([Iterable<ClientInterceptor>? middlewares]) grpcAuthFactory;
+  /// Connect Authentication client factory
+  late final ConnectAuthenticationClient Function([Iterable<Interceptor>? middlewares]) connectAuthFactory;
 
-  /// gRPC Users factory
-  late final GrpcUsersClient Function([Iterable<ClientInterceptor>? middlewares]) grpcUsersFactory;
+  /// Connect Users client factory
+  late final ConnectUsersClient Function([Iterable<Interceptor>? middlewares]) connectUsersFactory;
 
-  /// gRPC Authentication client. The container owns the concrete client so it can be disposed on
-  /// teardown (A6, via the `GrpcClient` base); consumers (repositories) receive the narrowed
-  /// `IAuthenticationApi` interface, so dependency inversion still holds at the boundary (A21).
-  late final GrpcAuthenticationClient authClient;
+  /// Shared Connect HTTP client behind every transport (one per-origin HTTP/2 pool, pinned TLS on
+  /// native). The container owns it so transport connections can be released on teardown (A6).
+  late final RpcHttpClientHandle rpcHttpClient;
 
-  /// gRPC Users client (owned concretely for disposal; consumers receive `IUsersApi`).
-  late final GrpcUsersClient usersClient;
+  /// Connect Authentication client. The container owns the concrete client; consumers
+  /// (repositories) receive the narrowed `IAuthenticationApi` interface, so dependency inversion
+  /// still holds at the boundary (A21). Connection teardown is owned by [rpcHttpClient] (A6).
+  late final ConnectAuthenticationClient authClient;
+
+  /// Connect Users client (owned concretely; consumers receive `IUsersApi`).
+  late final ConnectUsersClient usersClient;
 
   /// Authentication handler
   late final IAuthenticationHandler authenticationHandler;

@@ -1,6 +1,6 @@
-// Architecture guard: auth_model is consumed on web (gRPC-web), so its `lib/` must never import
-// `dart:io`, `dart:ui` or `dart:html` directly — those break the web build (A1) or couple the
-// model layer to the Flutter engine. Use platform-neutral typedefs / plain constants instead.
+// Architecture guard: auth_model is consumed on web (Connect over fetch), so its `lib/` must never
+// import `dart:io`, `dart:ui` or `dart:html` directly — those break the web build (A1) or couple
+// the model layer to the Flutter engine. Use platform-neutral typedefs / plain constants instead.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

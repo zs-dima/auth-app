@@ -13,8 +13,8 @@ enum AuthenticationState {
 typedef AuthenticationCallback = void Function(AuthenticationState state);
 
 /// The single, transport-agnostic auth-state bus. BOTH transports report an auth failure into it
-/// (gRPC via `GrpcAuthenticationMiddleware.onAuthError`, and any future authenticated HTTP path),
-/// so there is one place that drives logout regardless of transport (A26). The repository is the
+/// (Connect RPC via `ConnectAuthenticationMiddleware.onAuthError`, and any future authenticated
+/// HTTP path), so there is one place that drives logout regardless of transport (A26). The repository is the
 /// sole producer of [handleAuthenticated] and the sole consumer that turns an
 /// [AuthenticationState.unauthenticated] event into an actual sign-out.
 abstract interface class IAuthenticationHandler implements Stream<AuthenticationState> {

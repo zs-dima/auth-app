@@ -42,35 +42,39 @@ buf-breaking:
 # Clean
 # ---------------------------------------------------------------------------
 
-# Remove generated proto files (proxy files at auth_model/core/v2/ are static source)
+# Remove generated proto files (proxy files at auth_model .../proto/core/v1/ and
+# .../proto/google/ are static source — see buf.gen.auth.yaml)
+# NB: the previous `$(call RMDIR,…)` macro was never defined, so cleaning silently no-opped.
 buf-clean:
 	@echo "Cleaning generated proto files"
-	$(call RMDIR,packages/model/grpc_model/lib/src/proto)
-	$(call RMDIR,packages/model/auth_model/lib/src/api/proto/auth)
-	$(call RMDIR,packages/model/auth_model/lib/src/api/proto/users)
-	$(call RMDIR,lib/_core/data/api/proto)
+	@rm -rf packages/model/connect_model/lib/src/proto
+	@rm -rf packages/model/auth_model/lib/src/proto/auth
+	@rm -rf packages/model/auth_model/lib/src/proto/users
+	@rm -rf lib/_core/data/api/proto
 
 # ---------------------------------------------------------------------------
 # Code generation — Dart (three targets for three Dart output packages)
 # ---------------------------------------------------------------------------
 
-# Generate core/v2 → packages/model/grpc_model/lib/src/proto
+# Generate core/v1 → packages/model/connect_model/lib/src/proto
 buf-gen-core:
-	@echo "Generating core proto (grpc_model)"
-	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/core/v2 --template $(BUF_PROTO_DIR)/buf.gen.core.yaml
-	dart format -l 120 packages/model/grpc_model/lib/src/proto
+	@echo "Generating core proto (connect_model)"
+	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/core/v1 --template $(BUF_PROTO_DIR)/buf.gen.core.yaml
+	dart format -l 120 packages/model/connect_model/lib/src/proto
 
-# Generate auth/v2 + users/v2 → packages/model/auth_model/lib/src/api/proto
-# Static proxy files at core/v2/ re-export types from grpc_model (not generated)
+# Generate auth/v1 + users/v1 → packages/model/auth_model/lib/src/proto
+# Static proxy files at core/v1/ re-export types from connect_model (not generated)
 buf-gen-auth:
 	@echo "Generating auth + users proto (auth_model)"
-	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/auth/v2 --path $(BUF_PROTO_DIR)/users/v2 --template $(BUF_PROTO_DIR)/buf.gen.auth.yaml
-	dart format -l 120 packages/model/auth_model/lib/src/api/proto
+	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/auth/v1 --path $(BUF_PROTO_DIR)/users/v1 --template $(BUF_PROTO_DIR)/buf.gen.auth.yaml
+	@rm -f packages/model/auth_model/lib/src/proto/auth/v1/*.pbserver.dart packages/model/auth_model/lib/src/proto/users/v1/*.pbserver.dart
+	dart format -l 120 packages/model/auth_model/lib/src/proto
 
 # Generate app/v1 → lib/_core/data/api/proto
 buf-gen-app:
 	@echo "Generating app proto"
 	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/app/v1 --template $(BUF_PROTO_DIR)/buf.gen.app.yaml
+	@rm -f lib/_core/data/api/proto/app/v1/*.pbserver.dart
 	dart format -l 120 lib/_core/data/api/proto
 
 # ---------------------------------------------------------------------------

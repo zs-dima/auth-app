@@ -4,13 +4,13 @@ library auth_model;
 export 'src/api/auth_exceptions.dart';
 export 'src/api/i_authentication_api.dart';
 export 'src/api/i_users_api.dart';
+export 'src/api/rpc_exceptions.dart';
 // ── Transport-neutral glue ───────────────────────────────────────────────────
 export 'src/client/authentication_handler.dart';
-// ── gRPC transport ───────────────────────────────────────────────────────────
-export 'src/grpc/grpc_authentication_client.dart';
-export 'src/grpc/grpc_exceptions.dart';
-export 'src/grpc/grpc_users_client.dart';
-export 'src/grpc/middlewares/grpc_authentication_middleware.dart';
+// ── Connect RPC transport ────────────────────────────────────────────────────
+export 'src/connect/connect_authentication_client.dart';
+export 'src/connect/connect_users_client.dart';
+export 'src/connect/middlewares/connect_authentication_middleware.dart';
 // ── HTTP transport (auth middleware; clients live in the consuming app) ──
 export 'src/http/middlewares/http_authentication_middleware.dart';
 // ── Domain models (transport-free) ───────────────────────────────────────────

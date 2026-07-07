@@ -1,0 +1,15 @@
+# Vendored package — upstream analysis config minus the `package:lints/recommended.yaml` include,
+# which was dropped together with the upstream dev_dependencies (see VENDORED.md). Not held to this
+# repo's lint set.
+
+analyzer:
+  exclude: ["**/gen/**", "example"]
+  language:
+    strict-casts: true
+    strict-raw-types: true
+    strict-inference: true
+
+linter:
+  rules:
+    - cancel_subscriptions
+    - directives_ordering

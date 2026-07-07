@@ -6,7 +6,7 @@ import 'package:auth_app/authentication/controller/authentication_controller.dar
 import 'package:octopus/octopus.dart';
 
 /// Guard that intercepts email-verified route:
-/// - gRPC flow: extracts token, calls confirmVerification API for auto-login
+/// - RPC flow: extracts token, calls confirmVerification API for auto-login
 /// - REST fallback: handles success/status parameter, shows message (manual login required)
 class EmailVerifiedGuard extends OctopusGuard {
   EmailVerifiedGuard({
@@ -30,7 +30,7 @@ class EmailVerifiedGuard extends OctopusGuard {
     state.arguments.remove(RouteNode.code);
 
     if (token != null && token.isNotEmpty) {
-      // gRPC flow: Call confirmVerification for auto-login
+      // RPC flow: Call confirmVerification for auto-login
       authenticationController.confirmVerification(
         token: token,
         type: .email,

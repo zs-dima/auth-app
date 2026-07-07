@@ -17,7 +17,7 @@ funding:
 topics:
   - auth
   - authentication
-  - grpc
+  - connect-rpc
   - cross-platform
   - flutter
 
@@ -38,13 +38,16 @@ environment:
 
 workspace:
   - packages/model/core_model
-  - packages/model/grpc_model
+  - packages/model/connect_model
   - packages/model/auth_model
   - packages/tool/core_tool
   - packages/tool/lints_tool
   - packages/tool/converter/json_converter
   - packages/model/http_client
   - packages/ui
+  # Vendored connectrpc 1.0.0 with a protobuf ^6-compatible delta — see packages/vendor/connectrpc/VENDORED.md.
+  # Being a workspace member, it overrides the hosted `connectrpc` for every `connectrpc: ^1.0.0` dependency.
+  - packages/vendor/connectrpc
 
 dependencies:
   # Flutter SDK
@@ -60,8 +63,8 @@ dependencies:
   # Packages
   core_model:
     path: packages/model/core_model
-  grpc_model:
-    path: packages/model/grpc_model
+  connect_model:
+    path: packages/model/connect_model
   auth_model:
     path: packages/model/auth_model
   core_tool:
@@ -183,9 +186,9 @@ dependencies:
 
   # API
   ws: ^1.1.0-dev.1
-  # grpc
+  # Connect RPC
   protobuf: ^6.0.0
-  grpc: ^5.1.0
+  connectrpc: ^1.0.0
   retry: ^3.1.2
   # http
   http: ^1.6.0

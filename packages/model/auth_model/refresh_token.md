@@ -24,7 +24,7 @@ It deliberately spans two packages and the app layer: token types and middleware
 
 Sibling docs this file does not duplicate:
 
-- `packages/model/auth_model/README.md` — package layering; why a "model" package hosts the gRPC transport.
+- `packages/model/auth_model/README.md` — package layering; why a "model" package hosts the Connect RPC transport.
 - `lib/_core/api/README.md` — which middleware lives in packages vs the app (transport-generic vs observability).
 - `web/README.md` — web storage limits, multi-tab caveats, the CDN/CSP HTTP-header checklist.
 
@@ -64,14 +64,14 @@ Security goals, in priority order:
 | `AccessToken`                                                                              | `packages/model/auth_model/lib/src/model/credentials/access_token.dart`                               | JWT wrapper: `exp`-based expiry, `expiresSoon`, redacting `toString`, `authorizationHeaderValue`         |
 | `RefreshToken`                                                                             | `packages/model/auth_model/lib/src/model/credentials/refresh_token.dart`                              | zero-cost `extension type` over `String`; type-level separation from access tokens                       |
 | `AccessCredentials`                                                                        | `packages/model/auth_model/lib/src/model/credentials/access_credentials.dart`                         | access + refresh + scopes; the persisted JSON blob; masks both secrets in `toString`                     |
-| `GrpcAuthenticationClient`                                                                 | `packages/model/auth_model/lib/src/grpc/grpc_authentication_client.dart`                              | all auth RPCs; refresh-outcome classification; `mapRefreshResponse`                                      |
-| `GrpcAuthenticationMiddleware`, `kAuthServicePublicPaths`, `kAuthServiceRefreshTokensPath` | `packages/model/auth_model/lib/src/grpc/middlewares/grpc_authentication_middleware.dart`              | attach + 401→refresh→retry-once (unary); repair-without-replay (streaming)                               |
-| `HttpAuthenticationMiddleware`                                                             | `packages/model/auth_model/lib/src/http/middlewares/http_authentication_middleware.dart`              | exact HTTP mirror of the gRPC middleware; **standby, currently unwired** (§15)                           |
+| `ConnectAuthenticationClient`                                                                 | `packages/model/auth_model/lib/src/connect/connect_authentication_client.dart`                              | all auth RPCs; refresh-outcome classification; `mapRefreshResponse`                                      |
+| `ConnectAuthenticationMiddleware`, `kAuthServicePublicPaths`, `kAuthServiceRefreshTokensPath` | `packages/model/auth_model/lib/src/connect/middlewares/connect_authentication_middleware.dart`              | attach + 401→refresh→retry-once (unary); repair-without-replay (streaming)                               |
+| `HttpAuthenticationMiddleware`                                                             | `packages/model/auth_model/lib/src/http/middlewares/http_authentication_middleware.dart`              | exact HTTP mirror of the Connect middleware; **standby, currently unwired** (§15)                        |
 | `BearerAuthenticationMiddleware`                                                           | `packages/model/http_client/lib/src/middlewares/bearer_authentication_middleware.dart`                | minimal attach-only middleware, no refresh/retry — a different tool (§15); do not confuse with the above |
 | `ApiClient`, `kNoRetryContextKey`, `ApiClientRequest.canBeRetried`                         | `packages/model/http_client/lib/src/api_client.dart`                                                  | HTTP onion pipeline, body-replayability rules, session-cancel binding                                    |
 | `CredentialsRejectedException`                                                             | `packages/model/auth_model/lib/src/api/auth_exceptions.dart`                                          | the single "definitive refresh rejection" signal                                                         |
 | `RequestSessionEndedException`                                                             | `packages/model/auth_model/lib/src/api/auth_exceptions.dart`                                          | typed A27 throw: a request that outlived its session fails without touching the current one              |
-| `GrpcException` family                                                                     | `packages/model/auth_model/lib/src/grpc/grpc_exceptions.dart`                                         | typed transport errors (`$Authentication`, `$Network`, `$Request`, `$Server`, `$Cancelled`)              |
+| `RpcException` family                                                                     | `packages/model/auth_model/lib/src/api/rpc_exceptions.dart`                                         | typed transport errors (`$Authentication`, `$Network`, `$Request`, `$Server`, `$Cancelled`)              |
 | `AuthenticationHandler` / `IAuthenticationHandler`                                         | `packages/model/auth_model/lib/src/client/authentication_handler.dart`                                | the single transport-agnostic auth-state bus (A26)                                                       |
 | `AuthenticationRepository`                                                                 | `lib/authentication/data/authentication_repository.dart`                                              | ALL token state: single-flight, generation dedup, proactive refresh, persistence, session epoch, logout  |
 | `SettingsRepository`, `AppSecurePreferencesDao`                                            | `lib/settings/data/settings_repository.dart`, `lib/settings/data/dao/app_secure_preferences_dao.dart` | persistence: `credentials` blob (secure storage), `user_id` (plain prefs)                                |
@@ -94,7 +94,7 @@ already-rotated token, which can trip reuse detection and revoke the whole sessi
 
 | Callback                              | Returns credentials                                                                                                                      | Returns `null`                                                                                                                                                                            | Throws                                                                                                                                                                                                                                                              |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getToken()`                          | current credentials; the implementation MUST proactively refresh when `expiresSoon` (single-flight)                                      | definitively no session → middleware calls `onAuthError()` and fails the call fast (gRPC: `GrpcError.unauthenticated`; HTTP: `ApiClientException$Authentication(code: 'no_credentials')`) | transient resolution failure (e.g. a secure-storage hiccup) → propagates as-is, **no logout** — **INVARIANT (A3)**                                                                                                                                                  |
+| `getToken()`                          | current credentials; the implementation MUST proactively refresh when `expiresSoon` (single-flight)                                      | definitively no session → middleware calls `onAuthError()` and fails the call fast (RPC: `ConnectException(Code.unauthenticated, …)`; HTTP: `ApiClientException$Authentication(code: 'no_credentials')`) | transient resolution failure (e.g. a secure-storage hiccup) → propagates as-is, **no logout** — **INVARIANT (A3)**                                                                                                                                                  |
 | `refreshCredentials(usedAccessToken)` | rotated credentials — or the current ones when `usedAccessToken` is already stale within the same session (another wave refreshed; §7.2) | definitive rejection; the repository has already ended the session; middleware calls `onAuthError()` and rethrows the original auth error                                                 | transient failure → propagates, **no logout**; a later request retries. A typed throw (A27, `RequestSessionEndedException` from `auth_model`) likewise fails a request whose session ended before the refresh ran — no `onAuthError`, the current session untouched |
 | `onAuthError()`                       | fire-and-forget logout signal into the bus (A26); MUST be idempotent and MUST NOT throw                                                  | —                                                                                                                                                                                         | —                                                                                                                                                                                                                                                                   |
 
@@ -112,18 +112,18 @@ converts every storage or network hiccup into a forced logout. The `getToken` wr
 From `lib/initialization/initialize_dependencies.dart`, outermost → innermost:
 
 ```
-GrpcLoggerMiddleware → GrpcMetadataMiddleware → GrpcSentryMiddleware → GrpcRetryMiddleware
-    → GrpcAuthenticationMiddleware → wire
+ConnectLoggerMiddleware → ConnectMetadataMiddleware → ConnectSentryMiddleware → ConnectRetryMiddleware
+    → ConnectAuthenticationMiddleware → wire
 ```
 
-- `GrpcRetryMiddleware` retries transient gRPC codes only and **excludes UNAUTHENTICATED** — 401
+- `ConnectRetryMiddleware` retries transient RPC codes only and **excludes UNAUTHENTICATED** — 401
   recovery belongs exclusively to the auth middleware. Two layers reacting to 401 would multiply refresh
   attempts and retries.
 - Auth is innermost so the token is attached per attempt and the 401→refresh→retry-once loop runs
   closest to the wire.
 - Logger is outermost (one log line per logical call); the Sentry span wraps Retry so it covers all
   attempts.
-- The same `GrpcAuthenticationMiddleware` instance serves both the auth-service and users-service
+- The same `ConnectAuthenticationMiddleware` instance serves both the auth-service and users-service
   clients — one single-flight domain per repository.
 - The external HTTP `ApiClient` (S3 presigned uploads) deliberately carries **no** auth middleware and no
   first-party `X-*` metadata — a presigned URL is self-authenticated and first-party headers must not
@@ -147,8 +147,8 @@ GrpcLoggerMiddleware → GrpcMetadataMiddleware → GrpcSentryMiddleware → Grp
   designed safety net. This is why the retry-once-after-refresh MUST NOT be removed even where proactive
   refresh "should have" prevented the 401.
 - `authorizationHeaderValue` ≡ `'<type> <token>'` — the single transport-neutral Authorization value.
-  The gRPC metadata value (key `kGrpcAuthorizationKey` = `authorization`,
-  `packages/model/auth_model/lib/src/grpc/grpc_authorization.dart`) and the HTTP `Authorization` header
+  The RPC header value (key `kAuthorizationHeader` = `authorization`,
+  `packages/model/auth_model/lib/src/connect/authorization.dart`) and the HTTP `Authorization` header
   are both built from this one getter. A future scheme change (e.g. DPoP) happens here, once.
 - `toString()` prints `data=***` (§13). Value equality over `(type, token, expiry)` feeds the
   `setCredentials` dedup guard.
@@ -242,7 +242,7 @@ Five RPCs mint a `TokenPair`: `Authenticate`, `SignUp`, `VerifyMfa`, `ExchangeOA
    sign-in (converter throw into the A12 `FormatException` catch) — the RFC 6749 §6 omission rule
    applies only to REFRESH responses (§8), never to issuance.
 
-Related, same layer: `GrpcAuthenticationClient.recoveryStart` swallows errors and always returns `true` —
+Related, same layer: `ConnectAuthenticationClient.recoveryStart` swallows errors and always returns `true` —
 OWASP anti-enumeration. Do not "fix" the swallowed exception there.
 
 ## 7. Refresh flows (normative)
@@ -262,9 +262,9 @@ Proactive refresh also fires at cold-start `restore()` (§11.1) and on app resum
 (`AppTree.didChangeAppLifecycleState`: `.resumed` + authenticated → `getAccessCredentials().ignore()` —
 fire-and-forget; the single-flight mutex absorbs it; its failure never logs out).
 
-### 7.2 Reactive refresh (unary gRPC; replayable HTTP)
+### 7.2 Reactive refresh (unary RPC; replayable HTTP)
 
-1. A call went out with access token `A`; the server answers `UNAUTHENTICATED` (gRPC) / `401` (HTTP).
+1. A call went out with access token `A`; the server answers `UNAUTHENTICATED` (RPC) / `401` (HTTP).
 2. The middleware calls `refreshCredentials("A")` → repository, under the mutex:
    - **INVARIANT (A27 — session provenance):** `"A"` must have been minted in the CURRENT session
      (`_sessionAccessTokens`, seeded at sign-in/restore, extended per rotation, cleared by
@@ -286,19 +286,19 @@ fire-and-forget; the single-flight mutex absorbs it; its failure never logs out)
 
 ### 7.3 Repair-without-replay
 
-Applies to: gRPC server-streaming calls; HTTP requests whose body cannot be replayed
+Applies to: RPC server-streaming calls; HTTP requests whose body cannot be replayed
 (`MultipartRequest`, `StreamedRequest` → `ApiClientRequest.canBeRetried == false`); HTTP requests opted
 out via `kNoRetryContextKey` (set automatically by `ApiClient.sendMultipart` / `postStream`).
 
 **INVARIANT (repair-without-replay):** non-replayability and `kNoRetryContextKey` opt out of RESENDING
 THE BODY — never of repairing the session. On a 401 these paths still run the same single-flight
-`refreshCredentials`; afterwards the ORIGINAL 401 is rethrown (a consumed gRPC request stream is never
+`refreshCredentials`; afterwards the ORIGINAL 401 is rethrown (a consumed RPC request stream is never
 re-invoked). The caller retries/resubscribes on its own terms and finds the rotated token already in
 place. Logout rules are identical to §7.2 — definitive failures only.
 
 ### 7.4 Public paths
 
-`kAuthServicePublicPaths` (single source of truth, co-located with the gRPC middleware; asserted against
+`kAuthServicePublicPaths` (single source of truth, co-located with the Connect middleware; asserted against
 the generated stubs by `packages/model/auth_model/test/auth_public_paths_test.dart` — review-ID A19):
 
 ```
@@ -306,7 +306,7 @@ Authenticate, SignUp, SignOut, VerifyMfa, RecoveryStart, RecoveryConfirm,
 RefreshTokens, ConfirmVerification, GetOAuthUrl, ExchangeOAuthCode
 ```
 
-`RequestVerification` is **DELIBERATE**ly absent — per `api/proto/auth/v2/auth.proto` it is a resend for
+`RequestVerification` is **DELIBERATE**ly absent — per `api/proto/auth/v1/auth.proto` it is a resend for
 an authenticated user and must carry the access token.
 
 Public paths get no token attach and no refresh-retry. An auth-code error there (`UNAUTHENTICATED` /
@@ -318,7 +318,7 @@ session. The single exception is `sessionEndingPaths`, wired to exactly
 `{kAuthServiceRefreshTokensPath}`: an auth-code rejection of the refresh call itself is definitive
 session death (§8). Widening `sessionEndingPaths` re-introduces the "bad password logs you out" bug.
 
-Note: `SignOut` is a public path (no automatic attach); `GrpcAuthenticationClient.signOut` attaches the
+Note: `SignOut` is a public path (no automatic attach); `ConnectAuthenticationClient.signOut` attaches the
 CURRENT access token manually via `CallOptions` — logging out must never trigger a token refresh just to
 say goodbye (§11.3).
 
@@ -381,7 +381,7 @@ caller                     Repository                              AuthService  
 
 ## 8. Refresh-outcome classification
 
-The transport→domain classification lives in `GrpcAuthenticationClient.refreshTokens`; the
+The transport→domain classification lives in `ConnectAuthenticationClient.refreshTokens`; the
 domain→session policy lives in `AuthenticationRepository._doRefresh`.
 
 | Outcome of `RefreshTokens`                                             | Class                                                                                        | Client action                                                                                                                                                                                                                    |
@@ -390,7 +390,7 @@ domain→session policy lives in `AuthenticationRepository._doRefresh`.
 | `TokenPair` with new access, EMPTY `refresh_token`                     | success — RFC 6749 §6 (server MAY omit)                                                      | **keep the previous refresh token** — `mapRefreshResponse`; persisting `""` would poison the next refresh (`min_len 1` → `INVALID_ARGUMENT`) into a spurious logout                                                              |
 | Access token in the response fails JWT parsing                         | **definitive** — `FormatException` → `CredentialsRejectedException` (A12)                    | logout + clear storage; a structurally dead session must not loop as "transient"                                                                                                                                                 |
 | `UNAUTHENTICATED` / `PERMISSION_DENIED` / `INVALID_ARGUMENT`           | **definitive** — `CredentialsRejectedException` (invalid / expired / revoked / reused token) | logout + clear storage                                                                                                                                                                                                           |
-| `UNAVAILABLE`, `DEADLINE_EXCEEDED`, other codes, socket/timeout errors | transient — `GrpcException.from` (`$Network` / `$Server` / …)                                | proactive: serve the current (still valid) credentials; reactive: rethrow — session intact, a later request retries                                                                                                              |
+| `UNAVAILABLE`, `DEADLINE_EXCEEDED`, other codes, socket/timeout errors | transient — `RpcException.from` (`$Network` / `$Server` / …)                                | proactive: serve the current (still valid) credentials; reactive: rethrow — session intact, a later request retries                                                                                                              |
 | Cancellation                                                           | transient family (`$Cancelled`)                                                              | as transient                                                                                                                                                                                                                     |
 | Session epoch changed while awaiting the RPC or the persist            | stale generation (A2)                                                                        | discard the rotated tokens, return `null`; the logout's cleared state stands                                                                                                                                                     |
 | Storage write throws during the persist step                           | transient (`on Object` in `_doRefresh`)                                                      | old credentials stay in memory and are served. Honest edge: the server may already have rotated, so the NEXT refresh can be definitively rejected → clean logout. Mitigated by the SERVER-CONTRACT rotation grace period (§12.2) |
@@ -401,7 +401,7 @@ carrying the previous list. The server re-derives authorization from the token i
 not act on scopes today.
 
 **DELIBERATE:** `IAuthenticationApi.refreshTokens(String accessToken, RefreshToken refreshToken)`
-accepts the access token, but the gRPC implementation does not send it — `RefreshTokensRequest` carries
+accepts the access token, but the Connect implementation does not send it — `RefreshTokensRequest` carries
 only `refresh_token` (§12.1). The parameter remains for API symmetry and potential future transports.
 
 ## 9. Concurrency and race matrix
@@ -514,7 +514,7 @@ single-account app today.
    `sessionCancelToken` — all in-flight session-bound requests abort; the next `sessionCancelToken` read
    vends a fresh token for the next session.
 2. Under the mutex: best-effort server revocation — `_api.signOut(accessToken).ignore()`.
-   `GrpcAuthenticationClient.signOut` attaches the token manually and swallows every error.
+   `ConnectAuthenticationClient.signOut` attaches the token manually and swallows every error.
    **INVARIANT (logout-availability):** client logout MUST NOT block on, or fail because of, the network
    or an expired/rejected token. Local clearing is authoritative; the server call is a courtesy.
 3. Emit `unauthenticated`; **await** `setUserId(empty)` + `setCredentials(null)` — a completed logout has
@@ -545,11 +545,11 @@ sessions screen is a product decision, out of scope here).
 
 ## 12. Wire contract and server-side expectations
 
-### 12.1 Client-side contract (`api/proto/auth/v2/auth.proto`, service `auth.v2.AuthService`)
+### 12.1 Client-side contract (`api/proto/auth/v1/auth.proto`, service `auth.v1.AuthService`)
 
 - `RefreshTokens(RefreshTokensRequest) → TokenPair`; the request carries **only** `refresh_token`
   (buf.validate `min_len: 1` — which is why an empty persisted RT must be impossible: §6 guards
-  issuance, §8 guards rotation). HTTP transcoding: `POST /v2/auth/token/refresh`.
+  issuance, §8 guards rotation). HTTP transcoding: `POST /v1/auth/token/refresh`.
 - `TokenPair`: `access_token` (short-lived JWT), `refresh_token` (long-lived opaque), `expires_at`
   (Timestamp). **INVARIANT (A12):** the client IGNORES `expires_at` — expiry is read from the JWT `exp`
   claim, the single source of truth. Two sources of expiry would eventually disagree; the JWT is what the
@@ -561,8 +561,10 @@ sessions screen is a product decision, out of scope here).
   history.
 - Issuance RPCs carry `installation_id` + `ClientInfo` — device-session binding, surfaced in
   `SessionInfo` (`device_id`, `last_seen_at`, `is_current`, …).
-- `api/proto/auth/v1/auth.proto` is a structurally identical legacy twin; only v2 is generated
-  (`packages/model/auth_model/lib/src/grpc/proto/auth/v2/`) and used. Do not extend v1.
+- `api/proto/auth/v1/auth.proto` (package `auth.v1`) is the contract, copied verbatim from the
+  server (`auth-service-rs`) as the single source of truth and generated into
+  `packages/model/auth_model/lib/src/proto/auth/v1/`. The earlier `auth.v2` twin was removed —
+  the Connect protocol is versioned from v1.
 
 ### 12.2 SERVER-CONTRACT — expectations the client cannot verify
 
@@ -610,15 +612,15 @@ redaction at the SOURCE types, and it is load-bearing:
   those sets when introducing new sensitive parameters.
 - The raw request URL captured by HTTP telemetry (span-data `url`, exception hints) goes through
   `redactSensitiveUrl` — a presigned URL is a live bearer capability and MUST NOT reach Sentry intact;
-  query values are redacted by the same set. The gRPC middleware records the path only.
-- Transport logs (`GrpcLoggerMiddleware` / `HttpLoggerMiddleware`, `lib/_core/api/`) record path +
+  query values are redacted by the same set. The Connect middleware records the path only.
+- Transport logs (`ConnectLoggerMiddleware` / `HttpLoggerMiddleware`, `lib/_core/api/`) record path +
   outcome + duration ONLY — never metadata, headers, or bodies.
 - Trace propagation (`sentry-trace` / `baggage`) is disabled toward third parties
   (`HttpSentryMiddleware(propagateTrace: false)` on the S3 client) so correlation headers don't leak
   off-domain.
 - The composition-root logging around `onAuthError` / `getToken` mentions the event, never the token.
-- Expected teardown exceptions — gRPC `cancelled` and `RequestSessionEndedException` (A27) — are not
-  captured as Sentry issues; their spans finish with a `cancelled` status (`GrpcSentryMiddleware`).
+- Expected teardown exceptions — RPC `canceled` and `RequestSessionEndedException` (A27) — are not
+  captured as Sentry issues; their spans finish with a `cancelled` status (`ConnectSentryMiddleware`).
 - **RECOMMENDED (§16.8):** structured counters for refresh attempts and outcomes (success / definitive /
   transient) and forced-logout reasons — zero token material — so server-side reuse-detection incidents
   are diagnosable from client telemetry.
@@ -658,7 +660,7 @@ Each item is intentional. Changing any of them requires owner sign-off and an up
 - **Logout over-signalling on a rejected refresh** — up to three idempotent signals converge (§7.6).
 - **The `getToken` wiring wrapper rethrows transient errors instead of returning `null`** (A3, §3.3) —
   collapsing to `null` would convert storage hiccups into logouts.
-- **`refreshTokens(accessToken, …)` ignores its access-token argument at the gRPC layer** (§8).
+- **`refreshTokens(accessToken, …)` ignores its access-token argument at the RPC layer** (§8).
 - **`BearerAuthenticationMiddleware` logs out on ANY 401/403 and never refreshes** — it is a deliberately
   dumb tool for token-only backends without rotation, not a bug in the smart flow. Pick one middleware or
   the other; never stack them.
@@ -704,15 +706,15 @@ Before touching ANY auth/token code, know which tests pin which behavior — and
 | Invariant / behavior                                                                                                                                                                                                                                                                                          | Pinned by                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | Single-flight; 401-wave dedup; definitive vs transient policy; A2 epoch (no resurrection); A27 session-provenance guard (cross-session stale requests fail); F1 write ordering; F2 corrupt-blob recovery; F6 restore-emits-first; close-safe emits; best-effort logout clears; session cancel-token lifecycle | `test/authentication/authentication_repository_test.dart`                 |
-| Unary 401→refresh→retry-once; streaming repair-without-replay; public vs session-ending paths; transient getToken/refresh → no logout; 403 → no logout; exact `usedAccessToken` forwarding                                                                                                                    | `packages/model/auth_model/test/grpc_auth_refresh_test.dart`              |
+| Unary 401→refresh→retry-once; streaming repair-without-replay; public vs session-ending paths; transient getToken/refresh → no logout; 403 → no logout; exact `usedAccessToken` forwarding                                                                                                                    | `packages/model/auth_model/test/connect_auth_refresh_test.dart`              |
 | HTTP mirror of the above + `kNoRetryContextKey` (repair, no body resend) + multipart no-replay + second-401 logout                                                                                                                                                                                            | `packages/model/auth_model/test/http_authentication_middleware_test.dart` |
 | `exp` parsing + typed malformed-JWT errors; the 30 s `expiresSoon` window; redacting `toString`; value equality                                                                                                                                                                                               | `packages/model/auth_model/test/access_token_test.dart`                   |
 | Credentials blob round-trip; tolerant decode; both secrets masked in `toString`                                                                                                                                                                                                                               | `packages/model/auth_model/test/access_credentials_test.dart`             |
-| RFC 6749 §6 rotation mapping (`mapRefreshResponse`)                                                                                                                                                                                                                                                           | `packages/model/auth_model/test/grpc_authentication_client_test.dart`     |
-| Issuance mapping: SUCCESS without a refresh token → failed result; role mapping (A11)                                                                                                                                                                                                                         | `packages/model/auth_model/test/grpc_authentication_converter_test.dart`  |
+| RFC 6749 §6 rotation mapping (`mapRefreshResponse`)                                                                                                                                                                                                                                                           | `packages/model/auth_model/test/connect_authentication_client_test.dart`     |
+| Issuance mapping: SUCCESS without a refresh token → failed result; role mapping (A11)                                                                                                                                                                                                                         | `packages/model/auth_model/test/authentication_converter_test.dart`  |
 | Auth-bus semantics (eager controller, `distinct()`, safe post-close no-op)                                                                                                                                                                                                                                    | `packages/model/auth_model/test/authentication_handler_test.dart`         |
 | Public-path constants match the generated stubs (review-ID A19)                                                                                                                                                                                                                                               | `packages/model/auth_model/test/auth_public_paths_test.dart`              |
-| Transport-error classification (`GrpcException.from`)                                                                                                                                                                                                                                                         | `packages/model/auth_model/test/grpc_exceptions_test.dart`                |
+| Transport-error classification (`RpcException.from`)                                                                                                                                                                                                                                                         | `packages/model/auth_model/test/rpc_exceptions_test.dart`                |
 | Storage semantics (unconditional null-clear, dedup write)                                                                                                                                                                                                                                                     | `test/settings/settings_repository_test.dart`                             |
 | Telemetry redaction: headers, query (incl. SigV4 presigned material), raw-URL rendering                                                                                                                                                                                                                       | `test/_core/api/http/sentry_redaction_test.dart`                          |
 | PII redaction in user-profile `toString`                                                                                                                                                                                                                                                                      | `packages/model/auth_model/test/user_models_test.dart`                    |

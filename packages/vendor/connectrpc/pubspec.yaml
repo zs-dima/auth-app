@@ -1,0 +1,30 @@
+name: connectrpc
+description: >-
+  Implementation of the Connect protocol for Dart. Simple, reliable, interoperable.
+  Protobuf RPC that works
+
+# Vendored copy of pub.dev connectrpc 1.0.0 — see VENDORED.md for the exact delta and update steps.
+version: 1.0.0+protobuf6
+
+homepage: https://connectrpc.com
+documentation: https://connectrpc.com/docs
+repository: https://github.com/connectrpc/connect-dart
+
+environment:
+  sdk: ^3.6.0
+resolution: workspace
+dependencies:
+  # Upstream pins `">=3.1.0 <5.0.0"`; widened for the workspace's protobuf ^6 (the runtime APIs
+  # connectrpc uses are stable across 3→6; the embedded generated protos are regenerated — VENDORED.md).
+  protobuf: ">=3.1.0 <7.0.0"
+  path: ^1.9.0
+  http2: ^2.3.0
+  fixnum: ^1.1.1
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:

@@ -50,7 +50,7 @@ class AccessToken {
   bool get hasExpired => DateTime.now().toUtc().isAfter(expiry);
 
   /// `'<scheme> <token>'` — the single transport-neutral Authorization value used by both the
-  /// gRPC and HTTP auth middlewares.
+  /// Connect and HTTP auth middlewares.
   String get authorizationHeaderValue => '$type $token';
 
   @override

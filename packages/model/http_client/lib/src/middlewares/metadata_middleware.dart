@@ -6,8 +6,9 @@ import 'package:meta/meta.dart';
 ///
 /// Transport-neutral by design: it takes a ready [headers] map and merges it into each request —
 /// it does NOT know about app models. The app composes the map (e.g. `AppMetadata.toHeaders()` plus
-/// an `X-Environment`) at wiring time and passes it here. Mirrors gRPC's `GrpcMetadataMiddleware`,
-/// which likewise accepts a plain `Map<String, String>` so both transports stay symmetric.
+/// an `X-Environment`) at wiring time and passes it here. Mirrors Connect's
+/// `ConnectMetadataMiddleware`, which likewise accepts a plain `Map<String, String>` so both
+/// transports stay symmetric.
 ///
 /// First-party only: never attach this to a client that talks to third-party hosts (e.g. S3
 /// presigned uploads) — internal metadata must not leak off-origin.

@@ -5,8 +5,8 @@ import 'package:http_client/http_client.dart';
 import 'package:meta/meta.dart';
 
 /// {@template http_authentication_middleware}
-/// HTTP mirror of the gRPC [GrpcAuthenticationMiddleware]: attaches the access token and recovers
-/// from a `401` by a single-flight refresh + retry-once.
+/// HTTP mirror of the Connect `ConnectAuthenticationMiddleware`: attaches the access token and
+/// recovers from a `401` by a single-flight refresh + retry-once.
 ///
 /// Policy: 401 → refresh + retry once (the body resend is skipped for non-replayable requests and
 /// [kNoRetryContextKey] — the session is still repaired); 403 → surfaced as-is; missing credentials

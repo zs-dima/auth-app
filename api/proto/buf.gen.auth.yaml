@@ -1,7 +1,11 @@
-# Code generation for auth/v1 + users/v1 → packages/model/auth_model/lib/src/grpc/proto
+# Code generation for auth/v1 + users/v1 → packages/model/auth_model/lib/src/proto
+# `*.pb.dart` messages + `*.connect.client.dart` / `*.connect.spec.dart` Connect stubs.
+# Static proxy files (not generated): core/v1/ re-exports types from connect_model;
+# google/protobuf/ re-exports the WKTs bundled with package:protobuf (the connect plugin
+# emits relative google/protobuf imports while the message plugin uses the bundled WKTs).
 version: v2
 plugins:
   - remote: buf.build/protocolbuffers/dart:v25.0.0
-    out: packages/model/auth_model/lib/src/grpc/proto
-    opt:
-      - grpc
+    out: packages/model/auth_model/lib/src/proto
+  - remote: buf.build/connectrpc/dart:v1.0.0
+    out: packages/model/auth_model/lib/src/proto

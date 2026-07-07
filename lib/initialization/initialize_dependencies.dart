@@ -2,8 +2,8 @@
 
 import 'dart:async';
 
-import 'package:auth_app/_core/api/grpc/middlewares/logger_middleware.dart';
-import 'package:auth_app/_core/api/grpc/middlewares/sentry_middleware.dart';
+import 'package:auth_app/_core/api/connect/middlewares/logger_middleware.dart';
+import 'package:auth_app/_core/api/connect/middlewares/sentry_middleware.dart';
 import 'package:auth_app/_core/api/http/middlewares/logger_middleware.dart';
 import 'package:auth_app/_core/api/http/middlewares/sentry_middleware.dart';
 import 'package:auth_app/_core/controller/controller_observer.dart';
@@ -30,12 +30,12 @@ import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
+import 'package:connect_model/connect_model.dart';
+import 'package:connectrpc/connect.dart';
 import 'package:control/control.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:grpc/grpc.dart';
-import 'package:grpc_model/grpc_model.dart';
 import 'package:http_client/http_client.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:rxdart/rxdart.dart';
@@ -173,35 +173,38 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
   //   final localeRepository = LocaleRepository(localeDataSource);
   //   dependencies.localeRepository = localeRepository;
   // },
-  'gRPC Client factory': (dependencies) {
-    // A6: gRPC clients are intentionally NOT wired to the session CancelToken — per-call deadlines,
-    // subscription teardown, and server-side token rejection already cover it. If a hard "abort all
-    // on logout" is ever needed, prefer channel.terminate() + lazy re-init over a token bridge.
-    List<ClientInterceptor> interceptorsFactory([Iterable<ClientInterceptor>? middlewares]) => <ClientInterceptor>[
+  'Connect client factory': (dependencies) {
+    // A6: Connect clients are intentionally NOT wired to the session CancelToken — per-call
+    // deadlines, subscription teardown, and server-side token rejection already cover it. If a hard
+    // "abort all on logout" is ever needed, prefer closing the shared HTTP client + lazy re-init
+    // over a token bridge.
+    List<Interceptor> interceptorsFactory([Iterable<Interceptor>? middlewares]) => <Interceptor>[
       // Order (outermost → innermost): Logger → Metadata → Sentry → Retry → Authentication → wire.
+      // connect-dart applies the FIRST interceptor in this list as the outermost layer — pinned by
+      // connect_model's interceptor_chain_order_test (the upstream doc wording is ambiguous).
       // - Logger: logs the final outcome + total duration (outside Retry ⇒ one line per logical call).
       // - Metadata: static X-* headers (app version, locale, environment); before Sentry so Sentry
       //   captures (and redacts) them.
       // - Sentry: span wraps Retry so it covers every attempt.
-      // - Retry: transient gRPC codes only; UNAUTHENTICATED is excluded (recovered by auth's refresh).
+      // - Retry: transient RPC codes only; UNAUTHENTICATED is excluded (recovered by auth's refresh).
       // - Authentication (appended via `middlewares` below): innermost ⇒ token attached per attempt and
       //   401→refresh→retry-once runs closest to the wire (mirrors the HTTP Retry→Auth pipeline).
       // TODO: Deduplicate requests interceptor
       // TODO: Cache interceptor
 
       // Logger middleware
-      const GrpcLoggerMiddleware(),
+      const ConnectLoggerMiddleware().call,
 
       // Metadata middleware
-      GrpcMetadataMiddleware(
+      ConnectMetadataMiddleware(
         metadata: {
           ...dependencies.metadata.toHeaders(),
           'X-Environment': dependencies.environment.type.name,
         },
-      ),
+      ).call,
 
       // Sentry middleware
-      const GrpcSentryMiddleware(),
+      const ConnectSentryMiddleware().call,
 
       // Retry middleware
       // GrpcRetryMiddleware(
@@ -242,43 +245,43 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       //   ],
       // ),
 
-      // Retry middleware — transient GrpcError codes only (unavailable / aborted / internal /
+      // Retry middleware — transient ConnectException codes only (unavailable / aborted / internal /
       // deadlineExceeded; resourceExhausted only with server pushback). UNAUTHENTICATED is excluded
       // and recovered by the auth middleware's reactive refresh. Inner of Sentry (so its span covers
       // retries), outer of auth (appended below). Default RetryBackoff = full-jitter exponential
       // backoff + per-attempt ceiling + total budget; honors `grpc-retry-pushback-ms`.
-      GrpcRetryMiddleware(),
+      ConnectRetryMiddleware().call,
 
       // Any other middlewares you need
       ...?middlewares,
     ];
 
-    // Each client wraps a GrpcClientChannel (retained for shutdown on teardown — A6) and shares the
-    // same interceptor stack. timeout defaults to GrpcClientOptions.defaultCallTimeout (30s, unary);
-    // streaming RPCs override per-call.
-    GrpcAuthenticationClient grpcAuthFactory([Iterable<ClientInterceptor>? middlewares]) => .new(
-      GrpcClientOptions(
-        GrpcClientChannel(dependencies.environment.authService),
-        interceptors: interceptorsFactory(middlewares),
-      ),
-    );
+    // ONE shared HTTP client behind every transport: a single per-origin HTTP/2 connection pool
+    // with pinned TLS (native) or the browser fetch stack (web); owned by the container for
+    // teardown (A6). Each service keeps its own transport/base-URL (authService may differ from
+    // appService) and the shared interceptor stack. Per-call deadlines default to
+    // ConnectClient.defaultCallTimeout (30s, unary) via the call guards; streaming RPCs use the
+    // stream deadline per call.
+    final rpcHttpClient = createRpcHttpClient();
+    Transport transportFactory(Uri address, Iterable<Interceptor>? middlewares) =>
+        createConnectTransport(address, httpClient: rpcHttpClient, interceptors: interceptorsFactory(middlewares));
 
-    GrpcUsersClient grpcUsersFactory([Iterable<ClientInterceptor>? middlewares]) => .new(
-      GrpcClientOptions(
-        GrpcClientChannel(dependencies.environment.appService),
-        interceptors: interceptorsFactory(middlewares),
-      ),
-    );
+    ConnectAuthenticationClient connectAuthFactory([Iterable<Interceptor>? middlewares]) =>
+        .new(transportFactory(dependencies.environment.authService, middlewares));
+
+    ConnectUsersClient connectUsersFactory([Iterable<Interceptor>? middlewares]) =>
+        .new(transportFactory(dependencies.environment.appService, middlewares));
 
     dependencies
+      ..rpcHttpClient = rpcHttpClient
       ..interceptorsFactory = interceptorsFactory
-      ..grpcAuthFactory = grpcAuthFactory
-      ..grpcUsersFactory = grpcUsersFactory;
+      ..connectAuthFactory = connectAuthFactory
+      ..connectUsersFactory = connectUsersFactory;
   },
 
-  // General gRPC client initialization
-  'General gRPC Client': (dependencies) {
-    final authenticationMiddleware = GrpcAuthenticationMiddleware(
+  // General Connect client initialization
+  'General Connect Client': (dependencies) {
+    final authenticationMiddleware = ConnectAuthenticationMiddleware(
       getToken: () async {
         try {
           return await dependencies.authenticationRepository.getAccessCredentials();
@@ -292,7 +295,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       refreshCredentials: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
       // Logout only via the single auth-state bus (A26); the repository performs the sign-out.
       onAuthError: () {
-        logger.w('Received an unauthenticated gRPC response; signing out via the auth bus');
+        logger.w('Received an unauthenticated RPC response; signing out via the auth bus');
         dependencies.authenticationHandler.handleAuthenticationError();
       },
       // Single source of truth lives in auth_model and is asserted against the generated stub (A19).
@@ -302,8 +305,8 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
     );
 
     dependencies
-      ..authClient = dependencies.grpcAuthFactory([authenticationMiddleware])
-      ..usersClient = dependencies.grpcUsersFactory([authenticationMiddleware]);
+      ..authClient = dependencies.connectAuthFactory([authenticationMiddleware.call])
+      ..usersClient = dependencies.connectUsersFactory([authenticationMiddleware.call]);
   },
 
   ///
@@ -480,15 +483,14 @@ Future<void> $disposeDependencies(Dependencies dependencies) async {
   await _authUserInfoSubscription?.cancel();
   await _impersonationSubscription?.cancel();
 
-  // Tear down auth + transport resources (A6). Every dispose API below already existed but was
-  // never wired, leaking the two gRPC channels (HTTP/2 sockets + keep-alive), the external HTTP
-  // client's connection pool, the auth handler's broadcast controller, and the repository's
-  // controller + subscriptions. Best-effort: a teardown error must not crash app shutdown.
+  // Tear down auth + transport resources (A6). Best-effort: a teardown error must not crash app
+  // shutdown.
   try {
     // Source → sink order: shut transports down first so no late RPC/stream event races a closing
-    // controller, then tear down the auth coordinator and its streams.
-    await dependencies.authClient.dispose();
-    await dependencies.usersClient.dispose();
+    // controller, then tear down the auth coordinator and its streams. The shared Connect HTTP
+    // client owns every RPC connection (connectrpc 1.0.0 exposes no hard close — see
+    // RpcHttpClientHandle.close; idle connections are reaped by idleConnectionTimeout).
+    await dependencies.rpcHttpClient.close();
     dependencies.externalHttpClient.close();
     await dependencies.authenticationRepository.terminate();
     await dependencies.authenticationHandler.close();

@@ -1,6 +1,6 @@
-// Shared redaction for telemetry (Sentry) across transports (HTTP + gRPC), so credential-bearing
-// header/metadata values and sensitive query params never reach the error backend — and the two
-// transports can't drift out of sync.
+// Shared redaction for telemetry (Sentry) across transports (HTTP + Connect RPC), so
+// credential-bearing header/metadata values and sensitive query params never reach the error
+// backend — and the two transports can't drift out of sync.
 
 /// Header/metadata names whose values carry credentials and must never be sent to Sentry.
 /// Lowercase; matched case-insensitively (see [redactSensitiveHeaders]).
@@ -27,7 +27,7 @@ const kRedactedQueryParams = <String>{
   'x-amz-security-token',
 };
 
-/// Returns a copy of [headers] (HTTP headers or gRPC metadata) with credential-bearing values
+/// Returns a copy of [headers] (HTTP headers or RPC metadata) with credential-bearing values
 /// (see [kRedactedHeaders]) replaced by `<redacted>`. Names are matched case-insensitively against
 /// the (lowercase) [kRedactedHeaders] set — an O(1) lookup.
 Map<String, String> redactSensitiveHeaders(Map<String, String> headers) => <String, String>{
