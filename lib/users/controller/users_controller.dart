@@ -29,7 +29,8 @@ final class UsersController extends StateController<UsersState>
   String? _query;
 
   Future<void> reset() async {
-    _users.clear();
+    // Reassign, not clear(): published states hold views over the previous list.
+    _users = <User>[];
     _query = null;
     setState(UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([])));
   }
@@ -60,26 +61,38 @@ final class UsersController extends StateController<UsersState>
         .first;
   }
 
-  void listUsers(UserId currentUserId) => handle(
-    () async {
-      if (currentUserId.isEmpty) {
-        setState(UsersState.loaded(currentUserId, UnmodifiableListView<User>([])));
-        return;
-      }
+  void listUsers(UserId currentUserId) {
+    var progress = false;
+    handle(
+      () async {
+        if (currentUserId.isEmpty) {
+          setState(UsersState.loaded(currentUserId, UnmodifiableListView<User>([])));
+          return;
+        }
 
-      setState(UsersState.loading(currentUserId, state.users));
-      setProgressStarted();
+        setState(UsersState.loading(currentUserId, state.users));
+        progress = true;
+        setProgressStarted();
 
-      final users = await _repository.listUsers().toList();
-      users.sort();
-      _users = users;
-      final result = _filter(users, _query);
+        final users = await _repository.listUsers().toList();
+        users.sort();
+        _users = users;
+        final result = _filter(users, _query);
 
-      setState(UsersState.loaded(currentUserId, result));
-    },
-    error: (error, stackTrace) async => setError('Error on loading users', error, stackTrace),
-    done: () async => setProgressDone(),
-  );
+        setState(UsersState.loaded(currentUserId, result));
+      },
+      error: (error, stackTrace) async {
+        setError('Error on loading users', error, stackTrace);
+        // Unblock [getUserInfo] waiters parked on `firstWhere(loaded)` — else a failed load wedges
+        // them forever.
+        setState(UsersState.loaded(state.userId, state.users));
+      },
+      // Paired: the empty-id early return must not emit an unmatched `done`.
+      done: () async {
+        if (progress) setProgressDone();
+      },
+    );
+  }
 
   void filterUsers(String q) {
     final query = q.toUpperCase();

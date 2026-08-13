@@ -152,6 +152,10 @@ extension on Stream<http2.StreamMessage> {
   /// All the data frames will be part of the returned stream.
   ///
   /// Throwing in the [onHeaders] or [onTrailers] will reject the [sentinel].
+  ///
+  /// VENDORED CHANGE (back-pressure): while the consumer is paused the pump
+  /// stops calling `moveNext()`, keeping the HTTP/2 subscription paused so
+  /// flow control (withheld WINDOW_UPDATE) reaches the server.
   Stream<Uint8List> toBytes(
     Sentinel sentinel,
     void Function(List<http2.Header>) onHeaders,
@@ -159,7 +163,20 @@ extension on Stream<http2.StreamMessage> {
   ) {
     // To receive headers immediately, we need to start listening on the stream.
     final ctrl = StreamController<Uint8List>();
-    addAll(sentinel, onHeaders, onTrailers, ctrl.sink);
+    var resume = Completer<bool>()..complete(true);
+    ctrl
+      ..onPause = () {
+        if (resume.isCompleted) resume = Completer<bool>();
+      }
+      ..onResume = () {
+        if (!resume.isCompleted) resume.complete(true);
+      }
+      // A cancelled consumer must unblock a parked pump so it can observe the
+      // sentinel/stream end and run its cleanup.
+      ..onCancel = () {
+        if (!resume.isCompleted) resume.complete(true);
+      };
+    addAll(sentinel, onHeaders, onTrailers, ctrl.sink, () => resume.future);
     return ctrl.stream;
   }
 
@@ -168,12 +185,15 @@ extension on Stream<http2.StreamMessage> {
   /// Calls [onHeaders] and [onTrailers] for the first and last
   /// header frames.
   ///
+  /// Waits on [demand] before pulling each frame (back-pressure gate).
+  ///
   /// Closes the sink when stream is done or sentinal is rejected.
   void addAll(
     Sentinel sentinel,
     void Function(List<http2.Header>) onHeaders,
     void Function(List<http2.Header>) onTrailers,
     StreamSink<Uint8List> sink,
+    Future<bool> Function() demand,
   ) async {
     final it = StreamIterator(this);
     try {
@@ -190,7 +210,12 @@ extension on Stream<http2.StreamMessage> {
       }
       onHeaders(headersFrame.headers);
       var receivedTrailers = false;
-      while (await sentinel.race(it.moveNext())) {
+      while (true) {
+        // Raced so an aborted call unparks a paused pump.
+        await sentinel.race(demand());
+        if (!(await sentinel.race(it.moveNext()))) {
+          break;
+        }
         if (receivedTrailers) {
           throw ConnectException(
             Code.unknown,

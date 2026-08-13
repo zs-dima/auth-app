@@ -15,15 +15,12 @@ class UserAvatarMenuWidget extends StatelessWidget {
   const UserAvatarMenuWidget({super.key});
 
   static String _getInitials(String name) {
-    if (name.isEmpty) return 'NN';
-    final names = name.split(' ');
-    var initials = '';
-    if (names.length > 1) {
-      initials = names.first[0] + names.last[0];
-    } else if (names.length == 1) {
-      initials = names.first[0];
-    }
-    return initials.toUpperCase();
+    // Filter empty segments (double/trailing spaces): indexing them threw RangeError and blanked
+    // the app bar. Mirrors the corrected copy in user_avatar_widget.dart.
+    final names = name.split(' ').where((n) => n.isNotEmpty).toList();
+    if (names.isEmpty) return 'NN';
+    if (names.length > 1) return '${names.first[0]}${names.last[0]}'.toUpperCase();
+    return names.first[0].toUpperCase();
   }
 
   static Color _getIconColor(String initials) {

@@ -54,7 +54,7 @@ final class AppMessageController extends StateController<MessageState> with Sequ
     }
   }
 
-  void showAppError(String error, [Object? e, StackTrace? s]) => setState(MessageState.appError(error));
+  void showAppError(String error, [Object? e, StackTrace? s]) => setState(MessageState.appError(error, e));
   void showConnectError(ConnectException e, String message) => setState(MessageState.netError(e.detail(message), e));
   void showRpcException(RpcException e, String message) => setState(MessageState.netError(message, e));
   void showApiError(ApiClientException e, String message) => setState(MessageState.netError(message, e));

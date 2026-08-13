@@ -38,6 +38,10 @@ class _UserEditWidgetState extends State<UserEditWidget> {
   String? _password;
   UploadImageController? _imageController;
 
+  /// Create mode: the pick is held until the server returns the real user id (`_user.id` is a
+  /// throwaway placeholder).
+  ImageInfo? _pendingAvatar;
+
   StreamSubscription<UploadImageState>? _imageSubscription;
 
   late AvatarController _avatarController;
@@ -54,11 +58,18 @@ class _UserEditWidgetState extends State<UserEditWidget> {
       imageInfo: ImageInfo(url: _avatarController.getUrl(_user.id)),
     );
 
-    _imageSubscription = _imageController?.toStream().skip(1).whereType<UploadImageLoadedState>().listen(
+    // The constructor probe emits LOADING, so this filter passes user actions only.
+    _imageSubscription = _imageController?.toStream().whereType<UploadImageLoadedState>().listen(
       (state) async {
         if (!mounted) return;
 
         final image = state.imageInfo.image;
+
+        if (widget.createNewUser) {
+          // No server-side user yet — UsersScope uploads the pick after creation.
+          _pendingAvatar = image != null ? state.imageInfo : null;
+          return;
+        }
 
         // Upload new avatar if image bytes are provided
         if (image != null) {
@@ -97,6 +108,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
             locale: _user.locale,
             timezone: _user.timezone,
           ),
+          avatar: _pendingAvatar,
         );
       } else {
         await widget.usersController.updateUser(

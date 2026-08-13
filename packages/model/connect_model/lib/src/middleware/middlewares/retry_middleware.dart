@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:connect_model/src/middleware/connect_middleware.dart';
 import 'package:connectrpc/connect.dart';
 import 'package:core_model/core_model.dart';
 import 'package:meta/meta.dart';
@@ -44,11 +45,19 @@ const _kMaxPushback = Duration(seconds: 60);
 @immutable
 class ConnectRetryMiddleware {
   /// {@macro connect_retry_middleware}
-  ConnectRetryMiddleware({this.backoff = const RetryBackoff(), this.retryEvaluator, math.Random? random})
-    : _random = random ?? math.Random();
+  ConnectRetryMiddleware({
+    this.backoff = const RetryBackoff(),
+    this.retryEvaluator,
+    this.noRetryPaths = const <String>{},
+    math.Random? random,
+  }) : _random = random ?? math.Random();
 
   /// Backoff policy: max retries, full-jitter exponential delays, per-attempt ceiling, total budget.
   final RetryBackoff backoff;
+
+  /// Paths (canonical `/package.Service/Method`) that must never be replayed (e.g. `RefreshTokens`
+  /// — a replay trips reuse detection). Single attempt; [retryEvaluator] is not consulted.
+  final Set<String> noRetryPaths;
 
   /// Overrides [defaultRetryEvaluator] for deciding whether an error is retryable. A server
   /// "do-not-retry" (negative `grpc-retry-pushback-ms`) and caller cancellation are enforced as
@@ -60,6 +69,8 @@ class ConnectRetryMiddleware {
   /// connect-dart [Interceptor] entry point (callable class).
   AnyFn<I, O> call<I extends Object, O extends Object>(AnyFn<I, O> next) => (req) {
     if (req is! UnaryRequest<I, O>) return next(req); // streaming RPCs pass through untouched
+    // Opted-out path: single attempt, no retry wrapper at all.
+    if (noRetryPaths.contains(ConnectMiddleware.normalizePath(req.spec.procedure))) return next(req);
     return _executeWithRetry(req, next);
   };
 

@@ -293,9 +293,14 @@ final class _FakeCodec implements Codec {
 extension<T> on Stream<T> {
   /// Immediately subscribes to the stream and waits until a value is seen or
   /// stream is closed. Returns a stream with the same values.
+  ///
+  /// VENDORED CHANGE (back-pressure): pause/resume is coupled to the source,
+  /// mirroring the real HTTP/2 transport's demand gate.
   Future<Stream<T>> untilFirst(void Function() onDone) async {
     late final StreamSubscription<T> sub;
     final ctrl = StreamController<T>(
+      onPause: () => sub.pause(),
+      onResume: () => sub.resume(),
       onCancel: () {
         sub.cancel();
       },

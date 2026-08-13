@@ -103,8 +103,12 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
   /// Access tokens minted in THIS session (seeded at sign-in/restore, extended per rotation,
   /// cleared by [_endSession]). Guards [refreshCredentials] against serving another session's
-  /// credentials to a stale request (A27 — refresh_token.md §7.2).
+  /// credentials to a stale request (A27 — refresh_token.md §7.2). Bounded to
+  /// [_kMaxSessionAccessTokens] generations.
   final Set<String> _sessionAccessTokens = <String>{};
+
+  /// In-flight requests (30 s deadline ≪ rotation interval) never outlive this many generations.
+  static const int _kMaxSessionAccessTokens = 4;
 
   AuthenticationRepository({
     required final IAuthenticationApi api,
@@ -209,22 +213,22 @@ class AuthenticationRepository implements IAuthenticationRepository {
     // End the session synchronously BEFORE awaiting the lock, so an in-flight refresh sees the
     // new epoch and discards its rotation (A2); state clearing then serializes on the mutex.
     _endSession();
+    // Capture for the server revoke below — the logout emit wipes `_user`.
+    final accessToken = switch (_user) {
+      AuthenticatedUser(:final credentials) => credentials?.accessToken,
+      _ => null,
+    };
+    // Emit BEFORE the mutex: logout must not queue behind a network-bound refresh (§11.3).
+    _emit(const AuthUser.unauthenticated());
     return _refreshingMutex.synchronize(() async {
+      if (accessToken != null && accessToken.token.isNotEmpty) _api.signOut(accessToken).ignore();
+      // Awaited (F1), best-effort (F2); credentials FIRST so a faulted second write can't leave a
+      // restorable session (§11.3).
       try {
-        if (_user case final AuthenticatedUser authenticatedUser) {
-          final accessToken = authenticatedUser.credentials?.accessToken;
-          if (accessToken != null && accessToken.token.isNotEmpty) _api.signOut(accessToken).ignore();
-        }
-      } finally {
-        _emit(const AuthUser.unauthenticated());
-        // Awaited under the mutex so the clears order after any in-flight commit (F1); best-effort
-        // (F2): a storage fault must not fail the logout (refresh_token.md §11.3).
-        try {
-          await _settings.setUserId(UserIdX.empty);
-          await _settings.setCredentials(null);
-        } on Object catch (error, stackTrace) {
-          logger.w('Failed to clear the persisted session on logout', error: error, stackTrace: stackTrace);
-        }
+        await _settings.setCredentials(null);
+        await _settings.setUserId(UserIdX.empty);
+      } on Object catch (error, stackTrace) {
+        logger.w('Failed to clear the persisted session on logout', error: error, stackTrace: stackTrace);
       }
     });
   }
@@ -261,10 +265,10 @@ class AuthenticationRepository implements IAuthenticationRepository {
       credentials = await _settings.getCredentials();
     } on Object catch (e, st) {
       logger.w('Failed to restore credentials; clearing persisted session', error: e, stackTrace: st);
-      // The recovery itself must not throw either — degrade to logged-out no matter what.
+      // The recovery itself must not throw either; credentials clear first (§11.3).
       try {
-        await _settings.setUserId(UserIdX.empty);
         await _settings.setCredentials(null);
+        await _settings.setUserId(UserIdX.empty);
       } on Object catch (error, stackTrace) {
         logger.w('Failed to clear the corrupt persisted session', error: error, stackTrace: stackTrace);
       }
@@ -280,7 +284,9 @@ class AuthenticationRepository implements IAuthenticationRepository {
     // Emit the rehydrated session BEFORE the network refresh so a returning user does not flash
     // the sign-in screen (F6); the refresh below corrects the state (refresh_token.md §11.1).
     _emit(AuthUser.authenticated(userId: userId, credentials: credentials));
-    await _refreshingMutex.synchronize(() => _doRefresh(force: false));
+    // Detached (§11.1 step 3): cold start must not block on the network; outcomes surface via
+    // userChanges.
+    unawaited(_refreshingMutex.synchronize(() => _doRefresh(force: false)));
     return _user;
   }
 
@@ -300,7 +306,13 @@ class AuthenticationRepository implements IAuthenticationRepository {
         // a racing signOut (A2); only this short commit is locked — the network call ran in the
         // caller. Persist BEFORE publish: an unpersisted session is not a session (fails closed).
         return _refreshingMutex.synchronize(() async {
+          // End the previous identity's session scope; a stale scope must not survive the commit.
+          _endSession();
+          // A2: a signOut racing this commit bumps the epoch — discard the commit (its queued
+          // clears erase the persisted blob).
+          final epoch = _sessionEpoch;
           await _persistSession(userId, credentials);
+          if (epoch != _sessionEpoch) return const AuthUser.unauthenticated();
           // Every sign-in commit is a new session boundary for the provenance guard (A27).
           _sessionAccessTokens
             ..clear()
@@ -327,10 +339,10 @@ class AuthenticationRepository implements IAuthenticationRepository {
       await _settings.setCredentials(credentials);
     } on Object catch (error, stackTrace) {
       logger.w('Failed to persist session after authentication; revoking server session', error: error, stackTrace: stackTrace);
-      // Roll back a partial write so restore() can't rebuild a mismatched session; best-effort.
+      // Roll back a partial write; best-effort, credentials first (§11.3).
       try {
-        await _settings.setUserId(UserIdX.empty);
         await _settings.setCredentials(null);
+        await _settings.setUserId(UserIdX.empty);
       } on Object {/* best-effort rollback */}
       final accessToken = credentials.accessToken;
       if (accessToken.token.isNotEmpty) _api.signOut(accessToken).ignore();
@@ -358,11 +370,10 @@ class AuthenticationRepository implements IAuthenticationRepository {
   Future<void> _logOutSession() async {
     _endSession();
     _emit(const AuthUser.unauthenticated());
-    // Awaited (F1) and best-effort (F2): a storage fault must not escape [_doRefresh] as a
-    // pseudo-transient error after the session already ended in memory.
+    // Awaited (F1), best-effort (F2), credentials first (§11.3).
     try {
-      await _settings.setUserId(UserIdX.empty);
       await _settings.setCredentials(null);
+      await _settings.setUserId(UserIdX.empty);
     } on Object catch (error, stackTrace) {
       logger.w('Failed to clear the persisted session on logout', error: error, stackTrace: stackTrace);
     }
@@ -412,6 +423,11 @@ class AuthenticationRepository implements IAuthenticationRepository {
 
           // Register the rotation only after the re-check, so a discarded one never enters (A27).
           _sessionAccessTokens.add(refresh.accessToken.token);
+          // Evict the oldest generations — stale raw JWTs are needless secret retention.
+          while (_sessionAccessTokens.length > _kMaxSessionAccessTokens) {
+            final oldest = _sessionAccessTokens.first;
+            _sessionAccessTokens.remove(oldest);
+          }
           _emit(AuthUser.authenticated(credentials: refresh, userId: userId));
           return refresh;
         } on CredentialsRejectedException {

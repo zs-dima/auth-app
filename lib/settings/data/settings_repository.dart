@@ -81,7 +81,13 @@ class SettingsRepository implements ISettingsRepository {
   Future<AccessCredentials?> getCredentials() async {
     final js = await _securePreferences.credentials.get();
     if (js.isNullOrSpace) return null;
-    return AccessCredentials.fromJson(json.decode(js!) as Map<String, dynamic>);
+    try {
+      return AccessCredentials.fromJson(json.decode(js!) as Map<String, dynamic>);
+    } on Object catch (e, st) {
+      // Sanitize: FormatException.source carries the WHOLE decrypted blob, and warning-level logs
+      // reach Sentry (§13).
+      Error.throwWithStackTrace(FormatException('Malformed persisted credentials (${e.runtimeType})'), st);
+    }
   }
 
   @override

@@ -48,10 +48,13 @@ final class UploadImageController extends StateController<UploadImageState>
     if (sizeFuture != null) {
       Future.delayed(.zero, () async {
         final size = await sizeFuture;
+        // A late probe result must not overwrite a user action.
+        if (state is! UploadImageLoadingState) return;
+        // LOADING, not loaded: only user actions may reach the upload/delete subscription.
         setState(
           size == null && url.isNotEmpty
-              ? const UploadImageState.loaded(.empty)
-              : UploadImageState.loaded(
+              ? const UploadImageState.loading(.empty)
+              : UploadImageState.loading(
                   ImageInfo(
                     url: size == null ? '' : url,
                     image: image,

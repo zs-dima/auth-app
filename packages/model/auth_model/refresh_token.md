@@ -223,9 +223,13 @@ Five RPCs mint a `TokenPair`: `Authenticate`, `SignUp`, `VerifyMfa`, `ExchangeOA
 `AuthenticationRepository._handleAuthResult`:
 
 1. The network call runs OUTSIDE the mutex — long I/O must not head-of-line-block refresh or logout.
-2. On `AuthResultSuccess` the commit runs UNDER `_refreshingMutex`: `_persistSession(userId,
-   credentials)` → set in-memory user → emit. Sign-in, refresh, and logout all serialize on the same
-   lock; whichever lands last wins cleanly, and in-memory state never disagrees with storage.
+2. On `AuthResultSuccess` the commit runs UNDER `_refreshingMutex`: end the previous session scope
+   (`_endSession()` — a new identity must not inherit the old scope's cancel token), snapshot the
+   epoch, `_persistSession(userId, credentials)` → set in-memory user → emit. Sign-in, refresh, and
+   logout all serialize on the same lock; whichever lands last wins cleanly, and in-memory state
+   never disagrees with storage. A `signOut` racing the commit (its emit precedes the mutex, §11.3
+   step 2) bumps the epoch — the commit then discards itself (A2): no auth emit, and the logout's
+   queued clears erase the just-persisted blob.
 3. **INVARIANT (fail-closed sign-in):** persist happens BEFORE the session is published. On a
    storage-write failure `_persistSession` rolls back any partial write (a `userId` without credentials
    must not survive for `restore()` to rebuild a mismatched session), best-effort revokes the just-issued
@@ -487,17 +491,22 @@ single-account app today.
 
 ### 11.1 Cold start
 
-`$initializeDependencies` runs `'Restore credentials'` as the LAST init step →
-`AuthenticationController.restore()` → repository `restore()`:
+`$initializeDependencies` runs `'Restore credentials'` as the LAST init step → repository
+`restore()`, **awaited by the step runner** (the controller mirrors the emitted state via its
+`userChanges` subscription):
 
 1. Read `user_id` (plain prefs) and the `credentials` blob (secure). A corrupt blob triggers F2 recovery
    (§10.1). Either missing → remain unauthenticated (guest); the router's `AuthenticationGuard` sends the
    user to sign-in.
 2. **Emit the rehydrated `AuthenticatedUser` IMMEDIATELY** — F6 — before any network. A
    returning user must not flash the sign-in screen for the duration of a refresh round-trip.
-3. Then proactive `_doRefresh(force: false)` corrects the state: token fresh → no-op; `expiresSoon` →
-   rotate + persist + emit; definitive rejection → `_logOutSession()` (a brief home→sign-in transition —
-   rare and accepted); transient failure → keep the rehydrated session (offline-friendly cold start).
+   Because the init step awaits through this emit, the router's first guard pass runs against the
+   rehydrated session — the cold-start deep link survives and no sign-in flash occurs.
+3. Then proactive `_doRefresh(force: false)` corrects the state — **detached**: `restore()` returns
+   after step 2 without awaiting the refresh, so cold start never blocks on the network. Outcomes:
+   token fresh → no-op; `expiresSoon` → rotate + persist + emit; definitive rejection →
+   `_logOutSession()` (a brief home→sign-in transition — rare and accepted); transient failure →
+   keep the rehydrated session (offline-friendly cold start).
 
 ### 11.2 Foreground, background, offline
 
@@ -513,12 +522,20 @@ single-account app today.
 1. `_endSession()` runs SYNCHRONOUSLY, before awaiting the mutex: bump `_sessionEpoch` (A2) and cancel
    `sessionCancelToken` — all in-flight session-bound requests abort; the next `sessionCancelToken` read
    vends a fresh token for the next session.
-2. Under the mutex: best-effort server revocation — `_api.signOut(accessToken).ignore()`.
-   `ConnectAuthenticationClient.signOut` attaches the token manually and swallows every error.
+2. **Emit `unauthenticated` immediately — still BEFORE awaiting the mutex.** A refresh in flight holds
+   the mutex across its network round-trip; the user-visible logout must not queue behind it.
    **INVARIANT (logout-availability):** client logout MUST NOT block on, or fail because of, the network
    or an expired/rejected token. Local clearing is authoritative; the server call is a courtesy.
-3. Emit `unauthenticated`; **await** `setUserId(empty)` + `setCredentials(null)` — a completed logout has
-   durably erased credentials (same write-ordering rationale as F1). The clears are best-effort
+   (Safe against the racing refresh: its epoch-check→emit block is synchronous, so it either discards
+   its rotation on the bumped epoch or its emit is immediately superseded. Queued
+   `getAccessCredentials` callers observe `unauthenticated` and resolve to `null` — they can no longer
+   be handed the ended session's token.)
+3. Under the mutex: best-effort server revocation — `_api.signOut(accessToken).ignore()` with the token
+   captured at step 2. `ConnectAuthenticationClient.signOut` attaches the token manually and swallows
+   every error. Then **await** `setCredentials(null)` + `setUserId(empty)` — a completed logout has
+   durably erased credentials (same write-ordering rationale as F1). **Credentials — the secret —
+   clear FIRST:** if the second write faults, `restore()` still sees `credentials == null` and stays
+   logged out (no session resurrection, no orphaned refresh token at rest). The clears are best-effort
    (mirrors F2): a storage fault is logged and never fails the logout — nor escapes `_doRefresh` as a
    pseudo-transient error on the definitive-rejection path; a surviving blob rehydrates only until the
    (best-effort revoked) server rejects its refresh.

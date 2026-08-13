@@ -25,7 +25,9 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
 
   StreamSubscription? _messageSubscription;
 
-  bool get _overlayVisible => _overlayEntry != null;
+  /// Intent flag: [_overlayEntry] is created a frame late, so a same-frame `done` must be able to
+  /// veto the pending insert.
+  bool _shouldShow = false;
 
   void _subscribeMessages() {
     _unsubscribeMessages();
@@ -46,12 +48,13 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
 
     switch (progressState.progress) {
       case .started:
-        if (_overlayVisible) return;
+        if (_shouldShow) return;
+        _shouldShow = true;
         _createProgressOverlay();
         break;
 
       case .done:
-        if (!_overlayVisible) return;
+        _shouldShow = false;
         _removeProgressOverlay();
         break;
     }
@@ -63,7 +66,8 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
     assert(_overlayEntry == null, 'OverlayEntry should be null when creating a new one.');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      // `done` may have arrived while this callback was queued.
+      if (!mounted || !_shouldShow) return;
 
       RenderBox? renderedWidget;
       try {
@@ -122,6 +126,8 @@ class _ProgressOverlayState extends State<ProgressOverlay> {
       _messageController = messageController;
 
       SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // torn down within the mount frame — do not resubscribe
+
         _subscribeMessages();
 
         // Restore current progress state.

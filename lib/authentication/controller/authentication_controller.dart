@@ -75,6 +75,8 @@ final class AuthenticationController extends StateController<AuthenticationState
           setState(AuthenticationState.idle(user: state.user, error: message));
           return;
         }
+        // Leave `processing` before the hand-off, or the form and the MFA dialog stay disabled.
+        setState(AuthenticationState.idle(user: state.user));
         onMfaRequired(mfaChallenge);
         return;
       }

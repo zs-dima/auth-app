@@ -71,6 +71,49 @@ void main() {
       expect(attempts, 1);
     });
 
+    test('a path in noRetryPaths passes through with a single attempt (no replay)', () async {
+      var attempts = 0;
+      final mw = ConnectRetryMiddleware(
+        backoff: const RetryBackoff(
+          maxRetries: 2,
+          baseDelay: Duration(milliseconds: 1),
+          maxDelay: Duration(milliseconds: 1),
+        ),
+        random: math.Random(1),
+        noRetryPaths: const {'/svc.v1.Service/Method'},
+      );
+
+      final call = _run(mw, (req) async {
+        attempts++;
+        throw ConnectException(Code.unavailable, 'down');
+      });
+
+      await expectLater(call, throwsA(isA<ConnectException>()));
+      expect(attempts, 1, reason: 'RefreshTokens-class RPCs must never be replayed');
+    });
+
+    test('noRetryPaths naming a different path leaves this call retryable', () async {
+      var attempts = 0;
+      final mw = ConnectRetryMiddleware(
+        backoff: const RetryBackoff(
+          maxRetries: 2,
+          baseDelay: Duration(milliseconds: 1),
+          maxDelay: Duration(milliseconds: 1),
+        ),
+        random: math.Random(1),
+        noRetryPaths: const {'/auth.v1.AuthService/RefreshTokens'},
+      );
+
+      final result = await _run(mw, (req) async {
+        attempts++;
+        if (attempts == 1) throw ConnectException(Code.unavailable, 'down');
+        return _response(3);
+      });
+
+      expect(attempts, 2);
+      expect(result, 3);
+    });
+
     test('does NOT retry RESOURCE_EXHAUSTED without server pushback', () async {
       var attempts = 0;
       final call = _run(middleware(), (req) async {

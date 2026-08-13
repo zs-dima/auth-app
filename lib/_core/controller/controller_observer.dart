@@ -93,8 +93,8 @@ mixin _SentryTransactionMixin {
   void init(Logger log) => _log = log;
 
   /// Sentry transactions
-  final _transactions = <Controller, ISentrySpan?>{};
-  final _states = <Controller, List<Object>?>{};
+  final _transactions = <Controller, ISentrySpan>{};
+  final _states = <Controller, List<Object>>{};
 
   void _startTransaction(Controller controller, HandlerContext context) {
     try {
@@ -114,13 +114,22 @@ mixin _SentryTransactionMixin {
     }
   }
 
-  void _setState<S extends Object>(StateController<S> controller, S state) =>
-      (_states[controller] ??= <Object>[]).add(state);
+  // Buffer only while a transaction is active — otherwise entries accumulate for the
+  // controller's lifetime (AppMessageController emits outside handle()).
+  void _setState<S extends Object>(StateController<S> controller, S state) {
+    if (!_transactions.containsKey(controller)) return;
+    (_states[controller] ??= <Object>[]).add(state);
+  }
 
   void _finishTransaction(Controller controller, bool successful, [Object? error, StackTrace? stackTrace]) {
+    // remove() in every branch: a lingering key pins the controller (and its last state) forever.
     try {
       final transaction = _transactions[controller];
-      if (transaction == null || transaction.finished) return;
+      if (transaction == null || transaction.finished) {
+        _transactions.remove(controller);
+        _states.remove(controller);
+        return;
+      }
 
       final states = _states[controller] ?? <Object>[];
       var i = 0;
@@ -128,13 +137,12 @@ mixin _SentryTransactionMixin {
         transaction.setData('State #$i', state.toString());
         i++;
       }
-      states.clear();
 
       if (error != null) transaction.throwable = error;
       transaction.finish(status: successful ? const SpanStatus.ok() : const SpanStatus.internalError());
 
-      _transactions[controller] = null;
-      _states[controller] = null;
+      _transactions.remove(controller);
+      _states.remove(controller);
     } on Object catch (error, stackTrace) {
       _log.e('Error "$error" _SentryTransactionMixin._finishTransaction', stackTrace: stackTrace);
     }

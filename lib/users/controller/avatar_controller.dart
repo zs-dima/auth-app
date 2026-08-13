@@ -1,3 +1,4 @@
+import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
 import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/users/controller/platform/image_converter.dart';
@@ -52,9 +53,9 @@ final class AvatarController extends StateController<AvatarState>
       setProgressStarted();
 
       /// Todo: Compress image to 'webp' before upload 4 platforms
-      print('??? mime: ${image.mimeType} and size: ${image.image?.length} bytes');
+      logger.d('Avatar upload: source ${image.mimeType}, ${image.image?.length} bytes');
       final (data, mime) = await toWebPBytes(image, quality: 0.3);
-      print('!!! mime: $mime and size: ${data?.length} bytes');
+      logger.d('Avatar upload: converted $mime, ${data?.length} bytes');
       if (data == null) {
         setError('Failed to process avatar image.');
         return;

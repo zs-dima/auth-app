@@ -10,7 +10,6 @@ import 'package:auth_model/auth_model.dart';
 import 'package:collection/collection.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/foundation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:ui/ui.dart' hide ImageInfo;
 
 extension UsersScopeX on BuildContext {
@@ -25,7 +24,9 @@ abstract interface class IUsersController {
   UsersController get controller;
   List<User> get users;
   User? byId(UserId id);
-  Future<void> createUser(CreateUserData data);
+
+  /// Creates the user; [avatar] is uploaded once the server returns the created user's real id.
+  Future<void> createUser(CreateUserData data, {ImageInfo? avatar});
   Future<void> updateUser(UpdateUserData data);
 
   /// Upload avatar using presigned S3 URL workflow.
@@ -78,10 +79,23 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
       repository: context.dependencies.usersRepository,
       messageController: context.message,
     );
-    _userSubscription = _userController.toStream().whereType<UserUpdatedState>().distinct().listen(
-      (messages) => _reloadUsers(),
-      cancelOnError: false,
-    );
+    // Created AND updated both reload the list; UserCreatedState carries the server-minted id
+    // the pending avatar is uploaded against.
+    _userSubscription = _userController
+        .toStream()
+        .where((state) => state is UserCreatedState || state is UserUpdatedState)
+        .distinct()
+        .listen(
+          (state) {
+            if (state case UserCreatedState(:final user)) {
+              final avatar = _pendingAvatar;
+              _pendingAvatar = null;
+              if (avatar != null) _avatarController.uploadAvatar(user, avatar);
+            }
+            _reloadUsers();
+          },
+          cancelOnError: false,
+        );
     // _authController = context.dependencies.authenticationController;
   }
 
@@ -97,11 +111,16 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
 
   @override
   User? byId(UserId id) => controller.state.whenOrNull(
-    loaded: (_, stateUsers) => users.firstWhereOrNull((user) => user.id == id),
+    // The controller state is the live list (the scope's `users` field is a placeholder).
+    loaded: (_, stateUsers) => stateUsers.firstWhereOrNull((user) => user.id == id),
   );
 
+  /// Create-dialog avatar awaiting the server-minted user id; uploaded on [UserCreatedState].
+  ImageInfo? _pendingAvatar;
+
   @override
-  Future<void> createUser(CreateUserData data) async {
+  Future<void> createUser(CreateUserData data, {ImageInfo? avatar}) async {
+    _pendingAvatar = avatar;
     _userController.createUser(data);
   }
 
@@ -140,7 +159,8 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   @override
   void dispose() {
     _userSubscription?.cancel();
-    // _userController.dispose();
+    // Per-mount controller — dispose it, or every UsersScope rebuild leaks one.
+    _userController.dispose();
     super.dispose();
   }
 

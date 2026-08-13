@@ -34,6 +34,7 @@ config/keys.env
 .pub/
 /build/
 /coverage/
+**/build/
 
 # Symbolication related
 app.*.symbols

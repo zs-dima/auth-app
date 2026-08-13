@@ -21,7 +21,9 @@ prefix: auth
 # legacy service worker (auto-deleted by sw 0.1.2 but belt-and-braces),
 # source-map / symbol files, and the ~2 MB `assets/NOTICES` license dump.
 glob: "**.{html,js,wasm,json,mjs}; assets/**; canvaskit/**; icons/**"
-no-glob: "sw.js; bootstrap.js; firebase-messaging-sw.js; flutter_service_worker.js; **/*.map; assets/NOTICES"
+# v0/v1/prod-basic index snapshots must never enter the precache manifest — the deploy script
+# deletes them from build/web before sw:generate; this guards manual/out-of-script runs.
+no-glob: "sw.js; bootstrap.js; firebase-messaging-sw.js; flutter_service_worker.js; **/*.map; assets/NOTICES; v0-index.html; v1-index.html; index.prod-basic.html"
 
 # Loading-widget defaults baked into `bootstrap.js` as `BuildConfig.uiDefaults`.
 # `web/index.prod.html` sets `data-config` on the bootstrap <script> and that

@@ -93,6 +93,35 @@ void main() {
       expect(log, equals(['before', 'error:unavailable']));
     });
 
+    test('consumer pause/resume propagates to the wire subscription (back-pressure)', () async {
+      var pausedAtSource = false;
+      var resumedAtSource = false;
+      final source = StreamController<int>(
+        onPause: () => pausedAtSource = true,
+        onResume: () => resumedAtSource = true,
+      )..add(1);
+      final log = <String>[];
+      final transport = FakeTransportBuilder()
+          .server(_spec, (req, context) => source.stream)
+          .build(interceptors: [_StreamRecorder(log).call]);
+
+      final response = await transport.stream(_spec, Stream.value(0), const CallOptions());
+      final sub = response.message.listen((_) {});
+      await pumpEventQueue();
+
+      sub.pause();
+      await pumpEventQueue();
+      expect(pausedAtSource, isTrue, reason: 'pause must reach the wire subscription (flow control)');
+
+      sub.resume();
+      await pumpEventQueue();
+      expect(resumedAtSource, isTrue);
+
+      await source.close();
+      await pumpEventQueue();
+      await sub.cancel();
+    });
+
     test('cancelling the response subscription aborts the call via the child signal (A17)', () async {
       final log = <String>[];
       final serverAborted = Completer<void>();

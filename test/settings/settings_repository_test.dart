@@ -113,4 +113,29 @@ void main() {
       expect((await repo.getCredentials())?.accessToken.token, 'A');
     });
   });
+
+  group('SettingsRepository.getCredentials (secret hygiene — §13)', () {
+    test('a corrupt blob throws a sanitized error carrying no blob bytes', () async {
+      // Truncated mid-token: `json.decode`'s FormatException would otherwise hold the WHOLE
+      // decrypted blob in `source` and print a slice of it from toString() — which warning-level
+      // logging forwards to Sentry.
+      secureStore['credentials'] = '{"accessToken":{"type":"Bearer","data":"SECRET-ACCESS-TOKEN"';
+      final repo = await buildRepository();
+
+      await expectLater(
+        repo.getCredentials(),
+        throwsA(isA<FormatException>().having((e) => '$e', 'toString()', isNot(contains('SECRET')))),
+      );
+    });
+
+    test('valid JSON with a wrong shape also throws sanitized', () async {
+      secureStore['credentials'] = '{"accessToken":"SECRET-FLAT-STRING"}';
+      final repo = await buildRepository();
+
+      await expectLater(
+        repo.getCredentials(),
+        throwsA(isA<FormatException>().having((e) => '$e', 'toString()', isNot(contains('SECRET')))),
+      );
+    });
+  });
 }

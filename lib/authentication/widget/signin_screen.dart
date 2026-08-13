@@ -4,6 +4,7 @@ import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
 import 'package:auth_app/authentication/widget/layout/auth_layout.dart';
+import 'package:auth_app/authentication/widget/mfa_challenge_dialog.dart';
 import 'package:auth_model/auth_model.dart' hide AuthenticationState;
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
@@ -214,6 +215,12 @@ mixin _UsernamePasswordFormStateMixin on State<SignInScreen> {
         identifier: email,
         password: password,
       ),
+      // Second factor: hand the challenge to the MFA dialog, which drives verifyMfa and closes
+      // itself once the authenticated user is published (fires later — guard with `mounted`).
+      onMfaRequired: (challenge) {
+        if (!mounted) return;
+        showMfaChallengeDialog(this.context, challenge);
+      },
     );
     // Unfocus after initiating sign-in to avoid interrupting the tap gesture
     FocusScope.of(context).unfocus();

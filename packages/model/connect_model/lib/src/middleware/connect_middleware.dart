@@ -144,7 +144,7 @@ abstract class ConnectMiddleware {
         }
 
         final finished = done = Completer<void>();
-        sub = res.message.listen(
+        final subscription = res.message.listen(
           (event) {
             if (!controller.isClosed) controller.add(event);
           },
@@ -156,9 +156,17 @@ abstract class ConnectMiddleware {
           },
           cancelOnError: true,
         );
+        sub = subscription;
+        // Back-pressure: couple the consumer's pause/resume through to HTTP/2 flow control.
+        controller
+          ..onPause = subscription.pause
+          ..onResume = subscription.resume;
+        // Apply a pause missed before the call existed. hasListener matters: with no listener
+        // isPaused is also true, and pausing then would freeze the source (listen ≠ onResume).
+        if (controller.hasListener && controller.isPaused) subscription.pause();
         if (cancelled) {
           // Raced: the consumer cancelled while the call was being created — abort the pump.
-          await sub?.cancel();
+          await subscription.cancel();
           return;
         }
         await finished.future; // the handler awaits the full stream; mid-stream errors surface here

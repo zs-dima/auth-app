@@ -1,7 +1,5 @@
 // ignore_for_file: avoid_classes_with_only_static_members
 
-import 'dart:math';
-
 import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
@@ -34,7 +32,7 @@ sealed class AppMigrator {
         Config.versionPatchKey: Pubspec.version.patch,
       });
     } on Object catch (error, stackTrace) {
-      l.e('🏗️ App migration failed: $e', stackTrace);
+      l.e('🏗️ App migration failed: $error', stackTrace);
       rethrow;
     }
   }

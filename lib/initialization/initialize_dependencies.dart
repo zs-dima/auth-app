@@ -250,7 +250,20 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       // and recovered by the auth middleware's reactive refresh. Inner of Sentry (so its span covers
       // retries), outer of auth (appended below). Default RetryBackoff = full-jitter exponential
       // backoff + per-attempt ceiling + total budget; honors `grpc-retry-pushback-ms`.
-      ConnectRetryMiddleware().call,
+      // `noRetryPaths` = the dangerous-replay set (gRFC A6 / AIP-194): a replayed RefreshTokens
+      // trips reuse detection (§12.2); Authenticate/SignUp duplicate sessions/accounts; the
+      // senders duplicate emails. SignOut (idempotent revocation) and GetOAuthUrl (read) stay
+      // retryable.
+      ConnectRetryMiddleware(
+        noRetryPaths: {
+          ...kAuthServicePublicPaths,
+          // Authenticated email resend — same hazard, not in the public set.
+          '/auth.v1.AuthService/RequestVerification',
+        }.difference(const {
+          '/auth.v1.AuthService/SignOut',
+          '/auth.v1.AuthService/GetOAuthUrl',
+        }),
+      ).call,
 
       // Any other middlewares you need
       ...?middlewares,
@@ -414,7 +427,9 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
             );
   },
 
-  'Restore credentials': (dependencies) => dependencies.authenticationController.restore(),
+  // Awaited via the repository (blocks on the local storage read only, §11.1); the controller
+  // mirrors the emitted state via its userChanges subscription.
+  'Restore credentials': (dependencies) => dependencies.authenticationRepository.restore(),
 
   // 'Prepare authentication controller': (dependencies) =>
   //     dependencies.authenticationController = AuthenticationController(

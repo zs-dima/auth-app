@@ -310,6 +310,14 @@ rm -f build/web/index.html
 mv build/web/index.prod.html build/web/index.html
 log_info "Swapped dev index.html for prod template (index.prod.html)"
 
+# 4.3 Strip repo files that must not ship: template snapshots and the web README
+# (documents token/XSS threat model). Flutter copies web/ verbatim into build/web;
+# removing them BEFORE sw:generate keeps them out of the SW precache manifest too.
+# firebase.json `hosting.ignore` and sw.yaml `no-glob` guard the same set for
+# deploys made outside this script.
+rm -f build/web/v0-index.html build/web/v1-index.html build/web/index.prod-basic.html build/web/README.md
+log_info "Removed non-shipping web templates (v0/v1/prod-basic index, README.md)"
+
 # Post-swap sanity: the prod index.html MUST include the sw bootstrap tag,
 # otherwise sw:generate will succeed but the deployed site will load nothing.
 if ! grep -q 'data-sw-bootstrap' build/web/index.html; then
@@ -374,12 +382,13 @@ fi
 
 # Remove source map files in production to avoid exposing them publicly.
 # Keep them in staging/development for debugging WASM runtime errors.
-# if [ "$APP_ENVIRONMENT" = "production" ]; then
-#     find build/web -type f -name '*.map' -delete
-#     log_info "Source maps removed (production)"
-# else
-#     log_info "Source maps preserved (${APP_ENVIRONMENT}) for debugging"
-# fi
+# Runs AFTER the Sentry upload above, so sentry_dart_plugin still gets the maps.
+if [ "$APP_ENVIRONMENT" = "production" ]; then
+    find build/web -type f -name '*.map' -delete
+    log_info "Source maps removed (production)"
+else
+    log_info "Source maps preserved (${APP_ENVIRONMENT}) for debugging"
+fi
 
 # 6. Generate a build info file for traceability
 log_step "6/6 Generating build info..."

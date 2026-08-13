@@ -82,11 +82,14 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
     final file = image.files.firstOrNull;
     if (file == null) return;
 
-    final mimeType = file.extension!.fileExtToMimeType;
-    _setImage(file.bytes, mimeType);
+    final bytes = file.bytes;
+    if (bytes == null) return;
+    // `extension` is null for extensionless picks — degrade, don't crash.
+    final mimeType = file.extension?.fileExtToMimeType ?? '';
+    _setImage(bytes, mimeType);
   }
 
-  void _setImage(Uint8List? image, String mimeType) {
+  void _setImage(Uint8List image, String mimeType) {
     _imageController.setImage(image, mimeType);
     _urlController.text = '';
   }

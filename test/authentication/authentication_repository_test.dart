@@ -101,6 +101,12 @@ class _FakeSettings implements ISettingsRepository {
   /// corrupt-blob recovery path.
   bool throwOnClear = false;
 
+  /// When true, ONLY `setUserId(empty)` throws — the ASYMMETRIC fault: one store faults while the
+  /// other works. Pins the clear ordering (credentials first): pre-fix, the failing userId clear
+  /// ran first and blocked the credentials clear, leaving the refresh token at rest with the
+  /// userId still set — a cold start then resurrected the signed-out session.
+  bool throwOnClearUserId = false;
+
   UserId _userId = 'user-1';
 
   @override
@@ -117,7 +123,7 @@ class _FakeSettings implements ISettingsRepository {
 
   @override
   Future<void> setUserId(UserId userId) async {
-    if (throwOnClear && userId == UserIdX.empty) throw Exception('storage fault');
+    if ((throwOnClear || throwOnClearUserId) && userId == UserIdX.empty) throw Exception('storage fault');
     _userId = userId;
   }
 
@@ -433,7 +439,11 @@ void main() {
       expect(settings.credentials, isNull, reason: 'logout must win: no rotated credentials survive');
       expect(settings.userId, UserIdX.empty);
       expect(repo.user, isA<UnauthenticatedUser>());
-      expect(settings.writeLog.last, 'clear', reason: 'the refresh persist is ordered before the logout clears');
+      expect(
+        settings.writeLog.indexOf('clear'),
+        greaterThan(settings.writeLog.indexOf('set:B')),
+        reason: 'the refresh persist is ordered before the logout clears',
+      );
     });
 
     test('terminate during an in-flight refresh: no StateError escapes', () async {
@@ -485,6 +495,67 @@ void main() {
       expect(result, isNull);
       expect(repo.user, isA<UnauthenticatedUser>());
     });
+
+    test('signOut with a failing userId clear still erases the refresh token (no resurrection)', () async {
+      final settings = _FakeSettings(_creds('A'));
+      final repo = _repo(_FakeApi(), settings);
+      addTearDown(repo.terminate);
+      await repo.restore();
+
+      settings.throwOnClearUserId = true;
+      await expectLater(repo.signOut(), completes);
+
+      expect(settings.stored, isNull, reason: 'credentials clear FIRST: the secret must not survive the fault');
+
+      // A cold start over the half-cleared storage (userId still set, credentials gone) must NOT
+      // resurrect the signed-out session.
+      final repo2 = _repo(_FakeApi(), settings);
+      addTearDown(repo2.terminate);
+      final user = await repo2.restore();
+      expect(user, isA<UnauthenticatedUser>());
+    });
+
+    test('signOut publishes unauthenticated without waiting for an in-flight refresh (logout-availability)', () async {
+      final gate = Completer<void>();
+      final api = _GatedApi(gate);
+      final repo = _repo(api, _FakeSettings(_creds('A')));
+      addTearDown(repo.terminate);
+      await repo.restore();
+
+      // Park a reactive refresh inside the mutex on the gated network call.
+      final refreshFuture = repo.refreshCredentials('A');
+      await Future<void>.delayed(Duration.zero);
+
+      // The logout must be visible synchronously — while the refresh still holds the mutex.
+      final signOutFuture = repo.signOut();
+      expect(repo.user, isA<UnauthenticatedUser>(), reason: 'logout must not queue behind the network (§11.3)');
+
+      gate.complete();
+      await refreshFuture;
+      await signOutFuture;
+    });
+
+    test('a getAccessCredentials queued behind a refresh resolves null after signOut, not the old token', () async {
+      final gate = Completer<void>();
+      final api = _GatedApi(gate);
+      final repo = _repo(api, _FakeSettings(_creds('A')));
+      addTearDown(repo.terminate);
+      await repo.restore();
+
+      // Refresh holds the mutex; a routine token read queues behind it; then the user logs out.
+      final refreshFuture = repo.refreshCredentials('A');
+      await Future<void>.delayed(Duration.zero);
+      final pending = repo.getAccessCredentials();
+      final signOutFuture = repo.signOut();
+
+      gate.complete();
+      await refreshFuture;
+
+      // Pre-fix the queued read ran while `_user` was still authenticated and handed out the ended
+      // session's token; the early logout emit makes it resolve null.
+      await expectLater(pending, completion(isNull));
+      await signOutFuture;
+    });
   });
 
   group('restore', () {
@@ -510,6 +581,30 @@ void main() {
       // Must not rethrow out of restore() (which would fail every cold start).
       await expectLater(repo.restore(), completes);
       expect(repo.user, isA<UnauthenticatedUser>());
+    });
+
+    test('completes on the storage read alone; the proactive refresh is detached (§11.1)', () async {
+      final gate = Completer<void>();
+      final api = _GatedApi(gate);
+      final repo = _repo(api, _FakeSettings(_credsExpiring('A'))); // expiring ⇒ proactive refresh runs
+      addTearDown(repo.terminate);
+
+      // Pre-fix this await hung on the gated network call — cold start blocked on the network.
+      final user = await repo.restore().timeout(const Duration(seconds: 1));
+      expect(user, isA<AuthenticatedUser>(), reason: 'the rehydrated session returns without the refresh');
+
+      await Future<void>.delayed(Duration.zero);
+      expect(api.refreshCalls, 1, reason: 'the detached proactive refresh has started');
+
+      gate.complete();
+      await Future<void>.delayed(Duration.zero);
+      final refreshed = repo.user;
+      expect(refreshed, isA<AuthenticatedUser>());
+      expect(
+        (refreshed as AuthenticatedUser).credentials?.accessToken.token,
+        'B',
+        reason: 'the detached refresh corrects the state once it lands',
+      );
     });
 
     test('emits the rehydrated user BEFORE the proactive refresh completes (F6)', () async {
