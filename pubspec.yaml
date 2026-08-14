@@ -145,7 +145,7 @@ dependencies:
   # repaint: ^0.0.1
   # video_player: ^2.11.1
   # get_thumbnail_video: ^0.7.3
-  super_drag_and_drop: ^0.9.1 # TODO: Remove
+  super_drag_and_drop: ^0.10.0-dev.2 # TODO: Remove
   # flutter_app_icons: ^0.1.1
   # flutter_email_sender: ^7.0.0
   # pdf: ^3.11.3

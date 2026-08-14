@@ -144,6 +144,25 @@
       "problemMatcher": []
     },
     {
+      // Points `localhost` inside an Android emulator / USB device at this machine, so one launch
+      // config serves web, desktop and Android. Port mirrors APP_API_ADDRESS in config/development.env.
+      // `; exit 0` (valid in both PowerShell and sh) keeps a web launch unblocked when no device is attached.
+      "label": "adb reverse",
+      "type": "shell",
+      "command": "adb reverse tcp:50051 tcp:50051; exit 0",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "showReuseMessage": false,
+        "panel": "shared",
+        "close": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "UI Kit >> Firebase",
       "type": "shell",
       "command": "flutter build web --release && firebase hosting:channel:deploy ui-kit",

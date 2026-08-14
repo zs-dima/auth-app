@@ -10,6 +10,7 @@ import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/material.dart';
+import 'package:platform_info/platform_info.dart';
 
 class UsersWidget extends StatefulWidget {
   const UsersWidget({super.key});
@@ -80,10 +81,12 @@ class _UsersWidgetState extends State<UsersWidget> {
                       : const Center(child: CircularProgressIndicator());
                 }
 
-                final userRoles = [
-                  if (allUsers.any((u) => u.role == .admin)) UserRole.admin,
-                  if (allUsers.any((u) => u.role == .user)) UserRole.user,
-                ];
+                final userGroups = <({UserRole role, List<User> users})>[];
+                for (final role in const [UserRole.admin, UserRole.user]) {
+                  final users = allUsers.where((u) => u.role == role).toList();
+                  if (users.isNotEmpty) userGroups.add((role: role, users: users));
+                }
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     if (_currentUserId == null) return;
@@ -96,20 +99,18 @@ class _UsersWidgetState extends State<UsersWidget> {
                       // SliverOverlapInjector(
                       //   handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                       // ),
-                      ...userRoles.map((userRole) {
-                        final users = allUsers.where((i) => i.role == userRole).toList();
-
-                        return SliverMainAxisGroup(
+                      for (final group in userGroups)
+                        SliverMainAxisGroup(
                           slivers: [
                             SliverPersistentHeader(
                               pinned: true,
-                              delegate: UserListHeaderDelegate(userRole.name),
+                              delegate: UserListHeaderDelegate(group.role.name),
                             ),
                             SliverFixedExtentList(
                               itemExtent: 50,
                               delegate: SliverChildBuilderDelegate(
                                 (ctx, index) {
-                                  final user = users[index];
+                                  final user = group.users[index];
 
                                   return InkWell(
                                     key: ValueKey('user_tile_${user.id}'),
@@ -117,20 +118,19 @@ class _UsersWidgetState extends State<UsersWidget> {
                                     onTap: () => editUserDialog(ctx, user),
                                     child: UserTileWidget(
                                       user: user,
-                                      tileColor:
-                                          index
-                                              .isEven //
-                                          ? colorScheme.primary.withValues(alpha: 0.1)
-                                          : colorScheme.surface,
+                                      tileColor: platform.mobile
+                                          ? null
+                                          : (index.isEven
+                                                ? colorScheme.primary.withValues(alpha: 0.1)
+                                                : colorScheme.surface),
                                     ),
                                   );
                                 },
-                                childCount: users.length,
+                                childCount: group.users.length,
                               ),
                             ),
                           ],
-                        );
-                      }),
+                        ),
                     ],
                   ),
                 );

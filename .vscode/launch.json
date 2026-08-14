@@ -5,6 +5,7 @@
       "name": "Run DEV (Debug)",
       "type": "dart",
       "request": "launch",
+      "preLaunchTask": "adb reverse",
       "program": "lib/main.dart",
       "cwd": "${workspaceFolder}",
       // "openDevTools": "network",
@@ -34,6 +35,7 @@
       "name": "Run DEV (Debug, Drop database)",
       "type": "dart",
       "request": "launch",
+      "preLaunchTask": "adb reverse",
       "cwd": "${workspaceFolder}",
       "args": [
         "--wasm",
@@ -50,6 +52,7 @@
       "name": "Run DEV (Debug, Memmory database)",
       "type": "dart",
       "request": "launch",
+      "preLaunchTask": "adb reverse",
       "cwd": "${workspaceFolder}",
       "args": [
         "--wasm",
