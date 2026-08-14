@@ -111,12 +111,11 @@ class AuthenticationRepository implements IAuthenticationRepository {
   static const int _kMaxSessionAccessTokens = 4;
 
   AuthenticationRepository({
-    required final IAuthenticationApi api,
+    required this._api,
     required IAuthenticationHandler authHandler,
-    required final ISettingsRepository settings,
+    required this._settings,
     required this.metadata,
-  }) : _api = api,
-       _settings = settings {
+  }) {
     _userChangesSubscription =
         userChanges //
             .whereType<AuthenticatedUser>()
@@ -338,12 +337,18 @@ class AuthenticationRepository implements IAuthenticationRepository {
       await _settings.setUserId(userId);
       await _settings.setCredentials(credentials);
     } on Object catch (error, stackTrace) {
-      logger.w('Failed to persist session after authentication; revoking server session', error: error, stackTrace: stackTrace);
+      logger.w(
+        'Failed to persist session after authentication; revoking server session',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // Roll back a partial write; best-effort, credentials first (§11.3).
       try {
         await _settings.setCredentials(null);
         await _settings.setUserId(UserIdX.empty);
-      } on Object {/* best-effort rollback */}
+      } on Object {
+        /* best-effort rollback */
+      }
       final accessToken = credentials.accessToken;
       if (accessToken.token.isNotEmpty) _api.signOut(accessToken).ignore();
       rethrow;

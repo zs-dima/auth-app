@@ -184,7 +184,7 @@ mixin _PasswordFormStateMixin on State<AuthRecoveryConfirmScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _passwordController.dispose();
+    super.dispose();
   }
 }

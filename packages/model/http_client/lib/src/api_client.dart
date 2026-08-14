@@ -11,6 +11,7 @@ import 'package:http_client/src/headers.dart';
 import 'package:http_client/src/platform/http_client_vm.dart'
     // ignore: uri_does_not_exist
     if (dart.library.js_interop) 'package:http_client/src/platform/http_client_js.dart';
+import 'package:http_client/src/quic_hint.dart';
 
 /// Maximum allowed response size (15 MB by default)
 const int _kMaxResponseSize = 15 * 1024 * 1024;
@@ -259,16 +260,13 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   ApiClient({
     required this.baseUrl, // Base URL for the API
     http_package.Client? client, // Base HTTP client to use for requests
-    Map<String, String>? headers,
+    this._headers,
     Iterable<ApiClientMiddleware>? middlewares, // Middlewares to apply for each request
-    int maxRedirects = 5, // Maximum number of redirects to follow
-    CancelToken? Function()? sessionToken, // Session-scoped cancellation (cancelled on logout)
+    this._maxRedirects = 5, // Maximum number of redirects to follow
+    this._sessionToken, // Session-scoped cancellation (cancelled on logout)
     this.maxResponseSize = _kMaxResponseSize, // Max buffered response size (bytes); 0/neg = unlimited
     this.validateStatus, // Decides success per status code; defaults to `code < 400`
-  }) : _maxRedirects = maxRedirects,
-       _headers = headers,
-       _sessionToken = sessionToken,
-       middlewares = List<ApiClientMiddleware>.unmodifiable(middlewares ?? const Iterable.empty()) {
+  }) : middlewares = List<ApiClientMiddleware>.unmodifiable(middlewares ?? const Iterable.empty()) {
     final http_package.Client internalClient;
     if (client == null) {
       // Best-effort QUIC hint for our own API host so Cronet attempts HTTP/3 on the first
@@ -331,12 +329,12 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
   /// URLs (hints target hostnames); a wrong/stale hint is harmless (Cronet falls back). Consumed
   /// by the platform HTTP client factory (`$createHttpClient`); a no-op on iOS/web.
   @visibleForTesting
-  static List<(String, int, int)>? quicHintsForBaseUrl(Uri? uri) {
+  static List<QuicHint>? quicHintsForBaseUrl(Uri? uri) {
     // `uri.host` strips IPv6 brackets (`::1`), which would be a malformed hint — skip IP-literal
     // hosts (only IPv6 contains ':'; hostnames and IPv4 never do).
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty || uri.host.contains(':')) return null;
     final port = uri.hasPort ? uri.port : 443;
-    return <(String, int, int)>[(uri.host, port, port)];
+    return <QuicHint>[(uri.host, port, port)];
   }
 
   /// Sends a [method] request to the given [path].
@@ -541,8 +539,10 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     if (_headers != null) streamedRequest.headers.addAll(_headers);
     if (headers != null) streamedRequest.headers.addAll(headers);
 
-    // Pipe the body stream into the request sink as chunks arrive.
-    bodyStream.listen(
+    // Pipe the body stream into the request sink as chunks arrive. Held so it can be cancelled
+    // when the request settles: an aborted or timed-out upload must stop draining the source
+    // (a file read, an encoder) instead of pumping it into a socket nobody reads.
+    final pump = bodyStream.listen(
       streamedRequest.sink.add,
       onError: streamedRequest.sink.addError,
       onDone: streamedRequest.sink.close,
@@ -553,7 +553,10 @@ class ApiClient /* with http_package.BaseClient implements http_package.Client *
     // senders), so a construction failure above cannot leak a retained session-child token.
     final detachSession = _linkSession(effectiveToken);
     final future = _handler(ApiClientRequest(streamedRequest), ctx);
-    future.whenComplete(detachSession).ignore();
+    future.whenComplete(() {
+      detachSession();
+      pump.cancel().ignore(); // no-op once the stream already completed
+    }).ignore();
     return FutureApiClientResponse(future);
   }
 

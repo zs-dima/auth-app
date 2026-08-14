@@ -19,9 +19,9 @@ final class UserController extends StateController<UserState>
     with DroppableControllerHandler, AppMessageControllerMixin {
   UserController({
     super.initialState = const UserState.idle(),
-    required IUsersRepository repository,
+    required this._repository,
     required AppMessageController messageController,
-  }) : _repository = repository {
+  }) {
     this.messageController = messageController;
   }
 

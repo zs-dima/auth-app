@@ -11,3 +11,5 @@ export 'src/api_client.dart';
 export 'src/headers.dart';
 // Generic middlewares: retry, timeout, bearer authentication, metadata headers.
 export 'src/middleware.dart';
+// The QuicHint record type shared by ApiClient and the platform client factories.
+export 'src/quic_hint.dart';

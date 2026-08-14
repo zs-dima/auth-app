@@ -7,7 +7,7 @@ void main() {
       final token = CancelToken();
       expect(token.isCancelled, isFalse);
       expect(token.reason, isNull);
-      expect(token.debugLinkedCount, 0);
+      expect(token.debugLinkedCount, isZero);
     });
 
     test('cancel completes whenCancel and records the reason', () async {
@@ -16,14 +16,14 @@ void main() {
       token.cancel('logout');
       await expectLater(cancelled, completes);
       expect(token.isCancelled, isTrue);
-      expect(token.reason, 'logout');
+      expect(token.reason, equals('logout'));
     });
 
     test('cancel is idempotent — a second cancel does not overwrite the reason', () {
       final token = CancelToken()
         ..cancel('first')
         ..cancel('second');
-      expect(token.reason, 'first');
+      expect(token.reason, equals('first'));
     });
 
     test('link cancels children transitively with the same reason', () {
@@ -37,18 +37,18 @@ void main() {
 
       expect(request.isCancelled, isTrue);
       expect(subRequest.isCancelled, isTrue);
-      expect(request.reason, 'logout');
-      expect(subRequest.reason, 'logout');
+      expect(request.reason, equals('logout'));
+      expect(subRequest.reason, equals('logout'));
     });
 
     test('the unlink callback detaches the child so it survives a later cancel', () {
       final session = CancelToken();
       final request = CancelToken();
       final unlink = session.link(request);
-      expect(session.debugLinkedCount, 1);
+      expect(session.debugLinkedCount, equals(1));
 
       unlink();
-      expect(session.debugLinkedCount, 0);
+      expect(session.debugLinkedCount, isZero);
 
       session.cancel();
       expect(request.isCancelled, isFalse);
@@ -60,8 +60,8 @@ void main() {
       final unlink = session.link(request);
 
       expect(request.isCancelled, isTrue);
-      expect(request.reason, 'logout');
-      expect(session.debugLinkedCount, 0);
+      expect(request.reason, equals('logout'));
+      expect(session.debugLinkedCount, isZero);
       expect(unlink, returnsNormally); // no-op unlink
     });
 
@@ -69,10 +69,10 @@ void main() {
       final session = CancelToken()
         ..link(CancelToken())
         ..link(CancelToken());
-      expect(session.debugLinkedCount, 2);
+      expect(session.debugLinkedCount, equals(2));
 
       session.cancel();
-      expect(session.debugLinkedCount, 0);
+      expect(session.debugLinkedCount, isZero);
     });
   });
 }

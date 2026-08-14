@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 /// ScaffoldPadding widget.
 /// {@endtemplate}
 class ScaffoldPadding extends EdgeInsets {
-  const ScaffoldPadding._(final double value) : super.symmetric(horizontal: value);
+  const ScaffoldPadding._(double value) : super.symmetric(horizontal: value);
 
   /// {@macro scaffold_padding}
   factory ScaffoldPadding.of(BuildContext context, {double? maxWidth, double? minPadding}) => ScaffoldPadding._(
-    math.max((MediaQuery.sizeOf(context).width - (maxWidth ?? Config.maxScreenLayoutWidth)) / 2, minPadding ?? 16.0),
+    math.max((MediaQuery.widthOf(context) - (maxWidth ?? Config.maxScreenLayoutWidth)) / 2, minPadding ?? 16.0),
   );
 
   /// {@macro scaffold_padding}

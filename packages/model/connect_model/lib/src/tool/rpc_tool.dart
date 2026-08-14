@@ -5,15 +5,14 @@ import 'package:connect_model/src/well_known_types.dart' as rpc;
 import 'package:connectrpc/connect.dart';
 import 'package:core_model/core_model.dart';
 import 'package:fixnum/fixnum.dart' as fn;
-import 'package:uuid/uuid.dart';
 
 extension RpcIdX on Guid? {
   rpc.UUID toUUID() => this == null ? rpc.UUID() : (rpc.UUID()..value = this!);
-  bool get isNull => this == null || this!.isEmpty || this == Uuid.NAMESPACE_NIL;
+  bool get isNull => this == null || this!.isEmpty || this == GuidX.nil;
 }
 
 extension RpcUuidX on rpc.UUID {
-  Guid toId() => (value.isNull) ? Uuid.NAMESPACE_NIL : value;
+  Guid toId() => (value.isNull) ? GuidX.nil : value;
 
   bool get isNull => toId().isNull;
 }

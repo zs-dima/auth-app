@@ -1,8 +1,9 @@
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
+import 'package:core_model/core_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
 
 part 'user.freezed.dart';
 part 'user.g.dart';
@@ -21,7 +22,7 @@ sealed class User with _$User implements IUserInfo, Comparable<User> {
   static const type$ = '2204CA60-2D98-4BF7-8140-9BF746F4CFE1';
 
   static const empty = User(
-    id: Uuid.NAMESPACE_NIL,
+    id: GuidX.nil,
     name: '',
     email: '',
     role: .user,
@@ -63,5 +64,6 @@ sealed class User with _$User implements IUserInfo, Comparable<User> {
       'User(id: $id, name: ***, email: ***, role: $role, status: $status, phone: ***, '
       'emailVerified: $emailVerified, phoneVerified: $phoneVerified, mfaEnabled: $mfaEnabled, '
       'hasPassword: $hasPassword, avatarUrl: $avatarUrl, locale: $locale, timezone: $timezone, '
-      'createdAt: $createdAt, updatedAt: $updatedAt)';
+      'createdAt: ${createdAt == null ? 'null' : DateFormat().format(createdAt!)}, '
+      'updatedAt: ${updatedAt == null ? 'null' : DateFormat().format(updatedAt!)})';
 }

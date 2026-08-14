@@ -15,7 +15,7 @@ void main() {
     bool Function(Object error, int attempt)? retryEvaluator,
     CancelToken? Function()? sessionToken,
     Duration timeout = const Duration(seconds: 5),
-  }) => ApiClient(
+  }) => .new(
     baseUrl: () => Uri.parse('https://api.test'),
     client: client,
     sessionToken: sessionToken,
@@ -43,8 +43,8 @@ void main() {
       final api = buildClient(client: mock);
 
       final res = await api.get('/data');
-      expect(res.statusCode, 200);
-      expect(attempts, 2);
+      expect(res.statusCode, equals(200));
+      expect(attempts, equals(2));
     });
 
     test('does not retry a non-idempotent POST by default', () async {
@@ -56,7 +56,7 @@ void main() {
       final api = buildClient(client: mock);
 
       await expectLater(api.post('/data', body: {'x': 1}), throwsA(isA<ApiClientException$Server>()));
-      expect(attempts, 1, reason: 'POST is not idempotent — not auto-retried');
+      expect(attempts, equals(1), reason: 'POST is not idempotent — not auto-retried');
     });
 
     test('retries a POST when explicitly opted in', () async {
@@ -68,8 +68,8 @@ void main() {
       final api = buildClient(client: mock);
 
       final res = await api.post('/data', body: {'x': 1}, context: {kRetryNonIdempotentContextKey: true});
-      expect(res.statusCode, 200);
-      expect(attempts, 2);
+      expect(res.statusCode, equals(200));
+      expect(attempts, equals(2));
     });
 
     test('does not retry a non-transient 404 (default policy)', () async {
@@ -81,7 +81,7 @@ void main() {
       final api = buildClient(client: mock);
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Request>()));
-      expect(attempts, 1, reason: '4xx client errors are not transient');
+      expect(attempts, equals(1), reason: '4xx client errors are not transient');
     });
 
     test('a custom retryEvaluator overrides the default policy', () async {
@@ -94,8 +94,8 @@ void main() {
       final api = buildClient(client: mock, retryEvaluator: (_, _) => true);
 
       final res = await api.get('/data');
-      expect(res.statusCode, 200);
-      expect(attempts, 2);
+      expect(res.statusCode, equals(200));
+      expect(attempts, equals(2));
     });
   });
 
@@ -143,7 +143,7 @@ void main() {
 
       await expectLater(api.get('/slow'), throwsA(isA<ApiClientException$Timeout>()));
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      expect(attempts, 1, reason: 'timeout is not retried');
+      expect(attempts, equals(1), reason: 'timeout is not retried');
       expect(aborted, isTrue, reason: 'timeout cancels the request token (frees the socket)');
     });
   });
@@ -183,9 +183,9 @@ void main() {
       final api = buildClient(client: mock, sessionToken: () => session);
 
       await api.get('/data');
-      await Future<void>.delayed(Duration.zero); // let whenComplete(detach) run
+      await Future<void>.delayed(.zero); // let whenComplete(detach) run
 
-      expect(session.debugLinkedCount, 0);
+      expect(session.debugLinkedCount, isZero);
     });
 
     test('an in-flight request is retained, then released when the session is cancelled', () async {
@@ -197,11 +197,11 @@ void main() {
       final api = buildClient(client: mock, sessionToken: () => session);
 
       final future = api.get('/slow');
-      expect(session.debugLinkedCount, 1, reason: 'retained while in-flight');
+      expect(session.debugLinkedCount, equals(1), reason: 'retained while in-flight');
 
       session.cancel();
       await expectLater(future, throwsA(isA<ApiClientException$Cancelled>()));
-      expect(session.debugLinkedCount, 0, reason: 'cancel clears linked children');
+      expect(session.debugLinkedCount, isZero, reason: 'cancel clears linked children');
     });
 
     test('a construction failure (unsupported body) retains no link on the session token', () {
@@ -211,7 +211,7 @@ void main() {
 
       // The body switch throws synchronously before the session is linked, so nothing leaks.
       expect(() => api.post('/x', body: DateTime.now()), throwsArgumentError);
-      expect(session.debugLinkedCount, 0, reason: 'no link retained when construction fails');
+      expect(session.debugLinkedCount, isZero, reason: 'no link retained when construction fails');
     });
 
     test('a multipart construction failure retains no link on the session token', () async {
@@ -221,10 +221,15 @@ void main() {
 
       // A non-JSON-encodable field fails encoding before the session is linked.
       await expectLater(
-        api.postMultipart('/x', body: <String, Object?>{'f': <Object?>[DateTime.now()]}),
+        api.postMultipart(
+          '/x',
+          body: <String, Object?>{
+            'f': <Object?>[DateTime.now()],
+          },
+        ),
         throwsA(isA<ApiClientException$Internal>()),
       );
-      expect(session.debugLinkedCount, 0, reason: 'no link retained when multipart construction fails');
+      expect(session.debugLinkedCount, isZero, reason: 'no link retained when multipart construction fails');
     });
   });
 
@@ -233,11 +238,11 @@ void main() {
       final parent = CancelToken();
       final child = CancelToken();
       parent.link(child);
-      expect(parent.debugLinkedCount, 1);
+      expect(parent.debugLinkedCount, equals(1));
 
       parent.cancel();
       expect(child.isCancelled, isTrue);
-      expect(parent.debugLinkedCount, 0);
+      expect(parent.debugLinkedCount, isZero);
     });
 
     test('detach stops retaining and prevents later cancellation', () {
@@ -245,7 +250,7 @@ void main() {
       final child = CancelToken();
       parent.link(child)();
 
-      expect(parent.debugLinkedCount, 0);
+      expect(parent.debugLinkedCount, isZero);
       parent.cancel();
       expect(child.isCancelled, isFalse);
     });
@@ -260,10 +265,10 @@ void main() {
 
   // --- Dio-parity gaps: query arrays, validateStatus, size/stream/progress, receive timeout ---
 
-  ApiClient bareClient(http.Client client, {int? maxResponseSize, bool Function(int)? validateStatus}) => ApiClient(
+  ApiClient bareClient(http.Client client, {int? maxResponseSize, bool Function(int)? validateStatus}) => .new(
     baseUrl: () => Uri.parse('https://api.test'),
     client: client,
-    maxResponseSize: maxResponseSize ?? 15 * 1024 * 1024,
+    maxResponseSize: maxResponseSize ?? (15 * 1024 * 1024),
     validateStatus: validateStatus,
   );
 
@@ -275,10 +280,18 @@ void main() {
         return http.Response('ok', 200);
       });
 
-      await bareClient(mock).get('/data', queryParameters: {'id': [1, 2], 'q': 'a', 'skip': null, 'empty': <int>[]});
+      await bareClient(mock).get(
+        '/data',
+        queryParameters: {
+          'id': [1, 2],
+          'q': 'a',
+          'skip': null,
+          'empty': <int>[],
+        },
+      );
 
-      expect(seen!.queryParametersAll['id'], ['1', '2']);
-      expect(seen!.queryParameters['q'], 'a');
+      expect(seen!.queryParametersAll['id'], equals(['1', '2']));
+      expect(seen!.queryParameters['q'], equals('a'));
       expect(seen!.queryParametersAll.containsKey('skip'), isFalse);
       expect(seen!.queryParametersAll.containsKey('empty'), isFalse);
     });
@@ -292,9 +305,9 @@ void main() {
 
       await bareClient(mock).get('https://cdn.example.com/file.png?present=1', queryParameters: {'extra': 'x'});
 
-      expect(seen!.host, 'cdn.example.com');
-      expect(seen!.queryParameters['present'], '1', reason: 'the URL\'s own query survives');
-      expect(seen!.queryParameters['extra'], 'x', reason: 'queryParameters are merged, not silently dropped');
+      expect(seen!.host, equals('cdn.example.com'));
+      expect(seen!.queryParameters['present'], equals('1'), reason: 'the URL\'s own query survives');
+      expect(seen!.queryParameters['extra'], equals('x'), reason: 'queryParameters are merged, not silently dropped');
     });
   });
 
@@ -315,7 +328,7 @@ void main() {
       final copy = bareClient(mock, validateStatus: (c) => c == 404).clone(client: mock);
 
       final res = await copy.get('/x');
-      expect(res.statusCode, 404, reason: 'the custom success predicate survives the clone');
+      expect(res.statusCode, equals(404), reason: 'the custom success predicate survives the clone');
     });
 
     test('preserves the session-cancellation binding', () async {
@@ -342,8 +355,8 @@ void main() {
     test('a custom predicate makes a 404 a success', () async {
       final mock = MockClient((_) async => http.Response('body', 404));
       final res = await bareClient(mock, validateStatus: (c) => c == 404).get('/x');
-      expect(res.statusCode, 404);
-      expect(await res.toText(), 'body');
+      expect(res.statusCode, equals(404));
+      expect(await res.toText(), equals('body'));
     });
 
     test('a predicate rejecting 200 throws', () async {
@@ -369,13 +382,13 @@ void main() {
     test('stream: true bypasses the size cap', () async {
       final mock = MockClient((_) async => http.Response('x' * 100, 200));
       final res = await bareClient(mock, maxResponseSize: 10).get('/x', stream: true);
-      expect((await res.toBytes()).length, 100);
+      expect(await res.toBytes(), hasLength(100));
     });
 
     test('maxResponseSize 0 disables the cap', () async {
       final mock = MockClient((_) async => http.Response('x' * 100, 200));
       final res = await bareClient(mock, maxResponseSize: 0).get('/x');
-      expect((await res.toBytes()).length, 100);
+      expect(await res.toBytes(), hasLength(100));
     });
   });
 
@@ -392,12 +405,17 @@ void main() {
         ),
       );
       final events = <List<int>>[];
-      final res = await bareClient(mock).get('/x', onReceiveProgress: (received, total) => events.add([received, total]));
+      final res = await bareClient(
+        mock,
+      ).get('/x', onReceiveProgress: (received, total) => events.add([received, total]));
       await res.toBytes();
-      expect(events, [
-        [3, 5],
-        [5, 5],
-      ]);
+      expect(
+        events,
+        equals([
+          [3, 5],
+          [5, 5],
+        ]),
+      );
     });
   });
 
@@ -437,7 +455,7 @@ void main() {
     test('toJsonList parses a top-level array', () async {
       final mock = MockClient((_) async => http.Response('[1,2,3]', 200));
       final res = await bareClient(mock).get('/x');
-      expect(await res.toJsonList(), [1, 2, 3]);
+      expect(await res.toJsonList(), equals([1, 2, 3]));
     });
 
     test('toJson on an array body throws FormatException', () async {
@@ -449,7 +467,7 @@ void main() {
     test('toJson still parses an object body', () async {
       final mock = MockClient((_) async => http.Response('{"a":1}', 200));
       final res = await bareClient(mock).get('/x');
-      expect(await res.toJson(), {'a': 1});
+      expect(await res.toJson(), equals({'a': 1}));
     });
 
     test('a large body (> isolate threshold) decodes correctly via compute', () async {
@@ -457,7 +475,7 @@ void main() {
       final mock = MockClient((_) async => http.Response('{"big":"$big"}', 200));
       final res = await bareClient(mock).get('/x');
       final json = await res.toJson();
-      expect((json['big']! as String).length, big.length);
+      expect(json['big']! as String, hasLength(big.length));
     });
   });
 
@@ -492,8 +510,32 @@ void main() {
         ]),
         contentLength: 5,
       );
-      expect(res.statusCode, 200);
-      expect(received, [1, 2, 3, 4, 5]);
+      expect(res.statusCode, equals(200));
+      expect(received, equals([1, 2, 3, 4, 5]));
+    });
+
+    test('cancelling an upload stops draining the body stream', () async {
+      // Pre-fix the pump subscription was fire-and-forget: the socket aborted but the source
+      // (a file read, an encoder) kept being drained into a request nobody was reading.
+      var bodyCancelled = false;
+      final body = StreamController<List<int>>(onCancel: () => bodyCancelled = true);
+      final mock = MockClient.streaming((request, _) async {
+        await (request as http.Abortable).abortTrigger;
+        throw http.RequestAbortedException(request.url);
+      });
+
+      final token = CancelToken();
+      final future = bareClient(
+        mock,
+      ).postStream('/upload', bodyStream: body.stream, contentLength: 100, cancelToken: token);
+      await Future<void>.delayed(.zero); // let the pump attach before aborting
+      token.cancel();
+
+      await expectLater(future, throwsA(isA<ApiClientException$Cancelled>()));
+      await pumpEventQueue();
+
+      expect(bodyCancelled, isTrue, reason: 'the aborted upload must release the body stream');
+      await body.close();
     });
   });
 
@@ -523,7 +565,7 @@ void main() {
       );
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Server>()));
-      expect(attempts, 1, reason: 'budget exhausted after the first attempt — no retry');
+      expect(attempts, equals(1), reason: 'budget exhausted after the first attempt — no retry');
     });
   });
 
@@ -542,13 +584,13 @@ void main() {
         (_) async => http.Response('{"code":"validation_error","message":"Email taken"}', 422),
       );
       final e = await failOf(() => bareClient(mock).get('/x'));
-      expect((e.data! as Map)['body'], {'code': 'validation_error', 'message': 'Email taken'});
+      expect((e.data! as Map)['body'], equals({'code': 'validation_error', 'message': 'Email taken'}));
     });
 
     test('a non-JSON error body is captured as text', () async {
       final mock = MockClient((_) async => http.Response('boom', 500));
       final e = await failOf(() => bareClient(mock).get('/x'));
-      expect((e.data! as Map)['body'], 'boom');
+      expect((e.data! as Map)['body'], equals('boom'));
     });
 
     test('an empty error body adds no body key', () async {
@@ -563,8 +605,8 @@ void main() {
       );
       final e = await failOf(() => bareClient(mock).get('/x'));
       final data = e.data! as Map;
-      expect(data['retry-after'], '5');
-      expect(data['body'], {'m': 1});
+      expect(data['retry-after'], equals('5'));
+      expect(data['body'], equals({'m': 1}));
     });
 
     test('an oversized error body is skipped (no body key), still typed', () async {

@@ -14,6 +14,8 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void initState() {
+    super.initState();
+
     final dependencies = context.dependencies;
 
     // Observe all errors.
@@ -64,6 +66,5 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
         HeroController(),
       ], */
     );
-    super.initState();
   }
 }

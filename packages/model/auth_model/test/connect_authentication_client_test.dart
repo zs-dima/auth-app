@@ -25,7 +25,11 @@ void main() {
 
       final creds = ConnectAuthenticationClient.mapRefreshResponse(result, const RefreshToken('old-refresh'));
 
-      expect(creds.refreshToken.value, 'old-refresh', reason: 'an empty rotated token must NOT overwrite the old one');
+      expect(
+        creds.refreshToken.value,
+        equals('old-refresh'),
+        reason: 'an empty rotated token must NOT overwrite the old one',
+      );
     });
 
     test('replaces the previous refresh token when the response rotates it', () {
@@ -35,7 +39,7 @@ void main() {
 
       final creds = ConnectAuthenticationClient.mapRefreshResponse(result, const RefreshToken('old-refresh'));
 
-      expect(creds.refreshToken.value, 'new-refresh');
+      expect(creds.refreshToken.value, equals('new-refresh'));
     });
 
     test('always rotates the access token from the response JWT', () {
@@ -46,7 +50,7 @@ void main() {
 
       final creds = ConnectAuthenticationClient.mapRefreshResponse(result, const RefreshToken('old-refresh'));
 
-      expect(creds.accessToken.token, jwt);
+      expect(creds.accessToken.token, equals(jwt));
     });
   });
 }

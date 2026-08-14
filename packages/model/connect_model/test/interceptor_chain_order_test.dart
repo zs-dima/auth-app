@@ -48,28 +48,30 @@ void main() {
     final log = <String>[];
     Headers? wireHeaders;
 
-    final transport = FakeTransportBuilder().unary(_spec, (req, context) {
-      log.add('wire');
-      wireHeaders = context.requestHeaders;
-      return 2;
-    }).build(
-      interceptors: [
-        _Recorder('outer', log).call,
-        _RawRecorder('mid', log).call,
-        _Recorder('inner', log).call,
-      ],
-    );
+    final transport = FakeTransportBuilder()
+        .unary(_spec, (req, context) {
+          log.add('wire');
+          wireHeaders = context.requestHeaders;
+          return 2;
+        })
+        .build(
+          interceptors: [
+            _Recorder('outer', log).call,
+            _RawRecorder('mid', log).call,
+            _Recorder('inner', log).call,
+          ],
+        );
 
     final result = await Client(transport).unary(_spec, 1);
 
-    expect(result, 2);
+    expect(result, equals(2));
     expect(
       log,
       equals(['outer:before', 'mid:before', 'inner:before', 'wire', 'inner:after', 'mid:after', 'outer:after']),
       reason: 'list order must be outermost → innermost',
     );
     // Metadata added by the handler-based middleware reaches the wire (merge direction pinned).
-    expect(wireHeaders?['outer'], 'seen');
-    expect(wireHeaders?['inner'], 'seen');
+    expect(wireHeaders?['outer'], equals('seen'));
+    expect(wireHeaders?['inner'], equals('seen'));
   });
 }

@@ -45,8 +45,8 @@ void main() {
         return _response(42);
       });
 
-      expect(attempts, 2);
-      expect(result, 42);
+      expect(attempts, equals(2));
+      expect(result, equals(42));
     });
 
     test('does not retry UNAUTHENTICATED (owned by the auth middleware)', () async {
@@ -57,7 +57,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1);
+      expect(attempts, equals(1));
     });
 
     test('does not retry a non-transient error (notFound)', () async {
@@ -68,7 +68,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1);
+      expect(attempts, equals(1));
     });
 
     test('a path in noRetryPaths passes through with a single attempt (no replay)', () async {
@@ -89,7 +89,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1, reason: 'RefreshTokens-class RPCs must never be replayed');
+      expect(attempts, equals(1), reason: 'RefreshTokens-class RPCs must never be replayed');
     });
 
     test('noRetryPaths naming a different path leaves this call retryable', () async {
@@ -110,8 +110,8 @@ void main() {
         return _response(3);
       });
 
-      expect(attempts, 2);
-      expect(result, 3);
+      expect(attempts, equals(2));
+      expect(result, equals(3));
     });
 
     test('does NOT retry RESOURCE_EXHAUSTED without server pushback', () async {
@@ -122,7 +122,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1, reason: 'resourceExhausted is retried only when the server sends pushback');
+      expect(attempts, equals(1), reason: 'resourceExhausted is retried only when the server sends pushback');
     });
 
     test('retries RESOURCE_EXHAUSTED when the server sends a (non-negative) pushback', () async {
@@ -133,8 +133,8 @@ void main() {
         return _response(7);
       });
 
-      expect(attempts, 2);
-      expect(result, 7);
+      expect(attempts, equals(2));
+      expect(result, equals(7));
     });
 
     test('reads the pushback under the Connect `trailer-` prefixed key too', () async {
@@ -147,8 +147,12 @@ void main() {
         return _response(11);
       });
 
-      expect(attempts, 2, reason: 'unary trailing metadata may surface as trailer-prefixed headers over Connect');
-      expect(result, 11);
+      expect(
+        attempts,
+        equals(2),
+        reason: 'unary trailing metadata may surface as trailer-prefixed headers over Connect',
+      );
+      expect(result, equals(11));
     });
 
     test('negative pushback forbids retry even for an otherwise-transient code', () async {
@@ -159,7 +163,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1, reason: 'a negative pushback means do not retry');
+      expect(attempts, equals(1), reason: 'a negative pushback means do not retry');
     });
 
     test('a custom retryEvaluator can retry an otherwise non-retryable code', () async {
@@ -180,8 +184,8 @@ void main() {
         return _response(9);
       });
 
-      expect(attempts, 2);
-      expect(result, 9);
+      expect(attempts, equals(2));
+      expect(result, equals(9));
     });
 
     test('a custom retryEvaluator cannot retry against a negative pushback (mechanic)', () async {
@@ -202,7 +206,7 @@ void main() {
       });
 
       await expectLater(call, throwsA(isA<ConnectException>()));
-      expect(attempts, 1, reason: 'negative pushback is a mechanic; a custom evaluator cannot override it');
+      expect(attempts, equals(1), reason: 'negative pushback is a mechanic; a custom evaluator cannot override it');
     });
 
     test('streaming requests pass through untouched (no retry wrapping)', () async {
@@ -222,7 +226,7 @@ void main() {
         return response;
       })(streamRequest);
 
-      expect(invoked, 1);
+      expect(invoked, equals(1));
       expect(identical(result, response), isTrue);
     });
   });
@@ -234,9 +238,9 @@ void main() {
       )(_request());
 
       final unary = response as UnaryResponse<int, int>;
-      expect(unary.message, 5);
-      expect(unary.headers['h'], '1');
-      expect(unary.trailers['t'], '2');
+      expect(unary.message, equals(5));
+      expect(unary.headers['h'], equals('1'));
+      expect(unary.trailers['t'], equals('2'));
     });
 
     test('an aborted signal aborts the in-flight attempt and stops retrying', () async {
@@ -254,7 +258,7 @@ void main() {
       signal.cancel();
       await expectation;
 
-      expect(attempts, 1, reason: 'no further attempt after cancellation');
+      expect(attempts, equals(1), reason: 'no further attempt after cancellation');
     });
   });
 

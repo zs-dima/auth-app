@@ -26,13 +26,11 @@ final class AvatarController extends StateController<AvatarState>
 
   AvatarController({
     super.initialState = const AvatarState.idle(UserIdX.empty, ''),
-    required String s3Url,
-    required IUsersRepository repository,
-    required ApiClient httpClient,
+    required this._s3Url,
+    required this._repository,
+    required this._httpClient,
     required AppMessageController messageController,
-  }) : _repository = repository,
-       _httpClient = httpClient,
-       _s3Url = s3Url {
+  }) {
     this.messageController = messageController;
   }
 

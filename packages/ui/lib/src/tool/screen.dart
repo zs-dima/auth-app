@@ -55,10 +55,10 @@ extension ScreenUtilX on BuildContext {
   /// tablet  | 600..1023 dp | 8 column
   /// desktop | >= 1024 dp   | 12 column
   ScreenSizeWhenResult screenSizeWhen<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   }) => ScreenUtil.screenSizeOf(this).when(phone: phone, tablet: tablet, desktop: desktop, wideScreen: wideScreen);
 
   /// The [screenSizeMaybeWhen] method is equivalent to [screenSizeWhen],
@@ -67,10 +67,10 @@ extension ScreenUtilX on BuildContext {
   /// On the other hand, it adds an extra [orElse] required parameter,
   /// for fallback behavior.
   ScreenSizeWhenResult screenSizeMaybeWhen<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() orElse,
-    final ScreenSizeWhenResult Function()? phone,
-    final ScreenSizeWhenResult Function()? tablet,
-    final ScreenSizeWhenResult Function()? desktop,
+    required ScreenSizeWhenResult Function() orElse,
+    ScreenSizeWhenResult Function()? phone,
+    ScreenSizeWhenResult Function()? tablet,
+    ScreenSizeWhenResult Function()? desktop,
   }) => ScreenUtil.screenSizeOf(this).maybeWhen(phone: phone, tablet: tablet, desktop: desktop, orElse: orElse);
 }
 
@@ -102,7 +102,7 @@ abstract final class ScreenUtil {
   static ScreenSize from(Size size) => _screenSizeFromSize(size);
 
   /// {@macro screen_util}
-  static ScreenSize screenSizeOf(final BuildContext context) {
+  static ScreenSize screenSizeOf(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return _screenSizeFromSize(size);
   }
@@ -112,7 +112,7 @@ abstract final class ScreenUtil {
   @Deprecated('Use MediaQuery.sizeOf(context) or LayoutBuilder for adaptive layout cases')
   static Orientation orientationOf(BuildContext context) => MediaQuery.orientationOf(context);
 
-  static ScreenSize _screenSizeFromSize(final Size size) => switch (size.width) {
+  static ScreenSize _screenSizeFromSize(Size size) => switch (size.width) {
     <= 600 => ScreenSize.phone,
     <= 1024 => ScreenSize.tablet,
     <= 1600 => ScreenSize.desktop,
@@ -166,10 +166,10 @@ sealed class ScreenSize {
   /// tablet  | 600..1023 dp | 8 column
   /// desktop | >= 1024 dp   | 12 column
   ScreenSizeWhenResult when<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   });
 
   /// The [maybeWhen] method is equivalent to [when],
@@ -178,11 +178,11 @@ sealed class ScreenSize {
   /// On the other hand, it adds an extra [orElse] required parameter,
   /// for fallback behavior.
   ScreenSizeWhenResult maybeWhen<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() orElse,
-    final ScreenSizeWhenResult Function()? phone,
-    final ScreenSizeWhenResult Function()? tablet,
-    final ScreenSizeWhenResult Function()? desktop,
-    final ScreenSizeWhenResult Function()? wideScreen,
+    required ScreenSizeWhenResult Function() orElse,
+    ScreenSizeWhenResult Function()? phone,
+    ScreenSizeWhenResult Function()? tablet,
+    ScreenSizeWhenResult Function()? desktop,
+    ScreenSizeWhenResult Function()? wideScreen,
   }) => when<ScreenSizeWhenResult>(
     phone: phone ?? orElse,
     tablet: tablet ?? orElse,
@@ -217,14 +217,14 @@ final class ScreenSize$Phone extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   }) => phone();
 
   @override
-  bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Phone;
+  bool operator ==(Object other) => identical(other, this) || other is ScreenSize$Phone;
 }
 
 /// {@macro screen_util}
@@ -250,14 +250,14 @@ final class ScreenSize$Tablet extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   }) => tablet();
 
   @override
-  bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Tablet;
+  bool operator ==(Object other) => identical(other, this) || other is ScreenSize$Tablet;
 }
 
 /// {@macro screen_util}
@@ -283,14 +283,14 @@ final class ScreenSize$Desktop extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   }) => desktop();
 
   @override
-  bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$Desktop;
+  bool operator ==(Object other) => identical(other, this) || other is ScreenSize$Desktop;
 }
 
 /// {@macro screen_util}
@@ -316,12 +316,12 @@ final class ScreenSize$WideScreen extends ScreenSize {
 
   @override
   ScreenSizeWhenResult when<ScreenSizeWhenResult>({
-    required final ScreenSizeWhenResult Function() phone,
-    required final ScreenSizeWhenResult Function() tablet,
-    required final ScreenSizeWhenResult Function() desktop,
-    required final ScreenSizeWhenResult Function() wideScreen,
+    required ScreenSizeWhenResult Function() phone,
+    required ScreenSizeWhenResult Function() tablet,
+    required ScreenSizeWhenResult Function() desktop,
+    required ScreenSizeWhenResult Function() wideScreen,
   }) => wideScreen();
 
   @override
-  bool operator ==(final Object other) => identical(other, this) || other is ScreenSize$WideScreen;
+  bool operator ==(Object other) => identical(other, this) || other is ScreenSize$WideScreen;
 }

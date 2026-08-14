@@ -36,8 +36,8 @@ class _HistoryButtonState extends State<HistoryButton> {
       Positioned(
         right: 24.0,
         top: 52.0,
-        width: math.min(300, MediaQuery.sizeOf(context).width - 104),
-        height: math.min(500, MediaQuery.sizeOf(context).height - 128),
+        width: math.min(300, MediaQuery.widthOf(context) - 104),
+        height: math.min(500, MediaQuery.heightOf(context) - 128),
         child: Align(
           alignment: Alignment.topCenter,
           child: Card(

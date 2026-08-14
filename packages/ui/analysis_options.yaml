@@ -8,3 +8,10 @@ analyzer:
   exclude:
     # Generated
     - "lib/**/generated/**"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**

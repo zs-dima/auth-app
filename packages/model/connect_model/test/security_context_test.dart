@@ -29,7 +29,7 @@ void main() {
       // The pinned set REPLACES the platform trust store: every CA the backends can serve must be
       // present — LE RSA (X1), LE ECDSA (X2, no cross-sign dependence), GTS for the *.run.app
       // backup host.
-      expect('-----BEGIN CERTIFICATE-----'.allMatches(roots).length, 6);
+      expect('-----BEGIN CERTIFICATE-----'.allMatches(roots), hasLength(6));
       for (final pem in const [
         RootCertificates.letsEncrypt,
         RootCertificates.letsEncryptEcdsa,

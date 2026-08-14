@@ -34,8 +34,8 @@ void impersonateUserDialog(BuildContext context, {required IUserInfo authUser}) 
       ),
     ),
     content: SizedBox(
-      width: MediaQuery.sizeOf(ctx).width - 50.0,
-      height: MediaQuery.sizeOf(ctx).height - 50.0,
+      width: MediaQuery.widthOf(ctx) - 50.0,
+      height: MediaQuery.heightOf(ctx) - 50.0,
       child: const ColoredBox(
         color: Color(0xFFfffbff),
         child: Padding(padding: .all(10.0), child: UsersWidget()),

@@ -53,7 +53,7 @@ Future<QueryExecutor> $createQueryExecutor(
       await file.delete();
     }
   } on Object catch (e, st) {
-    l.e("Can't delete database file: $file, error: $e", st);
+    l.e("Can't delete database file: ${file.path}, error: $e", st);
     rethrow;
   }
   /* return ffi.NativeDatabase(

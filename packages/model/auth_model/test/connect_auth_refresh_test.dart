@@ -2,10 +2,13 @@ import 'package:auth_model/auth_model.dart';
 import 'package:connectrpc/connect.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-AccessCredentials _creds(String token) => AccessCredentials(
+AccessCredentials _creds(String token) => .new(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
   refreshToken: RefreshToken('r-$token'),
 );
+
+/// "Exactly one call" — shared by the call-count assertions below.
+final _once = equals(1);
 
 void main() {
   group('ConnectAuthenticationMiddleware reactive refresh', () {
@@ -20,7 +23,7 @@ void main() {
         seenAuth.add(auth);
         // The long-lived refresh token must never ride along on normal calls.
         sawRefreshTokenHeader.add(metadata.keys.any((k) => k.toLowerCase() == 'refresh-token'));
-        if (auth != 'Bearer B') throw ConnectException(Code.unauthenticated, 'nope');
+        if (auth != 'Bearer B') throw ConnectException(.unauthenticated, 'nope');
         // success on the rotated token
       }
 
@@ -35,8 +38,8 @@ void main() {
 
       await mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{});
 
-      expect(refreshCalls, 1, reason: 'one refresh for the wave');
-      expect(seenAuth, ['Bearer A', 'Bearer B'], reason: 'retry carries the new token');
+      expect(refreshCalls, _once, reason: 'one refresh for the wave');
+      expect(seenAuth, equals(['Bearer A', 'Bearer B']), reason: 'retry carries the new token');
       expect(sawRefreshTokenHeader, everyElement(isFalse), reason: 'refresh token never rides along on normal calls');
       expect(loggedOut, isFalse);
     });
@@ -48,7 +51,7 @@ void main() {
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
         attempts++;
-        throw ConnectException(Code.unauthenticated, 'nope');
+        throw ConnectException(.unauthenticated, 'nope');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -64,8 +67,8 @@ void main() {
         mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(refreshCalls, 1);
-      expect(attempts, 1, reason: 'no retry when refresh fails');
+      expect(refreshCalls, _once);
+      expect(attempts, _once, reason: 'no retry when refresh fails');
       expect(loggedOut, isTrue);
     });
 
@@ -76,7 +79,7 @@ void main() {
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
         seenAuth = metadata['authorization'];
-        throw ConnectException(Code.unauthenticated, 'invalid refresh token');
+        throw ConnectException(.unauthenticated, 'invalid refresh token');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -94,7 +97,7 @@ void main() {
         mw.handle(invoker)(kAuthServiceRefreshTokensPath, <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(refreshCalls, 0, reason: 'public paths do not refresh');
+      expect(refreshCalls, isZero, reason: 'public paths do not refresh');
       expect(seenAuth, isNull, reason: 'no token attached on public paths');
       expect(loggedOut, isTrue, reason: 'a rejected refresh token ends the session');
     });
@@ -103,7 +106,7 @@ void main() {
       var loggedOut = false;
 
       Future<void> invoker(String path, Map<String, String> metadata) async =>
-          throw ConnectException(Code.unauthenticated, 'bad password / wrong MFA code');
+          throw ConnectException(.unauthenticated, 'bad password / wrong MFA code');
 
       final mw = ConnectAuthenticationMiddleware(
         getToken: () async => _creds('A'),
@@ -126,12 +129,12 @@ void main() {
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
         attempts++;
-        throw ConnectException(Code.unauthenticated, 'nope');
+        throw ConnectException(.unauthenticated, 'nope');
       }
 
       final mw = ConnectAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refreshCredentials: (used) async => throw ConnectException(Code.unavailable, 'network blip'),
+        refreshCredentials: (used) async => throw ConnectException(.unavailable, 'network blip'),
         onAuthError: () => loggedOut = true,
       );
 
@@ -139,7 +142,7 @@ void main() {
         mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(attempts, 1, reason: 'no retry when the refresh itself failed');
+      expect(attempts, _once, reason: 'no retry when the refresh itself failed');
       expect(loggedOut, isFalse, reason: 'a transient refresh failure keeps the session (A3)');
     });
 
@@ -147,8 +150,8 @@ void main() {
       var loggedOut = false;
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
-        if (metadata['authorization'] == 'Bearer B') throw ConnectException(Code.permissionDenied, 'forbidden');
-        throw ConnectException(Code.unauthenticated, 'expired');
+        if (metadata['authorization'] == 'Bearer B') throw ConnectException(.permissionDenied, 'forbidden');
+        throw ConnectException(.unauthenticated, 'expired');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -180,7 +183,7 @@ void main() {
         mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(attempts, 0, reason: 'no call is attempted without a token');
+      expect(attempts, isZero, reason: 'no call is attempted without a token');
       expect(loggedOut, isTrue);
     });
 
@@ -190,7 +193,7 @@ void main() {
       Future<void> invoker(String path, Map<String, String> metadata) async {}
 
       final mw = ConnectAuthenticationMiddleware(
-        getToken: () async => throw ConnectException(Code.unavailable, 'secure-storage hiccup'),
+        getToken: () async => throw ConnectException(.unavailable, 'secure-storage hiccup'),
         refreshCredentials: (used) async => _creds('B'),
         onAuthError: () => loggedOut = true,
       );
@@ -206,7 +209,7 @@ void main() {
       String? forwarded;
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
-        if (metadata['authorization'] != 'Bearer B') throw ConnectException(Code.unauthenticated, 'expired');
+        if (metadata['authorization'] != 'Bearer B') throw ConnectException(.unauthenticated, 'expired');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -219,7 +222,7 @@ void main() {
       );
 
       await mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{});
-      expect(forwarded, 'A', reason: 'the raw token that was rejected is forwarded to the single-flight guard');
+      expect(forwarded, equals('A'), reason: 'the raw token that was rejected is forwarded to the single-flight guard');
     });
 
     test('PERMISSION_DENIED (403) on an authenticated path: no refresh, no retry, no logout', () async {
@@ -229,7 +232,7 @@ void main() {
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
         attempts++;
-        throw ConnectException(Code.permissionDenied, 'forbidden');
+        throw ConnectException(.permissionDenied, 'forbidden');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -245,8 +248,8 @@ void main() {
         mw.handle(invoker)('/users.v1.UsersService/List', <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(attempts, 1, reason: '403 is not retried');
-      expect(refreshCalls, 0, reason: '403 does not trigger a refresh (same roles)');
+      expect(attempts, _once, reason: '403 is not retried');
+      expect(refreshCalls, isZero, reason: '403 does not trigger a refresh (same roles)');
       expect(loggedOut, isFalse, reason: '403 is authorization, not a session failure — no logout');
     });
   });
@@ -259,7 +262,7 @@ void main() {
 
       Future<void> invoker(String path, Map<String, String> metadata) async {
         attempts++;
-        throw ConnectException(Code.unauthenticated, 'nope');
+        throw ConnectException(.unauthenticated, 'nope');
       }
 
       final mw = ConnectAuthenticationMiddleware(
@@ -275,8 +278,8 @@ void main() {
         mw.handleStreaming(invoker)('/users.v1.UserService/ListUsers', <String, String>{}),
         throwsA(isA<ConnectException>()),
       );
-      expect(attempts, 1, reason: 'a consumed stream is never replayed (caller resubscribes)');
-      expect(refreshCalls, 1, reason: 'streaming DOES repair the session on 401 (A3), just without replay');
+      expect(attempts, _once, reason: 'a consumed stream is never replayed (caller resubscribes)');
+      expect(refreshCalls, _once, reason: 'streaming DOES repair the session on 401 (A3), just without replay');
       expect(loggedOut, isFalse, reason: 'a recoverable streaming 401 must not tear down the session');
     });
 
@@ -284,7 +287,7 @@ void main() {
       var loggedOut = false;
 
       Future<void> invoker(String path, Map<String, String> metadata) async =>
-          throw ConnectException(Code.unauthenticated, 'nope');
+          throw ConnectException(.unauthenticated, 'nope');
 
       final mw = ConnectAuthenticationMiddleware(
         getToken: () async => _creds('A'),
@@ -303,11 +306,11 @@ void main() {
       var loggedOut = false;
 
       Future<void> invoker(String path, Map<String, String> metadata) async =>
-          throw ConnectException(Code.unauthenticated, 'nope');
+          throw ConnectException(.unauthenticated, 'nope');
 
       final mw = ConnectAuthenticationMiddleware(
         getToken: () async => _creds('A'),
-        refreshCredentials: (used) async => throw ConnectException(Code.unavailable, 'network blip'),
+        refreshCredentials: (used) async => throw ConnectException(.unavailable, 'network blip'),
         onAuthError: () => loggedOut = true,
       );
 
@@ -331,7 +334,7 @@ void main() {
       );
 
       await mw.handleStreaming(invoker)('/users.v1.UserService/ListUsers', <String, String>{});
-      expect(seenAuth, ['Bearer A']);
+      expect(seenAuth, equals(['Bearer A']));
       expect(loggedOut, isFalse);
     });
   });

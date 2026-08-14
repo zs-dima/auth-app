@@ -35,6 +35,7 @@ Stream<T> guardRpcStream<T>(
 }) {
   final signal = CancelableSignal(parent: TimeoutSignal(timeout));
   StreamSubscription<T>? sub;
+  // ignore: avoid-unnecessary-local-late
   late final StreamController<T> controller;
   controller = StreamController<T>(
     onListen: () {

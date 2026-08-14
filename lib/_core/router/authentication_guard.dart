@@ -7,16 +7,13 @@ import 'package:octopus/octopus.dart';
 /// A router guard that checks if the user is authenticated.
 class AuthenticationGuard extends OctopusGuard {
   AuthenticationGuard({
-    required FutureOr<AuthUser> Function() getUser,
-    required Set<String> routes,
-    required OctopusState signinNavigation,
+    required this._getUser,
+    required this._routes,
+    required this._signinNavigation,
     required OctopusState homeNavigation,
     OctopusState? lastNavigation,
     super.refresh,
-  }) : _getUser = getUser,
-       _routes = routes,
-       _homeNavigation = homeNavigation,
-       _signinNavigation = signinNavigation,
+  }) : _homeNavigation = homeNavigation,
        _lastNavigation = lastNavigation ?? homeNavigation {
     if (lastNavigation != null) return;
 

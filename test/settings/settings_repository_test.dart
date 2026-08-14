@@ -8,7 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-AccessCredentials _creds(String token) => AccessCredentials(
+AccessCredentials _creds(String token) => .new(
   accessToken: AccessToken(token: token, expiry: DateTime.utc(2030)),
   refreshToken: RefreshToken('r-$token'),
 );
@@ -44,20 +44,26 @@ void main() {
       switch (call.method) {
         case 'read':
           return secureStore[key];
+
         case 'write':
           secureWrites++;
           secureStore[key!] = args['value']! as String;
           return null;
+
         case 'delete':
           secureStore.remove(key);
           return null;
+
         case 'containsKey':
           return secureStore.containsKey(key);
+
         case 'readAll':
-          return Map<String, String>.from(secureStore);
+          return Map<String, String>.of(secureStore);
+
         case 'deleteAll':
           secureStore.clear();
           return null;
+
         default:
           return null;
       }
@@ -84,7 +90,7 @@ void main() {
       await repo.setCredentials(_creds('A'));
 
       final restored = await repo.getCredentials();
-      expect(restored?.accessToken.token, 'A');
+      expect(restored?.accessToken.token, equals('A'));
     });
 
     test('setCredentials then getCredentials round-trips', () async {
@@ -109,8 +115,8 @@ void main() {
 
       await repo.setCredentials(_creds('A')); // value-equal → must not hit secure storage again
 
-      expect(secureWrites, writesAfterFirst, reason: 'an identical rewrite must be skipped');
-      expect((await repo.getCredentials())?.accessToken.token, 'A');
+      expect(secureWrites, equals(writesAfterFirst), reason: 'an identical rewrite must be skipped');
+      expect((await repo.getCredentials())?.accessToken.token, equals('A'));
     });
   });
 

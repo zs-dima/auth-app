@@ -169,26 +169,17 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
 class EnhancedRenderFollowerLayer extends RenderProxyBox {
   /// Creates a render object that uses a [FollowerLayer].
   EnhancedRenderFollowerLayer({
-    required EnhancedLayerLink link,
-    required Iterable<Rect> displayFeatureBounds,
-    Alignment leaderAnchor = .topLeft,
-    Alignment followerAnchor = .topLeft,
-    bool showWhenUnlinked = true,
-    bool flipWhenOverflow = true,
-    bool moveWhenOverflow = true,
-    bool enforceLeaderWidth = false,
-    bool enforceLeaderHeight = false,
+    required this._link,
+    required this._displayFeatureBounds,
+    this._leaderAnchor = .topLeft,
+    this._followerAnchor = .topLeft,
+    this._showWhenUnlinked = true,
+    this._flipWhenOverflow = true,
+    this._moveWhenOverflow = true,
+    this._enforceLeaderWidth = false,
+    this._enforceLeaderHeight = false,
     RenderBox? child,
-  }) : _link = link,
-       _flipWhenOverflow = flipWhenOverflow,
-       _moveWhenOverflow = moveWhenOverflow,
-       _showWhenUnlinked = showWhenUnlinked,
-       _leaderAnchor = leaderAnchor,
-       _followerAnchor = followerAnchor,
-       _enforceLeaderWidth = enforceLeaderWidth,
-       _enforceLeaderHeight = enforceLeaderHeight,
-       _displayFeatureBounds = displayFeatureBounds,
-       super(child);
+  }) : super(child);
 
   @override
   bool get alwaysNeedsCompositing => true;

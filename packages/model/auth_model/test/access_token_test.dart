@@ -39,7 +39,7 @@ void main() {
     expect(AccessToken(token: 'x', expiry: expiry), equals(AccessToken(token: 'x', expiry: expiry)));
     expect(
       AccessToken(token: 'x', expiry: expiry).hashCode,
-      AccessToken(token: 'x', expiry: expiry).hashCode,
+      equals(AccessToken(token: 'x', expiry: expiry).hashCode),
     );
     expect(AccessToken(token: 'x', expiry: expiry), isNot(equals(AccessToken(token: 'y', expiry: expiry))));
   });

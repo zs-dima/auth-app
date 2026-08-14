@@ -28,7 +28,7 @@ void main() {
       final decoded = _decoded(original);
       expect(decoded, isA<AuthenticatedUser>());
       expect((decoded as AuthenticatedUser).credentials, isNull);
-      expect(decoded.userId, 'u-1');
+      expect(decoded.userId, equals('u-1'));
       expect(decoded, equals(original));
     });
 
@@ -46,7 +46,7 @@ void main() {
     test('UnauthenticatedUser.copyWith(userId:) without credentials does not crash', () {
       final user = const AuthUser.unauthenticated().copyWith(userId: 'u-1');
       expect(user, isA<AuthenticatedUser>());
-      expect((user as AuthenticatedUser).userId, 'u-1');
+      expect((user as AuthenticatedUser).userId, equals('u-1'));
       expect(user.credentials, isNull);
     });
 
@@ -60,7 +60,7 @@ void main() {
 
       final moved = original.copyWith(userId: 'u-2');
       expect(moved, isA<AuthenticatedUser>());
-      expect((moved as AuthenticatedUser).userId, 'u-2');
+      expect((moved as AuthenticatedUser).userId, equals('u-2'));
       expect(moved.credentials, equals(_creds()));
     });
 
@@ -68,7 +68,7 @@ void main() {
       const original = AuthenticatedUser(credentials: null, userId: 'u-1');
       final copy = original.copyWith();
       expect(copy.credentials, isNull);
-      expect(copy.userId, 'u-1');
+      expect(copy.userId, equals('u-1'));
     });
   });
 }

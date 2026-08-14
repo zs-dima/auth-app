@@ -7,14 +7,14 @@ import 'package:auth_model/auth_model.dart';
 import 'package:core_model/core_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-AccessCredentials _creds(String token) => AccessCredentials(
+AccessCredentials _creds(String token) => .new(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),
   refreshToken: RefreshToken('r-$token'),
 );
 
 /// Credentials whose access token is valid but within the `expiresSoon` window, so the
 /// proactive path attempts a refresh.
-AccessCredentials _credsExpiring(String token) => AccessCredentials(
+AccessCredentials _credsExpiring(String token) => .new(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(seconds: 10))),
   refreshToken: RefreshToken('r-$token'),
 );
@@ -107,10 +107,10 @@ class _FakeSettings implements ISettingsRepository {
   /// userId still set — a cold start then resurrected the signed-out session.
   bool throwOnClearUserId = false;
 
-  UserId _userId = 'user-1';
-
   @override
   String get installationId => 'test-install';
+
+  UserId _userId = 'user-1';
 
   @override
   UserId get userId => _userId;
@@ -166,7 +166,7 @@ class _RecordingSettings implements ISettingsRepository {
 
   /// Artificial latency applied to a non-null [setCredentials]; lets a fire-and-forget write stay
   /// pending long enough to (pre-fix) escape the mutex ordering.
-  Duration credentialsWriteDelay = Duration.zero;
+  Duration credentialsWriteDelay = .zero;
 
   @override
   String get installationId => 'test-install';
@@ -191,7 +191,7 @@ class _RecordingSettings implements ISettingsRepository {
       gate = null;
       await g.future;
     }
-    if (value != null && credentialsWriteDelay > Duration.zero) {
+    if (value != null && credentialsWriteDelay > .zero) {
       await Future<void>.delayed(credentialsWriteDelay);
     }
     credentials = value;
@@ -203,7 +203,7 @@ class _RecordingSettings implements ISettingsRepository {
 }
 
 AuthenticationRepository _repo(IAuthenticationApi api, ISettingsRepository settings) =>
-    AuthenticationRepository(api: api, authHandler: AuthenticationHandler(), settings: settings, metadata: _metadata);
+    .new(api: api, authHandler: AuthenticationHandler(), settings: settings, metadata: _metadata);
 
 void main() {
   group('AuthenticationRepository.refreshCredentials', () {
@@ -214,7 +214,7 @@ void main() {
 
       await repo.restore();
 
-      expect(api.refreshCalls, 0);
+      expect(api.refreshCalls, isZero);
     });
 
     test('concurrent 401s trigger exactly one refresh (single-flight)', () async {
@@ -225,7 +225,7 @@ void main() {
 
       final results = await Future.wait(List.generate(5, (_) => repo.refreshCredentials('A')));
 
-      expect(api.refreshCalls, 1, reason: 'one network refresh for the whole 401 wave');
+      expect(api.refreshCalls, equals(1), reason: 'one network refresh for the whole 401 wave');
       expect(results.map((r) => r?.accessToken.token), everyElement('B'));
     });
 
@@ -238,8 +238,8 @@ void main() {
       await repo.refreshCredentials('A'); // rotates A -> B (1 call)
       final again = await repo.refreshCredentials('A'); // 'A' is stale; current is 'B'
 
-      expect(again?.accessToken.token, 'B');
-      expect(api.refreshCalls, 1, reason: 'no second API call when the token already rotated');
+      expect(again?.accessToken.token, equals('B'));
+      expect(api.refreshCalls, equals(1), reason: 'no second API call when the token already rotated');
     });
 
     test('a definitive rejection returns null, emits unauthenticated, and ends the session', () async {
@@ -253,7 +253,7 @@ void main() {
       final sub = repo.userChanges.listen(emitted.add);
 
       final result = await repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
 
       expect(result, isNull, reason: 'definitive rejection is signalled as null');
@@ -272,7 +272,7 @@ void main() {
       final sub = repo.userChanges.listen(emitted.add);
 
       await expectLater(repo.refreshCredentials('A'), throwsA(isA<Exception>()));
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
 
       expect(token.isCancelled, isFalse, reason: 'a network blip must not end the session');
@@ -289,7 +289,7 @@ void main() {
 
       final creds = await repo.getAccessCredentials();
 
-      expect(creds?.accessToken.token, 'A', reason: 'fall back to the current token, do not log out');
+      expect(creds?.accessToken.token, equals('A'), reason: 'fall back to the current token, do not log out');
       expect(token.isCancelled, isFalse);
       expect(repo.user, isA<AuthenticatedUser>());
     });
@@ -312,11 +312,11 @@ void main() {
       // The stale request's 401 arrives only now: its token was minted in the ended session 1, so it
       // must fail — not be retried under session 2's identity, and not log session 2 out.
       await expectLater(repo.refreshCredentials('A'), throwsA(isA<RequestSessionEndedException>()));
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
 
-      expect(api.refreshCalls, 0, reason: 'a foreign token must not trigger a refresh');
-      expect(settings.stored?.accessToken.token, 'B2', reason: 'the new session survives untouched');
+      expect(api.refreshCalls, isZero, reason: 'a foreign token must not trigger a refresh');
+      expect(settings.stored?.accessToken.token, equals('B2'), reason: 'the new session survives untouched');
       expect(repo.user, isA<AuthenticatedUser>());
       expect(emitted.whereType<UnauthenticatedUser>(), isEmpty, reason: 'no logout of the new session');
     });
@@ -330,7 +330,7 @@ void main() {
       await repo.signOut();
 
       await expectLater(repo.refreshCredentials('A'), throwsA(isA<RequestSessionEndedException>()));
-      expect(api.refreshCalls, 0, reason: 'no refresh attempt for a token from an ended session');
+      expect(api.refreshCalls, isZero, reason: 'no refresh attempt for a token from an ended session');
     });
   });
 
@@ -365,7 +365,7 @@ void main() {
 
       // 1) Start a reactive refresh; it parks inside the mutex awaiting the gated network call.
       final refreshFuture = repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
 
       // 2) User logs out while the refresh is in flight (bumps the session epoch synchronously).
       final signOutFuture = repo.signOut();
@@ -374,7 +374,7 @@ void main() {
       gate.complete();
       await refreshFuture;
       await signOutFuture;
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
 
       expect(repo.user, isA<UnauthenticatedUser>(), reason: 'logout wins; rotated tokens must not revive the session');
@@ -393,7 +393,7 @@ void main() {
       settings.gate = gate;
 
       final signInFuture = repo.signIn(const SignInData(identifier: 'a@b.c', password: 'pw'));
-      await Future<void>.delayed(Duration.zero); // let sign-in authenticate and park inside persist
+      await Future<void>.delayed(.zero); // let sign-in authenticate and park inside persist
 
       // A concurrent logout arrives (as the authHandler subscription would deliver it).
       final signOutFuture = repo.signOut();
@@ -401,16 +401,16 @@ void main() {
       gate.complete();
       await signInFuture;
       await signOutFuture;
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
 
       // Invariant: in-memory state and persisted state agree — no torn / resurrected session.
       // (Pre-fix, the un-serialized sign-in commit could leave `_user` authenticated while the
       // persisted userId/credentials were cleared by the racing logout.)
       if (repo.user case AuthenticatedUser(:final userId)) {
-        expect(settings.userId, userId);
+        expect(settings.userId, equals(userId));
         expect(settings.credentials, isNotNull);
       } else {
-        expect(settings.userId, UserIdX.empty);
+        expect(settings.userId, equals(UserIdX.empty));
         expect(settings.credentials, isNull);
       }
     });
@@ -431,13 +431,13 @@ void main() {
       final gate = Completer<void>();
       settings.gate = gate;
       final refreshFuture = repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero); // let the refresh reach the gated setCredentials
+      await Future<void>.delayed(.zero); // let the refresh reach the gated setCredentials
       final signOutFuture = repo.signOut();
       gate.complete();
       await Future.wait(<Future<void>>[refreshFuture, signOutFuture]);
 
       expect(settings.credentials, isNull, reason: 'logout must win: no rotated credentials survive');
-      expect(settings.userId, UserIdX.empty);
+      expect(settings.userId, equals(UserIdX.empty));
       expect(repo.user, isA<UnauthenticatedUser>());
       expect(
         settings.writeLog.indexOf('clear'),
@@ -454,7 +454,7 @@ void main() {
 
       // Park a reactive refresh inside the mutex on the gated network call (past the A27 guard).
       final refreshFuture = repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
 
       // App teardown closes the user stream while the refresh is still in flight.
       await repo.terminate();
@@ -524,7 +524,7 @@ void main() {
 
       // Park a reactive refresh inside the mutex on the gated network call.
       final refreshFuture = repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
 
       // The logout must be visible synchronously — while the refresh still holds the mutex.
       final signOutFuture = repo.signOut();
@@ -544,7 +544,7 @@ void main() {
 
       // Refresh holds the mutex; a routine token read queues behind it; then the user logs out.
       final refreshFuture = repo.refreshCredentials('A');
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       final pending = repo.getAccessCredentials();
       final signOutFuture = repo.signOut();
 
@@ -593,16 +593,16 @@ void main() {
       final user = await repo.restore().timeout(const Duration(seconds: 1));
       expect(user, isA<AuthenticatedUser>(), reason: 'the rehydrated session returns without the refresh');
 
-      await Future<void>.delayed(Duration.zero);
-      expect(api.refreshCalls, 1, reason: 'the detached proactive refresh has started');
+      await Future<void>.delayed(.zero);
+      expect(api.refreshCalls, equals(1), reason: 'the detached proactive refresh has started');
 
       gate.complete();
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       final refreshed = repo.user;
       expect(refreshed, isA<AuthenticatedUser>());
       expect(
         (refreshed as AuthenticatedUser).credentials?.accessToken.token,
-        'B',
+        equals('B'),
         reason: 'the detached refresh corrects the state once it lands',
       );
     });
@@ -617,7 +617,7 @@ void main() {
       final sub = repo.userChanges.listen(emitted.add);
 
       final restoreFuture = repo.restore();
-      await Future<void>.delayed(Duration.zero); // let restore rehydrate + emit, then park on the gate
+      await Future<void>.delayed(.zero); // let restore rehydrate + emit, then park on the gate
 
       expect(
         emitted.whereType<AuthenticatedUser>(),
@@ -627,7 +627,7 @@ void main() {
 
       gate.complete();
       await restoreFuture;
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
     });
 
@@ -641,11 +641,13 @@ void main() {
       final sub = repo.userChanges.listen(emitted.add);
 
       await repo.restore();
-      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(.zero);
       await sub.cancel();
 
-      expect(repo.user, isA<UnauthenticatedUser>());
-      expect(emitted.last, isA<UnauthenticatedUser>(), reason: 'the dead session is corrected to logged-out');
+      final unauthenticated = isA<UnauthenticatedUser>();
+
+      expect(repo.user, unauthenticated);
+      expect(emitted.last, unauthenticated, reason: 'the dead session is corrected to logged-out');
       expect(settings.stored, isNull, reason: 'a definitively rejected session is cleared from storage');
     });
   });

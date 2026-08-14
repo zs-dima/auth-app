@@ -77,11 +77,11 @@ class ControllerObserver with _SentryTransactionMixin implements IControllerObse
   }
 
   /// Truncates state string representation if it exceeds max length.
-  // ignore: avoid-substring
   static String _truncateState(Object state) {
     const maxLength = 200;
     final str = state.toString();
     if (str.length <= maxLength) return str;
+    // ignore: avoid-substring
     return '${str.substring(0, maxLength)}... (truncated, ${str.length} chars)';
   }
 }

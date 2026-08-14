@@ -27,12 +27,18 @@ void main() {
       controller.ignoreUpdate();
       await _settleController();
 
-      expect(controller.state, isNot(isA<UpdateAvailableState>()));
+      expect(controller.state, isNot(isA<UpdateAvailableState>()), reason: 'ignoreUpdate hides the banner');
 
       controller.checkForUpdates();
       await _settleController();
 
-      expect(controller.state, isNot(isA<UpdateAvailableState>()));
+      // Pins the dismissal guard in checkForUpdates: without it an explicit re-check would
+      // resurrect the banner the user just dismissed.
+      expect(
+        controller.state,
+        isNot(isA<UpdateAvailableState>()),
+        reason: 'a re-check must not resurrect a dismissed update',
+      );
     });
 
     test('a fresh update event clears the dismissal and shows the banner again', () async {
@@ -58,7 +64,7 @@ void main() {
       controller.update();
       await _settleController();
 
-      expect(api.updateApplicationCalls, 1);
+      expect(api.updateApplicationCalls, equals(1));
       expect(controller.state, isA<ApplyingUpdateState>());
     });
 
@@ -138,7 +144,7 @@ final class _FakeUpdateCheckApi implements UpdateCheckApi {
   @override
   Future<void> updateApplication() async {
     updateApplicationCalls++;
-    if (updateError != null) Error.throwWithStackTrace(updateError!, StackTrace.current);
+    if (updateError != null) Error.throwWithStackTrace(updateError!, .current);
   }
 
   @override

@@ -26,8 +26,7 @@ enum LogLevel implements Comparable<LogLevel> {
   debug._(400),
 
   /// Verbose level
-  verbose._(200)
-  ;
+  verbose._(200);
 
   const LogLevel._(this.value);
 

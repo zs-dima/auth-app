@@ -56,10 +56,12 @@ void main() {
 
     test('handler observes a mid-stream error and the consumer still receives it', () async {
       final log = <String>[];
-      final transport = FakeTransportBuilder().server(_spec, (req, context) async* {
-        yield 1;
-        throw ConnectException(Code.unauthenticated, 'expired');
-      }).build(interceptors: [_StreamRecorder(log).call]);
+      final transport = FakeTransportBuilder()
+          .server(_spec, (req, context) async* {
+            yield 1;
+            throw ConnectException(Code.unauthenticated, 'expired');
+          })
+          .build(interceptors: [_StreamRecorder(log).call]);
 
       final events = <int>[];
       await expectLater(
@@ -78,11 +80,13 @@ void main() {
 
     test('failure before response headers surfaces as a failure of the call itself', () async {
       final log = <String>[];
-      final transport = FakeTransportBuilder().server(_spec, (req, context) async* {
-        throw ConnectException(Code.unavailable, 'down');
-        // ignore: dead_code
-        yield 0;
-      }).build(interceptors: [_StreamRecorder(log).call]);
+      final transport = FakeTransportBuilder()
+          .server(_spec, (req, context) async* {
+            throw ConnectException(Code.unavailable, 'down');
+            // ignore: dead_code
+            yield 0;
+          })
+          .build(interceptors: [_StreamRecorder(log).call]);
 
       await expectLater(
         transport.stream(_spec, Stream.value(0), const CallOptions()),
@@ -125,15 +129,17 @@ void main() {
     test('cancelling the response subscription aborts the call via the child signal (A17)', () async {
       final log = <String>[];
       final serverAborted = Completer<void>();
-      final transport = FakeTransportBuilder().server(_spec, (req, context) {
-        // Emit one value, then hang until aborted — like a live server stream.
-        final controller = StreamController<int>()..add(1);
-        context.signal.future.then((_) {
-          if (!serverAborted.isCompleted) serverAborted.complete();
-          controller.close().ignore();
-        }).ignore();
-        return controller.stream;
-      }).build(interceptors: [_StreamRecorder(log).call]);
+      final transport = FakeTransportBuilder()
+          .server(_spec, (req, context) {
+            // Emit one value, then hang until aborted — like a live server stream.
+            final controller = StreamController<int>()..add(1);
+            context.signal.future.then((_) {
+              if (!serverAborted.isCompleted) serverAborted.complete();
+              controller.close().ignore();
+            }).ignore();
+            return controller.stream;
+          })
+          .build(interceptors: [_StreamRecorder(log).call]);
 
       final response = await transport.stream(_spec, Stream.value(0), const CallOptions());
       final received = Completer<int>();
@@ -141,14 +147,14 @@ void main() {
         if (!received.isCompleted) received.complete(event);
       });
 
-      expect(await received.future, 1);
+      expect(await received.future, equals(1));
       await sub.cancel();
 
       // The middleware substitutes a child CancelableSignal into the forwarded request and cancels
       // it when its stream is cancelled — the (fake) wire observes the abort.
       await expectLater(serverAborted.future, completes);
       await pumpEventQueue();
-      expect(log.first, 'before');
+      expect(log.first, equals('before'));
     });
   });
 }

@@ -15,7 +15,7 @@ sealed class AuthUser with _AuthUserPatternMatching, _AuthUserShortcuts {
   const factory AuthUser.unauthenticated() = UnauthenticatedUser;
 
   /// {@macro user}
-  const factory AuthUser.authenticated({required final AccessCredentials credentials, required final UserId userId}) =
+  const factory AuthUser.authenticated({required AccessCredentials credentials, required UserId userId}) =
       AuthenticatedUser;
 
   /// {@macro user}

@@ -25,16 +25,18 @@ class Mutex {
   }
 
   /// Unlocks the mutex, allowing the next waiting task to proceed.
+  ///
+  /// Must be balanced with [lock] — [synchronize] guarantees that. A stray unlock trips an
+  /// assert in debug and is a no-op in release, so a caller bug never takes production down.
   void unlock() {
-    if (_queue.isEmpty) {
-      assert(false, 'Mutex unlock called when no tasks are waiting.');
-      return;
-    }
+    assert(_queue.isNotEmpty, 'Mutex unlock called when no task holds the lock.');
+    if (_queue.isEmpty) return;
+
     final completer = _queue.removeFirst(); // Remove the current lock holder
-    if (completer.isCompleted) {
-      assert(false, 'Mutex unlock called when the completer is already completed.');
-      return;
-    }
+    // Unreachable by construction: a completer is completed only after it leaves the queue.
+    assert(!completer.isCompleted, 'Mutex unlock called when the completer is already completed.');
+    if (completer.isCompleted) return;
+
     completer.complete();
   }
 

@@ -206,15 +206,6 @@ class _AppleLogoRenderObject extends RenderBox {
   double _scale = 0.0;
 
   @override
-  bool get isRepaintBoundary => false;
-
-  @override
-  bool get alwaysNeedsCompositing => false;
-
-  @override
-  bool get sizedByParent => false;
-
-  @override
   Size computeDryLayout(BoxConstraints constraints) => constraints.constrain(_targetSize);
 
   @override

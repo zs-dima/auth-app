@@ -109,7 +109,7 @@ class _LogsListState extends State<_LogsList> {
                 const SizedBox(width: 16.0),
               ], */
           floating: true,
-          pinned: MediaQuery.sizeOf(context).height > 600,
+          pinned: MediaQuery.heightOf(context) > 600,
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(72.0),
             child: Padding(

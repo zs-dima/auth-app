@@ -178,13 +178,8 @@ mixin _DatabaseKeyValueMixin on _$Database implements IKeyValueStorage {
   T? getKey<T extends Object>(String key) {
     assert(_$isInitialized, 'Database is not initialized');
     final v = _$store[key];
-    if (v is T) {
-      return v;
-    } else if (v == null) {
-      return null;
-    }
-    assert(false, 'Value is not of type $T');
-    return null;
+    assert(v == null || v is T, 'Value of "$key" is not of type $T');
+    return v is T ? v : null;
   }
 
   @override
@@ -193,10 +188,8 @@ mixin _DatabaseKeyValueMixin on _$Database implements IKeyValueStorage {
     assert(_$isInitialized, 'Database is not initialized');
     _$store[key] = value;
     final entity = _kvCompanionFromKeyValue(key, value);
-    if (entity == null) {
-      assert(false, 'Value type is not supported');
-      return;
-    }
+    assert(entity != null, 'Value type of "$key" is not supported');
+    if (entity == null) return;
     into(kvTbl).insertOnConflictUpdate(entity).ignore();
   }
 

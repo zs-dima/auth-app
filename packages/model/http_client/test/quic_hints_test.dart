@@ -6,14 +6,14 @@ void main() {
     test('https host → single hint on the default 443 port', () {
       expect(
         ApiClient.quicHintsForBaseUrl(Uri.parse('https://api.example.com/v1')),
-        equals(<(String, int, int)>[('api.example.com', 443, 443)]),
+        equals(<QuicHint>[('api.example.com', 443, 443)]),
       );
     });
 
     test('explicit https port is preserved', () {
       expect(
         ApiClient.quicHintsForBaseUrl(Uri.parse('https://api.example.com:8443')),
-        equals(<(String, int, int)>[('api.example.com', 8443, 8443)]),
+        equals(<QuicHint>[('api.example.com', 8443, 8443)]),
       );
     });
 
@@ -36,14 +36,14 @@ void main() {
     test('IPv4 literal host is kept (a valid hint host)', () {
       expect(
         ApiClient.quicHintsForBaseUrl(Uri.parse('https://10.0.0.1/v1')),
-        equals(<(String, int, int)>[('10.0.0.1', 443, 443)]),
+        equals(<QuicHint>[('10.0.0.1', 443, 443)]),
       );
     });
 
     test('scheme is matched case-insensitively (Uri normalizes to lowercase)', () {
       expect(
         ApiClient.quicHintsForBaseUrl(Uri.parse('HTTPS://api.example.com')),
-        equals(<(String, int, int)>[('api.example.com', 443, 443)]),
+        equals(<QuicHint>[('api.example.com', 443, 443)]),
       );
     });
   });

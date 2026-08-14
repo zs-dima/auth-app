@@ -22,13 +22,13 @@ void main() {
       // F1: the UI boundary recovers the cause to render a code-specific message.
       expect(mapped.cause, same(original));
       // R2: code is the raw int status value (Code.*.value), not the connect-dart enum.
-      expect(mapped.code, Code.unavailable.value);
+      expect(mapped.code, equals(Code.unavailable.value));
       expect(mapped.code, isA<int>());
     });
 
     test('falls back to a code-named message when the server message is empty', () {
       final mapped = RpcException.from(ConnectException(Code.unavailable, ''));
-      expect(mapped.message, 'RPC error (unavailable)');
+      expect(mapped.message, equals('RPC error (unavailable)'));
     });
 
     test('passes an existing RpcException through unchanged', () {

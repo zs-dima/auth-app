@@ -31,7 +31,7 @@ void main() {
     await tester.tap(find.text('Update Now'));
     await tester.pump();
 
-    expect(api.updateApplicationCalls, 1);
+    expect(api.updateApplicationCalls, equals(1));
     expect(controller.state, isA<ApplyingUpdateState>());
     expect(find.byType(MaterialBanner), findsOneWidget);
     expect(find.text('Updating...'), findsOneWidget);

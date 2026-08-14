@@ -53,9 +53,9 @@ sealed class SettingsState with _$SettingsState {
 
 final class SettingsController extends StateController<SettingsState> with SequentialControllerHandler {
   SettingsController({
-    required ISettingsRepository repository,
+    required this._repository,
     required super.initialState,
-  }) : _repository = repository;
+  });
 
   final ISettingsRepository _repository;
 

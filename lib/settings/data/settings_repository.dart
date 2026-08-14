@@ -30,16 +30,15 @@ abstract class ISettingsRepository {
 
 class SettingsRepository implements ISettingsRepository {
   SettingsRepository({
-    required AppPreferencesDao preferences,
-    required AppSecurePreferencesDao securePreferences,
+    required this._preferences,
+    required this._securePreferences,
     required this.codec,
-  }) : _preferences = preferences,
-       _securePreferences = securePreferences {
+  }) {
     installationId =
-        preferences.installationId.value ??
+        _preferences.installationId.value ??
         () {
           final id = const Uuid().v1();
-          preferences.installationId.set(id);
+          _preferences.installationId.set(id);
           return id;
         }();
   }

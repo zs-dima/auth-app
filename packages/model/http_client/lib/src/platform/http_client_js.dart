@@ -4,6 +4,7 @@ import 'dart:js_interop';
 
 import 'package:http/browser_client.dart' as browser_client;
 import 'package:http/http.dart' as http;
+import 'package:http_client/src/quic_hint.dart';
 
 /// JavaScript interop for accessing window.location.origin.
 extension type const _JSLocation._(JSObject _) implements JSObject {
@@ -33,6 +34,6 @@ String $getOrigin() => _window.location.origin;
 /// and supports credentials for cross-origin requests. [quicHints] is ignored — the browser
 /// controls HTTP version and compression itself; the parameter exists only to match the
 /// native factory's signature for the conditional import.
-http.Client $createHttpClient({List<(String, int, int)>? quicHints}) => browser_client.BrowserClient()
+http.Client $createHttpClient({List<QuicHint>? quicHints}) => browser_client.BrowserClient()
   // Send cookies on cross-origin requests (needed for cookie-based auth).
   ..withCredentials = true;

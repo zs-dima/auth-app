@@ -20,11 +20,10 @@ sealed class UpdateCheckState with _$UpdateCheckState {
 final class UpdateCheckController extends StateController<UpdateCheckState>
     with SequentialControllerHandler, AppMessageControllerMixin {
   UpdateCheckController({
-    required UpdateCheckApi updateCheckApi,
+    required this._updateCheckApi,
     required AppMetadata metadata,
     required AppMessageController messageController,
-  }) : _updateCheckApi = updateCheckApi,
-       super(initialState: UpdateCheckState.idle(metadata.appVersion)) {
+  }) : super(initialState: UpdateCheckState.idle(metadata.appVersion)) {
     this.messageController = messageController;
     _startUpdateCheckStream();
   }

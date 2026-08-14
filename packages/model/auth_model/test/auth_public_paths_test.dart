@@ -42,7 +42,7 @@ void main() {
       expect(normalized, equals(kAuthServicePublicPaths));
       expect(
         ConnectMiddleware.normalizePath(AuthService.refreshTokens.procedure),
-        kAuthServiceRefreshTokensPath,
+        equals(kAuthServiceRefreshTokensPath),
       );
     });
   });

@@ -197,11 +197,9 @@ final class UpdateCheckApiImpl implements UpdateCheckApi {
   /// field, exposed via [web.window.performance.getEntriesByType].
   bool _isFreshNavigation() {
     try {
-      final entries =
-          web.window.performance.getEntriesByType('navigation').toDart;
+      final entries = web.window.performance.getEntriesByType('navigation').toDart;
       if (entries.isEmpty) return false;
-      return (entries.first as web.PerformanceNavigationTiming).type ==
-          'navigate';
+      return (entries.first as web.PerformanceNavigationTiming).type == 'navigate';
     } on Object {
       return false;
     }

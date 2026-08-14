@@ -23,7 +23,7 @@ void main() {
       const policy = RetryBackoff(baseDelay: Duration(milliseconds: 100), maxDelay: Duration(seconds: 10));
       final a = List.generate(5, (i) => policy.backoff(i, math.Random(7)).inMilliseconds);
       final b = List.generate(5, (i) => policy.backoff(i, math.Random(7)).inMilliseconds);
-      expect(a, b);
+      expect(a, equals(b));
     });
 
     test('withinBudget caps the total elapsed time across attempts', () {

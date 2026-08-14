@@ -154,13 +154,12 @@ class _WindowTitleState extends State<_WindowTitle> with WindowListener {
 
 class _WindowButtons$Windows extends StatelessWidget {
   const _WindowButtons$Windows({
-    required ValueListenable<bool> isFullScreen,
-    required ValueListenable<bool> isAlwaysOnTop,
+    required this._isFullScreen,
+    required this._isAlwaysOnTop,
     required this.onPressedMinimize,
     required this.onPressedMaximize,
     required this.setAlwaysOnTop,
-  }) : _isFullScreen = isFullScreen,
-       _isAlwaysOnTop = isAlwaysOnTop;
+  });
 
   final VoidCallback onPressedMinimize;
   final VoidCallback onPressedMaximize;

@@ -17,10 +17,10 @@ sealed class AuthenticatedUserState with _$AuthenticatedUserState {
 final class AuthenticatedUserController extends StateController<AuthenticatedUserState>
     with SequentialControllerHandler, AppMessageControllerMixin {
   AuthenticatedUserController({
-    required UsersController usersController,
+    required this._usersController,
     required AppMessageController messageController,
     super.initialState = const AuthenticatedUserState.loading(UserInfo.empty),
-  }) : _usersController = usersController {
+  }) {
     this.messageController = messageController;
   }
 

@@ -14,17 +14,17 @@ String _jwt({required int exp}) =>
 void main() {
   group('proto <-> domain role mapping (A11 — privilege-correctness path)', () {
     test('maps each known role both directions', () {
-      expect(core.UserRole.USER_ROLE_ADMIN.toRole(), UserRole.admin);
-      expect(core.UserRole.USER_ROLE_USER.toRole(), UserRole.user);
-      expect(core.UserRole.USER_ROLE_GUEST.toRole(), UserRole.guest);
+      expect(core.UserRole.USER_ROLE_ADMIN.toRole(), equals(UserRole.admin));
+      expect(core.UserRole.USER_ROLE_USER.toRole(), equals(UserRole.user));
+      expect(core.UserRole.USER_ROLE_GUEST.toRole(), equals(UserRole.guest));
 
-      expect(UserRole.admin.toProtoRole(), core.UserRole.USER_ROLE_ADMIN);
-      expect(UserRole.user.toProtoRole(), core.UserRole.USER_ROLE_USER);
-      expect(UserRole.guest.toProtoRole(), core.UserRole.USER_ROLE_GUEST);
+      expect(UserRole.admin.toProtoRole(), equals(core.UserRole.USER_ROLE_ADMIN));
+      expect(UserRole.user.toProtoRole(), equals(core.UserRole.USER_ROLE_USER));
+      expect(UserRole.guest.toProtoRole(), equals(core.UserRole.USER_ROLE_GUEST));
     });
 
     test('an unknown/unspecified proto role degrades to the least-privileged guest', () {
-      expect(core.UserRole.USER_ROLE_UNSPECIFIED.toRole(), UserRole.guest);
+      expect(core.UserRole.USER_ROLE_UNSPECIFIED.toRole(), equals(UserRole.guest));
     });
   });
 
@@ -49,7 +49,7 @@ void main() {
 
       final result = response.toAuthResult();
       expect(result, isA<AuthResultSuccess>());
-      expect((result as AuthResultSuccess).credentials.refreshToken.value, 'rt-1');
+      expect((result as AuthResultSuccess).credentials.refreshToken.value, equals('rt-1'));
     });
   });
 }

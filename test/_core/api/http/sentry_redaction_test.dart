@@ -1,6 +1,11 @@
 import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// The `<redacted>` mask `redactSensitive*` writes in place of a secret, as a header value and as a
+/// single-element query value.
+final _isMasked = equals('<redacted>');
+final _isMaskedList = equals(<String>['<redacted>']);
+
 void main() {
   group('redactSensitiveHeaders', () {
     test('replaces credential-bearing header values with <redacted>', () {
@@ -12,17 +17,17 @@ void main() {
         'X-Trace-Id': 'trace-123',
       });
 
-      expect(redacted['Authorization'], '<redacted>');
-      expect(redacted['X-CSRF-Token'], '<redacted>');
-      expect(redacted['Cookie'], '<redacted>');
+      expect(redacted['Authorization'], _isMasked);
+      expect(redacted['X-CSRF-Token'], _isMasked);
+      expect(redacted['Cookie'], _isMasked);
       // Non-sensitive headers pass through unchanged.
-      expect(redacted['Content-Type'], 'application/json');
-      expect(redacted['X-Trace-Id'], 'trace-123');
+      expect(redacted['Content-Type'], equals('application/json'));
+      expect(redacted['X-Trace-Id'], equals('trace-123'));
     });
 
     test('matches header names case-insensitively', () {
       final redacted = redactSensitiveHeaders(<String, String>{'authorization': 'Bearer x'});
-      expect(redacted['authorization'], '<redacted>');
+      expect(redacted['authorization'], _isMasked);
     });
   });
 
@@ -35,17 +40,17 @@ void main() {
         'id': ['1', '2'], // multi-value preserved
       });
 
-      expect(redacted['token'], ['<redacted>']);
-      expect(redacted['access_token'], ['<redacted>']);
-      expect(redacted['page'], ['2']);
-      expect(redacted['id'], ['1', '2']);
+      expect(redacted['token'], _isMaskedList);
+      expect(redacted['access_token'], _isMaskedList);
+      expect(redacted['page'], equals(['2']));
+      expect(redacted['id'], equals(['1', '2']));
     });
 
     test('matches query names case-insensitively', () {
       final redacted = redactSensitiveQuery(<String, List<String>>{
         'Access_Token': ['x'],
       });
-      expect(redacted['Access_Token'], ['<redacted>']);
+      expect(redacted['Access_Token'], _isMaskedList);
     });
 
     test('redacts AWS SigV4 presigned-URL material', () {
@@ -56,10 +61,10 @@ void main() {
         'X-Amz-Expires': ['900'], // public metadata — preserved
       });
 
-      expect(redacted['X-Amz-Signature'], ['<redacted>']);
-      expect(redacted['X-Amz-Credential'], ['<redacted>']);
-      expect(redacted['X-Amz-Security-Token'], ['<redacted>']);
-      expect(redacted['X-Amz-Expires'], ['900']);
+      expect(redacted['X-Amz-Signature'], _isMaskedList);
+      expect(redacted['X-Amz-Credential'], _isMaskedList);
+      expect(redacted['X-Amz-Security-Token'], _isMaskedList);
+      expect(redacted['X-Amz-Expires'], equals(['900']));
     });
   });
 
@@ -84,7 +89,7 @@ void main() {
 
     test('returns a query-less URL unchanged', () {
       final url = Uri.parse('https://api.example.com/v2/users');
-      expect(redactSensitiveUrl(url), url.toString());
+      expect(redactSensitiveUrl(url), equals(url.toString()));
     });
   });
 }

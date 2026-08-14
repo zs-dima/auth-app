@@ -35,8 +35,7 @@ abstract base class PreferencesDao {
 }
 
 final class _PreferencesEntry<T extends Object> extends PreferencesEntry<T> {
-  const _PreferencesEntry({required SharedPreferences sharedPreferences, required this.key})
-    : _sharedPreferences = sharedPreferences;
+  const _PreferencesEntry({required this._sharedPreferences, required this.key});
 
   final SharedPreferences _sharedPreferences;
 

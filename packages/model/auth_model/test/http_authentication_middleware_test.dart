@@ -9,6 +9,9 @@ AccessCredentials _creds(String token) => AccessCredentials(
   refreshToken: RefreshToken('r-$token'),
 );
 
+/// "Exactly one call" — shared by the call-count assertions below.
+final _once = equals(1);
+
 ApiClient _client(MockClient mock, HttpAuthenticationMiddleware mw) => ApiClient(
   baseUrl: () => Uri.parse('https://api.test'),
   client: mock,
@@ -42,8 +45,8 @@ void main() {
 
       await api.get('/data');
 
-      expect(refreshCalls, 1, reason: 'one refresh for the wave');
-      expect(seenAuth, ['Bearer A', 'Bearer B'], reason: 'retry carries the new token');
+      expect(refreshCalls, _once, reason: 'one refresh for the wave');
+      expect(seenAuth, equals(['Bearer A', 'Bearer B']), reason: 'retry carries the new token');
       expect(loggedOut, isFalse);
     });
 
@@ -69,8 +72,8 @@ void main() {
       );
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException>()));
-      expect(refreshCalls, 1);
-      expect(attempts, 1, reason: 'no retry when refresh fails');
+      expect(refreshCalls, _once);
+      expect(attempts, _once, reason: 'no retry when refresh fails');
       expect(loggedOut, isTrue);
     });
 
@@ -98,7 +101,7 @@ void main() {
       );
 
       await expectLater(api.get('/auth/refresh'), throwsA(isA<ApiClientException>()));
-      expect(refreshCalls, 0, reason: 'public paths do not refresh');
+      expect(refreshCalls, isZero, reason: 'public paths do not refresh');
       expect(seenAuth, isNull, reason: 'no token attached on public paths');
       expect(loggedOut, isTrue, reason: 'a rejected refresh token ends the session');
     });
@@ -140,7 +143,7 @@ void main() {
       );
 
       await expectLater(api.get('/data'), throwsA(isA<FormatException>()));
-      expect(attempts, 1, reason: 'no retry when the refresh itself failed');
+      expect(attempts, _once, reason: 'no retry when the refresh itself failed');
       expect(loggedOut, isFalse, reason: 'a transient refresh failure keeps the session (A3)');
     });
 
@@ -183,7 +186,7 @@ void main() {
       );
 
       await api.get('/data');
-      expect(forwarded, 'A', reason: 'the raw token that was rejected is forwarded to the single-flight guard');
+      expect(forwarded, equals('A'), reason: 'the raw token that was rejected is forwarded to the single-flight guard');
     });
 
     test('403 (forbidden) on an authenticated path: no refresh, no retry, no logout', () async {
@@ -208,8 +211,8 @@ void main() {
       );
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException>()));
-      expect(attempts, 1, reason: '403 is not retried');
-      expect(refreshCalls, 0, reason: '403 does not trigger a refresh (same roles)');
+      expect(attempts, _once, reason: '403 is not retried');
+      expect(refreshCalls, isZero, reason: '403 does not trigger a refresh (same roles)');
       expect(loggedOut, isFalse, reason: '403 is authorization, not a session failure — no logout');
     });
 
@@ -232,7 +235,7 @@ void main() {
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException$Authentication>()));
       expect(loggedOut, isTrue);
-      expect(attempts, 0, reason: 'no request is sent without credentials');
+      expect(attempts, isZero, reason: 'no request is sent without credentials');
     });
 
     test('transient getToken failure propagates WITHOUT logging out (A3)', () async {
@@ -254,7 +257,7 @@ void main() {
 
       await expectLater(api.get('/data'), throwsA(isA<FormatException>()));
       expect(loggedOut, isFalse, reason: 'a transient resolution failure must not end the session (A3)');
-      expect(attempts, 0);
+      expect(attempts, isZero);
     });
 
     test('a 2nd 401 after refresh (rotated token still rejected) logs out', () async {
@@ -280,8 +283,8 @@ void main() {
       );
 
       await expectLater(api.get('/data'), throwsA(isA<ApiClientException>()));
-      expect(refreshCalls, 1, reason: 'one refresh attempt');
-      expect(seenAuth, ['Bearer A', 'Bearer B'], reason: 'retried once with the rotated token');
+      expect(refreshCalls, _once, reason: 'one refresh attempt');
+      expect(seenAuth, equals(['Bearer A', 'Bearer B']), reason: 'retried once with the rotated token');
       expect(loggedOut, isTrue, reason: 'a fresh token still 401 ⇒ broken session ⇒ logout');
     });
 
@@ -303,7 +306,7 @@ void main() {
       );
 
       await api.get('/data');
-      expect(seenAuth, ['Bearer A']);
+      expect(seenAuth, equals(['Bearer A']));
       expect(loggedOut, isFalse);
     });
 
@@ -334,9 +337,9 @@ void main() {
         api.get('/data', context: <String, Object?>{kNoRetryContextKey: true}),
         throwsA(isA<ApiClientException>()),
       );
-      expect(attempts, 1, reason: 'opt-out: the body is sent exactly once, never resent');
-      expect(refreshCalls, 1, reason: 'kNoRetryContextKey skips the RESEND, not the session repair (A3)');
-      expect(seenAuth, ['Bearer A'], reason: 'no replay, so only the original token was seen');
+      expect(attempts, _once, reason: 'opt-out: the body is sent exactly once, never resent');
+      expect(refreshCalls, _once, reason: 'kNoRetryContextKey skips the RESEND, not the session repair (A3)');
+      expect(seenAuth, equals(['Bearer A']), reason: 'no replay, so only the original token was seen');
       expect(loggedOut, isFalse, reason: 'the session was repaired; the original 401 surfaces to the caller');
     });
 
@@ -370,9 +373,9 @@ void main() {
         api.sendMultipart('POST', '/upload', body: <String, Object?>{'field': 'v'}),
         throwsA(isA<ApiClientException>()),
       );
-      expect(attempts, 1, reason: 'the multipart body is sent exactly once');
-      expect(refreshCalls, 1, reason: 'a non-replayable body still repairs the session (A3)');
-      expect(seenAuth, ['Bearer A'], reason: 'the body is not replayed, so only the original token was seen');
+      expect(attempts, _once, reason: 'the multipart body is sent exactly once');
+      expect(refreshCalls, _once, reason: 'a non-replayable body still repairs the session (A3)');
+      expect(seenAuth, equals(['Bearer A']), reason: 'the body is not replayed, so only the original token was seen');
       expect(loggedOut, isFalse, reason: 'the 401 surfaces to the caller without logout (session repaired)');
     });
 

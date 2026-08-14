@@ -65,27 +65,26 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
   }
 
   Future<void> _uploadImage() async {
-    final image = await FilePicker.pickFiles(
+    final file = await FilePicker.pickFile(
       dialogTitle: 'Select an image',
       type: kIsWeb ? .custom : .image,
-      allowMultiple: false, // allow multiple files to be selected
       allowedExtensions: [..._imageFormats.map((e) => e.providerFormat.fileExtFromMimeType)],
-      withData: true, // bytes for web/mobile preview
-      lockParentWindow: false,
-      readSequential: false,
-      withReadStream: false,
+      windowsOptions: const WindowsOptions(
+        lockParentWindow: false,
+      ),
+      linuxOptions: const LinuxOptions(
+        lockParentWindow: false,
+      ),
     );
-
-    if (image == null || image.count == 0) return;
-
-    if (!mounted) return;
-    final file = image.files.firstOrNull;
     if (file == null) return;
+    if (!mounted) return;
 
-    final bytes = file.bytes;
-    if (bytes == null) return;
-    // `extension` is null for extensionless picks — degrade, don't crash.
-    final mimeType = file.extension?.fileExtToMimeType ?? '';
+    final bytes = await file.readAsBytes(); // PlatformFile.readAsByteStream();
+    if (!mounted) return;
+
+    // extensionless picks degrade, don't crash.
+    final dot = file.name.lastIndexOf('.');
+    final mimeType = dot > 0 ? file.name.substring(dot + 1).fileExtToMimeType : '';
     _setImage(bytes, mimeType);
   }
 

@@ -68,17 +68,13 @@ class AiProgressShaderRenderObject extends RenderBox
     with RenderObjectWithChildMixin<RenderBox>, WidgetsBindingObserver {
   AiProgressShaderRenderObject({
     required Color background,
-    required double speed,
+    required this._speed,
     required Size? size,
-    required Radius? radius,
-    required double initialSeed,
-    required bool animate,
+    required this._radius,
+    required this._initialSeed,
+    required this._animate,
   }) : _backgroundColor = background,
-       _speed = speed,
-       _sizeParam = size,
-       _radius = radius,
-       _initialSeed = initialSeed,
-       _animate = animate {
+       _sizeParam = size {
     // Initialize paint with background color
     _paint.color = _backgroundColor;
     _paint.style = .fill;
@@ -108,12 +104,6 @@ class AiProgressShaderRenderObject extends RenderBox
   Ticker? _ticker;
   Duration _elapsed = .zero;
   int _activeFlag = 0; // bit flags to track if animation should pause (e.g., app not active or detached)
-
-  @override
-  bool get isRepaintBoundary => false;
-
-  @override
-  bool get alwaysNeedsCompositing => false;
 
   void update({
     required Color background,

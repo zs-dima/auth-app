@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import device_info_plus
-import file_picker
+import file_picker_darwin
 import flutter_secure_storage_darwin
 import irondash_engine_context
 import package_info_plus

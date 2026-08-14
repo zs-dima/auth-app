@@ -60,9 +60,8 @@ final class DropdownChipController<T> extends StateController<DropdownChipState<
   DropdownChipController({
     required List<DropdownEntry<T>> allSuggestions,
     required Set<T> values,
-    required Iterable<T> Function()? exclude,
-  }) : _exclude = exclude,
-       _allSuggestions = allSuggestions,
+    required this._exclude,
+  }) : _allSuggestions = allSuggestions,
        super(
          initialState: DropdownChipState(
            allSuggestions.where((i) => !values.contains(i.value)),

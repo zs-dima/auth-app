@@ -15,7 +15,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
 
-      expect(events, <AuthenticationState>[AuthenticationState.authenticated, AuthenticationState.unauthenticated]);
+      expect(
+        events,
+        equals(<AuthenticationState>[AuthenticationState.authenticated, AuthenticationState.unauthenticated]),
+      );
     });
 
     test('distinct(): consecutive duplicate events are collapsed', () async {
@@ -31,7 +34,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
 
-      expect(events, <AuthenticationState>[AuthenticationState.unauthenticated]);
+      expect(events, equals(<AuthenticationState>[AuthenticationState.unauthenticated]));
     });
 
     test('emitting after close() is a safe no-op', () async {

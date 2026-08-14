@@ -71,18 +71,13 @@ class Shimmer extends LeafRenderObjectWidget {
 
 class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
   ShimmerRenderObject({
-    required Color highlight,
+    required this._highlight,
     required Color background,
-    required double speed,
-    required Size? size,
-    required Radius? radius,
-    required double? stripe,
-  }) : _highlight = highlight,
-       _background = background,
-       _speed = speed,
-       _size = size,
-       _radius = radius,
-       _stripe = stripe,
+    required this._speed,
+    required this._size,
+    required this._radius,
+    required this._stripe,
+  }) : _background = background,
        _paint = Paint() {
     _paint
       ..color = background
@@ -112,15 +107,6 @@ class ShimmerRenderObject extends RenderBox with WidgetsBindingObserver {
   int _activeFlag = 0;
 
   Duration _elapsed = .zero;
-
-  @override
-  bool get isRepaintBoundary => false;
-
-  @override
-  bool get alwaysNeedsCompositing => false;
-
-  @override
-  bool get sizedByParent => false;
 
   Size? _size;
 

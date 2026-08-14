@@ -17,9 +17,8 @@ sealed class UsersState with _$UsersState {
 
 final class UsersController extends StateController<UsersState>
     with DroppableControllerHandler, AppMessageControllerMixin {
-  UsersController({required IUsersRepository repository, required AppMessageController messageController})
-    : _repository = repository,
-      super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
+  UsersController({required this._repository, required AppMessageController messageController})
+    : super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
     this.messageController = messageController;
   }
 

@@ -74,7 +74,7 @@ class EnhancedCompositedTransformTarget extends SingleChildRenderObjectWidget {
 ///  * [LeaderLayer], the layer that this render object creates.
 class EnhancedRenderLeaderLayer extends RenderProxyBox {
   /// Creates a render object that uses a [LeaderLayer].
-  EnhancedRenderLeaderLayer({required EnhancedLayerLink link, RenderBox? child}) : _link = link, super(child);
+  EnhancedRenderLeaderLayer({required this._link, RenderBox? child}) : super(child);
 
   // The latest size of this [RenderBox], computed during the previous layout
   // pass. It should always be equal to [size], but can be accessed even when

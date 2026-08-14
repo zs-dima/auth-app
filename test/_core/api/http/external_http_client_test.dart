@@ -44,7 +44,7 @@ void main() {
       const presigned = 'https://bucket.s3.amazonaws.test/users/u1/avatar.webp?X-Amz-Signature=abc';
       await api.put(presigned, headers: {'Content-Type': 'image/webp'}, body: <int>[1, 2, 3]).toBytes();
 
-      expect(seenUrl?.toString(), presigned, reason: 'absolute presigned URL used verbatim, baseUrl ignored');
+      expect(seenUrl?.toString(), equals(presigned), reason: 'absolute presigned URL used verbatim, baseUrl ignored');
       // Only what the caller set rides along — no first-party concerns leak to a third party.
       expect(_hasHeader(seenHeaders, 'authorization'), isFalse, reason: 'no bearer token to S3');
       expect(
@@ -63,7 +63,7 @@ void main() {
       final api = _externalClient(mock);
 
       await api.put('https://bucket.s3.test/x', headers: {'Content-Type': 'image/webp'}, body: <int>[1]).toBytes();
-      expect(attempts, 2, reason: 'PUT is idempotent → a transient 503 is retried');
+      expect(attempts, equals(2), reason: 'PUT is idempotent → a transient 503 is retried');
     });
   });
 
@@ -84,9 +84,10 @@ void main() {
         return http.Response('', 200);
       });
 
-      await sentryClient(mock, propagateTrace: false)
-          .put('https://bucket.s3.test/x', headers: {'Content-Type': 'image/webp'}, body: <int>[1])
-          .toBytes();
+      await sentryClient(
+        mock,
+        propagateTrace: false,
+      ).put('https://bucket.s3.test/x', headers: {'Content-Type': 'image/webp'}, body: <int>[1]).toBytes();
 
       expect(_hasHeader(seenHeaders, 'sentry-trace'), isFalse, reason: 'no trace header leaks to S3');
       expect(_hasHeader(seenHeaders, 'baggage'), isFalse, reason: 'no baggage leaks to S3');
@@ -99,9 +100,7 @@ void main() {
         return http.Response('', 200);
       });
 
-      await sentryClient(mock, propagateTrace: true)
-          .get('https://api.first-party.test/x')
-          .toBytes();
+      await sentryClient(mock, propagateTrace: true).get('https://api.first-party.test/x').toBytes();
 
       expect(_hasHeader(seenHeaders, 'sentry-trace'), isTrue, reason: 'first-party path propagates the trace');
     });

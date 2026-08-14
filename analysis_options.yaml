@@ -18,3 +18,10 @@ analyzer:
     # Web
     - "web/*drift_worker.js"
     - "web/web_env.dart"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**

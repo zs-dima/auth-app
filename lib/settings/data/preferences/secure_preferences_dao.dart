@@ -30,12 +30,10 @@ abstract base class SecurePreferencesDao {
 
 final class _SecurePreferencesEntry<T extends Object> extends PreferencesEntryAsync<T> {
   const _SecurePreferencesEntry({
-    required FlutterSecureStorage preferences,
-    // required PreferencesKeyCallback getKeyPrefix,
-    required String key,
-  }) : _preferences = preferences,
-       //  _getKeyPrefix = getKeyPrefix,
-       _key = key;
+    required this._preferences,
+    // required this._getKeyPrefix,
+    required this._key,
+  });
 
   final FlutterSecureStorage _preferences;
   // final PreferencesKeyCallback _getKeyPrefix;

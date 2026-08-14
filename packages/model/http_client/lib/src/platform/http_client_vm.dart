@@ -4,6 +4,7 @@ import 'package:cronet_http/cronet_http.dart';
 import 'package:cupertino_http/cupertino_http.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart' as io_client;
+import 'package:http_client/src/quic_hint.dart';
 
 /// Returns the current window origin for the HTTP client.
 /// On non-web platforms, this returns an empty string as there is no window origin.
@@ -15,7 +16,7 @@ String $getOrigin() => '';
 /// - Android: [CronetClient] over a [CronetEngine] with **HTTP/3 (QUIC), HTTP/2 and Brotli
 ///   enabled** — Cronet's default engine has QUIC and Brotli off, so we build one explicitly.
 ///   Without a hint QUIC is opportunistic (used only after the server advertises it via Alt-Svc
-///   on an earlier response); [quicHints] — `(host, port, alternatePort)` — pre-seeds known
+///   on an earlier response); [quicHints] — `(host, port, alternativePort)` — pre-seeds known
 ///   HTTP/3 hosts so the **first** request already attempts QUIC. Wrong/stale hints are harmless
 ///   (Cronet falls back to HTTP/2/1.1). `closeEngine: true` ties the engine's lifetime to the
 ///   client (closed on `close()`).
@@ -40,7 +41,7 @@ String $getOrigin() => '';
 /// here would silently leave Cronet/NSURLSession unpinned (false security). If pinning becomes a
 /// hard requirement it is a separate decision: force `IOClient` everywhere (losing HTTP/3 when on)
 /// or adopt a maintained pinning package.
-http.Client $createHttpClient({List<(String, int, int)>? quicHints}) {
+http.Client $createHttpClient({List<QuicHint>? quicHints}) {
   try {
     if (Platform.isAndroid) {
       return CronetClient.fromCronetEngine(

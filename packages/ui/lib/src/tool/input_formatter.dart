@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 /// - Maintaining cursor position when possible
 /// - Grouping symbols and partial input states
 class NumberTextInputFormatter extends TextInputFormatter {
-  const NumberTextInputFormatter({required NumberFormat format}) : _format = format;
+  const NumberTextInputFormatter({required this._format});
 
   final NumberFormat _format;
 
@@ -147,7 +147,7 @@ class NumberTextInputFormatter extends TextInputFormatter {
 }
 
 class NumberTextInputFormatter0 extends TextInputFormatter {
-  const NumberTextInputFormatter0({required NumberFormat format}) : _format = format;
+  const NumberTextInputFormatter0({required this._format});
 
   final NumberFormat _format;
 
@@ -209,9 +209,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 }
 
 class DecimalTextInputFormatter extends TextInputFormatter {
-  const DecimalTextInputFormatter({required String locale, int decimalDigits = 2})
-    : _locale = locale,
-      _decimalDigits = decimalDigits;
+  const DecimalTextInputFormatter({required this._locale, this._decimalDigits = 2});
 
   final String _locale;
   final int _decimalDigits;
@@ -248,7 +246,7 @@ class DecimalTextInputFormatter extends TextInputFormatter {
 }
 
 class IntTextInputFormatter extends TextInputFormatter {
-  const IntTextInputFormatter({required String locale}) : _locale = locale;
+  const IntTextInputFormatter({required this._locale});
 
   final String _locale;
 
