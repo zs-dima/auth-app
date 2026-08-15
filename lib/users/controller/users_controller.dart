@@ -17,6 +17,9 @@ sealed class UsersState with _$UsersState {
 
 final class UsersController extends StateController<UsersState>
     with DroppableControllerHandler, AppMessageControllerMixin {
+  /// Upper bound on how long [getUserInfo] waits for an in-flight [listUsers].
+  static const Duration _kLoadWait = Duration(seconds: 30);
+
   UsersController({required this._repository, required AppMessageController messageController})
     : super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
     this.messageController = messageController;
@@ -40,8 +43,10 @@ final class UsersController extends StateController<UsersState>
     if (cachedUser != null) return cachedUser;
 
     // If users are currently loading, wait for the load to complete
-    if (state is _usersLoadingState) {
-      final loadedState = await toStream().firstWhere((s) => s is UsersLoadedState);
+    if (isProcessing) {
+      final loadedState = await toStream()
+          .firstWhere((s) => s is UsersLoadedState)
+          .timeout(_kLoadWait, onTimeout: () => state);
       final user = loadedState.users.firstWhereOrNull((i) => i.id == userId);
       if (user != null) return user;
     }

@@ -46,6 +46,7 @@ final class AuthenticatedUserController extends StateController<AuthenticatedUse
     },
     error: (error, stackTrace) {
       setError('Error on loading current user', error, stackTrace);
+      setState(const AuthenticatedUserState.loaded(UserInfo.empty));
       Error.throwWithStackTrace(error, stackTrace);
     },
     name: 'getUser',

@@ -66,7 +66,6 @@ final class AuthenticationController extends StateController<AuthenticationState
     error: (error, _) async {
       // Handle MFA required - not an error, but a flow continuation
       if (error case AuthenticationException(result: AuthResultMfaRequired(:final mfaChallenge))) {
-        setProgressDone();
         if (onMfaRequired == null) {
           // No MFA UI wired for this entry point: surface a truthful error instead of silently
           // ending the spinner (a dead-end that looks like nothing happened). TODO: MFA challenge screen.
@@ -139,7 +138,6 @@ final class AuthenticationController extends StateController<AuthenticationState
     error: (error, _) async {
       // Handle pending verification - account created but needs email/phone confirmation
       if (error case AuthenticationException(result: AuthResultPending(:final message))) {
-        setProgressDone();
         onPendingVerification?.call();
         setState(
           AuthenticationState.idle(

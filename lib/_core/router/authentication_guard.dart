@@ -84,7 +84,7 @@ class AuthenticationGuard extends OctopusGuard {
     if (user.isAuthenticated) {
       // User authenticated.
       // Save the current navigation as the last navigation.
-      _lastNavigation = state;
+      _lastNavigation = state.freeze();
       return super(history, state, context);
     }
     // User not authenticated.

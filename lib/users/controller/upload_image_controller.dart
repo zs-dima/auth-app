@@ -154,21 +154,27 @@ final class UploadImageController extends StateController<UploadImageState>
     try {
       final imageProvider = NetworkImage(url);
       final stream = imageProvider.resolve(.empty);
-      final completer = Completer<ui.Image>();
+      final completer = Completer<Size>();
 
       final listener = ImageStreamListener(
         (info, _) {
-          completer.complete(info.image);
+          try {
+            if (completer.isCompleted) return;
+            completer.complete(Size(info.image.width.toDouble(), info.image.height.toDouble()));
+          } finally {
+            info.dispose();
+          }
         },
-        onError: completer.completeError,
+        onError: (error, stackTrace) {
+          if (completer.isCompleted) return;
+          completer.completeError(error, stackTrace);
+        },
       );
 
       stream.addListener(listener);
 
       try {
-        final image = await completer.future;
-        return Size(image.width.toDouble(), image.height.toDouble());
-        // setDimensions(image.width.toDouble(), image.height.toDouble());
+        return await completer.future;
       } finally {
         stream.removeListener(listener);
       }

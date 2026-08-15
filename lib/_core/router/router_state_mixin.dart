@@ -9,6 +9,9 @@ import 'package:octopus/octopus.dart';
 typedef RouterErrorDef = ({Object error, StackTrace stackTrace});
 
 mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
+  /// How many router errors [errorsObserver] keeps; the newest win.
+  static const int _maxObservedErrors = 20;
+
   late final Octopus router;
   late final ValueNotifier<List<RouterErrorDef>> errorsObserver;
 
@@ -60,7 +63,7 @@ mixin RouterStateMixin<T extends StatefulWidget> on State<T> {
       ],
       onError: (error, stackTrace) => errorsObserver.value = <RouterErrorDef>[
         (error: error, stackTrace: stackTrace),
-        ...errorsObserver.value,
+        ...errorsObserver.value.take(_maxObservedErrors - 1),
       ],
       /* observers: <NavigatorObserver>[
         HeroController(),
