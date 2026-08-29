@@ -32,7 +32,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'http_client must stay portable (web target; Flutter-engine-free core). '
+      reason:
+          'http_client must stay portable (web target; Flutter-engine-free core). '
           'Offending imports:\n${offenders.join('\n')}',
     );
   });

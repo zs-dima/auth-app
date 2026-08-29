@@ -32,14 +32,14 @@ extension StringX on String {
   /// Returns capitalized string.
   String get capitalized =>
       isEmpty //
-          ? ''
-          : '${this[0].toUpperCase()}${characters.getRange(1).toLowerCase()}';
+      ? ''
+      : '${this[0].toUpperCase()}${characters.getRange(1).toLowerCase()}';
 
   /// Returns string with capitalized first letter of each word.
   String get titled =>
       isEmpty //
-          ? ''
-          : replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalized).join(' ');
+      ? ''
+      : replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalized).join(' ');
 }
 
 extension StringNX on String? {

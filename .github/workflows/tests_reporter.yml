@@ -1,0 +1,28 @@
+name: "Tests Report"
+
+# Separate workflow_run workflow so the report gets `checks: write` even for
+# fork / dependabot PRs (the pattern used by dorny/test-reporter docs).
+on:
+  workflow_run:
+    workflows: ["Code Analysis"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+
+    steps:
+      - name: 📊 Publish Test Report
+        uses: dorny/test-reporter@v2
+        with:
+          artifact: test-results
+          name: Flutter Tests
+          path: "*.json"
+          reporter: flutter-json

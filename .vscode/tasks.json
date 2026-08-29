@@ -2,6 +2,21 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Generate localization",
+      "type": "shell",
+      "command": [
+        "dart run sheety_localization:generate -c credentials.json -s 1FAbQS3nA5czjBBayC3ms-DqkkdskCPLtrh2FDZ1P0lg --prefix=app --format --include-empty && dart run tool/verify_l10n.dart"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/localization"
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Dependencies",
       "type": "shell",
       "command": [

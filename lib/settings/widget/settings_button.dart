@@ -14,7 +14,7 @@ class SettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => IconButton(
     icon: const Icon(Icons.settings),
-    tooltip: Localization.of(context).settings,
+    tooltip: SettingsLocalization.of(context).settings,
     onPressed: () {
       context.octopus.push(Routes.settings);
       HapticFeedback.mediumImpact().ignore();

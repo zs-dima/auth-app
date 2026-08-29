@@ -47,6 +47,11 @@ StreamSubscription<AuthUser>? _authUserSubscription;
 StreamSubscription? _authUserInfoSubscription;
 StreamSubscription? _impersonationSubscription;
 
+/// The [Dependencies] whose composition wrote the module-level subscriptions above.
+/// Guards against a timed-out, abandoned composition cancelling a newer live app's
+/// subscriptions when its late teardown runs.
+Dependencies? _moduleSubscriptionsOwner;
+
 /// Initializes the app and returns a [Dependencies] object
 Future<Dependencies> $initializeDependencies({void Function(int progress, String message)? onProgress}) async {
   final dependencies = Dependencies();
@@ -70,6 +75,9 @@ Future<Dependencies> $initializeDependencies({void Function(int progress, String
       );
     } on Object catch (error, stackTrace) {
       logger.e('🚧 failed at step "${step.key}"', error: error, stackTrace: stackTrace);
+      // Release everything the completed steps created so a retry starts clean
+      // (fresh HTTP clients, closed database, no leaked subscriptions).
+      await _disposePartialDependencies(dependencies);
       Error.throwWithStackTrace('Initialization failed at step "${step.key}": $error', stackTrace);
     }
   }
@@ -255,14 +263,15 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
       // senders duplicate emails. SignOut (idempotent revocation) and GetOAuthUrl (read) stay
       // retryable.
       ConnectRetryMiddleware(
-        noRetryPaths: {
-          ...kAuthServicePublicPaths,
-          // Authenticated email resend — same hazard, not in the public set.
-          '/auth.v1.AuthService/RequestVerification',
-        }.difference(const {
-          '/auth.v1.AuthService/SignOut',
-          '/auth.v1.AuthService/GetOAuthUrl',
-        }),
+        noRetryPaths:
+            {
+              ...kAuthServicePublicPaths,
+              // Authenticated email resend — same hazard, not in the public set.
+              '/auth.v1.AuthService/RequestVerification',
+            }.difference(const {
+              '/auth.v1.AuthService/SignOut',
+              '/auth.v1.AuthService/GetOAuthUrl',
+            }),
       ).call,
 
       // Any other middlewares you need
@@ -305,7 +314,8 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
           Error.throwWithStackTrace(e, st);
         }
       },
-      refreshCredentials: (usedAccessToken) => dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
+      refreshCredentials: (usedAccessToken) =>
+          dependencies.authenticationRepository.refreshCredentials(usedAccessToken),
       // Logout only via the single auth-state bus (A26); the repository performs the sign-out.
       onAuthError: () {
         logger.w('Received an unauthenticated RPC response; signing out via the auth bus');
@@ -387,6 +397,7 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
         messageController: dependencies.messageController,
       ),
   'Prepare users handlers': (dependencies) {
+    _moduleSubscriptionsOwner = dependencies;
     final impersonateController = ImpersonateController(
       repository: ImpersonateRepository(currentUser: dependencies.authenticatedUserController.state.user),
       messageController: dependencies.messageController,
@@ -492,24 +503,77 @@ final _initializationSteps = <String, FutureOr<void> Function(Dependencies)>{
 };
 
 Future<void> $disposeDependencies(Dependencies dependencies) async {
+  await _cancelModuleSubscriptions(dependencies);
+
+  // Tear down auth + transport resources (A6). Best-effort with per-resource guards: one failing
+  // teardown must neither crash app shutdown nor skip the closes after it (the database close in
+  // particular — see below).
+  Future<void> guard(String what, FutureOr<void> Function() close) async {
+    try {
+      await close();
+    } on Object catch (e, stackTrace) {
+      logger.w('Error disposing $what', error: e, stackTrace: stackTrace);
+    }
+  }
+
+  // Source → sink order: shut transports down first so no late RPC/stream event races a closing
+  // controller, then tear down the auth coordinator and its streams. The shared Connect HTTP
+  // client owns every RPC connection (connectrpc 1.0.0 exposes no hard close — see
+  // RpcHttpClientHandle.close; idle connections are reaped by idleConnectionTimeout).
+  await guard('rpcHttpClient', dependencies.rpcHttpClient.close);
+  await guard('externalHttpClient', dependencies.externalHttpClient.close);
+  await guard('authenticationRepository', dependencies.authenticationRepository.terminate);
+  await guard('authenticationHandler', dependencies.authenticationHandler.close);
+  // Last: nothing above may touch the database once it is closed. Without this a re-init
+  // (retry after failure, dispose/resume cycle) reopens sqlite against a live connection.
+  await guard('database', dependencies.database.close);
+}
+
+/// Cancels the module-level subscriptions, but only when [owner] is the composition that
+/// created them — a stale (timed-out, abandoned) composition must not cancel the live app's.
+Future<void> _cancelModuleSubscriptions(Dependencies owner) async {
+  if (!identical(_moduleSubscriptionsOwner, owner)) return;
+  _moduleSubscriptionsOwner = null;
   await _logSubscription?.cancel();
   // await _logTblSubscription?.cancel();
   await _authUserSubscription?.cancel();
   await _authUserInfoSubscription?.cancel();
   await _impersonationSubscription?.cancel();
+  _logSubscription = null;
+  _authUserSubscription = null;
+  _authUserInfoSubscription = null;
+  _impersonationSubscription = null;
+}
 
-  // Tear down auth + transport resources (A6). Best-effort: a teardown error must not crash app
-  // shutdown.
+/// Best-effort teardown of a partially-built [Dependencies] after a failed init step.
+///
+/// Fields owned by steps that did not run yet are still unset: reading them throws
+/// [LateInitializationError], which the per-resource guards swallow by design.
+Future<void> _disposePartialDependencies(Dependencies dependencies) async {
+  await _cancelModuleSubscriptions(dependencies);
   try {
-    // Source → sink order: shut transports down first so no late RPC/stream event races a closing
-    // controller, then tear down the auth coordinator and its streams. The shared Connect HTTP
-    // client owns every RPC connection (connectrpc 1.0.0 exposes no hard close — see
-    // RpcHttpClientHandle.close; idle connections are reaped by idleConnectionTimeout).
     await dependencies.rpcHttpClient.close();
+  } on Object {
+    // Not created yet.
+  }
+  try {
     dependencies.externalHttpClient.close();
+  } on Object {
+    // Not created yet.
+  }
+  try {
     await dependencies.authenticationRepository.terminate();
+  } on Object {
+    // Not created yet.
+  }
+  try {
     await dependencies.authenticationHandler.close();
-  } on Object catch (e, stackTrace) {
-    logger.w('Error disposing dependencies', error: e, stackTrace: stackTrace);
+  } on Object {
+    // Not created yet.
+  }
+  try {
+    await dependencies.database.close();
+  } on Object {
+    // Not created yet.
   }
 }

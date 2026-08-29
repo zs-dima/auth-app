@@ -93,9 +93,11 @@ class HttpAuthenticationMiddleware {
       // Retry once with a fresh clone carrying the rotated token (the original was finalized).
       try {
         return await innerHandler(
-          request.clone(headers: <String, String>{
-            Headers.authorizationHeader: fresh.accessToken.authorizationHeaderValue,
-          }),
+          request.clone(
+            headers: <String, String>{
+              Headers.authorizationHeader: fresh.accessToken.authorizationHeaderValue,
+            },
+          ),
           context,
         );
       } on ApiClientException catch (err) {

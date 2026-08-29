@@ -34,7 +34,11 @@ config/keys.env
 .pub/
 /build/
 /coverage/
+**/coverage/
 **/build/
+
+# Per-package test reports (tool/test_workspace.dart, consumed by CI test-reporter)
+/reports/
 
 # Symbolication related
 app.*.symbols

@@ -10,5 +10,4 @@ const List<Compression> defaultAcceptCompressions = [];
 /// Web (fetch) HTTP client — Connect protocol over the browser's HTTP stack. NOTE: the browser
 /// manages connections, TLS, and keep-alive, so [config] is intentionally NOT applied here — the
 /// parameter is kept only to match the IO factory signature (A24).
-RpcHttpClientHandle createRpcHttpClient({ConnectTransportConfig config = .defaultConfig}) =>
-    .new(createHttpClient());
+RpcHttpClientHandle createRpcHttpClient({ConnectTransportConfig config = .defaultConfig}) => .new(createHttpClient());

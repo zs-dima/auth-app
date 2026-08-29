@@ -15,7 +15,12 @@ void main() => appZone(() async {
   // Splash screen
   final initializationProgress = ValueNotifier<({int progress, String message})>((progress: 0, message: ''));
   /* runApp(SplashScreen(progress: initializationProgress)); */
-  $initializeApp(
+  // Named so the failure screen can re-run the whole sequence: the memoized init future
+  // self-clears in its `finally`, and a failed attempt disposes its partial dependencies.
+  // On retry the first frame is NOT deferred — AppError is already on screen and its
+  // progress indicator must keep painting during re-initialization.
+  void launch({bool deferFirstFrame = true}) => $initializeApp(
+    deferFirstFrame: deferFirstFrame,
     onProgress: (progress, message) => initializationProgress.value = (progress: progress, message: message),
     onSuccess: (dependencies) => runApp(
       DefaultAssetBundle(
@@ -27,8 +32,17 @@ void main() => appZone(() async {
       ),
     ),
     onError: (error, stackTrace) {
-      runApp(AppError(error: error));
+      runApp(
+        AppError(
+          error: error,
+          stackTrace: stackTrace,
+          // Intentional self-reference: retry re-enters the launch sequence.
+          // ignore: avoid-recursive-calls
+          onRetry: () => launch(deferFirstFrame: false),
+        ),
+      );
       logger.e(error, stackTrace: stackTrace);
     },
   ).ignore();
+  launch();
 });

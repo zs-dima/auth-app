@@ -1,0 +1,26 @@
+{
+  "@@locale": "es",
+  "@@last_modified": "2026-08-29T22:19:07.217856Z",
+  "customColors": "Colores personalizados",
+  "@customColors": {},
+  "defaultThemes": "Temas predeterminados",
+  "@defaultThemes": {},
+  "locales": "Idioma",
+  "@locales": {},
+  "localeTag": "es_ES",
+  "@localeTag": {},
+  "localeCode": "es",
+  "@localeCode": {},
+  "lang": "Español",
+  "@lang": {},
+  "langEn": "Spanish",
+  "@langEn": {
+    "description": "Language name in English"
+  },
+  "settings": "Ajustes",
+  "@settings": {},
+  "languageSelection": "Selección de idioma",
+  "@languageSelection": {},
+  "textSize": "Tamaño del texto",
+  "@textSize": {}
+}

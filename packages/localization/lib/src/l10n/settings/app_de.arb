@@ -1,0 +1,26 @@
+{
+  "@@locale": "de",
+  "@@last_modified": "2026-08-29T22:19:07.217856Z",
+  "customColors": "Benutzerdefinierte Farben",
+  "@customColors": {},
+  "defaultThemes": "Standarddesigns",
+  "@defaultThemes": {},
+  "locales": "Gebietsschemas",
+  "@locales": {},
+  "localeTag": "de_DE",
+  "@localeTag": {},
+  "localeCode": "de",
+  "@localeCode": {},
+  "lang": "Deutsch",
+  "@lang": {},
+  "langEn": "German",
+  "@langEn": {
+    "description": "Language name in English"
+  },
+  "settings": "Einstellungen",
+  "@settings": {},
+  "languageSelection": "Sprachauswahl",
+  "@languageSelection": {},
+  "textSize": "Textgröße",
+  "@textSize": {}
+}

@@ -5,7 +5,7 @@ class IntConverter implements JsonConverter<int, Object?> {
 
   @override
   int fromJson(Object? value) => //
-      switch (value) {
+  switch (value) {
     final String text => int.tryParse(text) ?? 0,
     final num v => v.toInt(),
     _ => 0,

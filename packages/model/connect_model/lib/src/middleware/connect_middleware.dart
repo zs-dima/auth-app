@@ -50,10 +50,11 @@ abstract class ConnectMiddleware {
   /// connect-dart [Interceptor] entry point (callable class): dispatches to the handler API,
   /// preserving its contract that the handler observes the *whole* call — for streams that
   /// includes every message and any mid-stream error.
-  AnyFn<I, O> call<I extends Object, O extends Object>(AnyFn<I, O> next) => (req) => switch (req) {
-    UnaryRequest<I, O>() => _interceptUnary(req, next),
-    StreamRequest<I, O>() => _interceptStreaming(req, next),
-  };
+  AnyFn<I, O> call<I extends Object, O extends Object>(AnyFn<I, O> next) =>
+      (req) => switch (req) {
+        UnaryRequest<I, O>() => _interceptUnary(req, next),
+        StreamRequest<I, O>() => _interceptStreaming(req, next),
+      };
 
   /// Canonical leading-slash `/package.Service/Method` form of a generated procedure name, so
   /// path sets (e.g. the public auth paths) match regardless of the codegen's slash convention

@@ -5,7 +5,7 @@ class DoubleConverter implements JsonConverter<double, Object?> {
 
   @override
   double fromJson(Object? value) => //
-      switch (value) {
+  switch (value) {
     final String text => double.tryParse(text) ?? 0.0,
     final num v => v.toDouble(),
     _ => 0,

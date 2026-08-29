@@ -66,7 +66,7 @@ else
     log_warning "OpenAPI spec not found, skipping generation"
 fi
 
-# 3. Run all code generation tasks in parallel (for monorepo packages and localization)
+# 3. Run all code generation tasks in parallel (for monorepo packages)
 log_step "3/6 Running code generation tasks in parallel..."
 
 # Create a temporary directory to collect job outputs
@@ -78,7 +78,6 @@ declare -A job_packages      # Map job_id -> package name
 declare -a job_pids          # Array to store background job PIDs
 job_count=0
 active_jobs=0
-localization_job_id=""
 
 # Function to wait until a job slot is free (limits parallel jobs to MAX_PARALLEL_JOBS)
 wait_for_job_slot() {
@@ -142,57 +141,6 @@ if grep -q "build_runner:" pubspec.yaml; then
     start_build_runner_job "." "$job_count"
 fi
 
-# If localization configuration is present, run localization generation as a parallel job
-if [ -f "l10n.yaml" ] || grep -q "flutter_intl:" pubspec.yaml || grep -q "intl:" pubspec.yaml; then
-    wait_for_job_slot
-    job_count=$((job_count + 1))
-    localization_job_id=$job_count
-    log_info "Scheduling localization generation..."
-
-    (  # Localization generation job
-        output_file="$JOBS_DIR/job_${localization_job_id}.out"
-        exec > "$output_file" 2>&1
-        echo "Starting localization generation at $(date)"
-        start_time=$(date +%s)
-        # Activate intl_utils (if needed for flutter_intl)
-        dart pub global activate intl_utils || {
-            echo "ERROR: Failed to activate intl_utils"
-            exit 1
-        }
-        # Generate localization files using intl_utils or flutter gen-l10n
-        method=""
-        if dart pub global run intl_utils:generate; then
-            method="intl_utils"
-        else
-            echo "Trying flutter gen-l10n as fallback..."
-            if flutter gen-l10n; then
-                method="flutter_gen_l10n"
-            else
-                echo "ERROR: Both intl_utils and flutter gen-l10n generation failed"
-                exit 1
-            fi
-        fi
-        # Verify that the expected localization output exists
-        if [ ! -f "lib/_core/generated/localization/l10n.dart" ]; then
-            echo "ERROR: Expected localization file not generated"
-            exit 1
-        fi
-
-        end_time=$(date +%s)
-        echo $(( end_time - start_time )) > "$JOBS_DIR/job_${localization_job_id}.duration"
-
-        if [ "$method" = "flutter_gen_l10n" ]; then
-            echo "Completed successfully with flutter gen-l10n at $(date)"
-        else
-            echo "Completed successfully at $(date)"
-        fi
-        exit 0
-    ) &  # Run localization generation in background
-    job_pids[$localization_job_id]=$!
-    job_packages[$localization_job_id]="localization"
-    active_jobs=$((active_jobs + 1))
-fi
-
 # Find and schedule code generation for each package in the monorepo that uses build_runner
 if [ -d "package" ] || [ -d "packages" ]; then
     # Look for directories under "package(s)" that contain a pubspec with build_runner as a dependency
@@ -215,7 +163,6 @@ if [ ${#job_packages[@]} -gt 0 ]; then
     set +e  # allow capturing non-zero exit codes without exiting immediately
     success_count=0
     failed_packages=()
-    localization_failed=false
     for i in $(seq 1 $job_count); do
         wait "${job_pids[$i]}"
         exit_code=$?
@@ -233,7 +180,6 @@ if [ ${#job_packages[@]} -gt 0 ]; then
             fi
         else
             failed_packages+=("$package_name")
-            [ "$i" = "$localization_job_id" ] && localization_failed=true
             log_error "✗ $package_name codegen failed:"
             if [ -f "$JOBS_DIR/job_${i}.out" ]; then
                 grep -n -i 'SEVERE\|ERROR\|Could not generate\|Exception' "$JOBS_DIR/job_${i}.out" | head -n 20 | sed 's/^/  /' >&2
@@ -246,9 +192,6 @@ if [ ${#job_packages[@]} -gt 0 ]; then
     set -e  # re-enable immediate exit on errors
     if [ ${#failed_packages[@]} -gt 0 ]; then
         log_error "Code generation failed for ${#failed_packages[@]} package(s): ${failed_packages[*]}"
-        if [ "$localization_failed" = true ]; then
-            log_error "Localization generation failed – this is critical for the build."
-        fi
         exit 1
     else
         log_info "✅ All $success_count code generation jobs completed successfully"

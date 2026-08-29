@@ -31,8 +31,8 @@ Auth App provides a modern, responsive UI for authentication and user management
 
 ### Prerequisites
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.41+)
-- [Dart SDK](https://dart.dev/get-dart) (3.8+)
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.47.2+)
+- [Dart SDK](https://dart.dev/get-dart) (3.13+, bundled with Flutter)
 - Running Rust Connect RPC backend service ([zs-dima/auth-service-rs](https://github.com/zs-dima/auth-service-rs))
 
 ### Installation
@@ -91,10 +91,34 @@ lib/
 └── users/              # User management
 
 packages/
+├── localization/       # Generated l10n (Google Sheets → sheety_localization → gen-l10n)
 ├── model/              # Data models
 ├── tool/               # Development tools
 └── ui/                 # UI components library
 ```
+
+## Localization
+
+Source of truth is a [Google Sheet]
+(tabs `app` / `errors` / `settings` / `auth` — one generated class + delegate per tab).
+Columns: `label | description | meta | en | ru | es | de`. Generation is done by
+[sheety_localization](https://pub.dev/packages/sheety_localization), which writes ARB files and
+shells out to Flutter's own `gen-l10n` — the generated output in `packages/localization` is
+**committed**, so builds and CI never need Google credentials.
+
+- **Edit / translate**: change cells in the sheet (untranslated cells fall back to English),
+  then regenerate: `make l10n` (or the "Generate localization" VS Code task). Requires
+  `packages/localization/credentials.json` — a GCP service account with the Sheets API enabled
+  and the sheet shared to its email; the file is gitignored, never commit it.
+- **Add a key**: add a row; `label` becomes the Dart getter on that tab's class
+  (`AppLocalization`, `ErrorsLocalization`, `SettingsLocalization`, `AuthLocalization`).
+- **Placeholders / ICU**: put the ICU string in the locale cell and the placeholder types in
+  `meta`, e.g. `{"placeholders": {"name": {"type": "String"}}}` with `Hello, {name}!` —
+  see the `samplePlaceholder` row (the reference example). Plurals/selects work the same way.
+- **Add a locale**: add a column, fill it, regenerate — `Locales.values` and the delegates update.
+- Consumption: `Localization.of(context)` / `context.l10n` for the `app` tab; the other tabs are
+  read via their generated classes. `make l10n` also runs the round-trip verifier
+  (`packages/localization/tool/verify_l10n.dart`).
 
 ## Contributing
 

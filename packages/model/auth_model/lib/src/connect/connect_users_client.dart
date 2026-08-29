@@ -111,14 +111,17 @@ class ConnectUsersClient extends ConnectClient implements IUsersApi {
   @override
   Future<bool> confirmAvatarUpload(UserId userId) async {
     await guardRpcCall(
-      (signal) => client.confirmAvatarUpload(rpc.ConfirmAvatarUploadRequest()..userId = userId.toUUID(), signal: signal),
+      (signal) =>
+          client.confirmAvatarUpload(rpc.ConfirmAvatarUploadRequest()..userId = userId.toUUID(), signal: signal),
     );
     return true;
   }
 
   @override
   Future<bool> deleteUserAvatar(UserId userId) async {
-    await guardRpcCall((signal) => client.deleteAvatar(rpc.DeleteAvatarRequest()..userId = userId.toUUID(), signal: signal));
+    await guardRpcCall(
+      (signal) => client.deleteAvatar(rpc.DeleteAvatarRequest()..userId = userId.toUUID(), signal: signal),
+    );
     return true;
   }
 

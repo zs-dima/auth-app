@@ -5,7 +5,7 @@ class DoubleNullConverter implements JsonConverter<double?, Object?> {
 
   @override
   double? fromJson(Object? value) => //
-      switch (value) {
+  switch (value) {
     final String text => double.tryParse(text),
     final num v => v.toDouble(),
     _ => null,

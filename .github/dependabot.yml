@@ -1,63 +1,36 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# Dependabot configuration for the pub workspace + GitHub Actions.
+# Docs: https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
 enable-beta-ecosystems: true
 updates:
-  - package-ecosystem: "pub"
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    pull-request-branch-name:
-      separator: /
-    target-branch: "main"
-
-  - package-ecosystem: "pub"
-    directory: "/packages/model/core_model" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    pull-request-branch-name:
-      separator: /
-    target-branch: "main"
-
-  - package-ecosystem: "pub"
-    directory: "/packages/model/auth_model" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    pull-request-branch-name:
-      separator: /
-    target-branch: "main"
-
   # NB: packages/vendor/connectrpc is deliberately NOT listed — it is a pinned vendored copy
   # (see its VENDORED.md); dependabot must not bump it.
   - package-ecosystem: "pub"
-    directory: "/packages/model/connect_model" # Location of package manifests
+    directories:
+      - "/"
+      - "/packages/localization"
+      - "/packages/model/core_model"
+      - "/packages/model/connect_model"
+      - "/packages/model/auth_model"
+      - "/packages/model/http_client"
+      - "/packages/tool/core_tool"
+      - "/packages/tool/lints_tool"
+      - "/packages/tool/converter/json_converter"
+      - "/packages/ui"
     schedule:
       interval: "weekly"
     pull-request-branch-name:
       separator: /
     target-branch: "main"
+    groups:
+      pub-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
-  - package-ecosystem: "pub"
-    directory: "/packages/tool/core_tool" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    pull-request-branch-name:
-      separator: /
-    target-branch: "main"
-
-  - package-ecosystem: "pub"
-    directory: "/packages/tool/ui_tool" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    pull-request-branch-name:
-      separator: /
-    target-branch: "main"
-
-  - package-ecosystem: "pub"
-    directory: "/packages/tool/converter/json_converter" # Location of package manifests
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
     pull-request-branch-name:

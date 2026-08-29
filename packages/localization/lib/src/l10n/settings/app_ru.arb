@@ -1,0 +1,26 @@
+{
+  "@@locale": "ru",
+  "@@last_modified": "2026-08-29T22:19:07.217856Z",
+  "customColors": "Пользовательские цвета",
+  "@customColors": {},
+  "defaultThemes": "Темы по умолчанию",
+  "@defaultThemes": {},
+  "locales": "Локали",
+  "@locales": {},
+  "localeTag": "ru_RU",
+  "@localeTag": {},
+  "localeCode": "ru",
+  "@localeCode": {},
+  "lang": "Русский",
+  "@lang": {},
+  "langEn": "Russian",
+  "@langEn": {
+    "description": "Language name in English"
+  },
+  "settings": "Настройки",
+  "@settings": {},
+  "languageSelection": "Выбор языка",
+  "@languageSelection": {},
+  "textSize": "Размер текста",
+  "@textSize": {}
+}

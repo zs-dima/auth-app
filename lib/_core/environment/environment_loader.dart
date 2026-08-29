@@ -9,6 +9,7 @@ import 'package:auth_app/_core/log/logger.dart';
 import 'package:core_tool/core_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+
 // import 'package:package_info_plus/package_info_plus.dart';
 
 class EnvironmentLoader {

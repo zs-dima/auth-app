@@ -25,8 +25,7 @@ enum Routes with OctopusRoute {
   developer('developer', title: 'Developer'),
 
   settings('settings', title: 'Settings'),
-  settingsDialog('settings-dialog', title: 'Settings')
-  ;
+  settingsDialog('settings-dialog', title: 'Settings');
 
   const Routes(this.name, {this.title});
 

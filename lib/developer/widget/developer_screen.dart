@@ -29,7 +29,7 @@ class DeveloperScreen extends StatelessWidget {
         ),
 
         // --- Authentication --- //
-        _GroupSeparator(title: Localization.of(context).authentication),
+        _GroupSeparator(title: AuthLocalization.of(context).authentication),
         const _OpenUriTile(title: 'Profile', description: 'Information about current user'),
         const _OpenUriTile(title: 'Refresh session', description: "Refresh current user's session"),
         const _OpenUriTile(title: 'Logout', description: 'Logout current user'),

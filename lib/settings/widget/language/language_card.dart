@@ -1,3 +1,4 @@
+import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/settings/settings_scope.dart';
 import 'package:ui/ui.dart';
 
@@ -20,8 +21,10 @@ class LanguageCard extends StatelessWidget {
           width: 64.0,
           child: Center(
             child: AppText.bodyMedium(
-              _language.languageCode,
+              Localization.getLanguageByCode(_language.languageCode)?.nativeName ?? _language.languageCode,
               color: Theme.of(context).colorScheme.onPrimary,
+              maxLines: 1,
+              overflow: .ellipsis,
             ),
           ),
         ),

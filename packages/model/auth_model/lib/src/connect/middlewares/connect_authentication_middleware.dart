@@ -144,6 +144,5 @@ class ConnectAuthenticationMiddleware extends ConnectMiddleware {
 
   /// Auth-code check for the public path only; on the data path logout is gated on
   /// `unauthenticated` alone (403 is surfaced, never a logout).
-  static bool _isAuthError(ConnectException e) =>
-      e.code == Code.unauthenticated || e.code == Code.permissionDenied;
+  static bool _isAuthError(ConnectException e) => e.code == Code.unauthenticated || e.code == Code.permissionDenied;
 }

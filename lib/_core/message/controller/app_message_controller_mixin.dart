@@ -10,7 +10,7 @@ import 'package:connectrpc/connect.dart';
 import 'package:http_client/http_client.dart';
 
 typedef AppMessageBlocErrorCallback = void Function(String message);
-typedef AppMessageBlocLocalizeErrorCallback = String Function(Localization l);
+typedef AppMessageBlocLocalizeErrorCallback = String Function(ErrorsLocalization l);
 
 mixin AppMessageControllerMixin {
   late final AppMessageController _messageController;
@@ -113,7 +113,10 @@ mixin AppMessageControllerMixin {
   @pragma('dart2js:tryInline')
   @pragma('vm:prefer-inline')
   static String _localizedError(String fallback, AppMessageBlocLocalizeErrorCallback localize) =>
-      Localization.current == null ? fallback : localize(Localization.current!);
+      switch (Localization.currentErrors) {
+        final ErrorsLocalization errors => localize(errors),
+        null => fallback,
+      };
 
   // Also we can add current localization to this method
   static String formatMessage(Object error, [String fallback = 'An error has occurred']) => switch (error) {

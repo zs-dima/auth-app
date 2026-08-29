@@ -20,6 +20,7 @@ export 'package:protobuf/well_known_types/google/protobuf/wrappers.pbjson.dart';
 
 export 'proto/core/v1/core.pb.dart';
 export 'proto/core/v1/core.pbenum.dart';
+
 // NOTE: core.pbjson.dart (descriptor JSON) is intentionally NOT exported — it is an internal
 // codegen artifact and must not be part of connect_model's public API (A10). Generated code that
 // needs the descriptors imports it by relative path.

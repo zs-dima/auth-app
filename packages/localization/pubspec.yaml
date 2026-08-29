@@ -1,0 +1,33 @@
+name: localization
+resolution: workspace
+
+description: "Localization (Google Sheets → ARB → gen-l10n via sheety_localization)"
+
+publish_to: none
+
+version: 0.0.1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # Generated code imports package:intl (Intl.canonicalizedLocale, select/plural).
+  intl: any
+
+dev_dependencies:
+  lints_tool:
+    path: ../tool/lints_tool
+  sheety_localization: ^0.6.0
+  # Seeder only (tool/seed_sheet.dart).
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
+
+flutter:
+  # Required by gen-l10n (sheety shells out to it); harmless on pub get — this package has
+  # no l10n.yaml and no lib/l10n, so nothing generates outside the explicit sheety run.
+  # (The author's 2025 notes said `false`; Flutter 3.47 refuses to generate without it.)
+  generate: true

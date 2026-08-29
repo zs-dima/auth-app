@@ -34,9 +34,10 @@ platforms:
     #    path: screenshot_1.png
 
 environment:
-  sdk: ^3.13.0
+  sdk: ^3.13.2
 
 workspace:
+  - packages/localization
   - packages/model/core_model
   - packages/model/connect_model
   - packages/model/auth_model
@@ -45,7 +46,7 @@ workspace:
   - packages/tool/converter/json_converter
   - packages/model/http_client
   - packages/ui
-  # Vendored connectrpc 1.0.0 with a protobuf ^6-compatible delta — see packages/vendor/connectrpc/VENDORED.md.
+  # Vendored connectrpc 1.0.0 with a protobuf ^6-compatible delta
   # Being a workspace member, it overrides the hosted `connectrpc` for every `connectrpc: ^1.0.0` dependency.
   - packages/vendor/connectrpc
 
@@ -61,6 +62,8 @@ dependencies:
     sdk: flutter
 
   # Packages
+  localization:
+    path: packages/localization
   core_model:
     path: packages/model/core_model
   connect_model:
@@ -225,7 +228,6 @@ dev_dependencies:
   # melos: ^7.3.0 # dart pub global activate melos
   # build_verify: ^3.1.0
   # pigeon: ^25.3.1
-  # intl_utils: ^2.8.13
   #mockito: ^5.4.2
 
   sentry_dart_plugin: ^3.4.0
@@ -241,7 +243,9 @@ dependency_overrides:
   hooks: ^2.0.0
 
 flutter:
-  generate: true
+  # l10n generation lives in packages/localization (sheety_localization → gen-l10n);
+  # the app itself must not generate on pub get.
+  generate: false
   uses-material-design: true
 
   assets:
@@ -257,15 +261,6 @@ flutter:
   #   - family: SocialIcons
   #     fonts:
   #       - asset: packages/firebase_ui_auth/fonts/SocialIcons.ttf
-
-flutter_intl:
-  # dart run intl_utils:generate
-  enabled: true
-  class_name: GeneratedLocalization
-  main_locale: en
-  arb_dir: lib/_core/localization/translation
-  output_dir: lib/_core/generated/localization
-  use_deferred_loading: false
 
 flutter_gen:
   output: lib/_core/generated/resources

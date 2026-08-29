@@ -1,29 +1,24 @@
-import 'package:auth_app/_core/generated/localization/l10n.dart'
-    as generated
-    show GeneratedLocalization, AppLocalizationDelegate;
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/widgets.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:meta/meta.dart';
+import 'package:localization/localization.dart';
+
+// The generated bucket classes (AppLocalization, ErrorsLocalization, SettingsLocalization,
+// AuthLocalization, Locales) reach call sites through core.dart via this export.
+export 'package:localization/localization.dart';
 
 extension LocalizationX on BuildContext {
   /// {@macro localization}
-  Localization get l10n => Localization.of(this);
+  AppLocalization get l10n => Localization.of(this);
 }
 
 /// {@template localization}
-/// Localization class which is used to localize app.
-/// This class provides handy methods and tools.
+/// Static facade over the sheety_localization/gen-l10n bucket classes
+/// (`app` / `errors` / `settings` / `auth` — one Google Sheets tab each).
 /// {@endtemplate}
-final class Localization extends generated.GeneratedLocalization {
-  /// {@macro localization}
-  static const LocalizationsDelegate<Localization> delegate = _LocalizationView(generated.AppLocalizationDelegate());
-
-  Localization._(this.locale);
-
-  final Locale locale;
-
+abstract final class Localization {
   /// Get supported locales.
-  static List<Locale> get supportedLocales => const generated.AppLocalizationDelegate().supportedLocales;
+  static List<Locale> get supportedLocales => Locales.values;
 
   /// List of localization delegates.
   static List<LocalizationsDelegate<Object?>> get localizationDelegates => [
@@ -32,65 +27,62 @@ final class Localization extends generated.GeneratedLocalization {
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
 
-    // Provide the labels that are not overridden by LabelOverrides
-    // FirebaseUILocalizations.delegate,
-    // Creates an instance of FirebaseUILocalizationDelegate with overridden labels
-    // FirebaseUILocalizations.withDefaultOverrides(LabelOverrides()),
-    Localization.delegate,
+    AppLocalization.delegate,
+    _CurrentCapture.instance,
+    SettingsLocalization.delegate,
+    AuthLocalization.delegate,
   ];
 
-  /// Computes the default locale.
-  ///
-  /// This is the locale that is used when no locale is specified.
-  // ignore: prefer_expression_function_bodies
+  /// Computes the default locale: the platform locale when supported, English otherwise.
   static Locale get computeDefaultLocale {
-    //  TODO implement location
-    // final locale = WidgetsBinding.instance.platformDispatcher.locale;
-
-    // if (delegate.isSupported(locale)) return locale;
-
-    return const Locale('en', 'US');
+    final locale = PlatformDispatcher.instance.locale;
+    return supportedLocales.firstWhere(
+      (supported) => supported.languageCode == locale.languageCode,
+      orElse: () => Locales.en,
+    );
   }
 
-  /// Current localization instance.
-  static Localization? _current;
+  /// The most recently loaded `errors` bucket — the context-free escape hatch for
+  /// controller-side error localization (see AppMessageControllerMixin).
+  static ErrorsLocalization? _currentErrors;
 
-  static Localization? get current => _current;
+  static ErrorsLocalization? get currentErrors => _currentErrors;
 
-  /// Obtain [Localization] instance from [BuildContext].
-  static Localization of(BuildContext context) => switch (Localizations.of<Localization>(context, Localization)) {
-    final Localization localization => localization,
-    _ => throw ArgumentError(
-      'Out of scope, not found inherited widget a Localization of the exact type',
-      'out_of_scope',
-    ),
-  };
+  /// The `app` bucket for the given context (most UI strings live there).
+  /// The other buckets are read directly: `SettingsLocalization.of(context)`, etc.
+  static AppLocalization of(BuildContext context) => AppLocalization.of(context);
 
   /// Get language by code.
   static ({String name, String nativeName})? getLanguageByCode(String code) => switch (_kIsoLangs[code]) {
     final (String, String) lang => (name: lang.$1, nativeName: lang.$2),
     _ => null,
   };
+
+  /// Loads the `errors` bucket and records it into [currentErrors]
+  /// (SynchronousFuture.then runs inline, so the capture lands before the first frame).
+  static Future<ErrorsLocalization> _loadErrors(Locale locale) {
+    final future = ErrorsLocalization.delegate.load(locale);
+    final _ = future.then((loaded) => _currentErrors = loaded);
+    return future;
+  }
 }
 
+/// Delegates to the generated errors delegate through [Localization._loadErrors],
+/// which records the loaded instance into [Localization.currentErrors].
 @immutable
-final class _LocalizationView extends LocalizationsDelegate<Localization> {
-  @literal
-  const _LocalizationView(LocalizationsDelegate<generated.GeneratedLocalization> delegate) : _delegate = delegate;
+final class _CurrentCapture extends LocalizationsDelegate<ErrorsLocalization> {
+  static const _CurrentCapture instance = _CurrentCapture._();
 
-  final LocalizationsDelegate<generated.GeneratedLocalization> _delegate;
-
-  @override
-  bool isSupported(Locale locale) => _delegate.isSupported(locale);
+  const _CurrentCapture._();
 
   @override
-  Future<Localization> load(Locale locale) async {
-    await generated.GeneratedLocalization.load(locale);
-    return Localization._current = Localization._(locale);
-  }
+  bool isSupported(Locale locale) => ErrorsLocalization.delegate.isSupported(locale);
 
   @override
-  bool shouldReload(covariant _LocalizationView old) => _delegate.shouldReload(old._delegate);
+  Future<ErrorsLocalization> load(Locale locale) => Localization._loadErrors(locale);
+
+  @override
+  bool shouldReload(covariant _CurrentCapture old) => false;
 }
 
 const Map<String, (String name, String nativeName)> _kIsoLangs = <String, (String name, String nativeName)>{

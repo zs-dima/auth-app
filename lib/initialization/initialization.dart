@@ -44,23 +44,28 @@ Future<Dependencies> $initializeApp({
       await SystemChrome.setPreferredOrientations(orientations);
     }
 
-    final dependencies =
-        await $initializeDependencies(
-          onProgress: (percent, message) {
-            // Update the loading progress with the provided values.
-            final progress = (offset + percent * (100 - offset) / 100).clamp(offset, 100).round();
+    final dependenciesFuture = $initializeDependencies(
+      onProgress: (percent, message) {
+        // Update the loading progress with the provided values.
+        final progress = (offset + percent * (100 - offset) / 100).clamp(offset, 100).round();
 
-            platform_initialization.$updateLoadingProgress(
-              progress: progress,
-              text: message,
-            );
-
-            onProgress?.call(progress, message);
-          },
-        ).timeout(
-          const Duration(minutes: 7),
-          onTimeout: () => throw TimeoutException('Initialization timed out after 7 minutes'),
+        platform_initialization.$updateLoadingProgress(
+          progress: progress,
+          text: message,
         );
+
+        onProgress?.call(progress, message);
+      },
+    );
+    final dependencies = await dependenciesFuture.timeout(
+      const Duration(minutes: 7),
+      onTimeout: () {
+        // The abandoned composition keeps running in the background; if it ever completes,
+        // release its resources — nobody will consume it (a retry builds a fresh one).
+        dependenciesFuture.then($disposeDependencies).ignore();
+        throw TimeoutException('Initialization timed out after 7 minutes');
+      },
+    );
 
     final onSuccessCall = onSuccess?.call(dependencies);
     final _ = onSuccessCall is Future ? await onSuccessCall : onSuccessCall;

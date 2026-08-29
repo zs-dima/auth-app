@@ -1,0 +1,26 @@
+# Secrets — must NEVER enter the Docker build context / image layers
+# (.gitignore does not apply to docker build).
+**/credentials.json
+config/keys.env
+sentry.properties
+
+# VCS and IDE
+.git
+.github
+.idea
+.vscode
+.claude
+.cursor
+
+# Build artifacts and caches (regenerated inside the container)
+.dart_tool
+**/.dart_tool
+build
+**/build
+coverage
+**/coverage
+reports
+
+# Local logs and docs not needed for the image
+*.log
+doc

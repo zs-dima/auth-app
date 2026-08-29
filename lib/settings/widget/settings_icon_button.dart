@@ -14,7 +14,7 @@ class SettingsIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => IconButton(
     icon: const Icon(Icons.person),
-    tooltip: Localization.of(context).profileButton,
+    tooltip: AuthLocalization.of(context).profileButton,
     onPressed: () {
       Octopus.maybeOf(context)?.setState(
         (state) => state

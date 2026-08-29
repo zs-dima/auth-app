@@ -42,7 +42,7 @@ class SettingsWidget extends StatelessWidget {
                 Padding(
                   padding: const .all(8.0),
                   child: AppText.titleMedium(
-                    Localization.of(context).textSize,
+                    SettingsLocalization.of(context).textSize,
                   ),
                 ),
                 Slider(
@@ -57,14 +57,14 @@ class SettingsWidget extends StatelessWidget {
                 Padding(
                   padding: const .all(8.0),
                   child: AppText.titleMedium(
-                    Localization.of(context).locales,
+                    SettingsLocalization.of(context).locales,
                   ),
                 ),
                 LanguagesSelector(Localization.supportedLocales),
                 Padding(
                   padding: const .all(8.0),
                   child: AppText.titleMedium(
-                    Localization.of(context).default_themes,
+                    SettingsLocalization.of(context).defaultThemes,
                   ),
                 ),
                 const ThemeColorSelector(Colors.primaries),
@@ -74,7 +74,7 @@ class SettingsWidget extends StatelessWidget {
                 Padding(
                   padding: const .only(left: 8.0, top: 8.0),
                   child: AppText.titleMedium(
-                    Localization.of(context).custom_colors,
+                    SettingsLocalization.of(context).customColors,
                   ),
                 ),
                 // ThemeSelector(

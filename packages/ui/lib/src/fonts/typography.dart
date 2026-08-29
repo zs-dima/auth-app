@@ -181,8 +181,7 @@ enum AppTextStyle {
       letterSpacing: 0.5,
       package: kPackage,
     ),
-  )
-  ;
+  );
 
   const AppTextStyle(this.style);
 
