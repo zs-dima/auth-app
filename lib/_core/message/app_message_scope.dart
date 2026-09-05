@@ -1,51 +1,51 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/message/extension/message_toast.dart';
+import 'package:auth_app/_core/message/ui_messenger.dart';
+import 'package:auth_app/_core/widget/layout/progress_overlay.dart';
 import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
 import 'package:auth_app/update/widget/app_update_available_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:octopus/octopus.dart';
 import 'package:rxdart/rxdart.dart';
 
 extension AppMessageScopeX on BuildContext {
-  AppMessageController get message => dependencies.messageController;
+  /// The app's user-message surface.
+  UiMessenger get messenger => dependencies.messenger;
 }
 
 /// {@template app_message_scope}
-/// Subscribes to the app-global [AppMessageController] and
-/// [UpdateCheckController] and routes their events into the UI
-/// (toasts and the update banner). Holds no inherited state of its
-/// own — the [AppMessageController] is reached through
-/// `context.dependencies.messageController`.
+/// Subscribes to the app-global [UiMessenger] and [UpdateCheckController] and
+/// routes their events into the UI (toasts and the update banner). Holds no
+/// inherited state of its own — the messenger is reached through
+/// `context.dependencies.messenger`.
 /// {@endtemplate}
 class AppMessageScope extends StatefulWidget {
   /// {@macro app_message_scope}
-  const AppMessageScope({required this.child, this.octopus, super.key});
+  const AppMessageScope({required this.child, super.key});
 
   /// The child widget.
   final Widget child;
-
-  final Octopus? octopus;
 
   @override
   State<AppMessageScope> createState() => _AppMessageScopeState();
 }
 
 class _AppMessageScopeState extends State<AppMessageScope> {
-  static void _appendWithLine(StringBuffer buffer, String text) {
-    if (buffer.isNotEmpty) {
-      buffer.write('\r\n');
-    }
-    buffer.write(text);
-  }
+  /// How long messages are collected before being shown.
+  ///
+  /// One failed screen can raise three toasts at once (the call, the controller
+  /// and the retry); showing them in sequence means twelve seconds of snack
+  /// bars. Short enough to feel immediate, long enough to catch a burst — the
+  /// three seconds this used to wait were long enough for the user to have moved
+  /// on before being told anything.
+  static const Duration _coalesceWindow = Duration(milliseconds: 300);
 
-  late final AppMessageController _messagingController;
-
+  late final UiMessenger _messenger;
   late final UpdateCheckController _updateCheckController;
-  StreamSubscription<void>? _messageSubscription;
 
+  StreamSubscription<void>? _messageSubscription;
   StreamSubscription<void>? _updateCheckMessageSubscription;
 
   @override
@@ -55,7 +55,7 @@ class _AppMessageScopeState extends State<AppMessageScope> {
     _updateCheckController = context.dependencies.updateCheckController;
     _subscribeAppUpdates();
 
-    _messagingController = context.dependencies.messageController;
+    _messenger = context.dependencies.messenger;
     _subscribeMessages();
   }
 
@@ -82,14 +82,6 @@ class _AppMessageScopeState extends State<AppMessageScope> {
               ..showMaterialBanner(
                 AppUpdateAvailableWidget(context, updateCheckController: _updateCheckController),
               );
-
-            // Future.delayed(
-            //   const Duration(seconds: 3),
-            //   () => widget.octopus?.push(
-            //     Routes.appUpdateAvailable,
-            //     arguments: {RouteNode.version: state.version},
-            //   ),
-            // );
           },
           cancelOnError: false,
         );
@@ -98,58 +90,32 @@ class _AppMessageScopeState extends State<AppMessageScope> {
 
   void _subscribeMessages() {
     _messageSubscription?.cancel();
-    _messageSubscription = _messagingController
-        .toStream()
-        .bufferTime(const Duration(seconds: 3))
+    _messageSubscription = _messenger.messages
+        .bufferTime(_coalesceWindow)
         .where((batch) => batch.isNotEmpty)
-        .listen(
-          (messages) {
-            if (!mounted) return;
+        .listen(_show, cancelOnError: false);
+  }
 
-            final sbAppMessage = StringBuffer();
-            final sbError = StringBuffer();
-            final sbProgress = StringBuffer();
-            Color? bgColor;
+  void _show(List<UiMessage> batch) {
+    if (!mounted) return;
+    // Outside production a failure carries its Details action. In production the user reads one
+    // sentence and nothing else — a stack trace in a snack bar is both noise and a leak.
+    final withDetails = !context.dependencies.environment.type.isProduction;
 
-            for (final msg in messages) {
-              switch (msg) {
-                case AppErrorState(:final String error) || NetErrorState(:final String error):
-                  _appendWithLine(sbError, error);
-
-                case AppMessageState(
-                      :final message,
-                      :final backgroundColor,
-                    )
-                    when message.isNotEmpty:
-                  _appendWithLine(sbAppMessage, message);
-                  bgColor = backgroundColor;
-
-                case AppProgressState(:final message) when message != null && message.isNotEmpty:
-                  _appendWithLine(sbProgress, message);
-
-                default:
-              }
-            }
-
-            if (!context.mounted) return;
-            if (sbError.isNotEmpty) context.showError(sbError.toString());
-            if (sbAppMessage.isNotEmpty)
-              context.showInfo(
-                sbAppMessage.toString(),
-                backgroundColor: bgColor,
-              );
-            if (sbProgress.isNotEmpty) context.showProgress(sbProgress.toString());
-
-            // i.whenOrNull(
-            //   appMessage:
-            //       (message, backgroundColor) => context.showInfo(message, backgroundColor: colorScheme.surface),
-            //   appError: (error, _) => context.showError(error),
-            //   netError: (error, _) => context.showError(error),
-            //   progress: (progress, type, message) => message.isNullOrSpace ? null : context.showProgress('$message'),
-            // );
-          },
-          cancelOnError: false,
-        );
+    // One snack bar per tone: an error and a confirmation must not be merged into one line, but
+    // three failures of the same operation should not queue twelve seconds of snack bars either.
+    for (final tone in ToastTone.values) {
+      final messages = batch.where((message) => message.tone == tone).toList(growable: false);
+      if (messages.isEmpty) continue;
+      if (!context.mounted) return;
+      context.showUiMessage(
+        messages.length == 1
+            ? messages.single
+            // Merged: several causes, so no single event to attach a Details action to.
+            : UiMessage(tone: tone, text: messages.map((message) => message.text).join('\r\n')),
+        withDetails: withDetails && messages.length == 1,
+      );
+    }
   }
 
   @override
@@ -160,5 +126,7 @@ class _AppMessageScopeState extends State<AppMessageScope> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  // The bar belongs here for the same reason the toasts do: this scope is what
+  // owns the messenger, and progress is the other half of what it carries.
+  Widget build(BuildContext context) => ProgressOverlay(child: widget.child);
 }

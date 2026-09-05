@@ -1,8 +1,5 @@
-import 'dart:async';
-
-import 'package:auth_app/authentication/controller/authenticated_user_controller.dart';
+import 'package:auth_app/authentication/authenticated_scope.dart';
 import 'package:auth_app/impersonation/controller/impersonate_controller.dart';
-import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:ui/ui.dart';
@@ -42,46 +39,23 @@ class ImpersonateScope extends StatefulWidget {
 }
 
 /// State for widget ImpersonateScope.
+///
+/// Reads its controller from [AuthenticatedScope], which owns it for the length
+/// of the session. The scope also drives "act as whoever just signed in", so
+/// this widget no longer subscribes to the profile itself — one subscription,
+/// in the place that owns the controller.
 class _ImpersonateScopeState extends State<ImpersonateScope> implements IImpersonateController {
-  StreamSubscription? _authUserSubscription;
-
   @override
   late final ImpersonateController controller;
 
   @override
   void initState() {
     super.initState();
-
-    controller = context.dependencies.impersonateController;
-
-    final authenticatedUserController = context.dependencies.authenticatedUserController;
-    _authUserSubscription =
-        authenticatedUserController //
-            .toStream()
-            .listen(
-              (state) => switch (state) {
-                AuthenticatedUserLoadedState(:final user) => impersonate(user),
-                _ => null,
-              },
-              cancelOnError: false,
-            );
-
-    final currentUser = authenticatedUserController.state.user;
-    if (currentUser.id != UserIdX.empty) impersonate(currentUser);
+    controller = AuthenticatedScope.impersonateControllerOf(context);
   }
 
   @override
-  void impersonate(IUserInfo user) {
-    // if (user.id == UserIdX.empty) return; // TODO cleanup app data
-
-    // reload related data
-  }
-
-  @override
-  void dispose() {
-    _authUserSubscription?.cancel();
-    super.dispose();
-  }
+  void impersonate(IUserInfo user) => controller.impersonate(user);
 
   @override
   Widget build(BuildContext context) => StateConsumer<ImpersonateController, ImpersonateState>(

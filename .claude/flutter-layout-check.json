@@ -1,0 +1,30 @@
+{
+  "$comment": [
+    "The project's own kit wrappers, so a scrollable inside one is caught the same way it is",
+    "inside a `Padding` — a scrollable behind any box wrapper has a viewport smaller than the",
+    "space it was given, whatever the wrapper is called.",
+    "",
+    "`ScaffoldPadding` is deliberately NOT listed: it is an `EdgeInsets` value handed to a",
+    "`SliverPadding` or a `padding:` INSIDE the scrollable, which is the correct shape.",
+    "",
+    "`test/` is out of scope: a test is allowed to build the wrong shape on purpose to prove it is",
+    "wrong. Note the exclusions are SUBSTRING matches, so `/tool/` would also have hidden",
+    "`lib/_core/tool/`, `packages/tool/**` and `packages/ui/lib/src/tool/` — nine kit files among",
+    "them. The repository-root `tool/` is out of scope already: it is not under `paths`."
+  ],
+  "paths": [
+    "lib",
+    "packages"
+  ],
+  "boxWrappers": [
+    "ShadowWidget"
+  ],
+  "exclude": [
+    ".dart_tool/",
+    "build/",
+    "/generated/",
+    "/test/",
+    "/example/build/",
+    "packages/vendor/"
+  ]
+}

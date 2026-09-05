@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:auth_app/_core/log/logger.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/users/controller/upload_image_controller.dart';
 import 'package:pixer/pixer.dart';
 
@@ -35,7 +35,7 @@ Future<(Uint8List?, String)> toWebPBytes(
     resizedImage.dispose();
   }
 
-  logger.i('Image converted to WebP in ${stopwatch.elapsedMilliseconds} ms');
+  log.i('Image | convert | ok', meta: <String, Object?>{'app.image.ms': stopwatch.elapsedMilliseconds});
   stopwatch.stop();
 
   return (upscaledBytes, mime);

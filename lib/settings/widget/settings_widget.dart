@@ -3,6 +3,7 @@ import 'package:auth_app/_core/theme/extension/theme_sizes.dart';
 import 'package:auth_app/_core/theme/model/app_theme.dart';
 import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:auth_app/settings/settings_scope.dart';
+import 'package:auth_app/settings/widget/crash_reports_switch.dart';
 import 'package:auth_app/settings/widget/language/language_selector.dart';
 import 'package:auth_app/settings/widget/theme/theme_color_selector.dart';
 import 'package:auth_app/settings/widget/theme/theme_selector.dart';
@@ -86,6 +87,8 @@ class SettingsWidget extends StatelessWidget {
                 //       .toList(),
                 // ),
                 const ThemeColorSelector(Colors.accents),
+                const SizedBox(height: 8.0),
+                const CrashReportsSwitch(),
               ],
             ),
           ),

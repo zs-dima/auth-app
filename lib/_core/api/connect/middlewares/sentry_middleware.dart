@@ -1,15 +1,16 @@
 import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
 import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
 import 'package:auth_model/auth_model.dart';
-import 'package:connect_model/connect_model.dart';
+import 'package:connect_kit/connect_kit.dart';
 import 'package:connectrpc/connect.dart';
 import 'package:meta/meta.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// {@template connect_sentry_middleware}
 /// Middleware for Sentry integration in API requests.
-/// [ConnectSentryMiddleware] middleware captures Connect RPC requests and responses, creating a
-/// transaction for each request to monitor performance and errors.
+/// [ConnectSentryMiddleware] traces Connect RPC calls: one span per request, with the path and
+/// redacted headers as span data, and the trace headers propagated to the backend. It does NOT
+/// report errors — see the `on Object` clause.
 /// {@endtemplate}
 @immutable
 class ConnectSentryMiddleware extends ConnectMiddleware {
@@ -44,21 +45,28 @@ class ConnectSentryMiddleware extends ConnectMiddleware {
       // RPC OK (0), not HTTP 200; key renamed from 'grpc.response.status_code' with the transport.
       transaction.setData('rpc.response.status_code', 0);
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
-    } on Object catch (e, s) {
+    } on Object catch (e) {
+      // NO capture here. This middleware owns the SPAN; whether a failure is an issue is the
+      // telemetry pipeline's decision, made once, from the level the logger middleware assigns
+      // (`user_facing_error.dart`) and through the dedupe and rate limit that go with it.
+      // Capturing here as well filed one issue per call during an outage, plus a second issue
+      // with a different fingerprint for anything the pipeline also reported — the bare
+      // `ConnectException` here, the `RpcException` chain there.
+
       // Expected teardown (cancellation; a request that outlived its session — A27): no Sentry
       // issue; the span still finishes and the error rethrows.
-      final expectedTeardown = (e is ConnectException && e.code == .canceled) || e is RequestSessionEndedException;
-      if (!expectedTeardown) {
-        await Sentry.captureException(
-          e,
-          stackTrace: s,
-          withScope: (scope) => scope.span = transaction,
-          hint: Hint.withMap({
-            'path': path,
-            'headers': redactSensitiveHeaders(metadata),
-          }),
-        );
-      }
+      // final expectedTeardown = (e is ConnectException && e.code == .canceled) || e is RequestSessionEndedException;
+      // if (!expectedTeardown) {
+      //   await Sentry.captureException(
+      //     e,
+      //     stackTrace: s,
+      //     withScope: (scope) => scope.span = transaction,
+      //     hint: Hint.withMap({
+      //       'path': path,
+      //       'headers': redactSensitiveHeaders(metadata),
+      //     }),
+      //   );
+      // }
 
       if (!transaction.finished) {
         transaction.finish(status: _spanStatusFor(e), endTimestamp: DateTime.now().toUtc()).ignore();

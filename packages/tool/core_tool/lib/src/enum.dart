@@ -6,11 +6,7 @@ abstract final class EnumTool {
       final cache = _$searchCache.putIfAbsent(values.hashCode, () => {for (final e in values) e.name: e});
       if (cache[value] case final T e) return e;
     } else if (value is int) {
-      try {
-        return values.elementAt(value);
-      } on RangeError {
-        /* ignore */
-      }
+      if (value >= 0 && value < values.length) return values.elementAt(value);
     }
     return fallback?.call() ?? _$searchNotFound();
   }

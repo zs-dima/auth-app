@@ -1,5 +1,5 @@
-import 'package:auth_app/_core/core.dart';
-import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
+import 'package:auth_app/_core/message/ui_messenger.dart';
+import 'package:auth_app/_core/message/user_facing_error.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:collection/collection.dart';
@@ -15,17 +15,15 @@ sealed class UsersState with _$UsersState {
   const factory UsersState.loaded(UserId userId, UnmodifiableListView<User> users) = UsersLoadedState;
 }
 
-final class UsersController extends StateController<UsersState>
-    with DroppableControllerHandler, AppMessageControllerMixin {
+final class UsersController extends StateController<UsersState> with DroppableControllerHandler {
   /// Upper bound on how long [getUserInfo] waits for an in-flight [listUsers].
   static const Duration _kLoadWait = Duration(seconds: 30);
 
-  UsersController({required this._repository, required AppMessageController messageController})
-    : super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([]))) {
-    this.messageController = messageController;
-  }
+  UsersController({required this._repository, required this._messenger})
+    : super(initialState: UsersState.loading(UserIdX.empty, UnmodifiableListView<User>([])));
 
   final IUsersRepository _repository;
+  final UiMessenger _messenger;
   List<User> _users = <User>[];
 
   String? _query;
@@ -66,7 +64,6 @@ final class UsersController extends StateController<UsersState>
   }
 
   void listUsers(UserId currentUserId) {
-    var progress = false;
     handle(
       () async {
         if (currentUserId.isEmpty) {
@@ -75,25 +72,23 @@ final class UsersController extends StateController<UsersState>
         }
 
         setState(UsersState.loading(currentUserId, state.users));
-        progress = true;
-        setProgressStarted();
+        // The early return above is OUTSIDE the tracked region, which is the
+        // whole point: the `progress` flag this used to carry existed only to
+        // stop `done:` emitting a `progressDone` the return never matched.
+        await _messenger.track(() async {
+          final users = await _repository.listUsers().toList();
+          users.sort();
+          _users = users;
+          final result = _filter(users, _query);
 
-        final users = await _repository.listUsers().toList();
-        users.sort();
-        _users = users;
-        final result = _filter(users, _query);
-
-        setState(UsersState.loaded(currentUserId, result));
+          setState(UsersState.loaded(currentUserId, result));
+        });
       },
       error: (error, stackTrace) async {
-        setError('Error on loading users', error, stackTrace);
+        reportFailure('Users | list | failed', error, stackTrace: stackTrace, caption: 'Error on loading users');
         // Unblock [getUserInfo] waiters parked on `firstWhere(loaded)` — else a failed load wedges
         // them forever.
         setState(UsersState.loaded(state.userId, state.users));
-      },
-      // Paired: the empty-id early return must not emit an unmatched `done`.
-      done: () async {
-        if (progress) setProgressDone();
       },
     );
   }

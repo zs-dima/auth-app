@@ -13,7 +13,6 @@ sealed class AppEnvironmentModel with _$AppEnvironmentModel {
     @JsonKey(name: EnvironmentVariables.appVersion) String? version,
     @JsonKey(name: EnvironmentVariables.environment) String? environment,
     @JsonKey(name: EnvironmentVariables.sentryDsn) String? sentryDsn,
-    @JsonKey(name: EnvironmentVariables.aiKey) String? aiKey,
     // --- DATABASE --- //
     @JsonKey(name: EnvironmentVariables.dropDatabase) bool? dropDatabase,
     @JsonKey(name: EnvironmentVariables.databaseName) String? databaseName,
@@ -21,7 +20,6 @@ sealed class AppEnvironmentModel with _$AppEnvironmentModel {
     // --- API --- //
     @JsonKey(name: EnvironmentVariables.authAddress) String? authAddress,
     @JsonKey(name: EnvironmentVariables.apiAddress) String? apiAddress,
-    @JsonKey(name: EnvironmentVariables.whisperAddress) String? whisperAddress,
     // --- STORAGE --- //
     @JsonKey(name: EnvironmentVariables.s3Url) String? s3Url,
   }) = _AppEnvironmentModel;

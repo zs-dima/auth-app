@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ui/src/inputs/popup/popup.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 typedef ChipValueChanged<T> = void Function(List<T> value, bool selected);
 
@@ -56,13 +55,9 @@ class ChipsWidget<T> extends StatelessWidget {
   final bool itemShowCheckmark;
 
   @override
-  Widget build(BuildContext context) => CaseWrapWidget(
-    getWrapper: largeScreen
-        ? (child) => LabelWidget(
-            label: title ?? decoration?.labelText ?? '',
-            child: child,
-          )
-        : null,
+  Widget build(BuildContext context) => LabelWidget(
+    // Constant shape: the label is a slot, not a wrapper that appears at a breakpoint.
+    label: largeScreen ? (title ?? decoration?.labelText ?? '') : '',
     child: InputDecorator(
       decoration: largeScreen
           ? (decoration ?? const InputDecoration()).applyDefaults(InputDecorations.flatTheme).copyWith(labelText: '')

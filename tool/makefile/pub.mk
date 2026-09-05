@@ -1,4 +1,4 @@
-.PHONY: version doctor clean get fluttergen l10n build_runner codegen upgrade upgrade-major outdated dependencies format analyze check
+.PHONY: version doctor clean get fluttergen l10n l10n-translate build_runner codegen upgrade upgrade-major outdated dependencies format analyze check
 
 # Check flutter version
 version:
@@ -22,15 +22,20 @@ fluttergen:
 	@dart pub global activate flutter_gen
 	@fluttergen -c pubspec.yaml
 
-# Generate localization from the Google Sheet (sheety_localization → gen-l10n).
+# Generate localization from the Google Sheet (sheety_localization → gen-l10n), then verify the
+# round trip. The sheet id is not repeated here: `tool/generate.dart` reads
+# `packages/localization/l10n_tool.json`, the same file the offline gate reads.
 # Requires packages/localization/credentials.json (service account; never committed).
-SHEET_ID ?= 1FAbQS3nA5czjBBayC3ms-DqkkdskCPLtrh2FDZ1P0lg
+L10N_MODEL ?= gpt-5.5
 l10n:
-	@test -f packages/localization/credentials.json || \
-		{ echo "packages/localization/credentials.json is missing — see README (Localization)"; exit 1; }
-	@cd packages/localization && \
-		dart run sheety_localization:generate -c credentials.json -s $(SHEET_ID) --prefix=app --format --include-empty && \
-		dart run tool/verify_l10n.dart
+	@cd packages/localization && dart run tool/generate.dart
+
+# AI-fill the untranslated sheet cells (needs packages/localization/openai.key; never committed).
+# Then run `make l10n` to pull + verify the result.
+l10n-translate:
+	@test -f packages/localization/openai.key || \
+		{ echo "packages/localization/openai.key is missing — see README (Localization)"; exit 1; }
+	@cd packages/localization && dart run tool/generate.dart --translate --model=$(L10N_MODEL)
 
 # Build runner
 build_runner:

@@ -1,19 +1,30 @@
-#!/bin/bash
+#!/bin/sh
+# POSIX on purpose: the runtime image is nginx:alpine, which has no bash — the
+# previous #!/bin/bash + `compgen -e` version could never start there.
+#
+# ALLOWLIST on purpose: the container's environment can hold injected secrets,
+# and web-env's output is a PUBLICLY SERVED file. Only the variables the app
+# reads are passed; web-env applies the same allowlist again as defense in
+# depth. Keep this list in sync with tool/web_env.dart `kAllowedKeys`.
+set -eu
 
-# Initialize an empty string to hold the environment variables
-env_string=""
+write_env() {
+  set --
+  for var in APP_VERSION APP_ENVIRONMENT SENTRY_DSN DB_DROP DB_NAME DB_IN_MEMORY \
+             APP_AUTH_ADDRESS APP_API_ADDRESS S3_URL; do
+    val=$(eval "printf '%s' \"\${$var:-}\"")
+    # APP_VERSION passes through even when empty: web-env then derives it from
+    # version.json. Everything else empty is skipped (cannot override a define).
+    if [ -n "$val" ] || [ "$var" = "APP_VERSION" ]; then
+      set -- "$@" "$var=$val"
+    fi
+  done
+  # Arguments are individually quoted — values with spaces or '=' survive
+  # (the old unquoted $env_string word-split them).
+  /app/bin/web-env "$@"
+}
 
-# Iterate over the environment variables
-for var in $(compgen -e); do
-  # If the variable has a non-empty value
-  if [ -n "${!var}" ]; then
-    # Append the variable and its value to the string
-    env_string+="${var}=${!var} "
-  fi
-done
+write_env
 
-# Pass the string of environment variables to /app/bin/web-env
-/app/bin/web-env $env_string
-
-# This will exec the CMD from Dockerfile
+# Exec the image CMD (nginx).
 exec "$@"

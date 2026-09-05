@@ -1,48 +1,57 @@
+import 'package:auth_app/_core/log/telemetry.dart';
+import 'package:auth_app/_core/message/ui_messenger.dart';
+import 'package:auth_app/_core/message/widget/message_details_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:ui/ui.dart' show AppTone;
+
+/// The widget-layer twin of the pipeline's tone.
+AppTone _tone(ToastTone tone) => switch (tone) {
+  .info => .info,
+  .ok => .ok,
+  .alert => .alert,
+};
 
 extension BuildContextX on BuildContext {
-  void showError(String message) {
-    final theme = Theme.of(this);
-
+  /// Shows [message] as a snack bar.
+  ///
+  /// [withDetails] adds a Details action carrying the event behind the message —
+  /// the caller decides, because in production the user must never be shown a
+  /// stack trace.
+  void showUiMessage(UiMessage message, {bool withDetails = false}) {
+    final scheme = Theme.of(this).colorScheme;
+    final tone = _tone(message.tone);
+    final foreground = tone.foreground(scheme);
+    final event = message.details;
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
-        backgroundColor: theme.colorScheme.error,
+        backgroundColor: tone.background(scheme),
+        duration: const Duration(seconds: 4),
         content: Row(
-          children: [
+          spacing: 12,
+          children: <Widget>[
+            // The icon is inside the content, in the FOREGROUND colour: it used to be painted in
+            // `colorScheme.error` on an `error` background, which is the same colour — an invisible
+            // warning sign on every error toast.
+            Icon(tone.icon, color: foreground),
             Expanded(
-              child: Text(message),
-            ),
-            Icon(
-              Icons.warning,
-              color: theme.colorScheme.error,
+              child: Text(message.text, style: TextStyle(color: foreground)),
             ),
           ],
         ),
+        action: withDetails && event != null
+            ? SnackBarAction(
+                label: 'Details',
+                textColor: foreground,
+                onPressed: () => MessageDetailsDialog.show(this, event),
+              )
+            : null,
       ),
     );
   }
 
-  void showInfo(String message, {Color? backgroundColor}) {
-    ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(
-        backgroundColor: backgroundColor,
-        content: Text(message),
-      ),
-    );
-  }
-
-  void showProgress(String message) {
-    ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Expanded(
-              child: Text(message),
-            ),
-            const CircularProgressIndicator(),
-          ],
-        ),
-      ),
-    );
-  }
+  /// Shows a failure the user should see.
+  void showError(String message, {LogEvent? details, bool withDetails = false}) => showUiMessage(
+    UiMessage(tone: .alert, text: message, details: details),
+    withDetails: withDetails,
+  );
 }

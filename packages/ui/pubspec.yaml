@@ -41,7 +41,9 @@ dev_dependencies:
 
   # Packages
   lints_tool:
-    path: ../tool/lints_tool
+    git:
+      url: https://github.com/zs-dima/lints_tool.git
+      ref: v1.0.1
 
 flutter:
   uses-material-design: true

@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/core.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/theme/extension/theme_sizes.dart';
 import 'package:auth_app/_core/widget/form/switch_form_field.dart';
+import 'package:auth_app/authentication/authenticated_scope.dart';
 import 'package:auth_app/settings/settings_scope.dart';
 import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/upload_image_controller.dart';
@@ -51,11 +52,12 @@ class _UserEditWidgetState extends State<UserEditWidget> {
     super.initState();
     _user = widget.user;
 
-    _avatarController = context.dependencies.avatarController;
+    _avatarController = AuthenticatedScope.avatarControllerOf(context);
 
     _imageController = UploadImageController(
-      messageController: context.dependencies.messageController,
-      imageInfo: ImageInfo(url: _avatarController.getUrl(_user.id)),
+      // In create mode `_user.id` is a throwaway placeholder, so there is nothing to load for it —
+      // seeding its URL would request an avatar that cannot exist.
+      imageInfo: ImageInfo(url: widget.createNewUser ? '' : (_avatarController.getUrl(_user.id) ?? '')),
     );
 
     // The constructor probe emits LOADING, so this filter passes user actions only.
@@ -67,7 +69,7 @@ class _UserEditWidgetState extends State<UserEditWidget> {
 
         if (widget.createNewUser) {
           // No server-side user yet — UsersScope uploads the pick after creation.
-          _pendingAvatar = image != null ? state.imageInfo : null;
+          _pendingAvatar = image == null ? null : state.imageInfo;
           return;
         }
 
@@ -252,7 +254,10 @@ class _UserEditWidgetState extends State<UserEditWidget> {
                                       child: const Text('Change password'),
                                       onPressed: () {
                                         HapticFeedback.mediumImpact().ignore();
-                                        context.showInfo('Disabled for the demo version');
+                                        log('Users | edit | refused in demo')
+                                            .description('Disabled for the demo version')
+                                          ..info()
+                                          ..toast();
                                       },
                                     ),
                                 ],

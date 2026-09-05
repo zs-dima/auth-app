@@ -1,6 +1,7 @@
 abstract final class EnvironmentVariables {
   static const sentryDsn = 'SENTRY_DSN';
-  static const aiKey = 'AI_KEY';
+  // AI_KEY / WHISPER_ADDRESS removed 2026-09-02: zero consumers in lib/, yet the live key was
+  // const-folded into every artifact via String.fromEnvironment (docs/decisions.md).
 
   // --- APP --- //
 
@@ -27,5 +28,4 @@ abstract final class EnvironmentVariables {
 
   static const authAddress = 'APP_AUTH_ADDRESS';
   static const apiAddress = 'APP_API_ADDRESS';
-  static const whisperAddress = 'WHISPER_ADDRESS';
 }

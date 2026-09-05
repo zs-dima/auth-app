@@ -10,8 +10,9 @@ void main() {
       final events = <AuthenticationState>[];
       final sub = handler.listen(events.add);
 
-      handler.handleAuthenticated();
-      handler.handleAuthenticationError();
+      handler
+        ..handleAuthenticated()
+        ..handleAuthenticationError();
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
 

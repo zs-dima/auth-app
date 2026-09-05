@@ -24,7 +24,7 @@ void editUserDialog(
               .size
               .isPhone //
           ? .zero
-          : const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+          : const .symmetric(horizontal: 40.0, vertical: 24.0),
       titlePadding: EdgeInsets.zero,
       title: DecoratedBox(
         decoration: BoxDecoration(

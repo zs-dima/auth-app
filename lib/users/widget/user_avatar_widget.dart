@@ -1,9 +1,8 @@
-import 'package:auth_app/_core/core.dart';
+import 'package:auth_app/authentication/authenticated_scope.dart';
 import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 class UserAvatarWidget extends StatelessWidget {
   const UserAvatarWidget({
@@ -34,11 +33,12 @@ class UserAvatarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = _getInitials(user.name);
 
-    final avatarController = context.dependencies.avatarController;
+    final avatarController = AuthenticatedScope.avatarControllerOf(context);
 
     return StateConsumer<AvatarController, AvatarState>(
       controller: avatarController,
       builder: (_, state, __) {
+        // Null once the avatar is known to be missing — the initials then render without any request.
         final avatarUrl = avatarController.getUrl(user.id);
         return _AvatarCircle(
           key: ValueKey(avatarUrl),
@@ -46,6 +46,7 @@ class UserAvatarWidget extends StatelessWidget {
           initials: initials,
           size: size,
           backgroundColor: _getBackgroundColor(initials),
+          onImageError: (error) => avatarController.recordLoadError(user.id, error),
           onPressed: onPressed,
         );
       },
@@ -53,13 +54,14 @@ class UserAvatarWidget extends StatelessWidget {
   }
 }
 
-class _AvatarCircle extends StatefulWidget {
+class _AvatarCircle extends StatelessWidget {
   const _AvatarCircle({
     super.key,
     required this.avatarUrl,
     required this.initials,
     required this.size,
     required this.backgroundColor,
+    required this.onImageError,
     this.onPressed,
   });
 
@@ -67,41 +69,41 @@ class _AvatarCircle extends StatefulWidget {
   final String initials;
   final int size;
   final Color backgroundColor;
+  final ValueChanged<Object> onImageError;
   final VoidCallback? onPressed;
 
   @override
-  State<_AvatarCircle> createState() => _AvatarCircleState();
-}
-
-class _AvatarCircleState extends State<_AvatarCircle> {
-  bool _imageLoadFailed = false;
-
-  @override
-  void didUpdateWidget(_AvatarCircle oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.avatarUrl != widget.avatarUrl) {
-      _imageLoadFailed = false;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final showImage = widget.avatarUrl != null && !_imageLoadFailed;
+    final diameter = size * 2.0;
 
     return GestureDetector(
-      onTap: widget.onPressed,
+      onTap: onPressed,
       child: CircleAvatar(
-        radius: widget.size.toDouble(),
-        backgroundColor: widget.backgroundColor,
-        foregroundImage: showImage ? NetworkImage(widget.avatarUrl!) : null,
-        onForegroundImageError: showImage
-            ? (_, __) => SchedulerBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() => _imageLoadFailed = true);
-              })
-            : null,
-        child: Text(
-          widget.initials,
-          style: const TextStyle(color: Colors.white),
+        radius: size.toDouble(),
+        backgroundColor: backgroundColor,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Text(initials, style: const TextStyle(color: Colors.white)),
+            // Covers the initials once decoded, so a failed load simply leaves them visible.
+            // `errorBuilder` — not `foregroundImage` — registers the image stream listener with
+            // `reportErrors: false`, so the 404 of a user without an avatar never reaches
+            // `FlutterError` (and Sentry), not even when this tile is disposed mid-request.
+            if (avatarUrl case final url?)
+              ClipOval(
+                child: Image(
+                  image: NetworkImage(url),
+                  width: diameter,
+                  height: diameter,
+                  fit: .cover,
+                  excludeFromSemantics: true,
+                  errorBuilder: (_, error, __) {
+                    onImageError(error);
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );

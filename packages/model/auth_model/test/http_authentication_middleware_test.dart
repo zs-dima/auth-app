@@ -2,7 +2,7 @@ import 'package:auth_model/auth_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:http_client/http_client.dart';
+import 'package:http_kit/http_kit.dart';
 
 AccessCredentials _creds(String token) => AccessCredentials(
   accessToken: AccessToken(token: token, expiry: DateTime.now().toUtc().add(const Duration(hours: 1))),

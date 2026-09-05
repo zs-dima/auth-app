@@ -12,11 +12,17 @@ environment:
 dependencies:
   # Packages
   core_model:
-    path: ../../model/core_model
-  connect_model:
-    path: ../../model/connect_model
-  http_client:
-    path: ../../model/http_client
+    git:
+      url: https://github.com/zs-dima/core_model.git
+      ref: v0.1.0
+  connect_kit:
+    git:
+      url: https://github.com/zs-dima/connect_kit.git
+      ref: v0.1.0
+  http_kit:
+    git:
+      url: https://github.com/zs-dima/http_kit.git
+      ref: v0.1.0
 
   # SDK extensions
   meta: any
@@ -31,7 +37,7 @@ dependencies:
   json_annotation: ^4.12.0
 
   # API
-  connectrpc: ^1.0.0
+  connectrpc: ^2.0.0
   protobuf: ^6.0.0
 
 dev_dependencies:
@@ -47,4 +53,6 @@ dev_dependencies:
 
   # Lints
   lints_tool:
-    path: ../../tool/lints_tool
+    git:
+      url: https://github.com/zs-dima/lints_tool.git
+      ref: v1.0.1

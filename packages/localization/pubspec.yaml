@@ -19,10 +19,19 @@ dependencies:
   intl: any
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   lints_tool:
-    path: ../tool/lints_tool
-  sheety_localization: ^0.6.0
-  # Seeder only (tool/seed_sheet.dart).
+    git:
+      url: https://github.com/zs-dima/lints_tool.git
+      ref: v1.0.1
+  # The sheet -> ARB -> gen-l10n pipeline and its round-trip checks; `l10n_tool.json` is the
+  # shape it reads. It brings `sheety_localization` and the Sheets client with it.
+  l10n_tool:
+    git:
+      url: https://github.com/zs-dima/l10n_tool.git
+      ref: v0.1.1
+  # `tool/seed_sheet.dart` and `tool/verify_l10n.dart` write and read the sheet directly.
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
 

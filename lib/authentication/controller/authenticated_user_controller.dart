@@ -1,5 +1,4 @@
-import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/message/user_facing_error.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
@@ -15,14 +14,11 @@ sealed class AuthenticatedUserState with _$AuthenticatedUserState {
 }
 
 final class AuthenticatedUserController extends StateController<AuthenticatedUserState>
-    with SequentialControllerHandler, AppMessageControllerMixin {
+    with SequentialControllerHandler {
   AuthenticatedUserController({
     required this._usersController,
-    required AppMessageController messageController,
     super.initialState = const AuthenticatedUserState.loading(UserInfo.empty),
-  }) {
-    this.messageController = messageController;
-  }
+  });
 
   final UsersController _usersController;
 
@@ -44,10 +40,14 @@ final class AuthenticatedUserController extends StateController<AuthenticatedUse
           setState(const AuthenticatedUserState.loaded(UserInfo.empty));
       }
     },
-    error: (error, stackTrace) {
-      setError('Error on loading current user', error, stackTrace);
+    error: (error, stackTrace) async {
+      reportFailure(
+        'Users | current | load failed',
+        error,
+        stackTrace: stackTrace,
+        caption: 'Error on loading current user',
+      );
       setState(const AuthenticatedUserState.loaded(UserInfo.empty));
-      Error.throwWithStackTrace(error, stackTrace);
     },
     name: 'getUser',
   );

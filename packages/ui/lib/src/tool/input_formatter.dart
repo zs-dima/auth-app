@@ -82,7 +82,7 @@ class NumberTextInputFormatter extends TextInputFormatter {
   num? _tryParseNumber(String input) {
     try {
       return _format.parse(input);
-    } catch (_) {
+    } on Object {
       return null;
     }
   }

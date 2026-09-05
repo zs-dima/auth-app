@@ -6,7 +6,7 @@ import 'package:meta/meta.dart';
 /// Wraps `package:connectrpc`'s [ConnectException]/[Code] so callers of `IAuthenticationApi` /
 /// `IUsersApi` can classify failures (network vs auth vs server vs bad-request vs cancelled)
 /// WITHOUT importing `package:connectrpc`. Parallel to — but NOT interchangeable with —
-/// `http_client`'s `ApiClientException`: both share the `Cancelled`/`Network`/`Authentication`/
+/// `http_kit`'s `ApiClientException`: both share the `Cancelled`/`Network`/`Authentication`/
 /// `Request`/`Server` backbone, while HTTP additionally has `Internal`/`Timeout`, and [code] here
 /// is the raw RPC status as an `int` whereas HTTP's is a semantic `String`. The shared idea is
 /// transport-agnostic classification, not one identical vocabulary (A8). [code] is never the

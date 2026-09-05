@@ -1,5 +1,5 @@
 import 'package:auth_app/_core/model/dependencies.dart';
-import 'package:auth_app/authentication/controller/authenticated_user_controller.dart';
+import 'package:auth_app/authentication/authenticated_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
 import 'package:auth_app/impersonation/impersonate_scope.dart';
@@ -49,36 +49,36 @@ class AuthenticationScope extends StatefulWidget {
 /// State for widget AuthenticationScope.
 class _AuthenticationScopeState extends State<AuthenticationScope> {
   late final AuthenticationController _controller;
-  late final AuthenticatedUserController _userController;
 
   @override
   void initState() {
     super.initState();
     _controller = Dependencies.of(context).authenticationController;
-    _userController = Dependencies.of(context).authenticatedUserController;
   }
 
   @override
   Widget build(BuildContext context) => StateConsumer<AuthenticationController, AuthenticationState>(
     controller: _controller,
-    builder: (context, state, _) => StateConsumer<AuthenticatedUserController, AuthenticatedUserState>(
-      controller: _userController,
-      builder: (context, userInfoState, _) {
-        final userInfo = userInfoState.user;
-
-        return _InheritedAuthenticationScope(
-          scope: this,
-          controller: _controller,
-          authUser: state.user,
-          userInfo: userInfo,
-          child: ImpersonateScope(
-            authenticatedUser: userInfo,
-            child: UsersScope(
-              child: widget.child,
-            ),
+    builder: (context, state, _) => AuthenticatedScope(
+      // The identity IS the key: a sign-out drops to the empty id and disposes the session's
+      // controllers, a sign-in mints a new set. Nothing per-user survives the change.
+      key: ValueKey<UserId>(switch (state.user) {
+        AuthenticatedUser(:final userId) => userId,
+        _ => UserIdX.empty,
+      }),
+      authUser: state.user,
+      builder: (context, userInfo) => _InheritedAuthenticationScope(
+        scope: this,
+        controller: _controller,
+        authUser: state.user,
+        userInfo: userInfo,
+        child: ImpersonateScope(
+          authenticatedUser: userInfo,
+          child: UsersScope(
+            child: widget.child,
           ),
-        );
-      },
+        ),
+      ),
     ),
   );
 }

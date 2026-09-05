@@ -1,151 +1,45 @@
-import 'dart:async';
-import 'dart:io' as io;
-
-import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/_core/message/app_message_scope.dart';
-import 'package:auth_app/_core/message/controller/message_controller.dart';
-import 'package:auth_app/_core/widget/window_scope.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
-class ProgressOverlay extends StatefulWidget {
-  const ProgressOverlay({super.key, required this.child});
+/// {@template progress_overlay}
+/// A thin bar across the top of [child] while anything is in flight.
+/// {@endtemplate}
+///
+/// Reads `UiMessenger.progress`, which is a COUNT: two overlapping operations
+/// show one bar, and the first to finish does not take it from the second.
+///
+/// A `Stack`, not an `OverlayEntry`. The entry version needed a post-frame
+/// callback, an intent flag to let a same-frame `done` veto a pending insert,
+/// `findRenderObject`/`localToGlobal` to place itself, a manual insert/remove
+/// lifecycle and a `try/catch` around the insert — and it could only be mounted
+/// under a `Navigator`, because `Overlay.of` throws without one. That ruled out
+/// the one place that owns the messenger: `AppMessageScope` sits in
+/// `MaterialApp.builder`, which Flutter builds ABOVE the Router. Rendering in
+/// place needs none of it and works at any depth.
+class ProgressOverlay extends StatelessWidget {
+  /// {@macro progress_overlay}
+  const ProgressOverlay({required this.child, super.key});
 
+  /// The subtree the bar is drawn over.
   final Widget child;
 
   @override
-  State<ProgressOverlay> createState() => _ProgressOverlayState();
-}
-
-class _ProgressOverlayState extends State<ProgressOverlay> {
-  OverlayEntry? _overlayEntry;
-
-  AppMessageController? _messageController;
-
-  StreamSubscription? _messageSubscription;
-
-  /// Intent flag: [_overlayEntry] is created a frame late, so a same-frame `done` must be able to
-  /// veto the pending insert.
-  bool _shouldShow = false;
-
-  void _subscribeMessages() {
-    _unsubscribeMessages();
-    _messageSubscription =
-        _messageController! //
-            .toStream()
-            .where((i) => i is AppProgressState && [AppProgress.started, AppProgress.done].contains(i.progress))
-            .map((i) => i as AppProgressState)
-            .listen(_updateProgressOverlay, cancelOnError: false);
-  }
-
-  void _unsubscribeMessages() {
-    _messageSubscription?.cancel();
-  }
-
-  void _updateProgressOverlay(AppProgressState progressState) {
-    if (!mounted) return;
-
-    switch (progressState.progress) {
-      case .started:
-        if (_shouldShow) return;
-        _shouldShow = true;
-        _createProgressOverlay();
-        break;
-
-      case .done:
-        _shouldShow = false;
-        _removeProgressOverlay();
-        break;
-    }
-  }
-
-  void _createProgressOverlay() {
-    _removeProgressOverlay();
-
-    assert(_overlayEntry == null, 'OverlayEntry should be null when creating a new one.');
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // `done` may have arrived while this callback was queued.
-      if (!mounted || !_shouldShow) return;
-
-      RenderBox? renderedWidget;
-      try {
-        final renderObject = context.findRenderObject();
-        if (renderObject is! RenderBox) return;
-        renderedWidget = renderObject;
-      } catch (_) {
-        // Widget became inactive, just return
-        return;
-      }
-
-      if (!renderedWidget.hasSize) return;
-
-      final renderedOffset = renderedWidget.localToGlobal(.zero);
-      final renderedSize = renderedWidget.size;
-
-      final padding = MediaQuery.paddingOf(context);
-
-      final windowTitleHeigh = (kIsWeb || io.Platform.isAndroid || io.Platform.isIOS)
-          ? 0
-          : (context.findAncestorWidgetOfExactType<WindowScope>()?.height ?? 0);
-
-      _overlayEntry = OverlayEntry(
-        builder: (context) => Positioned(
-          left: renderedOffset.dx,
-          top: renderedOffset.dy + padding.top - windowTitleHeigh,
-          height: renderedSize.height / 150,
-          width: renderedSize.width,
-          child: const LinearProgressIndicator(),
+  Widget build(BuildContext context) => Stack(
+    children: <Widget>[
+      child,
+      Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: SafeArea(
+          bottom: false,
+          child: ValueListenableBuilder<int>(
+            valueListenable: context.messenger.progress,
+            builder: (context, count, _) =>
+                count > 0 ? const LinearProgressIndicator(minHeight: 2) : const SizedBox.shrink(),
+          ),
         ),
-      );
-
-      try {
-        // Add the OverlayEntry to the Overlay.
-        Overlay.of(context, debugRequiredFor: widget).insert(_overlayEntry!);
-      } on Object catch (e, s) {
-        logger.e('Failed to insert Progress Overlay', error: e, stackTrace: s);
-        _removeProgressOverlay();
-      }
-    });
-  }
-
-  // Remove the OverlayEntry.
-  void _removeProgressOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry?.dispose();
-    _overlayEntry = null;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final messageController = context.message;
-    if (_messageController != messageController) {
-      _messageController = messageController;
-
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return; // torn down within the mount frame — do not resubscribe
-
-        _subscribeMessages();
-
-        // Restore current progress state.
-        if (messageController.state case final AppProgressState state) {
-          _updateProgressOverlay(state);
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _unsubscribeMessages();
-    _removeProgressOverlay();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
+      ),
+    ],
+  );
 }

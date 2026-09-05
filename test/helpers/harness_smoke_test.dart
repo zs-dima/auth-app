@@ -11,9 +11,9 @@ void main() {
     test('TestDependencies fails fast with a named error on an unassigned field', () {
       final dependencies = TestDependencies();
       expect(
-        () => dependencies.usersController,
+        () => dependencies.usersRepository,
         throwsA(
-          isA<Error>().having((e) => e.toString(), 'message', contains('usersController')),
+          isA<Error>().having((e) => e.toString(), 'message', contains('usersRepository')),
         ),
       );
     });

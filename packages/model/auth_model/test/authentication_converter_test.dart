@@ -4,7 +4,7 @@ import 'package:auth_model/src/connect/authentication_converter.dart';
 import 'package:auth_model/src/model/credentials/auth_result.dart';
 import 'package:auth_model/src/model/role/role.dart';
 import 'package:auth_model/src/proto/auth/v1/auth.pb.dart' as rpc;
-import 'package:connect_model/connect_model.dart' as core;
+import 'package:auth_model/src/proto/core/v1/core.pb.dart' as core;
 import 'package:flutter_test/flutter_test.dart';
 
 /// Minimal decodable JWT: only the payload segment is parsed (`AccessToken.fromJwtToken` reads `exp`).

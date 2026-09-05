@@ -7,8 +7,9 @@ import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_info.dart';
 import 'package:auth_model/src/proto/auth/v1/auth.pb.dart' as rpc;
+import 'package:auth_model/src/proto/core/v1/core.pb.dart' as core;
+import 'package:auth_model/src/proto/core/v1/uuid_x.dart';
 import 'package:auth_model/src/proto/users/v1/users.pb.dart' as users;
-import 'package:connect_model/connect_model.dart' as core;
 
 // =============================================================================
 // USER ROLE MAPPING

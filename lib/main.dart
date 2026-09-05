@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:auth_app/_core/app_tree.dart';
-import 'package:auth_app/_core/log/logger.dart';
 import 'package:auth_app/initialization/app_zone.dart';
 import 'package:auth_app/initialization/initialization.dart';
 import 'package:auth_app/initialization/widget/app_error.dart';
@@ -41,7 +40,9 @@ void main() => appZone(() async {
           onRetry: () => launch(deferFirstFrame: false),
         ),
       );
-      logger.e(error, stackTrace: stackTrace);
+      // Deliberately NOT logged here: `composeDependencies` reported the failing step while the
+      // journal was still attached, and this call site had the error object as its BODY — which
+      // grouped every boot failure into its own crash-reporter issue.
     },
   ).ignore();
   launch();

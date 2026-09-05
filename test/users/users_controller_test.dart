@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/message/ui_messenger.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
 import 'package:auth_model/auth_model.dart';
@@ -46,8 +46,7 @@ void main() {
 
 User _user(UserId id) => .new(id: id, name: 'User $id', email: '$id@mail.com', role: .user, status: .active);
 
-UsersController _buildController(IUsersRepository repository) =>
-    .new(repository: repository, messageController: AppMessageController());
+UsersController _buildController(IUsersRepository repository) => .new(repository: repository, messenger: UiMessenger());
 
 final class _FakeUsersRepository implements IUsersRepository {
   _FakeUsersRepository({required this.users});

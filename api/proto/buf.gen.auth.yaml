@@ -1,6 +1,6 @@
 # Code generation for auth/v1 + users/v1 → packages/model/auth_model/lib/src/proto
 # `*.pb.dart` messages + `*.connect.client.dart` / `*.connect.spec.dart` Connect stubs.
-# Static proxy files (not generated): core/v1/ re-exports types from connect_model;
+# Static proxy files (not generated): core/v1/uuid_x.dart (hand-written Guid <-> UUID conversions);
 # google/protobuf/ re-exports the WKTs bundled with package:protobuf (the connect plugin
 # emits relative google/protobuf imports while the message plugin uses the bundled WKTs).
 version: v2

@@ -1,7 +1,7 @@
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
 // VoidCallback here is the single platform-neutral typedef from core_model (NOT dart:ui),
-// re-exported by http_client — so this middleware stays usable off the Flutter UI isolate.
-import 'package:http_client/http_client.dart';
+// re-exported by http_kit — so this middleware stays usable off the Flutter UI isolate.
+import 'package:http_kit/http_kit.dart';
 import 'package:meta/meta.dart';
 
 /// {@template http_authentication_middleware}

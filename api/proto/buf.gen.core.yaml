@@ -1,8 +1,8 @@
-# Code generation for core/v1 → packages/model/connect_model/lib/src/proto
+# Code generation for core/v1 → packages/model/auth_model/lib/src/proto
 # (messages only — core/v1 declares no services, so the connect plugin emits nothing for it)
 version: v2
 plugins:
   - remote: buf.build/protocolbuffers/dart:v25.0.0
-    out: packages/model/connect_model/lib/src/proto
+    out: packages/model/auth_model/lib/src/proto
   - remote: buf.build/connectrpc/dart:v1.0.0
-    out: packages/model/connect_model/lib/src/proto
+    out: packages/model/auth_model/lib/src/proto

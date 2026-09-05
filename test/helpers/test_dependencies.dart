@@ -10,7 +10,7 @@ import 'package:auth_app/_core/model/dependencies.dart';
 /// and assignments stay type-checked:
 ///
 /// ```dart
-/// final dependencies = TestDependencies()..usersController = fakeUsersController;
+/// final dependencies = TestDependencies()..usersRepository = fakeUsersRepository;
 /// await tester.pumpApp(const UsersScreen(), dependencies: dependencies);
 /// ```
 final class TestDependencies extends Dependencies {}

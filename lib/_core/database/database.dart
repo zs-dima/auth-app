@@ -2,6 +2,7 @@
 
 import 'package:auth_app/_core/database/platform/database.dart';
 import 'package:auth_app/_core/database/queries.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart' show WidgetsBindingObserver, WidgetsBinding, AppLifecycleState;
 import 'package:meta/meta.dart';
@@ -36,11 +37,12 @@ abstract interface class IKeyValueStorage {
 }
 
 @DriftDatabase(
+  // characteristic.drift (generic JSON-doc store) and settings.drift were removed 2026-09-02:
+  // dead since birth, zero readers/writers (storage doctrine: a table appears with its first
+  // consumer). Existing installs drop them in the v2 rung below.
   include: <String>{
     'ddl/kv.drift',
-    'ddl/characteristic.drift',
     'ddl/log.drift',
-    'ddl/settings.drift',
   },
   tables: <Type>[],
   daos: <Type>[],
@@ -102,12 +104,10 @@ class Database extends _$Database
          ),
        );
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
-  MigrationStrategy get migration => DatabaseMigrationStrategy(
-    database: this,
-  );
+  MigrationStrategy get migration => const DatabaseMigrationStrategy();
 }
 
 /// Handles database migrations by delegating work to [OnCreate] and [OnUpgrade]
@@ -116,12 +116,7 @@ class Database extends _$Database
 class DatabaseMigrationStrategy implements MigrationStrategy {
   /// Construct a migration strategy from the provided [onCreate] and
   /// [onUpgrade] methods.
-  const DatabaseMigrationStrategy({
-    required Database database,
-  }) : _db = database;
-
-  /// Database to use for migrations.
-  final Database _db;
+  const DatabaseMigrationStrategy();
 
   /// Executes when the database is opened for the first time.
   @override
@@ -131,11 +126,49 @@ class DatabaseMigrationStrategy implements MigrationStrategy {
 
   /// Executes when the database has been opened previously, but the last access
   /// happened at a different [GeneratedDatabase.schemaVersion].
-  /// Schema version upgrades and downgrades will both be run here.
+  ///
+  /// A REAL versioned ladder — the template body was `createAll()` with no version dispatch,
+  /// which silently does nothing for an existing install on the first schema bump. The
+  /// `default: throw` is the point: shipping a schema version without writing its rung must
+  /// fail loudly in the first debug run, not corrupt quietly in the field.
   @override
   OnUpgrade get onUpgrade => (m, from, to) async {
-    await m.createAll();
-    return _update(m, from, to);
+    if (from > to) {
+      throw StateError('Database downgrade from v$from to v$to is not supported');
+    }
+    for (var target = from + 1; target <= to; target++) {
+      switch (target) {
+        case 2:
+          // 2026-09-02: drop the dead-since-birth tables (characteristic doc-store, settings
+          // shadow table, log-prefix search index). DROP TABLE takes their indexes and
+          // triggers with them; IF EXISTS keeps the rung idempotent.
+          await m.database.customStatement('DROP TABLE IF EXISTS characteristic_tbl;');
+          await m.database.customStatement('DROP TABLE IF EXISTS settings_tbl;');
+          await m.database.customStatement('DROP TABLE IF EXISTS log_prefix_tbl;');
+
+        case 3:
+          // 2026-09-03: the journal stores an event, not a sentence — its
+          // attributes and the launch that produced it become columns.
+          //
+          // `level` changed MEANING in the same rung: 0-6 (`package:l`, descending, with `error`
+          // and `v1` both 1) became the OpenTelemetry severity number, 1-21 ascending. No data
+          // migration goes with it, and that is deliberate rather than forgotten: the row writer
+          // was commented out in every commit that ever had it (`git log -S LogTblCompanion.insert`
+          // finds one, already commented), so no released build wrote a row on the old scale.
+          // A remap would be guesswork over an ambiguous scale, applied to nothing.
+          await m.database.customStatement('ALTER TABLE log_tbl ADD COLUMN meta TEXT;');
+          await m.database.customStatement('ALTER TABLE log_tbl ADD COLUMN run_id TEXT;');
+
+        default:
+          await _missingMigration(target);
+      }
+    }
+    // AFTER the ladder, so the row means what it says. Logged before it, this line claimed
+    // "applied" over a rung that then threw — and over a downgrade that is refused outright.
+    // The first journal row of the launch after an upgrade: without it the only trace of a
+    // migration was `AppMigrator`'s version line, which says what the APP moved between, not
+    // what the schema did.
+    log.i('Database | migrate | applied', meta: <String, Object?>{'db.from': from, 'db.to': to});
   };
 
   /// Executes after the database is ready to be used (ie. it has been opened
@@ -146,10 +179,8 @@ class DatabaseMigrationStrategy implements MigrationStrategy {
   OnBeforeOpen get beforeOpen =>
       (details) => Future.value();
 
-  /// https://moor.simonbinder.eu/docs/advanced-features/migrations/
-  static Future<void> _update(Migrator m, int from, int to) async {
-    await m.createAll();
-  }
+  static Future<void> _missingMigration(int target) async =>
+      throw StateError('No migration to schema v$target — write the rung before bumping schemaVersion');
 }
 
 mixin _DatabaseKeyValueMixin on _$Database implements IKeyValueStorage {

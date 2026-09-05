@@ -270,6 +270,9 @@ class DropdownChipsFilterState<T> extends State<DropdownChipsFilter<T>> {
     return widget.intrinsicWidth
         ? ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 250.0),
+            // Same as the suggestions popup: the chip field's natural width is the only width
+            // there is, and the pass is paid once on open.
+            // layout-check: ignore intrinsic
             child: IntrinsicWidth(child: shortcutsWidget),
           )
         : shortcutsWidget;

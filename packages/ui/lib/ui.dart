@@ -26,7 +26,7 @@ export 'src/tool/dialog.dart';
 export 'src/tool/file_mime_type.dart';
 export 'src/tool/input_formatter.dart';
 export 'src/tool/screen.dart';
+export 'src/tool/tone.dart';
 export 'src/tool/validators.dart';
 export 'src/tool/window_size.dart';
-export 'src/widgets/case_wrap_widget.dart';
 export 'src/widgets/disabled_widget.dart';

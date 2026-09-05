@@ -1,3 +1,4 @@
+import 'package:auth_app/_core/message/user_facing_error.dart';
 import 'package:auth_app/_core/theme/model/app_theme.dart';
 import 'package:auth_app/settings/data/settings_repository.dart';
 import 'package:control/control.dart';
@@ -35,20 +36,10 @@ sealed class SettingsState with _$SettingsState {
     double? textScale,
   }) = _ProcessingSettingsState;
 
-  /// Error state for the [SettingsController].
-  const factory SettingsState.error({
-    /// The error message.
-    required Object cause,
-
-    /// The current locale.
-    Locale? locale,
-
-    /// The current theme mode.
-    AppTheme? appTheme,
-
-    /// Application text scale
-    double? textScale,
-  }) = _ErrorSettingsState;
+  // No `error` state. There was one, and nothing rendered it — and `done:` replaced it with
+  // `idle` on the next microtask anyway, so a failed write was invisible twice over. A settings
+  // write that fails now does the two things that are actually useful: it tells the user
+  // (`reportFailure`) and it puts the control back where it was.
 }
 
 final class SettingsController extends StateController<SettingsState> with SequentialControllerHandler {
@@ -61,77 +52,70 @@ final class SettingsController extends StateController<SettingsState> with Seque
 
   void updateTheme(AppTheme appTheme) => handle(
     () async {
-      setState(
-        SettingsState.processing(
-          appTheme: state.appTheme,
-          locale: state.locale,
-          textScale: state.textScale,
-        ),
-      );
-      await _repository.setThemeColor(appTheme.seed);
-      await _repository.setThemeMode(appTheme.mode);
+      final (:locale, :textScale, appTheme: previous) = _snapshot;
+      setState(SettingsState.processing(appTheme: previous, locale: locale, textScale: textScale));
+      try {
+        await _repository.setThemeColor(appTheme.seed);
+        await _repository.setThemeMode(appTheme.mode);
+      } on Object {
+        // The success state used to be set in `done:`, which runs whether the write succeeded or
+        // not: a theme that never reached storage stayed on screen until the next launch undid it.
+        setState(SettingsState.idle(appTheme: previous, locale: locale, textScale: textScale));
+        rethrow;
+      }
+      setState(SettingsState.idle(appTheme: appTheme, locale: locale, textScale: textScale));
     },
-    error: (error, _) async => setState(
-      SettingsState.error(
-        appTheme: state.appTheme,
-        locale: state.locale,
-        textScale: state.textScale,
-        cause: error,
-      ),
-    ),
-    done: () async => setState(
-      SettingsState.idle(appTheme: appTheme, locale: state.locale, textScale: state.textScale),
-    ),
+    error: (error, stackTrace) async => _failed('theme', error, stackTrace),
     name: 'updateTheme',
   );
 
   void updateLocale(Locale locale) => handle(
     () async {
-      setState(
-        SettingsState.processing(
-          appTheme: state.appTheme,
-          locale: state.locale,
-          textScale: state.textScale,
-        ),
-      );
-      await _repository.setLocale(locale);
+      final (locale: previous, :textScale, :appTheme) = _snapshot;
+      setState(SettingsState.processing(appTheme: appTheme, locale: previous, textScale: textScale));
+      try {
+        await _repository.setLocale(locale);
+      } on Object {
+        setState(SettingsState.idle(appTheme: appTheme, locale: previous, textScale: textScale));
+        rethrow;
+      }
+      setState(SettingsState.idle(appTheme: appTheme, locale: locale, textScale: textScale));
     },
-    error: (error, _) async => setState(
-      SettingsState.error(
-        appTheme: state.appTheme,
-        locale: state.locale,
-        textScale: state.textScale,
-        cause: error,
-      ),
-    ),
-    done: () async => setState(
-      SettingsState.idle(appTheme: state.appTheme, locale: locale, textScale: state.textScale),
-    ),
+    error: (error, stackTrace) async => _failed('locale', error, stackTrace),
     name: 'updateLocale',
   );
 
   void updateTextScale(double textScale) => handle(
     () async {
-      setState(
-        SettingsState.processing(
-          appTheme: state.appTheme,
-          locale: state.locale,
-          textScale: state.textScale,
-        ),
-      );
-      await _repository.setTextScale(textScale);
+      final (:locale, textScale: previous, :appTheme) = _snapshot;
+      setState(SettingsState.processing(appTheme: appTheme, locale: locale, textScale: previous));
+      try {
+        await _repository.setTextScale(textScale);
+      } on Object {
+        setState(SettingsState.idle(appTheme: appTheme, locale: locale, textScale: previous));
+        rethrow;
+      }
+      setState(SettingsState.idle(appTheme: appTheme, locale: locale, textScale: textScale));
     },
-    error: (error, _) async => setState(
-      SettingsState.error(
-        appTheme: state.appTheme,
-        locale: state.locale,
-        textScale: state.textScale,
-        cause: error,
-      ),
-    ),
-    done: () async => setState(
-      SettingsState.idle(appTheme: state.appTheme, locale: state.locale, textScale: textScale),
-    ),
+    error: (error, stackTrace) async => _failed('textScale', error, stackTrace),
     name: 'updateTextScale',
+  );
+
+  /// The three values, so a handler can restore what it found on a failed write.
+  ({Locale? locale, double? textScale, AppTheme? appTheme}) get _snapshot =>
+      (locale: state.locale, textScale: state.textScale, appTheme: state.appTheme);
+
+  /// One report for a settings write that did not land.
+  ///
+  /// Storage failing is a condition, not a defect (a full disk, a revoked
+  /// keychain entry), so it is a `warn` and does not file an issue — but the
+  /// user must be told, because the control has just snapped back.
+  void _failed(String key, Object error, StackTrace stackTrace) => reportFailure(
+    'Settings | save | failed',
+    error,
+    stackTrace: stackTrace,
+    caption: 'Could not save your settings.',
+    meta: <String, Object?>{'app.settings.key': key},
+    level: .warn,
   );
 }

@@ -172,39 +172,42 @@ class _HistorySearchWidgetState extends State<_HistorySearchWidget> {
         ),
       ),
       Expanded(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ListView(
-            shrinkWrap: true,
-            padding: const .symmetric(horizontal: 8.0, vertical: 16.0),
-            itemExtent: 78,
-            children: <Widget>[
-              for (final entry in _filtered)
-                ListTile(
-                  shape: const RoundedRectangleBorder(borderRadius: .all(.circular(16.0))),
-                  title: Text(
-                    entry.$1 ?? 'Octopus',
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: .bold,
-                    ),
+        // Full-bleed, with the insets INSIDE the scrollable.
+        //
+        // `Align(topCenter)` + `shrinkWrap: true` were doing what a plain list already does — a
+        // short list starts at the top of the space it is given — while costing a full measure of
+        // every entry on every layout and shrinking the viewport to the content, so the scrollbar
+        // stopped short of the panel's edge. `itemExtent` was already here, which is precisely
+        // what makes the builder form free.
+        child: ListView(
+          padding: const .symmetric(horizontal: 8.0, vertical: 16.0),
+          itemExtent: 78,
+          children: <Widget>[
+            for (final entry in _filtered)
+              ListTile(
+                shape: const RoundedRectangleBorder(borderRadius: .all(.circular(16.0))),
+                title: Text(
+                  entry.$1 ?? 'Octopus',
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.0,
+                    fontWeight: .bold,
                   ),
-                  subtitle: Text(
-                    entry.$2.state.location,
-                    maxLines: 2,
-                    overflow: .ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10.0,
-                      height: 1.5,
-                    ),
-                  ),
-                  isThreeLine: true,
-                  onTap: () => _select(entry.$2),
                 ),
-            ],
-          ),
+                subtitle: Text(
+                  entry.$2.state.location,
+                  maxLines: 2,
+                  overflow: .ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10.0,
+                    height: 1.5,
+                  ),
+                ),
+                isThreeLine: true,
+                onTap: () => _select(entry.$2),
+              ),
+          ],
         ),
       ),
     ],

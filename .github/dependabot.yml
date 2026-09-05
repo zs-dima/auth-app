@@ -4,18 +4,15 @@
 version: 2
 enable-beta-ecosystems: true
 updates:
-  # NB: packages/vendor/connectrpc is deliberately NOT listed — it is a pinned vendored copy
-  # (see its VENDORED.md); dependabot must not bump it.
+  # NB: the kit (core_model, telemetry, connect_kit, http_kit, lints_tool) arrives by git tag from
+  # github.com/zs-dima, and dependabot does not update pub git dependencies (dart-lang/pub#3382);
+  # those pins are bumped by hand.
   - package-ecosystem: "pub"
     directories:
       - "/"
       - "/packages/localization"
-      - "/packages/model/core_model"
-      - "/packages/model/connect_model"
       - "/packages/model/auth_model"
-      - "/packages/model/http_client"
       - "/packages/tool/core_tool"
-      - "/packages/tool/lints_tool"
       - "/packages/tool/converter/json_converter"
       - "/packages/ui"
     schedule:

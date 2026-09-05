@@ -20,9 +20,6 @@ class AppWidget extends StatefulWidget {
 }
 
 class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
-  // Disable recreate widget tree
-  final _builderKey = GlobalKey();
-
   // This global key is needed for [MaterialApp]
   // to work properly when Widgets Inspector is enabled.
   // static final _globalKey = GlobalKey();
@@ -33,8 +30,6 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
     final locale = SettingsScope.localeOf(context).locale;
     final textScale = SettingsScope.textScaleOf(context).textScale;
     final environment = context.dependencies.environment.type;
-
-    final mediaQueryData = MediaQuery.of(context);
 
     return MaterialApp.router(
       // key: _globalKey, // TODO
@@ -64,15 +59,8 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
       themeMode: theme.mode,
 
       // Scopes
-      builder: (context, child) => MediaQuery(
-        key: _builderKey,
-        // Override the default text scaling behavior.
-        // Can be a range: minScaleFactor: 1.0, maxScaleFactor: 2.0
-        data: mediaQueryData.copyWith(
-          // textScaler: TextScaler.noScaling,
-          textScaler: TextScaler.linear(mediaQueryData.textScaler.scale(textScale).clamp(0.5, 2.0)),
-        ),
-        child: WindowSizeScope(
+      builder: (context, child) {
+        final scopes = WindowSizeScope(
           child: WindowScope(
             title: Localization.of(context).appTitle,
             height: 24.0, // TODO
@@ -80,15 +68,44 @@ class _AppWidgetState extends State<AppWidget> with RouterStateMixin {
               enable: !environment.isProduction,
               octopus: router,
               child: AppMessageScope(
-                octopus: router,
                 child: AuthenticationScope(
                   child: child ?? const SizedBox.shrink(),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+
+        return _TextScale(scale: textScale, child: scopes);
+      },
+    );
+  }
+}
+
+/// Applies the user's text-size preference, and nothing else.
+///
+/// Its own widget so that the element depending on the full [MediaQuery] is a LEAF over the app:
+/// when the keyboard animates or the window rotates, this rebuilds and its `child` — an unchanged
+/// instance — is skipped by `Widget.canUpdate`. Building a whole `MediaQueryData` needs the whole
+/// of it, which is exactly why the dependency has to stop here.
+class _TextScale extends StatelessWidget {
+  const _TextScale({required this.scale, required this.child});
+
+  /// The stored multiplier from Settings.
+  final double scale;
+
+  /// The whole app.
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // layout-check: ignore media-query-of
+    final data = MediaQuery.of(context);
+    return MediaQuery(
+      // A range rather than a fixed scale: the OS preference still applies, the app's own
+      // multiplier rides on top of it, and the product of the two is clamped.
+      data: data.copyWith(textScaler: TextScaler.linear(data.textScaler.scale(scale).clamp(0.5, 2.0))),
+      child: child,
     );
   }
 }

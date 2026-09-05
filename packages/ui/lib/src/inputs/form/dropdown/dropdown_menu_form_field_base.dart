@@ -74,6 +74,9 @@ class DropdownMenuFormFieldBase<T> extends FormField<T> {
 }
 
 class _DropdownMenuFormFieldBaseState<T> extends FormFieldState<T> {
+  // Typed access to this State's own widget, not a widget factory: the Flutter SDK writes the
+  // same getter (`material/dropdown_menu_form_field.dart`), and the rule has no option for it.
+  // ignore: avoid-returning-widgets
   DropdownMenuFormFieldBase<T> get _dropdownMenuFormField => widget as DropdownMenuFormFieldBase<T>;
 
   @override

@@ -8,7 +8,11 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
   <!-- STRICT CSP (XSS → refresh-token defense): all scripts external, no 'unsafe-inline'.
-       gstatic is REQUIRED (release CanvasKit/skwasm CDN). Rationale + CDN-header checklist: web/README.md. -->
+       gstatic stays in script-src ONLY because sw 0.1.5's bootstrap loads CanvasKit CDN-first with
+       no opt-out: it fetch-probes gstatic (passes — connect-src allows https:) and then script-loads
+       from there; dropping gstatic here would pass the probe and block the script = broken app, NOT
+       a fallback to the local canvaskit/ that --no-web-resources-cdn already ships. Drop it when sw
+       grows a no-CDN toggle (docs/decisions.md 2026-09-02). Checklist: web/README.md. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; form-action 'self'">
 
   <meta name="description" content="Authentication demo app.">
@@ -62,7 +66,6 @@
 </head>
 <body>
   <!-- External (strict CSP forbids inline); must run before the deferred bootstrap. -->
-  <script src="launch_params.js"></script>
 
   <script defer data-sw-bootstrap src="bootstrap.js"></script>
 </body>

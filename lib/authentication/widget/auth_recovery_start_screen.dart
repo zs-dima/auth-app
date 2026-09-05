@@ -1,4 +1,4 @@
-import 'package:auth_app/_core/message/app_message_scope.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:auth_app/authentication/controller/authentication_state.dart';
@@ -48,7 +48,10 @@ class _AuthRecoveryStartScreenState extends State<AuthRecoveryStartScreen> {
     setState(() => _emailError = null);
     FocusScope.of(context).unfocus();
     _authenticationController?.recoveryStart(email, onSuccess: () => Navigator.pop(context));
-    context.message.showAppMessage('If an account with that email exists, a reset link has been sent.');
+    log('Auth | recoveryStart | requested')
+        .description('If an account with that email exists, a reset link has been sent.')
+      ..info()
+      ..toast();
   }
 
   @override

@@ -3,27 +3,36 @@
 import 'package:auth_app/_core/constant/config.dart';
 import 'package:auth_app/_core/database/database.dart';
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
-import 'package:l/l.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 
 /// Migrate application when version is changed.
 sealed class AppMigrator {
+  static String get _version => '${Pubspec.version.major}.${Pubspec.version.minor}.${Pubspec.version.patch}';
+
   static void migrate(Database database) {
     try {
       final prevMajor = database.getKey<int>(Config.versionMajorKey);
       final prevMinor = database.getKey<int>(Config.versionMinorKey);
       final prevPatch = database.getKey<int>(Config.versionPatchKey);
       if (prevMajor == null || prevMinor == null || prevPatch == null) {
-        l.i('🏗️ Initializing app for the first time');
-        /* ... */
+        log.i('Migrator | install | first launch', meta: <String, Object?>{'app.version': _version});
+        // Nothing to migrate on a fresh install: the schema ladder creates the
+        // database and every stored value has a code default.
       } else if (Pubspec.version.major != prevMajor ||
           Pubspec.version.minor != prevMinor ||
           Pubspec.version.patch != prevPatch) {
-        l.i(
-          'Migrating from $prevMajor.$prevMinor.$prevPatch to ${Pubspec.version.major}.${Pubspec.version.minor}.${Pubspec.version.patch}',
+        log.i(
+          'Migrator | upgrade | version changed',
+          meta: <String, Object?>{
+            'app.version.previous': '$prevMajor.$prevMinor.$prevPatch',
+            'app.version': _version,
+          },
         );
-        /* ... */
+        // No data migration is needed today: the drift schema has its own
+        // ladder, and preferences are read through defaults. A future step
+        // that DOES need one belongs here, with a version guard.
       } else {
-        l.i('🏗️ App is up-to-date');
+        log.v4('Migrator | check | up to date', meta: <String, Object?>{'app.version': _version});
         return;
       }
       database.setAll(<String, int>{
@@ -32,7 +41,8 @@ sealed class AppMigrator {
         Config.versionPatchKey: Pubspec.version.patch,
       });
     } on Object catch (error, stackTrace) {
-      l.e('🏗️ App migration failed: $error', stackTrace);
+      // `warn`: the failed step is reported once, by `composeDependencies`.
+      log.w('Migrator | run | failed', error: error, stackTrace: stackTrace);
       rethrow;
     }
   }

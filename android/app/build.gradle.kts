@@ -10,7 +10,10 @@ plugins {
 
 android {
     namespace = "app.dmitrii.auth_app"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage 11 compiles against SDK 37 while Flutter 3.47.2 defaults to 36 —
+    // checkDebugAarMetadata fails on the default. Pinned explicitly. compileSdk only widens compile-time API visibility;
+    // minSdk/targetSdk are unaffected.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

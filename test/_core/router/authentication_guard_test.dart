@@ -43,8 +43,7 @@ void main() {
     final context = <String, Object?>{};
     final afterAuth = await guard(const <OctopusHistoryEntry>[], state.mutate(), context);
     if (!withHomeGuard) return afterAuth;
-    final afterHome = await HomeGuard()(const <OctopusHistoryEntry>[], afterAuth.mutate(), context);
-    return afterHome;
+    return await HomeGuard()(const <OctopusHistoryEntry>[], afterAuth.mutate(), context);
   }
 
   group('AuthenticationGuard logout', () {

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/message_controller.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:auth_app/update/controller/update_check_controller.dart';
@@ -60,7 +59,6 @@ UpdateCheckController _buildController(_FakeUpdateCheckApi api) => .new(
     locale: 'en',
     deviceVersion: 'test',
   ),
-  messageController: AppMessageController(),
 );
 
 final class _FakeUpdateCheckApi implements UpdateCheckApi {

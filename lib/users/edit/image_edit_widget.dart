@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/users/controller/upload_image_controller.dart';
 import 'package:control/control.dart';
 import 'package:file_picker/file_picker.dart';
@@ -59,8 +59,7 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
   void initState() {
     super.initState();
 
-    _imageController =
-        widget.controller ?? UploadImageController(messageController: context.dependencies.messageController);
+    _imageController = widget.controller ?? UploadImageController();
     _urlController = TextEditingController(text: _imageController.state.imageInfo.url);
   }
 
@@ -142,7 +141,9 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
               final mimeType = format.providerFormat;
               _setImage(image, mimeType);
             },
-            onError: (error) => debugPrint('Error reading value $error'),
+            // Through the pipeline, not `debugPrint`: in release the Sentry SDK replaces
+            // `debugPrint` with an unredacted breadcrumb that prints nowhere.
+            onError: (error) => log.w('Image | drop | read failed', error: error),
           );
         },
         child: StateConsumer<UploadImageController, UploadImageState>(
@@ -216,6 +217,10 @@ class _ImageEditWidgetState extends State<ImageEditWidget> {
                         state.imageInfo.url,
                         fit: .contain,
                         semanticLabel: 'Image',
+                        // A user without an avatar answers 404 — an expected result, not a failure.
+                        // Without `errorBuilder` it reaches FlutterError and is reported to Sentry.
+                        // The dimension probe blanks the URL right after, which shows the empty card.
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   ),

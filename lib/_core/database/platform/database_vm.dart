@@ -1,10 +1,10 @@
 import 'dart:io' as io;
 
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart' as ffi;
 import 'package:flutter/foundation.dart';
-import 'package:l/l.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:platform_info/platform_info.dart';
@@ -21,9 +21,10 @@ Future<QueryExecutor> $createQueryExecutor(
   if (kDebugMode) {
     // Close existing instances for hot restart
     try {
+      // ignore: experimental_member_use — hot-restart hygiene; drift offers no stable equivalent.
       await ffi.NativeDatabase.closeExistingInstances();
     } on Object catch (e, st) {
-      l.w("Can't close existing database instances, error: $e", st);
+      log.w('Database | reset | close of existing instances failed', error: e, stackTrace: st);
     }
   }
 
@@ -53,7 +54,7 @@ Future<QueryExecutor> $createQueryExecutor(
       await file.delete();
     }
   } on Object catch (e, st) {
-    l.e("Can't delete database file: ${file.path}, error: $e", st);
+    log.e('Database | drop | delete failed', error: e, stackTrace: st, meta: <String, Object?>{'db.path': file.path});
     rethrow;
   }
   /* return ffi.NativeDatabase(

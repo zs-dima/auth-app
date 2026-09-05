@@ -1,8 +1,7 @@
 // ignore_for_file: argument_type_not_assignable
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/message/user_facing_error.dart';
 import 'package:auth_app/_core/model/app_metadata.dart';
 import 'package:auth_app/update/controller/update_check_api.dart';
 import 'package:control/control.dart';
@@ -17,14 +16,11 @@ sealed class UpdateCheckState with _$UpdateCheckState {
   const factory UpdateCheckState.applyingUpdate(String version) = ApplyingUpdateState;
 }
 
-final class UpdateCheckController extends StateController<UpdateCheckState>
-    with SequentialControllerHandler, AppMessageControllerMixin {
+final class UpdateCheckController extends StateController<UpdateCheckState> with SequentialControllerHandler {
   UpdateCheckController({
     required this._updateCheckApi,
     required AppMetadata metadata,
-    required AppMessageController messageController,
   }) : super(initialState: UpdateCheckState.idle(metadata.appVersion)) {
-    this.messageController = messageController;
     _startUpdateCheckStream();
   }
 
@@ -38,7 +34,13 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
       _isCurrentPendingUpdateDismissed = _updateCheckApi.hasPendingUpdate || state is UpdateAvailableState;
       setState(UpdateCheckState.idle(state.version));
     },
-    error: (error, stackTrace) async => setError('Error on ignore update ${state.version}', error, stackTrace),
+    error: (error, stackTrace) async => reportFailure(
+      'Update | ignore | failed',
+      error,
+      stackTrace: stackTrace,
+      caption: 'Error on ignore update ${state.version}',
+      meta: <String, Object?>{'app.update.version': state.version},
+    ),
     name: 'ignoreUpdate',
   );
 
@@ -59,7 +61,13 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
         rethrow;
       }
     },
-    error: (error, stackTrace) async => setError('Error on update ${state.version}', error, stackTrace),
+    error: (error, stackTrace) async => reportFailure(
+      'Update | apply | failed',
+      error,
+      stackTrace: stackTrace,
+      caption: 'Error on update ${state.version}',
+      meta: <String, Object?>{'app.update.version': state.version},
+    ),
     name: 'update',
   );
 
@@ -70,7 +78,12 @@ final class UpdateCheckController extends StateController<UpdateCheckState>
       if (state is UpdateAvailableState || state is ApplyingUpdateState) return;
       setState(UpdateCheckState.updateAvailable(state.version));
     },
-    error: (error, stackTrace) async => setError('Error on checking for updates', error, stackTrace),
+    error: (error, stackTrace) async => reportFailure(
+      'Update | check | failed',
+      error,
+      stackTrace: stackTrace,
+      caption: 'Error on checking for updates',
+    ),
     name: 'checkForUpdates',
   );
 

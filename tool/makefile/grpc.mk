@@ -1,5 +1,5 @@
 .PHONY: proto buf-lint buf-breaking buf-format buf-format-check \
-       buf-gen buf-gen-core buf-gen-auth buf-gen-app buf-gen-rust buf-clean
+       buf-gen buf-gen-core buf-gen-auth buf-gen-rust buf-clean
 
 # ==============================================================================
 # Buf — protobuf toolchain
@@ -42,12 +42,12 @@ buf-breaking:
 # Clean
 # ---------------------------------------------------------------------------
 
-# Remove generated proto files (proxy files at auth_model .../proto/core/v1/ and
-# .../proto/google/ are static source — see buf.gen.auth.yaml)
+# Remove generated proto files (proxy files at auth_model .../proto/google/ are static source —
+# see buf.gen.auth.yaml)
 # NB: the previous `$(call RMDIR,…)` macro was never defined, so cleaning silently no-opped.
 buf-clean:
 	@echo "Cleaning generated proto files"
-	@rm -rf packages/model/connect_model/lib/src/proto
+	@rm -rf packages/model/auth_model/lib/src/proto/core
 	@rm -rf packages/model/auth_model/lib/src/proto/auth
 	@rm -rf packages/model/auth_model/lib/src/proto/users
 	@rm -rf lib/_core/data/api/proto
@@ -56,26 +56,22 @@ buf-clean:
 # Code generation — Dart (three targets for three Dart output packages)
 # ---------------------------------------------------------------------------
 
-# Generate core/v1 → packages/model/connect_model/lib/src/proto
+# Generate core/v1 → packages/model/auth_model/lib/src/proto
 buf-gen-core:
-	@echo "Generating core proto (connect_model)"
+	@echo "Generating core proto (auth_model)"
 	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/core/v1 --template $(BUF_PROTO_DIR)/buf.gen.core.yaml
-	dart format -l 120 packages/model/connect_model/lib/src/proto
+	dart format -l 120 packages/model/auth_model/lib/src/proto/core
 
 # Generate auth/v1 + users/v1 → packages/model/auth_model/lib/src/proto
-# Static proxy files at core/v1/ re-export types from connect_model (not generated)
 buf-gen-auth:
 	@echo "Generating auth + users proto (auth_model)"
 	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/auth/v1 --path $(BUF_PROTO_DIR)/users/v1 --template $(BUF_PROTO_DIR)/buf.gen.auth.yaml
 	@rm -f packages/model/auth_model/lib/src/proto/auth/v1/*.pbserver.dart packages/model/auth_model/lib/src/proto/users/v1/*.pbserver.dart
 	dart format -l 120 packages/model/auth_model/lib/src/proto
 
-# Generate app/v1 → lib/_core/data/api/proto
-buf-gen-app:
-	@echo "Generating app proto"
-	buf generate $(BUF_PROTO_DIR) --path $(BUF_PROTO_DIR)/app/v1 --template $(BUF_PROTO_DIR)/buf.gen.app.yaml
-	@rm -f lib/_core/data/api/proto/app/v1/*.pbserver.dart
-	dart format -l 120 lib/_core/data/api/proto
+# buf-gen-app removed 2026-09-02: the generated app/v1 stubs (lib/_core/data/api/proto) had no
+# consumer and were deleted. The contract (api/proto/app/v1/app.proto) stays; when a client
+# consumer appears, restore the target from git history.
 
 # ---------------------------------------------------------------------------
 # Code generation — Rust (reference template for backend repos)
@@ -91,7 +87,7 @@ buf-gen-rust:
 # ---------------------------------------------------------------------------
 
 # Generate all Dart (clean first to remove stale files)
-buf-gen: buf-clean buf-gen-core buf-gen-auth buf-gen-app
+buf-gen: buf-clean buf-gen-core buf-gen-auth
 	@echo "All proto generation complete"
 
 proto: buf-gen

@@ -15,25 +15,18 @@ COPY --chown=101:101 . .
 
 ARG APP_ENVIRONMENT
 ENV APP_ENVIRONMENT=$APP_ENVIRONMENT
+# Git-traceable SW cache version; pass from CI: --build-arg GIT_SHA=$GITHUB_SHA
+# (without it the script falls back to git metadata, then a timestamp).
+ARG GIT_SHA=""
+ENV GIT_SHA=$GIT_SHA
+ENV CI=true
 
-RUN (cd packages/model/auth_model && flutter pub get && dart run build_runner build --delete-conflicting-outputs --release)
-RUN flutter pub get
-RUN dart run build_runner build --delete-conflicting-outputs --release
-RUN flutter build web --release --no-source-maps \
-    --dart-define=APP_ENVIRONMENT=$APP_ENVIRONMENT \
-    --wasm --no-web-resources-cdn --tree-shake-icons \
-    --base-href /
-
-# Swap dev index.html for the prod template before sw:generate.
-# (dev uses flutter_bootstrap.js, prod uses the sw bootstrap.js tag).
-RUN rm -f build/web/index.html && mv build/web/index.prod.html build/web/index.html
-
-# Generate service worker with the sw CLI (pinned in pubspec.yaml).
-# Config is loaded from sw.yaml at the repo root; only --version varies per build.
-# sw 0.1.2 inlines flutter.js into bootstrap.js and auto-deletes flutter.js,
-# flutter_bootstrap.js, flutter_service_worker.js, .last_build_id, and any
-# *.js.map / *.js.symbols / *.wasm.map files.
-RUN dart run sw:generate --version="${GIT_SHA}"
+# ONE build implementation per artifact (C4): the exact script CI uses. It runs pub get, the
+# codegen (packages first, then the app), pubspec_generator, `flutter build web` with
+# --dart-define-from-file=config/$APP_ENVIRONMENT.env, the prod-index swap, template stripping
+# and sw:generate. The inline build this replaces had drifted: no pubspec_generator (failed a
+# clean checkout), no dart-define-from-file, template snapshots shipped.
+RUN bash deploy/build_flutter_web.sh
 
 
 FROM nginx:alpine as production

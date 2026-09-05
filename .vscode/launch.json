@@ -41,7 +41,7 @@
         "--wasm",
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
-        "--dart-define=DROP_DATABASE=true",
+        "--dart-define=DB_DROP=true",
         "--web-port=8008",
         "--web-header=Cross-Origin-Opener-Policy=same-origin",
         "--web-header=Cross-Origin-Embedder-Policy=require-corp"
@@ -49,7 +49,7 @@
       "env": {}
     },
     {
-      "name": "Run DEV (Debug, Memmory database)",
+      "name": "Run DEV (Debug, Memory database)",
       "type": "dart",
       "request": "launch",
       "preLaunchTask": "adb reverse",
@@ -58,7 +58,7 @@
         "--wasm",
         "--dart-define-from-file=config/development.env",
         "--dart-define-from-file=config/keys.env",
-        "--dart-define=IN_MEMORY_DATABASE=true",
+        "--dart-define=DB_IN_MEMORY=true",
         "--web-port=8008",
         "--web-header=Cross-Origin-Opener-Policy=same-origin",
         "--web-header=Cross-Origin-Embedder-Policy=require-corp"
@@ -109,16 +109,6 @@
         "--web-header=Cross-Origin-Opener-Policy=same-origin",
         "--web-header=Cross-Origin-Embedder-Policy=require-corp"
       ],
-      "env": {}
-    },
-    {
-      "name": "Tag - make release",
-      "type": "dart",
-      "program": "tool/tag.dart",
-      "request": "launch",
-      "flutterMode": "release",
-      "cwd": "${workspaceFolder}",
-      "args": [],
       "env": {}
     }
   ]

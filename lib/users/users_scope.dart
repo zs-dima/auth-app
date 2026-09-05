@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_app/_core/core.dart';
+import 'package:auth_app/authentication/authenticated_scope.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/users/controller/avatar_controller.dart';
 import 'package:auth_app/users/controller/upload_image_controller.dart';
@@ -72,12 +73,12 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
   void initState() {
     super.initState();
 
-    controller = context.dependencies.usersController;
-    _avatarController = context.dependencies.avatarController;
+    controller = AuthenticatedScope.usersControllerOf(context);
+    _avatarController = AuthenticatedScope.avatarControllerOf(context);
 
     _userController = UserController(
       repository: context.dependencies.usersRepository,
-      messageController: context.message,
+      messenger: context.messenger,
     );
     // Created AND updated both reload the list; UserCreatedState carries the server-minted id
     // the pending avatar is uploaded against.
@@ -152,7 +153,9 @@ class _UsersScopeState extends State<UsersScope> implements IUsersController {
     if (_currentUserId == currentUserId) return;
     _currentUserId = currentUserId;
 
-    // TODO cleanup app data
+    // No cleanup here any more: the per-user controllers live under `AuthenticatedScope`, keyed by
+    // the user id, so an identity change disposes them with the scope rather than asking each
+    // consumer to empty itself (docs/decisions.md, 2026-09-03).
     if (currentUserId != UserIdX.empty) controller.listUsers(currentUserId);
   }
 

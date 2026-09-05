@@ -107,6 +107,10 @@ class _FakeSettings implements ISettingsRepository {
   /// userId still set — a cold start then resurrected the signed-out session.
   bool throwOnClearUserId = false;
 
+  /// One-shot gate parking [getCredentials] — lets a test freeze `restore()` inside the async
+  /// storage read and fire a concurrent signOut into the gap.
+  Completer<void>? getGate;
+
   @override
   String get installationId => 'test-install';
 
@@ -117,6 +121,19 @@ class _FakeSettings implements ISettingsRepository {
 
   @override
   Future<AccessCredentials?> getCredentials() async {
+    final g = getGate;
+    if (g != null) {
+      getGate = null;
+      // The blob is READ before the gate opens, and the read is what a real store does first: the
+      // race being modelled is a signOut landing after the storage handed the credentials back and
+      // before `restore()` resumed. Returning `stored` after the await instead would hand back the
+      // logout's `null`, and `restore()` would leave on its `credentials == null` early return —
+      // never reaching the epoch check the test exists to pin.
+      final snapshot = stored;
+      await g.future;
+      if (throwOnGetCredentials) throw const FormatException('corrupt credentials blob');
+      return snapshot;
+    }
     if (throwOnGetCredentials) throw const FormatException('corrupt credentials blob');
     return stored;
   }
@@ -259,6 +276,31 @@ void main() {
       expect(result, isNull, reason: 'definitive rejection is signalled as null');
       expect(emitted.whereType<UnauthenticatedUser>(), isNotEmpty);
       expect(token.isCancelled, isTrue, reason: 'a rejected refresh token ends the session');
+    });
+
+    test('401-wave at a definitive rejection: queued callers get RequestSessionEndedException', () async {
+      // §7.2/§3.3 pin: when caller #1's forced refresh is DEFINITIVELY rejected, the session ends
+      // (epoch bump + provenance set cleared) while callers #2..#N are still queued on the mutex.
+      // They then land in an ended session and fail with RequestSessionEndedException — a
+      // transient-shaped failure that triggers no second logout — NOT with a propagated copy of
+      // the definitive result. Callers treat both as "this request dies, the session state is
+      // already correct"; asserting the exact type here keeps the doc honest about which one.
+      final gate = Completer<void>();
+      final api = _GatedApi(gate)..reject = true;
+      final repo = _repo(api, _FakeSettings(_creds('A')));
+      addTearDown(repo.terminate);
+      await repo.restore();
+
+      final first = repo.refreshCredentials('A'); // holds the refresh open on the gate
+      final queued = List.generate(3, (_) => repo.refreshCredentials('A'));
+      gate.complete();
+
+      expect(await first, isNull, reason: 'definitive rejection → null, session ended');
+      for (final f in queued) {
+        await expectLater(f, throwsA(isA<RequestSessionEndedException>()));
+      }
+      expect(api.refreshCalls, equals(1), reason: 'one network refresh for the whole wave');
+      expect(repo.user, isA<UnauthenticatedUser>());
     });
 
     test('a transient (network) reactive failure keeps the session and rethrows', () async {
@@ -629,6 +671,26 @@ void main() {
       await restoreFuture;
       await Future<void>.delayed(.zero);
       await sub.cancel();
+    });
+
+    test('signOut during restore does not resurrect the session (A2 epoch guard)', () async {
+      // Pre-fix, restore() was the ONE session-establishing path with no epoch guard: a signOut
+      // landing inside the `await getCredentials()` gap was silently overwritten by restore's
+      // emit — an in-memory authenticated session over cleared storage.
+      final gate = Completer<void>();
+      final settings = _FakeSettings(_creds('A'))..getGate = gate;
+      final api = _FakeApi();
+      final repo = _repo(api, settings);
+      addTearDown(repo.terminate);
+
+      final restoring = repo.restore(); // parked inside the storage read
+      await repo.signOut(); // wins the race: bumps the epoch, clears storage
+      gate.complete(); // release the read — restore sees a stale epoch and must NOT commit
+
+      final user = await restoring;
+      expect(user, isA<UnauthenticatedUser>(), reason: 'the signed-out state must win the race');
+      expect(repo.user, isA<UnauthenticatedUser>());
+      expect(settings.stored, isNull, reason: 'storage stays cleared');
     });
 
     test('with a definitive rejection ends the session and clears storage (F6)', () async {

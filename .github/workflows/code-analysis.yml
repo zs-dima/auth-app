@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  checks: write # DCM posts its results as a GitHub check
 
 env:
   FLUTTER_VERSION: "3.47.2" # keep in sync with deploy-firebase.yml
@@ -39,15 +40,9 @@ jobs:
           fi
 
       - name: 🐦 Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: ./.github/actions/setup-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-          cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('**/pubspec.lock') }}
-
-      - name: 📦 Install Dependencies
-        run: flutter pub get
 
       # Hand-written sources only: generated output (.g/.freezed/.gen, proto stubs, l10n) keeps its
       # generator's formatting, and packages/vendor keeps its upstream formatting.
@@ -57,39 +52,31 @@ jobs:
             | grep -vE '\.(g|freezed|gen)\.dart$|\.pb(enum|json|server)?\.dart$|\.connect\.(client|spec)\.dart$|/generated/' \
             | xargs -r dart format --output=none --set-exit-if-changed
 
-      # Generated Dart (.g/.freezed) is gitignored, so CI must produce it. build_runner only
-      # builds the current package in a pub workspace — run it in every member that has it.
-      # l10n is NOT generated here: sheety_localization output is committed (CI must not
-      # need Google credentials).
-      - name: 🦄 Generate Code
-        run: |
-          dart run build_runner build --delete-conflicting-outputs
-          (cd packages/model/auth_model && dart run build_runner build --delete-conflicting-outputs)
-          # pubspec.yaml.g.dart is gitignored but imported by lib/ code; its builder is not in
-          # build_runner (commented out in build.yaml) — generate it explicitly, after
-          # build_runner (same order as deploy/build_flutter_web.sh).
-          dart pub global activate pubspec_generator
-          dart pub global run pubspec_generator:generate --input pubspec.yaml --output lib/_core/generated/constant/pubspec.yaml.g.dart
-
-      # TODO: tighten to fatal warnings/infos once the pre-existing issues are addressed
-      # (19 on 2026-08-29: unused_field, experimental_member_use, avoid_catches_without_on_clauses, …).
-      # NB: flutter analyze treats BOTH warnings and infos as fatal by default — errors still fail here.
+      # Fatal by default (warnings AND infos): the pre-existing issues were swept 2026-09-02.
+      # A new info fails the gate — fix it or justify a targeted `// ignore:` in the diff.
       - name: 🕵️ Analyze
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        run: flutter analyze
 
       - name: Install DCM
-        uses: CQLabs/setup-dcm@v1
+        uses: CQLabs/setup-dcm@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           # version: "1.39.1"
 
       # TODO: tighten to fatal warnings/style once the pre-existing issues are swept
-      # (223 on 2026-08-30: 64 warning + 159 style; DCM errors still fail the step).
+      # (347 on 2026-09-05: 198 warning + 149 style). DCM ERRORS still fail the step, and
+      # `lints_tool` v1.0.1 promoted six layout rules to that severity — the three real hits it
+      # found in `packages/ui` are fixed, so the count here is zero and must stay zero.
       - name: Run DCM
         run: dcm analyze --no-fatal-warnings --no-fatal-style .
 
       - name: 🧪 Run Tests (workspace)
         run: dart run tool/test_workspace.dart
+
+      # Browser-platform tests (ubuntu runners ship Chrome): the web update-check API degrades
+      # gracefully without the sw bootstrap — pinned in a real browser, not an emulated one.
+      - name: 🌐 Run Web Tests (chrome)
+        run: flutter test --platform chrome test/web
 
       # Non-blocking: missing CODECOV_TOKEN or an upload hiccup must not fail the gate.
       - name: 📈 Upload Coverage

@@ -1,16 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:auth_app/_core/api/http/middlewares/sentry_middleware.dart';
-import 'package:core_model/core_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:http_client/http_client.dart';
+import 'package:http_kit/http_kit.dart';
 
 /// Mirrors the behavioural middleware of `Dependencies.externalHttpClient` (see
 /// `initialize_dependencies.dart`): Retry + Timeout, and deliberately NO auth / app-metadata.
 /// Logger + Sentry are observational and are exercised by their own package/integration tests.
-ApiClient _externalClient(http.Client client) => ApiClient(
+ApiClient _externalClient(http.Client client) => .new(
   baseUrl: () => Uri.parse('https://s3.example.test'),
   client: client,
   middlewares: <ApiClientMiddleware>[
@@ -71,7 +70,7 @@ void main() {
     // Builds a client whose only middleware is HttpSentryMiddleware, so we can observe exactly which
     // headers it injects. Sentry isn't initialised here → a no-op span, but a no-op span still
     // yields a `sentry-trace` header, so the propagateTrace gate is observable either way.
-    ApiClient sentryClient(http.Client client, {required bool propagateTrace}) => ApiClient(
+    ApiClient sentryClient(http.Client client, {required bool propagateTrace}) => .new(
       baseUrl: () => Uri.parse('https://s3.example.test'),
       client: client,
       middlewares: <ApiClientMiddleware>[HttpSentryMiddleware(propagateTrace: propagateTrace).call],

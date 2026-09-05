@@ -1,3 +1,11 @@
+// Kept as a reference implementation; nothing consumes it.
+//
+// It will NOT compile as written: `CaseWrapWidget` was deleted on 2026-09-04 because a helper whose
+// whole purpose is a conditional wrap changes a subtree's DEPTH on a runtime value, and a field
+// that moves depth is rebuilt — losing its focus, its selection and the IME's composing region.
+// The replacement for the `getWrapper` below is a `FocusTraversalOrder` that is always present,
+// with the order as a parameter; the label/expands half is `LabelWidget`.
+
 // import 'dart:async';
 
 // import 'package:flutter/material.dart';

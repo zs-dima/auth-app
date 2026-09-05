@@ -24,9 +24,15 @@
   },
   "hosting": {
     "public": "build/web",
+    /* Never upload: build script leftovers that would otherwise be publicly served —
+       template snapshots, the web README (documents the token/XSS threat model) and
+       Dart source maps. deploy/build_flutter_web.sh removes them from build/web too;
+       this guards `firebase deploy` runs made without the script. */
     "ignore": [
       "firebase.json",
-      "**/.*"
+      "**/.*",
+      "README.md",
+      "**/*.map"
     ],
     "frameworksBackend": {
       "region": "europe-west1"

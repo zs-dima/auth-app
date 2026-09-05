@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:auth_app/_core/message/controller/app_message_controller_mixin.dart';
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/message/user_facing_error.dart';
 import 'package:control/control.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -29,16 +28,12 @@ sealed class UploadImageState with _$UploadImageState {
   const factory UploadImageState.loaded(ImageInfo imageInfo) = UploadImageLoadedState;
 }
 
-final class UploadImageController extends StateController<UploadImageState>
-    with SequentialControllerHandler, AppMessageControllerMixin {
+final class UploadImageController extends StateController<UploadImageState> with SequentialControllerHandler {
   UploadImageController({
-    required AppMessageController messageController,
     ImageInfo imageInfo = .empty,
   }) : super(
          initialState: UploadImageState.loading(imageInfo),
        ) {
-    this.messageController = messageController;
-
     // Initialize dimensions for provided data
     final url = imageInfo.url;
     final image = imageInfo.image;
@@ -75,9 +70,8 @@ final class UploadImageController extends StateController<UploadImageState>
 
       setState(UploadImageState.loaded(ImageInfo(image: image, size: size, mimeType: mimeType)));
     },
-    error: (error, stackTrace) {
-      setError('Error on setImage', error, stackTrace);
-      Error.throwWithStackTrace(error, stackTrace);
+    error: (error, stackTrace) async {
+      reportFailure('Image | setImage | failed', error, stackTrace: stackTrace, caption: 'Error on setImage');
     },
     name: 'setImage',
   );
@@ -106,9 +100,8 @@ final class UploadImageController extends StateController<UploadImageState>
         UploadImageState.loaded(ImageInfo(url: link, size: size, mimeType: url.split('.').last.fileExtToMimeType)),
       );
     },
-    error: (error, stackTrace) {
-      setError('Error on setUrl', error, stackTrace);
-      Error.throwWithStackTrace(error, stackTrace);
+    error: (error, stackTrace) async {
+      reportFailure('Image | setUrl | failed', error, stackTrace: stackTrace, caption: 'Error on setUrl');
     },
     name: 'setUrl',
   );
@@ -117,9 +110,8 @@ final class UploadImageController extends StateController<UploadImageState>
     () async {
       setState(const UploadImageState.loaded(.empty));
     },
-    error: (error, stackTrace) {
-      setError('Error on clean', error, stackTrace);
-      Error.throwWithStackTrace(error, stackTrace);
+    error: (error, stackTrace) async {
+      reportFailure('Image | clean | failed', error, stackTrace: stackTrace, caption: 'Error on clean');
     },
     name: 'clean',
   );
@@ -141,8 +133,16 @@ final class UploadImageController extends StateController<UploadImageState>
       image.dispose();
       codec.dispose();
       return size;
-    } catch (e) {
-      setError('Error getting image dimensions', e, .current);
+    } on Object catch (e, s) {
+      // A file the platform codec cannot decode is the user's file, not our defect: it is
+      // reported and shown, and it does not become a crash-reporter issue.
+      reportFailure(
+        'Image | dimensions | failed',
+        e,
+        stackTrace: s,
+        caption: 'Error getting image dimensions',
+        level: .warn,
+      );
       return Size.zero;
     }
   }
@@ -178,8 +178,8 @@ final class UploadImageController extends StateController<UploadImageState>
       } finally {
         stream.removeListener(listener);
       }
-    } catch (e) {
-      // setError('Error getting network image dimensions', e, StackTrace.current);
+    } on Object {
+      // Broken/unauthorized image URL: dimensions are a nicety — degrade to null silently.
       return null;
     }
   }

@@ -1,4 +1,5 @@
 import 'package:auth_app/_core/app_widget.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/model/dependencies.dart';
 import 'package:auth_app/initialization/initialization.dart';
 import 'package:auth_app/settings/settings_scope.dart';
@@ -32,6 +33,10 @@ class _AppTreeState extends State<AppTree> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Logged unconditionally, before the switch: "the app went to the background here" is what
+    // explains a gap in the journal, and half of what explains a socket that died on its own.
+    log.i('App | lifecycle | changed', meta: <String, Object?>{'app.lifecycle': state.name});
+
     final dependencies = _dependencies;
     if (dependencies == null) return;
 

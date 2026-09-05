@@ -1,5 +1,5 @@
 import 'package:auth_app/_core/constant/config.dart';
-import 'package:auth_app/_core/message/extension/message_toast.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
@@ -167,7 +167,10 @@ mixin _PasswordFormStateMixin on State<AuthRecoveryConfirmScreen> {
       newPassword: _passwordController.text,
       onSuccess: () {
         if (!context.mounted) return;
-        context.showInfo('Password has been reset successfully. Please sign in with your new password.');
+        log('Auth | recovery | password reset')
+            .description('Password has been reset successfully. Please sign in with your new password.')
+          ..info()
+          ..toast(tone: .ok);
         context.octopus.setState((_) => OctopusState.single(Routes.signin.node()));
       },
     );

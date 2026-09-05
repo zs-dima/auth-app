@@ -149,7 +149,7 @@ class _SettingsScopeState extends State<SettingsScope> implements SettingsScopeC
   Locale get locale => _settingsController.state.locale ?? Localization.computeDefaultLocale;
 
   @override
-  AppTheme get theme => _settingsController.state.appTheme ?? AppTheme.system(ScreenUtil.screenSize);
+  AppTheme get theme => _settingsController.state.appTheme ?? .system(ScreenUtil.screenSize);
 
   @override
   double get textScale => _settingsController.state.textScale ?? 1;

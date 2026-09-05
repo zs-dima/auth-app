@@ -319,10 +319,12 @@ abstract final class _AiProgressShaderManager {
     const assetPath = 'packages/ui/shaders/ai/progress.frag';
     try {
       return await ui.FragmentProgram.fromAsset(assetPath).timeout(const Duration(seconds: 5));
+      // Deliberate Error catch: FragmentProgram.fromAsset throws UnsupportedError on renderers
+      // without shader support (HTML web, older devices); the shader is a nicety — degrade.
+      // ignore: avoid_catching_errors
     } on UnsupportedError {
-      // Shader not supported (e.g., Web or older device)
       return null;
-    } catch (e, stack) {
+    } on Object catch (e, stack) {
       debugPrint('Failed to load progress shader: $e, $stack');
       return null;
     }

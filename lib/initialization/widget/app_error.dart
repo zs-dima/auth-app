@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 import 'package:flutter/material.dart';
 
 /// {@template app_error}
@@ -45,47 +45,68 @@ class _AppErrorState extends State<AppError> {
         ? ThemeData.dark(useMaterial3: true)
         : ThemeData.light(useMaterial3: true),
     home: Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const .all(8.0),
-            child: Column(
-              mainAxisSize: .min,
-              children: [
-                Text(
-                  // ErrorUtil.formatMessage(error)
-                  widget.error?.toString() ?? 'Something went wrong',
-                  textScaler: .noScaling,
-                ),
-                if (widget.onRetry != null) ...[
-                  const SizedBox(height: 16),
-                  // English on purpose: localization is not initialized when this screen shows.
-                  if (_retrying)
-                    const CircularProgressIndicator()
-                  else
-                    FilledButton.icon(
-                      onPressed: _retry,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+      // Fill the viewport, then scroll — the framework's own shape, and the one that keeps the
+      // scroll region the size of the screen. `SafeArea > Center` around a scroll view shrank the
+      // viewport to the content's height, so on a short phone with a long stack trace there was
+      // nothing to scroll at all, and the scrollbar never reached the edge. The insets go INSIDE
+      // (`SliverSafeArea`, `SliverPadding`); the bottom one goes inside the fill, because an
+      // after-padding is not counted in `precedingScrollExtent` and would make the fill taller
+      // than the viewport for ever.
+      body: CustomScrollView(
+        slivers: <Widget>[
+          SliverSafeArea(
+            bottom: false,
+            sliver: SliverPadding(
+              padding: const .all(8.0),
+              sliver: SliverFillRemaining(
+                hasScrollBody: false,
+                child: SafeArea(
+                  top: false,
+                  left: false,
+                  right: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: .min,
+                      children: [
+                        Text(
+                          // The raw error only outside release: initialization fails before localization
+                          // loads, so there is no sentence to translate — and an exception's own words are
+                          // for whoever is debugging, not for the user staring at a stopped app.
+                          kReleaseMode ? 'Something went wrong' : widget.error?.toString() ?? 'Something went wrong',
+                          textScaler: .noScaling,
+                        ),
+                        if (widget.onRetry != null) ...[
+                          const SizedBox(height: 16),
+                          // English on purpose: localization is not initialized when this screen shows.
+                          if (_retrying)
+                            const CircularProgressIndicator()
+                          else
+                            FilledButton.icon(
+                              onPressed: _retry,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                            ),
+                        ],
+                        if (kDebugMode && widget.stackTrace != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.stackTrace!.toString(),
+                            textScaler: .noScaling,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      ],
                     ),
-                ],
-                if (kDebugMode && widget.stackTrace != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.stackTrace!.toString(),
-                    textScaler: .noScaling,
-                    style: const TextStyle(fontSize: 11),
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     ),
-    builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: .noScaling),
-      child: child!,
-    ),
+    // The framework's own helper, not a hand-built `MediaQueryData`: `MediaQuery.of` here
+    // subscribed to every metric of a screen that has no reason to rebuild at all.
+    builder: (context, child) => MediaQuery.withNoTextScaling(child: child!),
   );
 }

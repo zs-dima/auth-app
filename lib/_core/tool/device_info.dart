@@ -1,5 +1,5 @@
 import 'package:android_id/android_id.dart';
-import 'package:auth_app/_core/log/logger.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:core_model/core_model.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:platform_info/platform_info.dart';
@@ -15,6 +15,17 @@ class DeviceInfo implements IDeviceInfo {
     required this.deviceOsVersion,
   });
 
+  /// Fallback identity when platform device info is unavailable (web, unsupported platforms, or a
+  /// failed plugin read): the stable [installationId] doubles as the device id.
+  const DeviceInfo._unknown({
+    required this.appVersion,
+    required this.installationId,
+    required this.deviceOs,
+    required String osVersion,
+  }) : deviceId = installationId,
+       deviceName = 'Unknown device',
+       deviceModel = 'Unknown model',
+       deviceOsVersion = osVersion;
   @override
   final String appVersion;
   @override
@@ -27,6 +38,7 @@ class DeviceInfo implements IDeviceInfo {
   final String deviceId;
   @override
   final String deviceOs;
+
   @override
   final String deviceOsVersion;
 
@@ -84,7 +96,7 @@ class DeviceInfo implements IDeviceInfo {
           );
       }
     } on Object catch (error, stackTrace) {
-      logger.w('Failed to read device info; using the unknown-device fallback', error: error, stackTrace: stackTrace);
+      log.w('Device | info | unavailable', error: error, stackTrace: stackTrace);
       return DeviceInfo._unknown(
         appVersion: appVersion,
         installationId: installationId,
@@ -93,16 +105,4 @@ class DeviceInfo implements IDeviceInfo {
       );
     }
   }
-
-  /// Fallback identity when platform device info is unavailable (web, unsupported platforms, or a
-  /// failed plugin read): the stable [installationId] doubles as the device id.
-  const DeviceInfo._unknown({
-    required this.appVersion,
-    required this.installationId,
-    required this.deviceOs,
-    required String osVersion,
-  }) : deviceId = installationId,
-       deviceName = 'Unknown device',
-       deviceModel = 'Unknown model',
-       deviceOsVersion = osVersion;
 }

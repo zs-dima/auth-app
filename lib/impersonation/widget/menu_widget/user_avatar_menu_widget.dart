@@ -1,14 +1,13 @@
-import 'package:auth_app/_core/generated/resources/assets.gen.dart';
-import 'package:auth_app/_core/message/extension/message_toast.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/authentication/authentication_scope.dart';
 import 'package:auth_app/impersonation/controller/impersonate_controller.dart';
 import 'package:auth_app/impersonation/impersonate_scope.dart';
 import 'package:auth_app/impersonation/widget/impersonate_user_dialog.dart';
+import 'package:auth_app/initialization/widget/inherited_dependencies.dart';
 import 'package:auth_model/auth_model.dart';
 import 'package:control/control.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:octopus/octopus.dart';
 
 class UserAvatarMenuWidget extends StatelessWidget {
@@ -152,9 +151,13 @@ class UserAvatarMenuWidget extends StatelessWidget {
               //   break;
 
               case 'Version':
-                final data = await rootBundle.loadString(Assets.environment);
-
-                if (context.mounted) context.showInfo(data);
+                // Only the version string. This used to dump the WHOLE runtime
+                // environment.json into the toast — with the allowlisted
+                // deployment config it is no longer secret-bearing, but a
+                // config dump is diagnostics, not a version label.
+                log('App | version | shown').description(InheritedDependencies.of(context).environment.version)
+                  ..debug()
+                  ..toast();
                 break;
             }
           },

@@ -12,7 +12,10 @@
 .swiftpm/
 .gradle/
 migrate_working_dir/
-config/keys.env
+config/*.env
+!config/development.env
+!config/staging.env
+!config/production.env
 
 # IntelliJ related
 *.iml
@@ -92,3 +95,7 @@ mise.lock
 
 # Firebase
 .firebase
+
+# Agent tooling: the shared config is committed (`.claude/flutter-layout-check.json` is read by
+# the layout gate, so CI needs it), the per-machine permissions are not.
+.claude/settings.local.json

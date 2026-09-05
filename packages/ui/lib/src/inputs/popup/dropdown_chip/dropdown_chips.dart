@@ -15,7 +15,6 @@ import 'package:ui/src/inputs/popup/dropdown_chip/dropdown_chips_filter.dart';
 import 'package:ui/src/inputs/popup/popup_builder.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 typedef ChipSelectorAddNewCallback<T> = Future<T?> Function(String name);
 
@@ -294,13 +293,9 @@ class DropdownChipsState<T> extends State<DropdownChips<T>> {
   List<T> get _getValues => _chipsController.state.selected.toList();
 
   @override
-  Widget build(BuildContext context) => CaseWrapWidget(
-    getWrapper: widget.largeScreen
-        ? (child) => LabelWidget(
-            label: widget.title ?? widget.decoration?.labelText ?? '',
-            child: child,
-          )
-        : null,
+  Widget build(BuildContext context) => LabelWidget(
+    // Constant shape: the label is a slot, not a wrapper that appears at a breakpoint.
+    label: widget.largeScreen ? (widget.title ?? widget.decoration?.labelText ?? '') : '',
     child: PopupBuilder(
       controller: _overlayController,
       followerAnchor: .topLeft,

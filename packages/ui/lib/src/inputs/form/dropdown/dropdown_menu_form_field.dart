@@ -3,7 +3,6 @@ import 'package:ui/src/inputs/form/dropdown/dropdown_menu_form_field_base.dart';
 import 'package:ui/src/inputs/form/dropdown/icons/dropdown_progress_icon.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 class DropdownMenuFormField<T> extends StatefulWidget {
   const DropdownMenuFormField(
@@ -101,13 +100,9 @@ class _DropdownMenuFormFieldState<T> extends State<DropdownMenuFormField<T>> {
                   alignLabelWithHint: widget.decoration!.alignLabelWithHint,
                 ));
 
-    return CaseWrapWidget(
-      getWrapper: widget.largeScreen
-          ? (child) => LabelWidget(
-              label: widget.title ?? widget.decoration?.labelText ?? '',
-              child: child,
-            )
-          : null,
+    return LabelWidget(
+      // Constant shape: the label is a slot, not a wrapper that appears at a breakpoint.
+      label: widget.largeScreen ? (widget.title ?? widget.decoration?.labelText ?? '') : '',
       child: DropdownMenuFormFieldBase<T>(
         label: (widget.largeScreen || widget.title == null)
             ? null

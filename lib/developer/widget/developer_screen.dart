@@ -1,3 +1,6 @@
+// Octopus.showDialog is the router's route-aware dialog API (marked @experimental upstream);
+// there is no stable alternative that keeps dialogs in the navigation state.
+// ignore_for_file: experimental_member_use
 import 'package:auth_app/_core/generated/constant/pubspec.yaml.g.dart';
 import 'package:auth_app/_core/localization/localization.dart';
 import 'package:auth_app/_core/widget/scaffold_padding.dart';

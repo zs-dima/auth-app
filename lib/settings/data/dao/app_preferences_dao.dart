@@ -12,6 +12,7 @@ final class AppPreferencesDao extends PreferencesDao {
   PreferencesEntry<double> get textScale => doubleEntry('text_scale');
   PreferencesEntry<String> get installationId => stringEntry('installation_id');
   PreferencesEntry<bool> get firstStart => boolEntry('first_start');
+  PreferencesEntry<bool> get sendCrashReports => boolEntry('send_crash_reports');
 
   PreferencesEntry<String> get credentials => stringEntry('api_credentials');
 }

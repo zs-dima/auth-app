@@ -362,7 +362,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   /// was unable to determine the transform (see
   /// [FollowerLayer.getLastTransform]), this returns the identity matrix (see
   /// [Matrix4.identity].
-  Matrix4 getCurrentTransform() => layer?.getLastTransform() ?? Matrix4.identity();
+  Matrix4 getCurrentTransform() => layer?.getLastTransform() ?? .identity();
 
   @override
   void performLayout() {

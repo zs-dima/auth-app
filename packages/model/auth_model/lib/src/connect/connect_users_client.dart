@@ -7,9 +7,10 @@ import 'package:auth_model/src/model/user/avatar_upload_url.dart';
 import 'package:auth_model/src/model/user/i_user_info.dart';
 import 'package:auth_model/src/model/user/user.dart';
 import 'package:auth_model/src/model/user/user_id.dart';
+import 'package:auth_model/src/proto/core/v1/uuid_x.dart';
 import 'package:auth_model/src/proto/users/v1/users.connect.client.dart' as rpc;
 import 'package:auth_model/src/proto/users/v1/users.pb.dart' as rpc;
-import 'package:connect_model/connect_model.dart';
+import 'package:connect_kit/connect_kit.dart';
 import 'package:fixnum/fixnum.dart';
 
 /// Connect RPC client for the user management service.

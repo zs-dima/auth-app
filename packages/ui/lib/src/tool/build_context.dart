@@ -33,7 +33,11 @@ extension BuildContextX on BuildContext {
   static Never _notFoundInheritedWidgetOfExactType<T extends InheritedWidget>() =>
       throw ArgumentError('Out of scope, not found inherited widget a $T of the exact type', 'out_of_scope');
 
-  MediaQueryData get mediaQuery => MediaQuery.of(this);
+  // `context.mediaQuery` used to live here with no call site. It was the worst possible accessor
+  // to offer: `MediaQuery.of` subscribes to EVERY metric, so the first person to reach for the
+  // short spelling would have rebuilt their widget on each frame of the keyboard's animation.
+  // The aspect accessors (`MediaQuery.sizeOf`, `.paddingOf`, `.viewInsetsOf`, `.textScalerOf`)
+  // are already short, and each subscribes to one thing.
 
   ThemeData get theme => Theme.of(this);
   TextTheme get textTheme => theme.textTheme;

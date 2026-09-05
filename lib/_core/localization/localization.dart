@@ -27,10 +27,13 @@ abstract final class Localization {
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
 
-    AppLocalization.delegate,
-    _CurrentCapture.instance,
-    SettingsLocalization.delegate,
-    AuthLocalization.delegate,
+    // Each bucket is loaded through a capture, so a controller can read the CURRENT sheet without a
+    // BuildContext — which is what a `.description(...)` on a telemetry draft needs, since it is
+    // written where the failure happens and not where it is shown.
+    const _CurrentCapture<AppLocalization>(AppLocalization.delegate, _captureApp),
+    const _CurrentCapture<ErrorsLocalization>(ErrorsLocalization.delegate, _captureErrors),
+    const _CurrentCapture<SettingsLocalization>(SettingsLocalization.delegate, _captureSettings),
+    const _CurrentCapture<AuthLocalization>(AuthLocalization.delegate, _captureAuth),
   ];
 
   /// Computes the default locale: the platform locale when supported, English otherwise.
@@ -42,11 +45,49 @@ abstract final class Localization {
     );
   }
 
-  /// The most recently loaded `errors` bucket — the context-free escape hatch for
-  /// controller-side error localization (see AppMessageControllerMixin).
+  /// The most recently loaded bucket of each sheet — the context-free escape
+  /// hatch for controller-side localization (`user_facing_error.dart`, and any
+  /// `.description(...)` written outside the widget tree).
+  ///
+  /// `null` until the delegate has loaded, which is why every reader carries an
+  /// English fallback.
+  static AppLocalization? _currentApp;
+
+  /// The current `app` sheet, or `null` before the first load.
+  static AppLocalization? get currentApp => _currentApp;
   static ErrorsLocalization? _currentErrors;
 
+  /// The current `errors` sheet, or `null` before the first load.
   static ErrorsLocalization? get currentErrors => _currentErrors;
+
+  static SettingsLocalization? _currentSettings;
+
+  /// The current `settings` sheet, or `null` before the first load.
+  static SettingsLocalization? get currentSettings => _currentSettings;
+
+  static AuthLocalization? _currentAuth;
+
+  /// The current `auth` sheet, or `null` before the first load.
+  static AuthLocalization? get currentAuth => _currentAuth;
+
+  /// Sets the captured buckets by hand. Tests only.
+  ///
+  /// The readers of `current*` are the ones with no `BuildContext` — a controller's sentence, a
+  /// release error box's semantics label — so a test of one of those has no widget tree to load
+  /// a delegate from. Called with nothing, it restores the "no frame yet" state, which is the
+  /// other branch every reader carries.
+  @visibleForTesting
+  static void debugSetCurrent({
+    AppLocalization? app,
+    ErrorsLocalization? errors,
+    SettingsLocalization? settings,
+    AuthLocalization? auth,
+  }) {
+    _currentApp = app;
+    _currentErrors = errors;
+    _currentSettings = settings;
+    _currentAuth = auth;
+  }
 
   /// The `app` bucket for the given context (most UI strings live there).
   /// The other buckets are read directly: `SettingsLocalization.of(context)`, etc.
@@ -58,31 +99,40 @@ abstract final class Localization {
     _ => null,
   };
 
-  /// Loads the `errors` bucket and records it into [currentErrors]
-  /// (SynchronousFuture.then runs inline, so the capture lands before the first frame).
-  static Future<ErrorsLocalization> _loadErrors(Locale locale) {
-    final future = ErrorsLocalization.delegate.load(locale);
-    final _ = future.then((loaded) => _currentErrors = loaded);
-    return future;
-  }
+  // Methods, not setters: each is torn off into a `const _CurrentCapture(...)`, and a setter
+  // cannot be torn off.
+  // ignore_for_file: use_setters_to_change_properties
+  static void _captureApp(AppLocalization loaded) => _currentApp = loaded;
+  static void _captureErrors(ErrorsLocalization loaded) => _currentErrors = loaded;
+  static void _captureSettings(SettingsLocalization loaded) => _currentSettings = loaded;
+  static void _captureAuth(AuthLocalization loaded) => _currentAuth = loaded;
 }
 
-/// Delegates to the generated errors delegate through [Localization._loadErrors],
-/// which records the loaded instance into [Localization.currentErrors].
+/// Loads a bucket through its generated delegate and records the result.
+///
+/// `SynchronousFuture.then` runs inline, so the capture lands before the first
+/// frame. Const with a static tear-off: `localizationDelegates` builds a fresh
+/// list on every read, and two identical const instances are the same object —
+/// without that, Flutter would see a new delegate each build and reload.
 @immutable
-final class _CurrentCapture extends LocalizationsDelegate<ErrorsLocalization> {
-  static const _CurrentCapture instance = _CurrentCapture._();
+final class _CurrentCapture<T extends Object> extends LocalizationsDelegate<T> {
+  const _CurrentCapture(this._delegate, this._capture);
 
-  const _CurrentCapture._();
-
-  @override
-  bool isSupported(Locale locale) => ErrorsLocalization.delegate.isSupported(locale);
+  final LocalizationsDelegate<T> _delegate;
+  final void Function(T loaded) _capture;
 
   @override
-  Future<ErrorsLocalization> load(Locale locale) => Localization._loadErrors(locale);
+  bool isSupported(Locale locale) => _delegate.isSupported(locale);
 
   @override
-  bool shouldReload(covariant _CurrentCapture old) => false;
+  Future<T> load(Locale locale) {
+    final future = _delegate.load(locale);
+    final _ = future.then(_capture);
+    return future;
+  }
+
+  @override
+  bool shouldReload(covariant _CurrentCapture<T> old) => false;
 }
 
 const Map<String, (String name, String nativeName)> _kIsoLangs = <String, (String name, String nativeName)>{

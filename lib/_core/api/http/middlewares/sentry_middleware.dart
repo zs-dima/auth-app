@@ -1,13 +1,13 @@
 import 'package:auth_app/_core/api/_core/sentry_redaction.dart';
 import 'package:auth_app/_core/api/_core/sentry_tracing.dart';
-import 'package:http_client/http_client.dart';
+import 'package:http_kit/http_kit.dart';
 import 'package:meta/meta.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// {@template sentry_middleware}
 /// Middleware for Sentry integration in API requests.
-/// [HttpSentryMiddleware] middleware captures HTTP requests and responses, creating a transaction
-/// for each request to monitor performance and errors.
+/// [HttpSentryMiddleware] traces HTTP calls: one span per request, with the redacted url, path,
+/// query and headers as span data. It does NOT report errors — see the `on Object` clause.
 /// {@endtemplate}
 @immutable
 class HttpSentryMiddleware {
@@ -17,7 +17,7 @@ class HttpSentryMiddleware {
   /// Whether to inject `sentry-trace`/`baggage` headers into the outgoing request for
   /// distributed tracing. Keep `true` for first-party services; set `false` for third-party
   /// hosts (e.g. an S3 presigned upload) so internal trace IDs / baggage don't leak off-domain.
-  /// The Sentry span + error capture (monitoring) still run regardless.
+  /// The span still opens and closes regardless.
   final bool propagateTrace;
 
   ApiClientHandler call(ApiClientHandler innerHandler) => (request, context) async {
@@ -52,24 +52,12 @@ class HttpSentryMiddleware {
       transaction.setData('http.response.status_code', response.statusCode);
       if (!transaction.finished) transaction.finish(status: const SpanStatus.ok()).ignore();
       return response;
-    } on Object catch (e, s) {
-      // Expected teardown (cancellation): no Sentry issue; the span still finishes and rethrows.
-      if (e is! ApiClientException$Cancelled) {
-        await Sentry.captureException(
-          e,
-          stackTrace: s,
-          withScope: (scope) => scope.span = transaction,
-          hint: Hint.withMap({
-            'method': request.method,
-            // Redacted string, not the raw Uri — same rationale as the span-data 'url' field.
-            'url': redactSensitiveUrl(request.url),
-            'path': request.url.path,
-            'query': redactSensitiveQuery(request.url.queryParametersAll),
-            'headers': redactSensitiveHeaders(request.headers),
-          }),
-        );
-      }
-
+    } on Object catch (e) {
+      // NO capture here. This middleware owns the SPAN; whether a failure is an issue is the
+      // telemetry pipeline's decision, made once, from the level the logger middleware assigns
+      // and through the dedupe and rate limit that go with it. Capturing here as well filed one
+      // issue per call during an outage, and a second issue with a different fingerprint for
+      // anything the pipeline also reported.
       if (!transaction.finished) {
         transaction.finish(status: _spanStatusFor(e), endTimestamp: DateTime.now().toUtc()).ignore();
       }
@@ -79,18 +67,18 @@ class HttpSentryMiddleware {
 
   /// Maps a thrown error to the Sentry [SpanStatus] used to finish the transaction.
   static SpanStatus _spanStatusFor(Object e) => switch (e) {
-    ApiClientException(statusCode: 503) => const SpanStatus.unavailable(),
-    ApiClientException(statusCode: 501) => const SpanStatus.unimplemented(),
-    ApiClientException(statusCode: 500) => const SpanStatus.internalError(),
-    ApiClientException(statusCode: 429) => const SpanStatus.resourceExhausted(),
-    ApiClientException(statusCode: 409) => const SpanStatus.aborted(),
-    ApiClientException(statusCode: 404) => const SpanStatus.notFound(),
-    ApiClientException(statusCode: 403) => const SpanStatus.permissionDenied(),
-    ApiClientException(statusCode: 401) => const SpanStatus.unauthenticated(),
-    ApiClientException(statusCode: 400) => const SpanStatus.failedPrecondition(),
-    ApiClientException$Cancelled() => const SpanStatus.cancelled(),
-    ApiClientException(statusCode: < 400) => const SpanStatus.unknownError(),
-    ApiClientException(:final statusCode) => SpanStatus.fromHttpStatusCode(statusCode),
-    _ => const SpanStatus.unknownError(),
+    ApiClientException(statusCode: 503) => const .unavailable(),
+    ApiClientException(statusCode: 501) => const .unimplemented(),
+    ApiClientException(statusCode: 500) => const .internalError(),
+    ApiClientException(statusCode: 429) => const .resourceExhausted(),
+    ApiClientException(statusCode: 409) => const .aborted(),
+    ApiClientException(statusCode: 404) => const .notFound(),
+    ApiClientException(statusCode: 403) => const .permissionDenied(),
+    ApiClientException(statusCode: 401) => const .unauthenticated(),
+    ApiClientException(statusCode: 400) => const .failedPrecondition(),
+    ApiClientException$Cancelled() => const .cancelled(),
+    ApiClientException(statusCode: < 400) => const .unknownError(),
+    ApiClientException(:final statusCode) => .fromHttpStatusCode(statusCode),
+    _ => const .unknownError(),
   };
 }

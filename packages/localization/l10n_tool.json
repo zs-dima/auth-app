@@ -1,0 +1,14 @@
+{
+  "$comment": "The shape of this app's catalog, read by `dart run l10n_tool:<command>` and by the offline gate in test/l10n_consistency_test.dart.",
+
+  "sheetId": "1FAbQS3nA5czjBBayC3ms-DqkkdskCPLtrh2FDZ1P0lg",
+  "locales": ["en", "ru", "es", "de"],
+  "buckets": ["app", "errors", "settings", "auth"],
+
+  "$comment_factual": "Labels whose values are per-locale facts: a cell equal to the English one is the failure, not a mismatch.",
+  "factualLabels": ["lang", "langEn", "localeTag", "localeCode"],
+
+  "prefix": "app",
+  "arbDir": "lib/src/l10n",
+  "baselineDir": "tool/baseline"
+}

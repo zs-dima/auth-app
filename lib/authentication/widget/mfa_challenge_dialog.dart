@@ -33,12 +33,19 @@ class MfaChallengeDialog extends StatefulWidget {
 }
 
 class _MfaChallengeDialogState extends State<MfaChallengeDialog> {
+  static String _methodLabel(MfaMethod method) => switch (method) {
+    .totp => 'Authenticator app',
+    .sms => 'SMS code',
+    .email => 'Email code',
+    .recoveryCode => 'Recovery code',
+  };
   final _codeController = TextEditingController();
-  final _codeFocusNode = FocusNode();
 
+  final _codeFocusNode = FocusNode();
   late MfaMethodInfo _method;
   AuthenticationController? _controller;
   StreamSubscription<AuthenticationState>? _subscription;
+
   String? _localError;
 
   @override
@@ -49,22 +56,6 @@ class _MfaChallengeDialogState extends State<MfaChallengeDialog> {
     _method = methods.isEmpty
         ? const MfaMethodInfo(method: .totp, hint: '')
         : methods.firstWhere((m) => m.isDefault, orElse: () => methods.first);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_controller == null) {
-      final controller = AuthenticationScope.controllerOf(context);
-      _controller = controller;
-      // On success the dialog only has to leave — the guard handles navigation.
-      _subscription = controller.toStream().listen(
-        (state) {
-          if (state.user.isAuthenticated && mounted) Navigator.of(context).pop();
-        },
-        cancelOnError: false,
-      );
-    }
   }
 
   void _verify() {
@@ -85,12 +76,21 @@ class _MfaChallengeDialogState extends State<MfaChallengeDialog> {
     );
   }
 
-  static String _methodLabel(MfaMethod method) => switch (method) {
-    .totp => 'Authenticator app',
-    .sms => 'SMS code',
-    .email => 'Email code',
-    .recoveryCode => 'Recovery code',
-  };
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller == null) {
+      final controller = AuthenticationScope.controllerOf(context);
+      _controller = controller;
+      // On success the dialog only has to leave — the guard handles navigation.
+      _subscription = controller.toStream().listen(
+        (state) {
+          if (state.user.isAuthenticated && mounted) Navigator.of(context).pop();
+        },
+        cancelOnError: false,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -168,9 +168,8 @@ class _MfaChallengeDialogState extends State<MfaChallengeDialog> {
             FilledButton(
               onPressed: busy ? null : _verify,
               child: busy
-                  ? const SizedBox(
-                      width: 16.0,
-                      height: 16.0,
+                  ? const SizedBox.square(
+                      dimension: 16.0,
                       child: CircularProgressIndicator(strokeWidth: 2.0),
                     )
                   : const Text('Verify'),

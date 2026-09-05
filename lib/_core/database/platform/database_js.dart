@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_web_libraries_in_flutter, prefer-static-class
 
-import 'package:auth_app/_core/log/logger.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
 
@@ -21,7 +21,13 @@ Future<QueryExecutor> $createQueryExecutor(
       );
 
       if (result.missingFeatures.isNotEmpty) {
-        logger.w('Using ${result.chosenImplementation} due to missing browser features: ${result.missingFeatures}');
+        log.w(
+          'Database | web | degraded',
+          meta: <String, Object?>{
+            'db.implementation': result.chosenImplementation.toString(),
+            'db.missing_features': result.missingFeatures.toString(),
+          },
+        );
       }
 
       return result.resolvedExecutor;

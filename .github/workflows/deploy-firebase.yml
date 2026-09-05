@@ -36,14 +36,50 @@ env:
   FIREBASE_TOOLS_VERSION: "15.15.0"
 
 jobs:
+  # Deploy gate: never ship what does not analyze/test green (infos are fatal too — the tree
+  # was swept clean 2026-09-02).
+  analysis:
+    name: Analyze & Test (deploy gate)
+    runs-on: ubuntu-latest
+    container:
+      image: plugfox/flutter:${{ vars.FLUTTER_VERSION || '3.47.2' }}-web
+    timeout-minutes: 20
+    env:
+      PUB_CACHE: /var/cache/pub
+    steps:
+      - name: ✨ Checkout
+        uses: actions/checkout@v6
+
+      - name: 📦 Cache Flutter Pub packages
+        uses: actions/cache@v5
+        with:
+          path: /var/cache/pub
+          key: flutter-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            flutter-pub-
+
+      # `install: false` — the container image already ships the pinned SDK. Codegen is NOT
+      # optional here: `.g.dart` / `.freezed.dart` are gitignored, so before this the deploy gate
+      # analyzed a tree whose generated half did not exist.
+      - name: 🐦 Setup Flutter
+        uses: ./.github/actions/setup-flutter
+        with:
+          install: "false"
+
+      - name: 🔍 Analyze
+        run: flutter analyze
+
+      - name: 🧪 Test
+        run: flutter test
+
   build_and_deploy_web:
     name: Build & Deploy Flutter Web
     runs-on: ubuntu-latest
-    # needs: [lint, test] TODO
+    needs: [analysis]
     container:
       image: plugfox/flutter:${{ vars.FLUTTER_VERSION || '3.47.2' }}-web
     if: github.actor != 'dependabot[bot]' && (github.ref_name == 'main' || github.ref_name == 'v3' || github.ref_name ==
-      'dev' || startsWith(github.ref, 'refs/tags'))
+      'dev' || github.ref_name == 'connect' || startsWith(github.ref, 'refs/tags'))
     timeout-minutes: 30
     env:
       # Persist PUB_CACHE path. GitLab can use: ${{ github.workspace }}/.pub-cache
@@ -85,13 +121,13 @@ jobs:
           APP_ENVIRONMENT: ${{ env.ENV }}
           GIT_SHA: ${{ github.sha }}
           S3_URL: ${{ secrets.S3_URL }}
-          # OAI_KEY: ${{ secrets.OAI_KEY }}
-          # WHISPER_ADDRESS: ${{ secrets.WHISPER_ADDRESS }}
-          # SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          # SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          # SENTRY_PROJECT: ${{ env.SENTRY_PROJECT }}
-          # SENTRY_ENVIRONMENT: ${{ env.ENV }}
-          # SENTRY_RELEASE: ${{ github.sha }}
+          # Source-map upload (sentry_dart_plugin); the build script skips it gracefully when
+          # SENTRY_AUTH_TOKEN is not configured in the repo secrets.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ env.SENTRY_PROJECT }}
+          SENTRY_ENVIRONMENT: ${{ env.ENV }}
+          SENTRY_RELEASE: ${{ github.sha }}
 
       - name: 📦 Upload build artifacts
         if: success() && env.ENV == 'production'

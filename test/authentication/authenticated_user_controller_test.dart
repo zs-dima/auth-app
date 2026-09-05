@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/message/ui_messenger.dart';
 import 'package:auth_app/authentication/controller/authenticated_user_controller.dart';
 import 'package:auth_app/users/controller/users_controller.dart';
 import 'package:auth_app/users/data/users_repository.dart';
@@ -39,13 +39,9 @@ void main() {
   });
 }
 
-AuthenticatedUserController _buildController(IUsersRepository repository) {
-  final messageController = AppMessageController();
-  return .new(
-    usersController: UsersController(repository: repository, messageController: messageController),
-    messageController: messageController,
-  );
-}
+AuthenticatedUserController _buildController(IUsersRepository repository) => .new(
+  usersController: UsersController(repository: repository, messenger: UiMessenger()),
+);
 
 /// Drains the controller's sequential queue plus the fetch it awaits.
 Future<void> _settle() async {

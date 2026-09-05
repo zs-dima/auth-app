@@ -1,0 +1,9 @@
+# Version pin for the vendored web binaries next to this file.
+#
+# web/drift_worker.js and web/sqlite3.wasm are PRECOMPILED artifacts that must match the Dart
+# packages the app pins (a drift worker from another major/minor can silently break the OPFS
+# protocol). test/tool/web_binaries_pin_test.dart compares these lines against pubspec.lock:
+# when a dependency bump fails that test, refresh the binaries (drift docs: "Web setup",
+# https://drift.simonbinder.eu/platforms/web/) and update the versions here in the same change.
+drift 2.34.3
+sqlite3 3.5.2

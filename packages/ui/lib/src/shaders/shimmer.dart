@@ -270,9 +270,12 @@ abstract final class _ShimmerShaderManager {
     const asset = 'packages/ui/shaders/shimmer.frag';
     try {
       return _$fragmentProgram = await ui.FragmentProgram.fromAsset(asset).timeout(const Duration(seconds: 5));
+      // Deliberate Error catch: fromAsset throws UnsupportedError on renderers without shader
+      // support — that's fine for the HTML renderer and unsupported platforms.
+      // ignore: avoid_catching_errors
     } on UnsupportedError {
-      return null; // Thats fine for HTML Renderer and unsupported platforms.
-    } catch (e, s) {
+      return null;
+    } on Object catch (e, s) {
       developer.log('Failed to load shader: $e', error: e, stackTrace: s, name: 'ui', level: 700);
       FlutterError.reportError(
         FlutterErrorDetails(

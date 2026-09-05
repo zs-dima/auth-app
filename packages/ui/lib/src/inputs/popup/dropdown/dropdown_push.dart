@@ -6,7 +6,6 @@ import 'package:ui/src/inputs/popup/core/dropdown_suggestions.dart';
 import 'package:ui/src/inputs/popup/popup_builder.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 class DropdownPush<T> extends StatelessWidget {
   const DropdownPush(
@@ -67,13 +66,9 @@ class DropdownPush<T> extends StatelessWidget {
           : decoration,
     );
 
-    return CaseWrapWidget(
-      getWrapper: largeScreen
-          ? (child) => LabelWidget(
-              label: title ?? decoration?.labelText ?? '',
-              child: child,
-            )
-          : null,
+    return LabelWidget(
+      // Constant shape: the label is a slot, not a wrapper that appears at a breakpoint.
+      label: largeScreen ? (title ?? decoration?.labelText ?? '') : '',
       child: enabled
           ? PopupBuilder(
               followerAnchor: .topLeft,

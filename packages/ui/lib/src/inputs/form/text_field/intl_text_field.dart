@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 class IntlTextField extends StatelessWidget {
   const IntlTextField(
@@ -120,13 +119,9 @@ class IntlTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final decimalDigits = (format.decimalDigits ?? 0) > 0;
 
-    return CaseWrapWidget(
-      getWrapper: largeScreen
-          ? (child) => LabelWidget(
-              label: label ?? decoration?.labelText ?? '',
-              child: child,
-            )
-          : null,
+    return LabelWidget(
+      // Constant shape: the label is a slot, not a wrapper that appears at a breakpoint.
+      label: largeScreen ? (label ?? decoration?.labelText ?? '') : '',
       child: TextFormField(
         decoration: largeScreen
             ? (decoration ?? const InputDecoration())

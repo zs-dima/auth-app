@@ -145,9 +145,11 @@ packages:
   lints_tool:
     dependency: "direct dev"
     description:
-      path: "../../tool/lints_tool"
-      relative: true
-    source: path
+      path: "."
+      ref: "v1.0.1"
+      resolved-ref: bcd516335806dee9e11d3f83ab7b56d5112c623a
+      url: "https://github.com/zs-dima/lints_tool.git"
+    source: git
     version: "1.0.1"
   matcher:
     dependency: transitive

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:auth_model/src/api/rpc_exceptions.dart';
-import 'package:connect_model/connect_model.dart';
+import 'package:connect_kit/connect_kit.dart';
 import 'package:connectrpc/connect.dart';
 
 /// Runs a unary RPC with the app-default deadline, mapping any [ConnectException] to the domain

@@ -1,6 +1,6 @@
 import 'package:auth_model/auth_model.dart';
 import 'package:auth_model/src/proto/auth/v1/auth.connect.spec.dart';
-import 'package:connect_model/connect_model.dart';
+import 'package:connect_kit/connect_kit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

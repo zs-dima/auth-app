@@ -41,29 +41,44 @@ Missing translations can be AI-filled (writes only empty cells, validates that I
 placeholders survive):
 
 ```bash
-dart run sheety_localization:localize -c credentials.json -s <SHEET_ID> -f <openai-key-file> --model=gpt-5
+# from the repo root
+make l10n-translate
 ```
 
 ## ⚠ Pitfalls
 
 - **Never translate placeholder names**: `{name}` must stay `{name}` in every locale —
   Sheets' built-in auto-translate WILL rename them (`{имя}`) and break gen-l10n
-  (`tool/fix_probe.dart` is the recorded repair example). Use `sheety_localization:localize`
+  (the repair is a single-cell `values.update` with `valueInputOption: 'RAW'`; `tool/seed_sheet.dart`
+  shows the shape). Use `sheety_localization:localize`
   instead — it validates placeholders.
 - ICU `select` keys (e.g. `permissionDenied` in `rpcErrorMessages`) are code identifiers,
   not text — never translate them either.
 - `--include-empty` is required on generate (already wired into `make l10n`): without it a
   row with blank trailing locale cells is dropped entirely, English included.
 
+## The shape, in one file
+
+`l10n_tool.json` holds the sheet id, the locale order, the buckets, the factual labels and the ARB
+paths. Every command and the offline gate read it, so a change lands in one place.
+
 ## Tools (`tool/`)
 
-- `verify_l10n.dart` — round-trip gate (run by `make l10n`): every legacy key present,
-  values not drifted, all bucket×locale ARBs exist, ICU probe intact.
+- `generate.dart` — the pipeline `make l10n` runs: sheet to ARBs to generated Dart, then the
+  round-trip gate. `--translate` AI-fills empty cells first.
+- `verify_l10n.dart` — round-trip gate: every legacy key present, values not drifted, all
+  bucket by locale ARBs exist, ICU placeholders intact in every locale.
 - `seed_sheet.dart` — the original one-off seeder. **Destructive**: clears and rewrites all
-  tabs from `tool/legacy_baseline/` — re-running it discards sheet edits/translations.
-- `add_rpc_errors_row.dart`, `fix_probe.dart`, `fix_rpc_errors_de.dart` — one-off targeted
-  sheet edits, kept as reference examples for safe (append/single-cell) API writes.
+  tabs from `tool/legacy_baseline/` — re-running it discards sheet edits and translations.
+- `migration.dart` — what the 2026 sheet migration renamed and added; it goes away with the
+  legacy baseline.
 - `legacy_baseline/` — frozen pre-migration ARB catalog; the verifier's comparison baseline.
+
+The offline gate (`test/l10n_consistency_test.dart`) is `package:l10n_tool/testing.dart`. The rest
+of that package (`l10n_tool:generate`, `verify`, `seed_sheet`, `pull_baseline`) needs a per-bucket
+baseline authored from the sheet, and `pull_baseline` refuses a row without a description: this
+catalog has 4 across 115 keys. Write the descriptions, then the local scripts here go away and
+`requireDescriptions` in the gate turns on.
 
 ## Consumption
 

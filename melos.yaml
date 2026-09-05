@@ -1,8 +1,0 @@
-name: auth_app
-
-packages:
-  - packages/**
-
-scripts:
-  analyze:
-    exec: dart analyze .

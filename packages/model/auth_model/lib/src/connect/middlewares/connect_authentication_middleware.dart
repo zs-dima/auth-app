@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:auth_model/src/connect/authorization.dart';
 import 'package:auth_model/src/model/credentials/access_credentials.dart';
-import 'package:connect_model/connect_model.dart';
+import 'package:connect_kit/connect_kit.dart';
 import 'package:connectrpc/connect.dart';
 // VoidCallback is the single platform-neutral typedef from core_model (NOT dart:ui), so this
 // package stays web-safe (A1).

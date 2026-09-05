@@ -40,10 +40,15 @@ if [ ! -f "config/${APP_ENVIRONMENT}.env" ]; then
     exit 1
 fi
 
-# 0. Clean up example folders that interfere with workspace resolution
+# 0. Clean up example folders that interfere with workspace resolution.
+# CI-only: on a developer tree this permanently deletes working example apps.
 log_step "0/6 Cleaning up example folders..."
-find packages -type d -name "example" -exec rm -rf {} + 2>/dev/null || true
-log_info "Removed example folders from packages"
+if [[ -n "${CI:-}" ]]; then
+    find packages -type d -name "example" -exec rm -rf {} + 2>/dev/null || true
+    log_info "Removed example folders from packages (CI)"
+else
+    log_info "Skipping example cleanup (not CI)"
+fi
 
 # 1. Fetch Flutter dependencies for the main app
 log_step "1/6 Getting Flutter packages for main app..."
@@ -51,20 +56,6 @@ flutter pub get || { log_error "Failed to get Flutter packages"; exit 1; }
 
 # 1.5 Activate pubspec_generator (actual generation runs after build_runner in step 3.5)
 dart pub global activate pubspec_generator || { log_error "Failed to activate pubspec_generator"; exit 1; }
-
-# 2. Generate OpenAPI client from the spec (must run before build_runner)
-log_step "2/6 Generating OpenAPI client..."
-if [ -f "api/openapi/v2/openapi.yaml" ]; then
-    if ! dart run openapi_generator:generate \
-        --input=api/openapi/v2/openapi.yaml \
-        --output=lib/_core/api; then
-        log_error "OpenAPI client generation failed"
-        exit 1
-    fi
-    log_info "OpenAPI client generated successfully"
-else
-    log_warning "OpenAPI spec not found, skipping generation"
-fi
 
 # 3. Run all code generation tasks in parallel (for monorepo packages)
 log_step "3/6 Running code generation tasks in parallel..."
@@ -134,12 +125,8 @@ start_build_runner_job() {
     active_jobs=$((active_jobs + 1))
 }
 
-# Schedule codegen for the main app if it uses build_runner
-if grep -q "build_runner:" pubspec.yaml; then
-    job_count=$((job_count + 1))
-    log_info "Scheduling code generation for main app"
-    start_build_runner_job "." "$job_count"
-fi
+# Packages first, app AFTER the wait below: the app's build_runner consumes the packages'
+# generated output, so it must not race them in the same parallel wave.
 
 # Find and schedule code generation for each package in the monorepo that uses build_runner
 if [ -d "package" ] || [ -d "packages" ]; then
@@ -200,6 +187,16 @@ else
     log_info "No code generation tasks needed"
 fi
 
+# 3.2 App codegen — serial, after every package job finished (see the ordering note above).
+if grep -q "build_runner:" pubspec.yaml; then
+    log_info "Running code generation for the main app..."
+    if ! dart run build_runner build --release --fail-on-severe -d; then
+        log_error "build_runner failed for the main app"
+        exit 1
+    fi
+    job_count=$((job_count + 1))
+fi
+
 # 3.5 Generate pubspec.yaml.g.dart (runs after build_runner to avoid -d deleting it)
 PUBSPEC_GEN="lib/_core/generated/constant/pubspec.yaml.g.dart"
 log_info "Generating pubspec.yaml.g.dart..."
@@ -217,15 +214,6 @@ if [[ -n "${S3_URL:-}" ]]; then
     BUILD_DEFINES+=(--dart-define="S3_URL=${S3_URL}")
     log_info "Added S3_URL to build defines"
 fi
-if [[ -n "${OAI_KEY:-}" ]]; then
-    BUILD_DEFINES+=(--dart-define="OAI_KEY=${OAI_KEY}")
-    log_info "Added OAI_KEY to build defines"
-fi
-if [[ -n "${WHISPER_ADDRESS:-}" ]]; then
-    BUILD_DEFINES+=(--dart-define="WHISPER_ADDRESS=${WHISPER_ADDRESS}")
-    log_info "Added WHISPER_ADDRESS to build defines"
-fi
-
 # Run the Flutter web build with environment-specific config.
 if ! flutter build web --release --no-pub "${BUILD_DEFINES[@]}" \
     --dart-define-from-file="config/${APP_ENVIRONMENT}.env" \
@@ -253,13 +241,13 @@ rm -f build/web/index.html
 mv build/web/index.prod.html build/web/index.html
 log_info "Swapped dev index.html for prod template (index.prod.html)"
 
-# 4.3 Strip repo files that must not ship: template snapshots and the web README
-# (documents token/XSS threat model). Flutter copies web/ verbatim into build/web;
-# removing them BEFORE sw:generate keeps them out of the SW precache manifest too.
-# firebase.json `hosting.ignore` and sw.yaml `no-glob` guard the same set for
-# deploys made outside this script.
-rm -f build/web/v0-index.html build/web/v1-index.html build/web/index.prod-basic.html build/web/README.md
-log_info "Removed non-shipping web templates (v0/v1/prod-basic index, README.md)"
+# 4.3 Strip repo files that must not ship: the web README documents the token/XSS
+# threat model. Flutter copies web/ verbatim into build/web; removing it BEFORE
+# sw:generate keeps it out of the SW precache manifest too. firebase.json
+# `hosting.ignore` guards the same for deploys made outside this script.
+# (v0/v1/prod-basic template snapshots were deleted from web/ on 2026-09-02.)
+rm -f build/web/README.md
+log_info "Removed non-shipping web files (README.md)"
 
 # Post-swap sanity: the prod index.html MUST include the sw bootstrap tag,
 # otherwise sw:generate will succeed but the deployed site will load nothing.

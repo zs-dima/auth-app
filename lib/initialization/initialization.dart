@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/log/logger.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/model/dependencies.dart';
 import 'package:auth_app/initialization/initialize_dependencies.dart';
 import 'package:auth_app/initialization/platform/platform_initialization.dart' as platform_initialization;
+import 'package:auth_app/initialization/widget/error_box.dart';
 /* import 'package:database/database.dart'; */
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -37,8 +38,9 @@ Future<Dependencies> $initializeApp({
       text: 'Logic initialization started...',
     );
 
-    FlutterError.onError = logger.logFlutterError;
-    PlatformDispatcher.instance.onError = logger.logPlatformDispatcherError;
+    FlutterError.onError = logFlutterError;
+    PlatformDispatcher.instance.onError = logPlatformError;
+    ErrorWidget.builder = buildAppErrorWidget;
 
     if (orientations != null) {
       await SystemChrome.setPreferredOrientations(orientations);
@@ -63,12 +65,21 @@ Future<Dependencies> $initializeApp({
         // The abandoned composition keeps running in the background; if it ever completes,
         // release its resources — nobody will consume it (a retry builds a fresh one).
         dependenciesFuture.then($disposeDependencies).ignore();
+        // Logged HERE, unlike a failed step: no step failed, so `composeDependencies`
+        // reported nothing and this was the one boot outcome that left no trace anywhere.
+        log.e('Boot | compose | timed out', meta: <String, Object?>{'app.boot.timeout_s': 420});
         throw TimeoutException('Initialization timed out after 7 minutes');
       },
     );
 
     final onSuccessCall = onSuccess?.call(dependencies);
     final _ = onSuccessCall is Future ? await onSuccessCall : onSuccessCall;
+
+    // Maintenance runs AFTER the first frame and after first-build contention, not as an init
+    // step: nothing about trimming last week's journal is worth making the user wait for.
+    binding.addPostFrameCallback(
+      (_) => Future<void>.delayed(const Duration(seconds: 3)).then((_) => $maintainDatabase(dependencies)).ignore(),
+    );
 
     platform_initialization.$updateLoadingProgress(
       progress: 100,
@@ -77,8 +88,10 @@ Future<Dependencies> $initializeApp({
 
     return dependencies;
   } on Object catch (error, stackTrace) {
+    // Not logged here: `composeDependencies` already reported the step that failed, WITH the
+    // journal sink still attached. A second line here (and a third in `main`) produced three
+    // crash-reporter issues for one boot, two of them after the sink was removed.
     onError?.call(error, stackTrace);
-    logger.e('Initialization failed', error: error, stackTrace: stackTrace);
     Error.throwWithStackTrace(error, stackTrace);
   } finally {
     stopwatch.stop();

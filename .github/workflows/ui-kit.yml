@@ -1,0 +1,99 @@
+name: "UI Kit Gallery"
+
+# Publishes `packages/ui/example` to a Firebase preview channel, so the design system has a
+# LOOKABLE version: a widget test proves a control still meets contrast and tap-target rules,
+# but only a rendered gallery answers "does this still look like our app".
+#
+# A preview channel, not the live site: the gallery is a working reference for the team, and it
+# expires on its own if nobody keeps publishing it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/ui/**"
+      - ".github/workflows/ui-kit.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.2" # keep in sync with code-analysis.yml
+  FIREBASE_PROJECT_ID: "zs-auth-app"
+  FIREBASE_TOOLS_VERSION: "15.15.0"
+
+jobs:
+  publish:
+    name: Build & publish the gallery
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The example app is NOT a workspace member (it pins `ui` by path), so it resolves and builds
+    # on its own — the composite bootstrap would generate the app's code, which it never needs.
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v6
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('packages/ui/example/pubspec.lock') }}
+
+      - name: 🧪 Test the kit
+        working-directory: packages/ui
+        run: |
+          flutter pub get
+          flutter test
+
+      - name: 🏗️ Build the gallery
+        working-directory: packages/ui/example
+        run: |
+          flutter pub get
+          flutter build web --release --base-href /
+
+      - name: 🟢 Install Node.js 24.x # for Firebase CLI
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: 🔐 Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZS_AUTH_APP }}"
+
+      - name: ☁ Deploy to the ui-kit channel
+        id: deploy
+        working-directory: packages/ui/example
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx "firebase-tools@${FIREBASE_TOOLS_VERSION}" \
+            hosting:channel:deploy ui-kit \
+            --expires 30d \
+            --project "${FIREBASE_PROJECT_ID}" \
+            --json >/tmp/ui-kit-deploy.json
+          node -e '
+            const fs = require("fs");
+            const deployment = JSON.parse(fs.readFileSync("/tmp/ui-kit-deploy.json", "utf8"));
+            const results = Object.values(deployment.result ?? {});
+            if (results.length === 0) throw new Error("Firebase preview deploy returned no hosting results.");
+            const { url = "", expireTime = "" } = results[0];
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${url}\nexpire_time=${expireTime}\n`);
+          '
+
+      - name: 🖼️ Summary
+        if: always()
+        run: |
+          {
+            echo "### 🖼️ UI Kit gallery"
+            echo ""
+            echo "**URL:** ${{ steps.deploy.outputs.url || 'N/A' }}"
+            echo "**Expires:** ${{ steps.deploy.outputs.expire_time || 'N/A' }}"
+            echo "**Commit:** ${{ github.sha }}"
+          } >> "$GITHUB_STEP_SUMMARY"

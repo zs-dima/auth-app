@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ui/src/inputs/widget/input_decorations.dart';
 import 'package:ui/src/inputs/widget/label_widget.dart';
-import 'package:ui/src/widgets/case_wrap_widget.dart';
 
 /// {@template text_form_field}
 /// AppTextFormField widget.
@@ -833,13 +832,17 @@ class AppTextFormField extends StatelessWidget {
   final AutovalidateMode? autovalidateMode;
 
   @override
-  Widget build(BuildContext context) => CaseWrapWidget(
-    getWrapper: largeScreen
-        ? (child) => LabelWidget(
-            label: decoration?.labelText ?? '',
-            child: expands ? Expanded(child: child) : child,
-          )
-        : null,
+  Widget build(BuildContext context) => LabelWidget(
+    // Constant shape: the label is a slot and `expands` is a parameter — swapping `Expanded` in
+    // and out around a text field destroyed its element, its focus and the IME's composing region
+    // on the keystroke that changed the flag.
+    label: largeScreen ? (decoration?.labelText ?? '') : '',
+    // NOT `largeScreen && expands`: the wrapper is unconditional now, so the field always sits in
+    // a `Flexible`, and a LOOSE one hands its child UNBOUNDED height. `TextField(expands: true)`
+    // under an unbounded height makes `InputDecorator` resolve an infinite container — which is
+    // why this has to follow `expands` itself. A tight `Flexible` in a bounded column is exactly
+    // the `Expanded` this replaced; in an unbounded one it throws, as that `Expanded` did.
+    expands: expands,
     child: TextFormField(
       groupId: groupId,
       restorationId: restorationId,
@@ -863,8 +866,8 @@ class AppTextFormField extends StatelessWidget {
       obscuringCharacter: obscuringCharacter,
       obscureText: obscureText,
       autocorrect: autocorrect ?? true,
-      smartDashesType: smartDashesType ?? (obscureText ? SmartDashesType.disabled : SmartDashesType.enabled),
-      smartQuotesType: smartQuotesType ?? (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
+      smartDashesType: smartDashesType ?? (obscureText ? .disabled : .enabled),
+      smartQuotesType: smartQuotesType ?? (obscureText ? .disabled : .enabled),
       enableSuggestions: enableSuggestions,
       maxLengthEnforcement: maxLengthEnforcement,
       maxLines: maxLines,

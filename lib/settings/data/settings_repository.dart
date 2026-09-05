@@ -17,6 +17,10 @@ abstract class ISettingsRepository {
   bool get firstStart;
   UserId get userId;
 
+  /// Whether crash reports may be sent. Defaults to true when never set (opt-out).
+  bool get sendCrashReports;
+
+  Future<void> setSendCrashReports(bool value);
   Future<void> setThemeColor(Color? value);
   Future<void> setThemeMode(ThemeMode? value);
   Future<void> setLocale(Locale value);
@@ -77,6 +81,9 @@ class SettingsRepository implements ISettingsRepository {
   UserId get userId => _preferences.userId.value ?? UserIdX.empty;
 
   @override
+  bool get sendCrashReports => _preferences.sendCrashReports.value ?? true;
+
+  @override
   Future<AccessCredentials?> getCredentials() async {
     final js = await _securePreferences.credentials.get();
     if (js.isNullOrSpace) return null;
@@ -110,6 +117,9 @@ class SettingsRepository implements ISettingsRepository {
     if (value == current) return;
     await _securePreferences.credentials.set(json.encode(value.toJson()));
   }
+
+  @override
+  Future<void> setSendCrashReports(bool value) => _preferences.sendCrashReports.set(value);
 
   @override
   Future<void> setThemeMode(ThemeMode? theme) => //

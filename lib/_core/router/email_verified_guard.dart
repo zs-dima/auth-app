@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:auth_app/_core/message/controller/message_controller.dart';
+import 'package:auth_app/_core/log/telemetry.dart';
 import 'package:auth_app/_core/router/routes.dart';
 import 'package:auth_app/authentication/controller/authentication_controller.dart';
 import 'package:octopus/octopus.dart';
@@ -9,12 +9,8 @@ import 'package:octopus/octopus.dart';
 /// - RPC flow: extracts token, calls confirmVerification API for auto-login
 /// - REST fallback: handles success/status parameter, shows message (manual login required)
 class EmailVerifiedGuard extends OctopusGuard {
-  EmailVerifiedGuard({
-    required this.messageController,
-    required this.authenticationController,
-  });
+  EmailVerifiedGuard({required this.authenticationController});
 
-  final AppMessageController messageController;
   final AuthenticationController authenticationController;
 
   @override
@@ -34,9 +30,10 @@ class EmailVerifiedGuard extends OctopusGuard {
       authenticationController.confirmVerification(
         token: token,
         type: .email,
-        onSuccess: () {
-          messageController.showAppMessage('Your email has been successfully verified.');
-        },
+        onSuccess: () =>
+            log('Auth | verification | confirmed').description('Your email has been successfully verified.')
+              ..info()
+              ..toast(tone: .ok),
       );
     } else {
       // REST fallback: Handle success/status parameter (manual login required)
@@ -44,7 +41,9 @@ class EmailVerifiedGuard extends OctopusGuard {
       final status = state.arguments.remove(RouteNode.status) ?? node.arguments[RouteNode.status];
 
       if (success == 'true' || status == 'success') {
-        messageController.showAppMessage('Your email has been verified. Please sign in.');
+        log('Auth | verification | confirmed out of band').description('Your email has been verified. Please sign in.')
+          ..info()
+          ..toast(tone: .ok);
       } else {
         final code = node.arguments[RouteNode.code];
         final msg = switch (code) {
@@ -53,7 +52,11 @@ class EmailVerifiedGuard extends OctopusGuard {
           'internal_error' => 'An error occurred. Please try again later.',
           _ => 'Email verification failed.',
         };
-        messageController.showAppError(msg);
+        log('Auth | verification | link rejected')
+            .meta(<String, Object?>{'app.verification.code': code})
+            .description(msg)
+          ..warn()
+          ..toast(tone: .alert);
       }
     }
 

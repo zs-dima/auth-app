@@ -64,7 +64,7 @@ void main() {
 
       expect(SettingsLocalization.of(capturedContext).lang, equals('Русский'));
       expect(ErrorsLocalization.of(capturedContext).error, equals('Ошибка'));
-      // The context-free escape hatch used by AppMessageControllerMixin.
+      // The context-free escape hatch used by describeError (user_facing_error.dart).
       expect(Localization.currentErrors, isNotNull);
       expect(Localization.currentErrors?.errInvalidFormat, equals('Неверный формат'));
       // ICU probe: meta placeholders → typed method; placeholder survives translation.

@@ -10,6 +10,8 @@
 
 RFC 2119 keywords (MUST / MUST NOT / SHOULD / MAY) are used in their normative sense.
 
+Last verified against the code: 2026-09-05.
+
 **Conventions**: file paths are repo-root-relative in backticks. Code is referenced by symbol name, never by line number — line numbers rot, symbols and tags are rep-stable. ASCII diagrams are illustrative; the numbered step lists are normative.
 
 ---
@@ -20,7 +22,7 @@ This document specifies the complete lifecycle of access/refresh tokens in this 
 model, both transport middlewares, the repository that owns all token state, persistence, the wire
 contract, the failure policy, concurrency guards, telemetry rules, and the hardening roadmap.
 
-It deliberately spans two packages and the app layer: token types and middleware contracts live in `packages/model/auth_model`, the HTTP pipeline in `packages/model/http_client`, and the stateful half (single-flight, persistence, logout) in the app at `lib/authentication/data/authentication_repository.dart`. That split is architectural (§3.2); the spec covers the whole and MUST NOT be split per package or relocated.
+It deliberately spans two packages and the app layer: token types and middleware contracts live in `packages/model/auth_model`, the HTTP pipeline in `http_kit` (a git dependency since 2026-09-04; source at `A:\source\_lib\flutter\http_kit`, formerly `packages/model/http_client`), and the stateful half (single-flight, persistence, logout) in the app at `lib/authentication/data/authentication_repository.dart`. That split is architectural (§3.2); the spec covers the whole and MUST NOT be split per package or relocated.
 
 Sibling docs this file does not duplicate:
 
@@ -67,8 +69,8 @@ Security goals, in priority order:
 | `ConnectAuthenticationClient`                                                                 | `packages/model/auth_model/lib/src/connect/connect_authentication_client.dart`                              | all auth RPCs; refresh-outcome classification; `mapRefreshResponse`                                      |
 | `ConnectAuthenticationMiddleware`, `kAuthServicePublicPaths`, `kAuthServiceRefreshTokensPath` | `packages/model/auth_model/lib/src/connect/middlewares/connect_authentication_middleware.dart`              | attach + 401→refresh→retry-once (unary); repair-without-replay (streaming)                               |
 | `HttpAuthenticationMiddleware`                                                             | `packages/model/auth_model/lib/src/http/middlewares/http_authentication_middleware.dart`              | exact HTTP mirror of the Connect middleware; **standby, currently unwired** (§15)                        |
-| `BearerAuthenticationMiddleware`                                                           | `packages/model/http_client/lib/src/middlewares/bearer_authentication_middleware.dart`                | minimal attach-only middleware, no refresh/retry — a different tool (§15); do not confuse with the above |
-| `ApiClient`, `kNoRetryContextKey`, `ApiClientRequest.canBeRetried`                         | `packages/model/http_client/lib/src/api_client.dart`                                                  | HTTP onion pipeline, body-replayability rules, session-cancel binding                                    |
+| `BearerAuthenticationMiddleware`                                                           | `http_kit` → `lib/src/middlewares/bearer_authentication_middleware.dart`                              | minimal attach-only middleware, no refresh/retry — a different tool (§15); do not confuse with the above |
+| `ApiClient`, `kNoRetryContextKey`, `ApiClientRequest.canBeRetried`                         | `http_kit` → `lib/src/api_client.dart`                                                                | HTTP onion pipeline, body-replayability rules, session-cancel binding                                    |
 | `CredentialsRejectedException`                                                             | `packages/model/auth_model/lib/src/api/auth_exceptions.dart`                                          | the single "definitive refresh rejection" signal                                                         |
 | `RequestSessionEndedException`                                                             | `packages/model/auth_model/lib/src/api/auth_exceptions.dart`                                          | typed A27 throw: a request that outlived its session fails without touching the current one              |
 | `RpcException` family                                                                     | `packages/model/auth_model/lib/src/api/rpc_exceptions.dart`                                         | typed transport errors (`$Authentication`, `$Network`, `$Request`, `$Server`, `$Cancelled`)              |
@@ -95,7 +97,7 @@ already-rotated token, which can trip reuse detection and revoke the whole sessi
 | Callback                              | Returns credentials                                                                                                                      | Returns `null`                                                                                                                                                                            | Throws                                                                                                                                                                                                                                                              |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getToken()`                          | current credentials; the implementation MUST proactively refresh when `expiresSoon` (single-flight)                                      | definitively no session → middleware calls `onAuthError()` and fails the call fast (RPC: `ConnectException(Code.unauthenticated, …)`; HTTP: `ApiClientException$Authentication(code: 'no_credentials')`) | transient resolution failure (e.g. a secure-storage hiccup) → propagates as-is, **no logout** — **INVARIANT (A3)**                                                                                                                                                  |
-| `refreshCredentials(usedAccessToken)` | rotated credentials — or the current ones when `usedAccessToken` is already stale within the same session (another wave refreshed; §7.2) | definitive rejection; the repository has already ended the session; middleware calls `onAuthError()` and rethrows the original auth error                                                 | transient failure → propagates, **no logout**; a later request retries. A typed throw (A27, `RequestSessionEndedException` from `auth_model`) likewise fails a request whose session ended before the refresh ran — no `onAuthError`, the current session untouched |
+| `refreshCredentials(usedAccessToken)` | rotated credentials — or the current ones when `usedAccessToken` is already stale within the same session (another wave refreshed; §7.2) | definitive rejection; the repository has already ended the session; middleware calls `onAuthError()` and rethrows the original auth error                                                 | transient failure → propagates, **no logout**; a later request retries. A typed throw (A27, `RequestSessionEndedException` from `auth_model`) likewise fails a request whose session ended before the refresh ran — no `onAuthError`, the current session untouched. This includes callers #2..#N of a 401 wave whose first caller's refresh was definitively rejected: the session is already ended when they leave the mutex queue (see 7.2 step 5) |
 | `onAuthError()`                       | fire-and-forget logout signal into the bus (A26); MUST be idempotent and MUST NOT throw                                                  | —                                                                                                                                                                                         | —                                                                                                                                                                                                                                                                   |
 
 `unauthenticatedPaths` — exact-match path allowlist that skips attach and refresh-retry (§7.4).
@@ -285,6 +287,12 @@ fire-and-forget; the single-flight mutex absorbs it; its failure never logs out)
    refresh-retry.
 5. `refreshCredentials` returned `null` (definitive; the repository has already logged out) →
    `onAuthError()` + rethrow the original auth error.
+   Only the wave's FIRST caller — the one whose refresh actually ran — sees this `null`. The
+   definitive rejection ends the session (epoch bump, provenance set cleared) while callers #2..#N
+   are still queued on the mutex; they then land in an ended session and take the A27 arm below
+   (`RequestSessionEndedException`, transient-shaped, no second `onAuthError`). The end state is
+   identical — one logout, every waved request fails — pinned by the "401-wave at a definitive
+   rejection" test.
 6. `refreshCredentials` threw (transient) → propagate WITHOUT `onAuthError` — a network blip during
    refresh never logs the user out (A3 policy).
 
@@ -415,13 +423,21 @@ Single-writer rule: `_refreshingMutex` serializes refresh, the sign-in commit, l
 instance, never `static`) so multi-account / impersonation / test instances don't head-of-line block each
 other.
 
+KNOWN (A22 residual): instance scoping means two LIVE composition roots — possible during the
+initialization retry window, where a timed-out first init's dependencies are not disposed before the
+retry builds a second set — hold independent mutexes over the SAME storage keys, recreating the
+multi-tab race in-process. The planned fix is structural (a lease/epoch primitive over the storage
+scope, tracked in the architecture plan), not a `static` mutex — see the multi-tab row below for the
+compensating SERVER-CONTRACT control.
+
 | Race                                                                          | Guard                                                                                                                                                                                                                                                                                                     | Anchor                                                 | Pinned by                                                                                                     |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | N parallel requests hit an expiring token                                     | one refresh under the mutex; the rest read the committed result                                                                                                                                                                                                                                           | `_refreshingMutex`                                     | `test/authentication/authentication_repository_test.dart`                                                     |
 | Concurrent 401 wave (many requests sent with token A)                         | generation dedup: stored token ≠ `usedAccessToken` → reuse, zero RPCs                                                                                                                                                                                                                                     | `refreshCredentials`                                   | same file                                                                                                     |
 | Logout during an in-flight refresh                                            | **INVARIANT (A2):** `_endSession()` bumps `_sessionEpoch` SYNCHRONOUSLY before `signOut` awaits the mutex; `_doRefresh` snapshots the epoch and re-checks it BOTH after the RPC AND after the persist awaits; on mismatch the rotated tokens are discarded — no session resurrection                      | `_sessionEpoch`, `_endSession`, `_doRefresh`           | same file                                                                                                     |
-| Refresh persist vs a queued logout's clears                                   | **INVARIANT (F1):** the persist is AWAITED under the mutex, so the queued logout's `setCredentials(null)` is ordered after it — storage always ends cleared. Disambiguation: the tag `F1` in `lib/_core/message/controller/app_message_controller_mixin.dart` belongs to a different review scope         | awaited `setUserId` / `setCredentials` in `_doRefresh` | same file                                                                                                     |
+| Refresh persist vs a queued logout's clears                                   | **INVARIANT (F1):** the persist is AWAITED under the mutex, so the queued logout's `setCredentials(null)` is ordered after it — storage always ends cleared. Disambiguation: the tag `F1` in `lib/_core/message/user_facing_error.dart` (which replaced `AppMessageControllerMixin` in the 2026-09-03 telemetry rework) belongs to a different review scope         | awaited `setUserId` / `setCredentials` in `_doRefresh` | same file                                                                                                     |
 | Sign-in commit vs logout                                                      | both serialize on the same mutex; whichever lands last wins cleanly; memory never disagrees with storage                                                                                                                                                                                                  | `_handleAuthResult`                                    | same file                                                                                                     |
+| Sign-out during `restore()`'s storage read                                    | **INVARIANT (A2):** `restore()` snapshots the epoch BEFORE `await getCredentials()` and commits the rehydrated session under `_refreshingMutex` with an epoch re-check — a signOut landing in the read gap wins; the cleared state stands (this was the one session-establishing path without the guard) | `restore()` epoch snapshot | same file ("signOut during restore") |
 | `restore()` vs proactive refresh                                              | emit-then-correct (F6): the rehydrated user is emitted first, the refresh corrects state afterwards                                                                                                                                                                                                       | `restore()`                                            | same file                                                                                                     |
 | Resume-refresh vs in-flight refresh                                           | single-flight absorbs both into the same mutex                                                                                                                                                                                                                                                            | `AppTree.didChangeAppLifecycleState`                   | by construction                                                                                               |
 | Process death between server rotation and local persist                       | stale refresh token on disk at next start — unavoidable client-side                                                                                                                                                                                                                                       | none                                                   | SERVER-CONTRACT grace period (§12.2); otherwise the next refresh is definitively rejected → clean logout (§8) |
@@ -483,6 +499,14 @@ Web architecture note: per draft-ietf-oauth-browser-based-apps the stronger brow
 token-mediating backend (tokens never reachable from JS). **DELIBERATE:** this app accepts the
 browser-only pattern with CSP because one Flutter codebase serves native + web; revisit only if the web
 deployment's threat profile hardens (§16.1 is the first step).
+
+**DELIBERATE (WebOptions):** the composition root supplies no `WebOptions` to `flutter_secure_storage`,
+so on web both the credentials blob AND the plugin's wrapping AES key live in `localStorage`
+(`FlutterSecureStorage.credentials` + the plugin's key entry). Supplying `WebOptions` (e.g. a
+non-extractable `wrapKey`) would not change the threat model: the wrapping key material is still
+persisted in the same origin storage an XSS attacker reads, so it buys obfuscation, not security — the
+operative defenses remain the CSP and the BFF escape hatch above. Do not "harden" this by adding
+`WebOptions` without a design that actually moves key material out of JS reach.
 
 The commented-out per-user key prefix in `SecurePreferencesDao` is kept scaffolding — this is a
 single-account app today.
@@ -557,8 +581,9 @@ best-effort, source→sink order. State emissions are close-safe: every publish 
 `_emit` helper, which skips the stream add once the controller is closed — an in-flight refresh
 completing during teardown cannot throw into its caller. Multi-device management exists at the contract level: `ListSessions`
 (POST; carries the refresh token in the body as the session credential), `RevokeSession(device_id)`,
-`RevokeOtherSessions` — all exposed by `IAuthenticationApi`; no UI yet (§16.7 covers the MFA UI; a
-sessions screen is a product decision, out of scope here).
+`RevokeOtherSessions` — all exposed by `IAuthenticationApi`; no session-management UI yet (a sessions
+screen is a product decision, out of scope here; the MFA challenge UI, once tracked as §16.7, is
+wired — see §16.7 DONE).
 
 ## 12. Wire contract and server-side expectations
 
@@ -603,6 +628,11 @@ sessions screen is a product decision, out of scope here).
   (§16.5).
 - **Revocation.** `SignOut` MUST revoke the presented session server-side (RFC 7009 analog);
   `RevokeSession` / `RevokeOtherSessions` likewise for targeted/mass revocation.
+- **Recovery tokens are single-use.** The password-recovery token accepted by `RecoveryConfirm` MUST be
+  invalidated on first successful use (and SHOULD be short-lived and bound to the requesting identity).
+  The client treats `recoveryConfirm` as one-shot and cannot verify reuse handling; a replayable
+  recovery token is an account-takeover primitive. `RecoveryStart` MUST answer identically for known and
+  unknown identifiers (anti-enumeration — the client already renders a neutral "check your inbox").
 - **Definitive codes are sacred.** The refresh endpoint MUST answer `UNAUTHENTICATED` /
   `INVALID_ARGUMENT` / `PERMISSION_DENIED` ONLY for genuinely unrecoverable token states. The client logs
   out immediately and durably on them; using these codes for transient conditions causes spurious
@@ -638,6 +668,17 @@ redaction at the SOURCE types, and it is load-bearing:
 - The composition-root logging around `onAuthError` / `getToken` mentions the event, never the token.
 - Expected teardown exceptions — RPC `canceled` and `RequestSessionEndedException` (A27) — are not
   captured as Sentry issues; their spans finish with a `cancelled` status (`ConnectSentryMiddleware`).
+  The same classification gates the transport logger (`ConnectLoggerMiddleware.isExpectedTeardown`:
+  `debug`, not `warn` — a warning is read as a problem, and it rides on the next crash report as a
+  breadcrumb) and the UI error boundary (`describeError` returns `null` for these types, so
+  `reportFailure` says nothing at all — the user's own logout must not render "An error has
+  occurred"). Unchanged guarantee, new mechanism: the classification moved out of
+  `AppMessageControllerMixin` with the 2026-09-03 telemetry rework, and only errors — never
+  warnings — become Sentry issues now.
+  The boundary matches the DOMAIN types as well as the transport ones: every RPC leaves the client
+  through `guardRpcCall` / `guardRpcStream`, which map a `ConnectException` to the family (A8), so
+  a cancelled call reaches the UI as `RpcException$Cancelled` and never as the bare type
+  (2026-09-05: matching only the bare one left "…: canceled" on screen after a sign-out).
 - **RECOMMENDED (§16.8):** structured counters for refresh attempts and outcomes (success / definitive /
   transient) and forced-logout reasons — zero token material — so server-side reuse-detection incidents
   are diagnosable from client telemetry.
@@ -709,8 +750,12 @@ explicitly scoped tasks, preserving the named invariants.
 6. **DPoP / sender-constraining readiness (RFC 9449).** Server-led. The client is already shaped for it:
    scheme + token flow through `AccessToken.type` / `authorizationHeaderValue`; a DPoP proof would be a
    second header attached at the same two middleware points. Do not build speculatively.
-7. **MFA challenge UI wiring.** `verifyMfa` (repository + API) and the controller's `onMfaRequired` hook
-   exist; the challenge screen does not — MFA_REQUIRED currently surfaces a truthful error message.
+7. **MFA challenge UI wiring — DONE 2026-09-02** (was already wired when this entry claimed otherwise:
+   the doc had drifted behind the code). `showMfaChallengeDialog`
+   (`lib/authentication/widget/mfa_challenge_dialog.dart`) drives `verifyMfa` and is handed to the
+   controller's `onMfaRequired` hook by the sign-in screen. Residual DELIBERATE: an entry point that
+   does not wire `onMfaRequired` still surfaces a truthful "MFA required" error instead of a dead-end
+   spinner (`AuthenticationController`).
 8. **Refresh observability counters** (§13) — attempts, outcomes, forced-logout reasons; no token
    material.
 9. **Per-deployment CSP `connect-src` pinning** at the CDN/header level — `web/README.md` owns the
@@ -735,7 +780,7 @@ Before touching ANY auth/token code, know which tests pin which behavior — and
 | Storage semantics (unconditional null-clear, dedup write)                                                                                                                                                                                                                                                     | `test/settings/settings_repository_test.dart`                             |
 | Telemetry redaction: headers, query (incl. SigV4 presigned material), raw-URL rendering                                                                                                                                                                                                                       | `test/_core/api/http/sentry_redaction_test.dart`                          |
 | PII redaction in user-profile `toString`                                                                                                                                                                                                                                                                      | `packages/model/auth_model/test/user_models_test.dart`                    |
-| HTTP pipeline ground rules (retry never touches 401; cancellation; replayability; timeouts)                                                                                                                                                                                                                   | `packages/model/http_client/test/http_pipeline_test.dart`                 |
+| HTTP pipeline ground rules (retry never touches 401; cancellation; replayability; timeouts)                                                                                                                                                                                                                   | `http_kit` → `test/http_pipeline_test.dart` (its own repository's gate)   |
 
 Rules:
 
@@ -746,7 +791,8 @@ Rules:
    - never move session persistence outside `_refreshingMutex`, and never fire-and-forget it (F1);
    - never remove either `_sessionEpoch` check around the awaits in `_doRefresh` (A2);
    - never signal logout except through `AuthenticationHandler` (A26).
-3. Gate: `flutter analyze` clean and `flutter test` green in the app root, `packages/model/auth_model`,
-   and `packages/model/http_client`.
+3. Gate: `flutter analyze` clean and `flutter test` green in the app root and `packages/model/auth_model`.
+   `http_kit` is a git dependency with its own CI gate; a change to the HTTP pipeline is a change
+   there, released by tag, and the `ref:` in `pubspec.yaml` moves with it.
 4. Update this document in the same PR that changes described behavior; refresh the
    "Last verified against" line.

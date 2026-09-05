@@ -1,0 +1,57 @@
+name: "Setup Flutter"
+description: "Install Flutter, fetch dependencies and generate the code that is not committed."
+
+# One bootstrap for every workflow. Before this, each job spelled out its own
+# `pub get` + build_runner sequence, and they had already drifted: the deploy
+# gate analyzed without generating anything, which cannot work when `.g.dart`
+# and `.freezed.dart` are gitignored.
+inputs:
+  flutter-version:
+    description: "Flutter SDK version. Keep in sync with deploy-firebase.yml and deploy/Dockerfile."
+    required: false
+    default: "3.47.2"
+  install:
+    description: "Install the SDK. Set to false inside a container image that already ships Flutter."
+    required: false
+    default: "true"
+  codegen:
+    description: "Run build_runner and pubspec_generator. Set to false when the job generates its own."
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: 🐦 Setup Flutter
+      if: inputs.install == 'true'
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+        cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('**/pubspec.lock') }}
+
+    # A container-run job checks out into a directory git considers foreign.
+    - name: 🔒 Configure Git safe directory
+      if: inputs.install != 'true'
+      shell: bash
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+    - name: 📦 Install Dependencies
+      shell: bash
+      run: flutter pub get
+
+    # Generated Dart (.g/.freezed) is gitignored, so CI must produce it. build_runner only builds
+    # the current package in a pub workspace — run it in every member that has it. l10n is NOT
+    # generated here: sheety_localization output is committed (CI must not need Google credentials).
+    - name: 🦄 Generate Code
+      if: inputs.codegen == 'true'
+      shell: bash
+      run: |
+        dart run build_runner build --delete-conflicting-outputs
+        (cd packages/model/auth_model && dart run build_runner build --delete-conflicting-outputs)
+        # pubspec.yaml.g.dart is gitignored but imported by lib/ code; its builder is not in
+        # build_runner (commented out in build.yaml) — generate it explicitly, after build_runner
+        # (same order as deploy/build_flutter_web.sh).
+        dart pub global activate pubspec_generator
+        dart pub global run pubspec_generator:generate --input pubspec.yaml --output lib/_core/generated/constant/pubspec.yaml.g.dart

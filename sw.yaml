@@ -18,12 +18,13 @@ prefix: auth
 # two SW entry points (`sw.js`, `bootstrap.js`), Firebase Cloud Messaging SW
 # (forward-compat: if the app ever adds FCM web, the messaging SW needs to
 # stay out of our cache manifest — it runs in a different scope), Flutter's
-# legacy service worker (auto-deleted by sw 0.1.2 but belt-and-braces),
+# legacy service worker (auto-deleted by sw itself but belt-and-braces),
 # source-map / symbol files, and the ~2 MB `assets/NOTICES` license dump.
 glob: "**.{html,js,wasm,json,mjs}; assets/**; canvaskit/**; icons/**"
-# v0/v1/prod-basic index snapshots must never enter the precache manifest — the deploy script
-# deletes them from build/web before sw:generate; this guards manual/out-of-script runs.
-no-glob: "sw.js; bootstrap.js; firebase-messaging-sw.js; flutter_service_worker.js; **/*.map; assets/NOTICES; v0-index.html; v1-index.html; index.prod-basic.html"
+# assets/assets/environment.json is the RUNTIME config the docker entrypoint writes at container
+# start (runtime wins over dart-define — environment_loader.dart). Cache-first precaching it
+# would freeze a container's env changes until the next SW version; it must always revalidate.
+no-glob: "sw.js; bootstrap.js; firebase-messaging-sw.js; flutter_service_worker.js; **/*.map; assets/NOTICES; assets/assets/environment.json"
 
 # Loading-widget defaults baked into `bootstrap.js` as `BuildConfig.uiDefaults`.
 # `web/index.prod.html` sets `data-config` on the bootstrap <script> and that
