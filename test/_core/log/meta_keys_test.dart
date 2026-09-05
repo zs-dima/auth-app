@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:telemetry/telemetry.dart';
 
 import '../tool/source_text.dart';
 
@@ -19,7 +20,11 @@ void main() {
   /// better anchor than the parameter name.
   final attributeMap = RegExp(r'<String, Object\?>\s*\{');
   final key = RegExp(r"'([^']+)'\s*:");
-  final wellFormed = RegExp(r'^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$');
+  // The package's own pattern, exported for exactly this: the rule the runtime
+  // asserts in `.meta({...})` and the rule this scan applies to source cannot
+  // drift apart if they are the same object. It is slightly stricter than the
+  // copy that used to live here — a segment may not start with a digit.
+  final wellFormed = kAttributeKey;
 
   test('every literal attribute key is lowercase, dotted and snake_cased', () {
     final offenders = <String>[];

@@ -96,11 +96,11 @@ void main() {
 
   Future<List<SentryEvent>> captured() async {
     // Pump FIRST: a cascade's channel actions are resolved after the last one is
-    // written, so the escalation has not been dispatched yet. Then `settle()` —
+    // written, so the escalation has not been dispatched yet. Then `flush()` —
     // the sink drops its capture future (a crash report never blocks the failing
     // path) and the SDK's own future makes no progress until something awaits it.
     await pumpEventQueue();
-    await sink.settle();
+    await sink.flush();
     final events = <SentryEvent>[];
     for (final envelope in recorder.envelopes) {
       for (final item in envelope.items) {
@@ -138,24 +138,21 @@ void main() {
 
   group('cascade order does not change what is sent', () {
     test('..escalate() then ..error() captures once', () async {
-      telemetry('Auth | signIn | failed')
-        ..cause(StateError('disk'))
+      telemetry('Auth | signIn | failed').cause(StateError('disk'))
         ..escalate()
         ..error();
       expect(await captured(), hasLength(1));
     });
 
     test('..error() then ..escalate() captures once', () async {
-      telemetry('Auth | signIn | failed')
-        ..cause(StateError('disk'))
+      telemetry('Auth | signIn | failed').cause(StateError('disk'))
         ..error()
         ..escalate();
       expect(await captured(), hasLength(1));
     });
 
     test('..warn() with escalate(level: .error) captures once', () async {
-      telemetry('Auth | signIn | failed')
-        ..cause(StateError('disk'))
+      telemetry('Auth | signIn | failed').cause(StateError('disk'))
         ..warn()
         ..escalate(level: .error);
       expect(await captured(), hasLength(1));
@@ -183,12 +180,11 @@ void main() {
   });
 
   test('an escalated warning travels as a structured LOG, never as an issue', () async {
-    telemetry('Rpc | call | failed')
-      ..meta(<String, Object?>{'rpc.path': '/auth.v1/SignIn'})
+    telemetry('Rpc | call | failed').meta(<String, Object?>{'rpc.path': '/auth.v1/SignIn'})
       ..warn()
       ..escalate();
     await pumpEventQueue();
-    await sink.settle();
+    await sink.flush();
 
     expect(await captured(), isEmpty, reason: 'a warning is not an issue');
     // That it still TRAVELS is not asserted here: a structured log is batched by the SDK

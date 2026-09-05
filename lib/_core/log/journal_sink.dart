@@ -90,7 +90,9 @@ final class JournalSink implements TelemetrySink, Flushable {
     (writer) => writer.insertAll(_database.logTbl, <LogTblCompanion>[
       for (final event in batch)
         LogTblCompanion.insert(
-          level: event.level.severityNumber,
+          // `LogEvent.severityNumber`, not the level's: a trace line spends the four numbers of
+          // its OpenTelemetry range on its tier, and `LogLevel.fromValue` reads all of them back.
+          level: event.severityNumber,
           message: event.body,
           time: Value<int>(event.timestamp.millisecondsSinceEpoch ~/ 1000),
           stack: Value<String?>(event.stackTrace?.toString()),

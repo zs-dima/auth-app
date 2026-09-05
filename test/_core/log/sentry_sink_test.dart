@@ -140,9 +140,12 @@ void main() {
       expect(crumb.timestamp, DateTime.utc(2026, 9, 3));
     });
 
-    test('a body with no separators still gets a category', () {
+    test('a body with no separators falls back to one shared category', () {
+      // A bridged line or a captured `print` names no subsystem, and a category
+      // made of the message would give the trail one category per line.
       final crumb = SentryTelemetry.breadcrumbFor(event(level: .info, body: 'something happened'));
-      expect(crumb.category, 'something happened');
+      expect(crumb.category, 'log');
+      expect(crumb.message, 'something happened', reason: 'the line itself is still the crumb');
     });
   });
 

@@ -42,15 +42,27 @@ final Telemetry log = Telemetry(runId: const Uuid().v4())..addSink(consoleSink);
 /// building MyWidget` — a distinct crash-reporter issue per widget, and a
 /// throttle key that never matched twice.
 void logFlutterError(FlutterErrorDetails details) =>
-    log('Flutter | framework | error').cause(details.exception, details.stack).meta(<String, Object?>{
-      if (details.library case final String library) 'flutter.library': library,
-      if (details.context?.toDescription() case final String context) 'flutter.context': context,
-      if (details.silent) 'flutter.silent': true,
-    }).error();
+    log('Flutter | framework | error')
+        .name('flutter.framework.error')
+        .cause(details.exception, details.stack)
+        .meta(<String, Object?>{
+          if (details.library case final String library) 'flutter.library': library,
+          if (details.context?.toDescription() case final String context) 'flutter.context': context,
+          if (details.silent) 'flutter.silent': true,
+        })
+        .error();
 
 /// Records an error from [PlatformDispatcher.onError]; returns `true` so the
-/// platform treats it as handled — it is, by us.
-bool logPlatformError(Object error, StackTrace stackTrace) => log.logPlatformError(error, stackTrace);
+/// platform treats it as handled, which it is.
+///
+/// Composed here rather than through `Telemetry.logPlatformError` so the event
+/// carries a name: the throttle dedupes on it and the reporter fingerprints on
+/// it, which is what keeps one uncaught failure to one issue.
+bool logPlatformError(Object error, StackTrace stackTrace) {
+  log('Platform | uncaught | error').name('platform.uncaught.error').cause(error, stackTrace).error();
+  return true;
+}
 
 /// Records an uncaught error escaping the app's zone.
-void logZoneError(Object error, StackTrace stackTrace) => log.logZoneError(error, stackTrace);
+void logZoneError(Object error, StackTrace stackTrace) =>
+    log('Zone | uncaught | error').name('zone.uncaught.error').cause(error, stackTrace).error();

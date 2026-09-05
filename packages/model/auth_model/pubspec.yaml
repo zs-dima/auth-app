@@ -11,18 +11,9 @@ environment:
 
 dependencies:
   # Packages
-  core_model:
-    git:
-      url: https://github.com/zs-dima/core_model.git
-      ref: v0.1.0
-  connect_kit:
-    git:
-      url: https://github.com/zs-dima/connect_kit.git
-      ref: v0.1.0
-  http_kit:
-    git:
-      url: https://github.com/zs-dima/http_kit.git
-      ref: v0.1.0
+  core_model: ^0.1.0
+  connect_kit: ^0.1.0
+  http_kit: ^0.1.0
 
   # SDK extensions
   meta: any
@@ -52,7 +43,4 @@ dev_dependencies:
   http: ^1.6.0
 
   # Lints
-  lints_tool:
-    git:
-      url: https://github.com/zs-dima/lints_tool.git
-      ref: v1.0.1
+  lints_tool: ^1.0.1

@@ -25,6 +25,8 @@ class LogsDialog extends StatelessWidget {
   /// which is what made "Details" on an error toast open a screen without it.
   static Future<void> show(BuildContext context) async {
     final router = Octopus.of(context);
+    // The journal only, not `log.flush()`: that would also wait for a crash
+    // report in flight, and this screen shows journal rows.
     final journal = context.dependencies.journal;
     await journal.flush();
     await router.showDialog<void>((context) => const LogsDialog());

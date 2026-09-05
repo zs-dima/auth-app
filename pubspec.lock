@@ -212,11 +212,10 @@ packages:
   connect_kit:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "v0.1.0"
-      resolved-ref: "2419f78dc9d4cc41be2d0d28b3474e474357df7c"
-      url: "https://github.com/zs-dima/connect_kit.git"
-    source: git
+      name: connect_kit
+      sha256: "88d5ea0434b00ba6cef0d7d40497899f8ad8e9f019bea46381adc62cfbd7621d"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.1.0"
   connectrpc:
     dependency: "direct main"
@@ -245,11 +244,10 @@ packages:
   core_model:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "v0.1.0"
-      resolved-ref: "8f39cfede4a97ba43000b1f08151546ed659bb77"
-      url: "https://github.com/zs-dima/core_model.git"
-    source: git
+      name: core_model
+      sha256: "7677ff7c8413e1811067a57d9580ae01c5d809329fcebe53be57963a8147936b"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.1.0"
   coverage:
     dependency: transitive
@@ -692,11 +690,10 @@ packages:
   http_kit:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "v0.1.0"
-      resolved-ref: e7e1c0cbe2838c93f5741757e2e8c9943bd75a0e
-      url: "https://github.com/zs-dima/http_kit.git"
-    source: git
+      name: http_kit
+      sha256: c76b256ee20cd39f587b74d13b78e046f3a08d20db4d710b28e549bb189ac104
+      url: "https://pub.dev"
+    source: hosted
     version: "0.1.0"
   http_multi_server:
     dependency: transitive
@@ -867,11 +864,10 @@ packages:
   lints_tool:
     dependency: "direct dev"
     description:
-      path: "."
-      ref: "v1.0.1"
-      resolved-ref: bcd516335806dee9e11d3f83ab7b56d5112c623a
-      url: "https://github.com/zs-dima/lints_tool.git"
-    source: git
+      name: lints_tool
+      sha256: adca5ec87595d0ee3c33d02ef950718ae26d1f0291da1e9287d24e30fff21f52
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.1"
   logging:
     dependency: "direct main"
@@ -1529,12 +1525,11 @@ packages:
   telemetry:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "v0.2.1"
-      resolved-ref: a3ceb09ca782d8ec302fb5006d2970579d8fdf08
-      url: "https://github.com/zs-dima/telemetry.git"
-    source: git
-    version: "0.2.1"
+      name: telemetry
+      sha256: c5b80c5a46a168bc16b04742bbcfaa1574ef01c8d6d3e7d282f224a602e35209
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.5"
   term_glyph:
     dependency: transitive
     description:

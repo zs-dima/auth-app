@@ -40,12 +40,13 @@ final class LoggingBridge {
       LogEvent(
         level: effective,
         body: 'Logging | forwarded | record',
-        name: 'logging.forwarded.${record.loggerName}',
         timestamp: record.time.toUtc(),
         sequence: log.nextSequence(),
         runId: log.runId,
+        // `emit` enriches nothing, so the launch attributes are passed rather
+        // than merged into `meta`: they belong to the launch, not this record.
+        resource: log.resource,
         meta: <String, Object?>{
-          ...log.resource,
           'log.source': 'logging',
           'log.logger': record.loggerName,
           'log.message': record.message,

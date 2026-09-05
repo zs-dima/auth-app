@@ -79,9 +79,12 @@ String? reportFailure(
     );
     return null;
   }
-  final draft = log(body).cause(error, stackTrace).description(described.text);
-  if (meta != null) draft.meta(meta);
-  draft.at(described.level);
+  final draft = log(body).cause(error, stackTrace).description(described.text).meta(meta)
+    ..at(described.level)
+    // To the reporter as well. Below the capture floor `ReportingSink` sends it
+    // as a structured log rather than an issue, which is how an outage or a 5xx
+    // the user was told about is visible without filing one issue per retry.
+    ..escalate();
   // `toast: false` for a caller that renders the sentence itself — the auth
   // screens put it under the form, and a snack bar saying the same thing twice
   // is not a second piece of information.

@@ -17,5 +17,37 @@ const TelemetryOptions kConsoleOptions = TelemetryOptions(
   // report. `info` there, `trace` in debug: the debug lines are state transitions
   // whose attributes carry whole state renderings, and a device log is the one
   // destination with no consent, no redaction and no expiry.
-  minLevel: kReleaseMode ? LogLevel.info : LogLevel.trace,
+  minLevel: kReleaseMode ? .info : .trace,
+  // The bare letter: the colour says the level, and the brackets were only
+  // ever there for a log without it.
+  levelTag: .letter,
+  // One glyph per subsystem after the level tag, and the word for the area
+  // dropped since the glyph says it. A CONSOLE choice only: the journal, Sentry
+  // and the breadcrumb trail are given the body, which stays
+  // `Area | operation | message`.
+  icon: AreaIcons(<String, String>{
+    'Auth': '🔑',
+    'Users': '👥',
+    'Avatar': '🖼',
+    'Image': '🖼',
+    'Control': '🪢',
+    'Rpc': '🌍',
+    'Http': '🌍',
+    'Router': '🧭',
+    'Database': '🗃',
+    'Journal': '🗃',
+    'Maintenance': '🧹',
+    'Migrator': '📦',
+    'Environment': '🌱',
+    'Device': '📱',
+    'Boot': '💫', // 🏗️ 🚀
+    'App': '📱',
+    'Sentry': '🛰',
+    'Settings': '⚙️',
+    'Logging': '🔌',
+    'Flutter': '🧩',
+    'Zone': '🧨',
+    'Platform': '🧨',
+    'Telemetry': '🔭',
+  }),
 );

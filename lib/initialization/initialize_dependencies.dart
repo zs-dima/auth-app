@@ -84,27 +84,20 @@ Future<Dependencies> composeDependencies(
       // `🚧 failed at step "Collect logs"` every step grouped into its own crash-reporter issue,
       // and the callers above (`$initializeApp`, `main`) each logged the same failure again — one
       // boot, three error events, two of them after this sink was already removed.
-      log.e(
-        'Boot | step | failed',
-        error: error,
-        stackTrace: stackTrace,
-        meta: <String, Object?>{'app.boot.step': step.name},
-      );
+      // Named: `ReportThrottle` dedupes on the name and the Sentry sink
+      // fingerprints on it, so every failed boot is one issue however the line
+      // is later reworded, and the step stays an attribute.
+      log('Boot | step | failed')
+          .name('boot.step.failed')
+          .cause(error, stackTrace)
+          .meta(<String, Object?>{'app.boot.step': step.name})
+          .error();
       await disposeSteps(steps.sublist(0, currentStep), dependencies);
       Error.throwWithStackTrace('Initialization failed at step "${step.name}": $error', stackTrace);
     }
   }
   return dependencies;
 }
-
-/// The journal sink currently registered on the telemetry facade, or `null` when none is.
-///
-/// The one piece of composition state that has to be module-level, for the same reason
-/// `log.toastSink` is compared by identity on teardown: an ABANDONED composition (the seven-minute
-/// timeout in `$initializeApp` builds a second container without disposing the first) tears down
-/// after the live one is running, and its dispose must not reach into globals the live container
-/// owns. `Telemetry` exposes no way to ask which sinks are registered, so ownership is tracked here.
-JournalSink? _liveJournal;
 
 /// The composition, as data. Each step colocates creation with its teardown (`dispose`);
 /// the dispose mirror is DERIVED by reversing this list — see [InitStep].
@@ -250,7 +243,6 @@ final List<InitStep> initializationSteps = <InitStep>[
       // has no other home (see `LogBuffer`).
       log.buffer.markDrained();
       log.addSink(journal);
-      _liveJournal = journal;
       // The drained events are queued, not written: the sink batches for five seconds, and the
       // lines this step exists to keep are exactly the ones a crash in the next second takes.
       journal.flush().ignore();
@@ -270,14 +262,12 @@ final List<InitStep> initializationSteps = <InitStep>[
       // abandoned one being replaced), and the next composition's lines need a keeper until its
       // own journal opens.
       //
-      // Only if this container's journal is still the registered one. An abandoned composition
-      // tearing down AFTER the retry installed its own would otherwise flip the live ring back to
-      // keeping `debug` and up, and 300 entries of that evict the `trace` lines the dev menu is
-      // the only home for.
-      if (identical(_liveJournal, dependencies.journal)) {
-        _liveJournal = null;
-        log.buffer.undrain();
-      }
+      // Only when no journal is left. A sink list is not a slot: an ABANDONED composition (the
+      // seven-minute timeout in `$initializeApp` builds a second container without disposing the
+      // first) is still registered when the retry installs its own, so asking whether THIS journal
+      // was registered says yes for both. The ring must go back to keeping `debug` and up only
+      // once nothing is writing it to disk.
+      if (!log.sinks.any((sink) => sink is JournalSink)) log.buffer.undrain();
       await dependencies.journal.dispose();
       await dependencies.loggingBridge.dispose();
     },

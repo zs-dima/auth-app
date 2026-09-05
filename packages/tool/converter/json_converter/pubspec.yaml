@@ -20,7 +20,4 @@ dependencies:
   json_annotation: ^4.12.0
 
 dev_dependencies:
-  lints_tool:
-    git:
-      url: https://github.com/zs-dima/lints_tool.git
-      ref: v1.0.1
+  lints_tool: ^1.0.1

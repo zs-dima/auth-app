@@ -145,11 +145,10 @@ packages:
   lints_tool:
     dependency: "direct dev"
     description:
-      path: "."
-      ref: "v1.0.1"
-      resolved-ref: bcd516335806dee9e11d3f83ab7b56d5112c623a
-      url: "https://github.com/zs-dima/lints_tool.git"
-    source: git
+      name: lints_tool
+      sha256: adca5ec87595d0ee3c33d02ef950718ae26d1f0291da1e9287d24e30fff21f52
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.1"
   matcher:
     dependency: transitive

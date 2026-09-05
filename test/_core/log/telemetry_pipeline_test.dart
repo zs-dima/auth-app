@@ -11,7 +11,7 @@ import 'package:logging/logging.dart' as logging;
 
 /// The app-side half of the pipeline: the sinks that know about drift, the
 /// messenger and the crash reporter. The engine itself is a separate package
-/// with its own gate (`telemetry`, github.com/zs-dima/telemetry).
+/// with its own gate (`telemetry`, https://pub.dev/packages/telemetry).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

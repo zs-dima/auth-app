@@ -58,24 +58,17 @@ dependencies:
   # Packages
   localization:
     path: packages/localization
-  core_model:
-    git:
-      url: https://github.com/zs-dima/core_model.git
-      ref: v0.1.0
-  connect_kit:
-    git:
-      url: https://github.com/zs-dima/connect_kit.git
-      ref: v0.1.0
+
+  # The shared kit, published by `dmitrii.app` on pub.dev; sources in A:/source/_lib/flutter.
+  core_model: ^0.1.0
+  connect_kit: ^0.1.0
   auth_model:
     path: packages/model/auth_model
   core_tool:
     path: packages/tool/core_tool
   json_converter:
     path: packages/tool/converter/json_converter
-  http_kit:
-    git:
-      url: https://github.com/zs-dima/http_kit.git
-      ref: v0.1.0
+  http_kit: ^0.1.0
   ui:
     path: packages/ui
 
@@ -100,10 +93,7 @@ dependencies:
   # timezone: ^0.10.0
 
   # Telemetry: one event model for logs, journal, crash reports, toasts
-  telemetry:
-    git:
-      url: https://github.com/zs-dima/telemetry.git
-      ref: v0.2.1
+  telemetry: ^0.3.5
 
   # State management
   control: ^1.0.0-dev.1
@@ -244,10 +234,7 @@ dev_dependencies:
   sw: ^0.1.5
 
   # Lints
-  lints_tool:
-    git:
-      url: https://github.com/zs-dima/lints_tool.git
-      ref: v1.0.1
+  lints_tool: ^1.0.1
 
 dependency_overrides:
   web: ^1.1.1 # ws

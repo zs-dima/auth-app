@@ -1,6 +1,6 @@
 .PHONY: dcm dcm-fix dcm-unused-code dcm-unused-files dcm-unused-l10n stats dependency-validator pana
 
-# DCM (configured in `lints_tool`, a git dependency: github.com/zs-dima/lints_tool). The template's targets here called
+# DCM (configured in `lints_tool`: https://pub.dev/packages/lints_tool). The template's targets here called
 # `grind code-metrics-*`, and this repo has no tool/grind.dart — they could never have run.
 #
 # Scope is the whole repo, not just lib/: the tests and tool scripts are code we maintain, and

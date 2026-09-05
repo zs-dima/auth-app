@@ -40,7 +40,7 @@ typedef SentryInitializer = Future<void> Function(FlutterOptionsConfiguration co
 /// addresses in a backend's refusal message, and raw state renderings. The
 /// pipeline is allowed to know them; the reporter is not.
 /// {@endtemplate}
-final class SentryTelemetry extends ReportingSink implements CrashReporting {
+final class SentryTelemetry extends ReportingSink implements CrashReporting, Flushable {
   /// The attribute keys allowed to leave the device as Sentry tags.
   ///
   /// A whitelist because the failure mode of a blacklist is silent: every new
@@ -141,10 +141,15 @@ final class SentryTelemetry extends ReportingSink implements CrashReporting {
       case .warn:
         Sentry.logger.warn(body, attributes: attributes);
 
-      // `error` and `fatal` never reach here: they are incidents, and the base
-      // class captures them.
-      case .error || .fatal:
-        break;
+      // Reachable: `report` is called for everything BELOW the sink's
+      // `captureLevel`, and that floor is configurable. Dropping these on the
+      // assumption that an incident had already been filed is how an escalated
+      // failure reached the reporter zero times.
+      case .error:
+        Sentry.logger.error(body, attributes: attributes);
+
+      case .fatal:
+        Sentry.logger.fatal(body, attributes: attributes);
     }
   }
 
@@ -228,8 +233,9 @@ final class SentryTelemetry extends ReportingSink implements CrashReporting {
       // whatever any package prints; `LoggingBridge` and the print capture in `appZone` are the
       // owned ones, and both come through `beforeSend`.
       ..enablePrintBreadcrumbs = false
-      // Pinned, not inherited: `Sentry.logger.*` — how `..sentry()` ships a structured log — is a
-      // no-op when this is false, and the value is an SDK default on an alpha channel.
+      // Set explicitly: since SDK 9.28 this gates the SDK's OWN automatic log collection, while
+      // `Sentry.logger.*` (how `..escalate()` ships a structured log below `captureLevel`) is
+      // captured either way. The default is `false`, and what it turns on is worth naming.
       ..enableLogs = true
       // The SDK's automatic breadcrumbs may carry raw payloads in `data`, so the
       // ARGUMENTS go — that is where a password-reset token would ride. The rest
@@ -267,7 +273,13 @@ final class SentryTelemetry extends ReportingSink implements CrashReporting {
         ..escalationSink = null
         ..traceContext = null;
     }
-    if (ours) await Sentry.close();
+    if (ours) {
+      // The capture in flight first: `Sentry.close()` shuts the client without
+      // waiting for what is already enqueued, and the report worth having on
+      // this path is the boot failure that started the teardown.
+      await flush();
+      await Sentry.close();
+    }
   }
 
   /// Registers this sink without starting the SDK. Tests only.
@@ -351,24 +363,31 @@ final class SentryTelemetry extends ReportingSink implements CrashReporting {
 
   @override
   void capture(LogEvent event, LogLevel level, StackTrace? stackTrace) {
-    final sending = Sentry.captureException(
-      event.error ?? event.body,
-      stackTrace: stackTrace,
-      withScope: (scope) async {
-        scope.level = _sentryLevel(level);
-        // Only when the call site named the event. `ReportThrottle` keys on that
-        // name, so an issue then groups exactly as the throttle deduped; an
-        // unnamed event keeps Sentry's own grouping, which is what every issue
-        // filed before this line was grouped by.
-        if (event.name case final String name) {
-          scope.fingerprint = <String>[name, '${event.error.runtimeType}'];
-        }
-        for (final MapEntry(:key, :value) in tagsFor(event).entries) {
-          await scope.setTag(key, value);
-        }
-      },
-    );
-    // CHAINED, not replaced: `settle()` means "every capture started so far", and a test that
+    Future<void> withScope(Scope scope) async {
+      scope.level = _sentryLevel(level);
+      // The subsystem, so a rule or an alert can key on it. Breadcrumbs get it
+      // as their category; without this an issue had no such field at all.
+      if (event.area.isNotEmpty) await scope.setTag('area', event.area);
+      // Only when the call site named the event. `ReportThrottle` keys on that
+      // name, so an issue then groups exactly as the throttle deduped; an
+      // unnamed event keeps Sentry's own grouping, which is what every issue
+      // filed before this line was grouped by.
+      if (event.name case final String name) {
+        scope.fingerprint = <String>[name, '${event.error.runtimeType}'];
+      }
+      for (final MapEntry(:key, :value) in tagsFor(event).entries) {
+        await scope.setTag(key, value);
+      }
+    }
+
+    // A MESSAGE when there is no exception. `captureException` wraps whatever it
+    // is given in a `SentryException`, so a body arrived as an issue of type
+    // `String`, valued with the line, and grouped by a stack snapshot taken
+    // inside this method rather than by the failure.
+    final sending = event.error == null
+        ? Sentry.captureMessage(event.body, level: _sentryLevel(level), withScope: withScope)
+        : Sentry.captureException(event.error, stackTrace: stackTrace, withScope: withScope);
+    // CHAINED, not replaced: `flush()` means "every capture started so far", and a test that
     // drives two failures must be able to see both.
     _inFlight = _inFlight.then((_) => sending).then((_) {}, onError: (Object _) {});
     sending.ignore();
@@ -376,13 +395,13 @@ final class SentryTelemetry extends ReportingSink implements CrashReporting {
 
   Future<void> _inFlight = Future<void>.value();
 
-  /// Waits for the capture already started. Tests only.
+  /// Waits for every capture started so far.
   ///
-  /// [capture] is fire-and-forget by design — a crash report must never make the failing path
-  /// wait on the network — so nothing else can observe whether an envelope actually left. This is
-  /// the seam that lets a test count them, and it is why the SDK's own future is kept at all.
-  @visibleForTesting
-  Future<void> settle() => _inFlight;
+  /// [capture] is fire-and-forget by design: a crash report must never make the failing path wait
+  /// on the network. `Flushable`, so `log.flush()` reaches it where that debt has to be paid, and
+  /// so a test can count the envelopes that actually left.
+  @override
+  Future<void> flush() => _inFlight;
 
   static Map<String, SentryAttribute> _attributes(LogEvent event) => <String, SentryAttribute>{
     for (final MapEntry(:key, :value) in event.attributes.entries)

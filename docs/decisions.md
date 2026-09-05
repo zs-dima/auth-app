@@ -87,8 +87,19 @@ Eleven fixes, each of them something the extraction or the telemetry rework left
 11. **`AuthLayout` kept its insets outside the scrollable** (`SafeArea > Center >
     SingleChildScrollView`), the shape the 2026-09-04 sweep removed from `AppError`. It is
     `CustomScrollView > SliverSafeArea > SliverPadding > SliverFillRemaining` now, with tests for
-    the three behaviours: centred when the form fits, scrolling when it does not, and a viewport
-    that spans the window.
+    centred-when-it-fits, scrolling-when-it-does-not, and a viewport that spans the window.
+
+    **And it shipped broken for an hour, which is the lesson.** The first version centred with a
+    `Center`, and every auth form moved to the top of the window. A `Center` gives its child LOOSE
+    constraints, and every screen hands over a `Column` at the default `mainAxisSize.max`, which
+    fills whatever it is given — so there was no slack left to centre. The old
+    `SingleChildScrollView` had centred those same forms only because a scroll view gives its child
+    an UNBOUNDED main axis, which makes a max-size column shrink-wrap. The fix reproduces that
+    mechanism deliberately: a single-child `Column(mainAxisAlignment: .center,
+    crossAxisAlignment: .stretch)`, which lays a non-flex child out unbounded and then centres it.
+    The test that missed it used a `SizedBox` — a child that shrink-wraps on its own, i.e. the one
+    shape that cannot show the bug. A layout test has to be given the shape its callers actually
+    build.
 
 **Also:** the layout gate excluded `/tool/`, a SUBSTRING that hid `lib/_core/tool/`,
 `packages/tool/**` and nine files in `packages/ui/lib/src/tool/` (removed — the check is still

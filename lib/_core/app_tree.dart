@@ -55,8 +55,12 @@ class _AppTreeState extends State<AppTree> with WidgetsBindingObserver {
         final repository = dependencies.authenticationRepository;
         if (repository.user.isAuthenticated) repository.getAccessCredentials().ignore();
 
-      case .inactive:
+      // Backgrounded: pay the batching debt now. `flush` reaches every `Flushable` sink, which is
+      // the journal today, because the process may not be resumed and a killed app writes nothing.
       case .paused:
+        log.flush().ignore();
+
+      case .inactive:
       case .hidden:
         break;
     }

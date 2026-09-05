@@ -21,10 +21,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  lints_tool:
-    git:
-      url: https://github.com/zs-dima/lints_tool.git
-      ref: v1.0.1
+  lints_tool: ^1.0.1
   # The sheet -> ARB -> gen-l10n pipeline and its round-trip checks; `l10n_tool.json` is the
   # shape it reads. It brings `sheety_localization` and the Sheets client with it.
   l10n_tool:

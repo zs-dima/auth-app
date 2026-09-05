@@ -22,13 +22,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  lints_tool:
-
-    git:
-
-      url: https://github.com/zs-dima/lints_tool.git
-
-      ref: v1.0.1
+  lints_tool: ^1.0.1
 
   # flutter_lints: ^5.0.0
 

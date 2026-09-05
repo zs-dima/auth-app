@@ -92,10 +92,22 @@ lib/
 
 packages/
 ├── localization/       # Generated l10n (Google Sheets → sheety_localization → gen-l10n)
-├── model/              # Data models
+├── model/auth_model/   # Auth and user contracts, the generated protobuf and Connect clients
 ├── tool/               # Development tools
 └── ui/                 # UI components library
 ```
+
+The shared kit is not in this repository. It comes from pub.dev, publisher `dmitrii.app`:
+
+| Package | What it is |
+|---|---|
+| [core_model](https://pub.dev/packages/core_model) | `Lease`, `CancelToken`, `RetryBackoff`, `Guid` |
+| [telemetry](https://pub.dev/packages/telemetry) | one event model for logs, crash reporting, analytics |
+| [connect_kit](https://pub.dev/packages/connect_kit) | the Connect RPC runtime: transport, interceptors, retry |
+| [http_kit](https://pub.dev/packages/http_kit) | the HTTP client and its middleware pipeline |
+| [lints_tool](https://pub.dev/packages/lints_tool) | the analyzer and DCM rule set |
+
+Their sources live in `A:\source\_lib\flutter`, one repository each.
 
 ## Localization
 
